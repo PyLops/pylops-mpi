@@ -1,0 +1,12 @@
+.idea/
+__pycache__/
+
+# setuptools_scm generated
+pylops_mpi/version.py
+
+# Environment
+venv/
+
+# Build
+pylops_mpi.egg-info/
+.eggs/
