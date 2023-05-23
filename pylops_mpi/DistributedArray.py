@@ -98,6 +98,9 @@ class DistributedArray(np.ndarray):
     def __add__(self, x):
         return self.add(x)
 
+    def __sub__(self, x):
+        return self.add(-x)
+
     def __mul__(self, x):
         return self.multiply(x)
 
