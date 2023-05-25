@@ -27,6 +27,8 @@ class DistributedArray(np.ndarray):
 
     def __new__(cls, global_shape: Union[Tuple, Integral], dtype: Optional[DTypeLike] = "float",
                 base_comm: Optional[MPI.Comm] = MPI.COMM_WORLD, type_part: str = "S"):
+        if type_part not in ["B", "S"]:
+            raise ValueError("Should be either B or S")
         if isinstance(global_shape, Integral):
             global_shape = (global_shape,)
         # Broadcast the array
@@ -133,7 +135,12 @@ class DistributedArray(np.ndarray):
         pass
 
     def __repr__(self):
-        return f"<DistributedArray with shape={self.global_shape})" \
+        return f"<DistributedArray with global shape={self.global_shape}), local shape={self.local_shape}" \
+               f", dtype={self.dtype}, " \
+               f"processes={[i for i in range(self.base_comm.Get_size())]})> "
+
+    def __str__(self):
+        return f"<DistributedArray with global shape={self.global_shape}), local shape={self.local_shape}" \
                f", dtype={self.dtype}, " \
                f"processes={[i for i in range(self.base_comm.Get_size())]})> "
 
