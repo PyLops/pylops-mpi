@@ -2,6 +2,10 @@ import numpy as np
 
 from pylops_mpi.DistributedArray import DistributedArray
 
+# For global arrays use to_dist
+distr = DistributedArray.to_dist(np.random.randint(1, 10, (100, )))
+print(distr.local_shape, distr.local_array)
+
 # Broadcast
 arr = DistributedArray(global_shape=(1000, 100), dtype=int, type_part="B")
 arr[:] = np.random.normal(10, 1, arr.shape)

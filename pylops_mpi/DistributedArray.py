@@ -41,7 +41,7 @@ class DistributedArray(np.ndarray):
                     global_shape[0] % base_comm.Get_size())
                            else global_shape[0] // base_comm.Get_size()] + list(global_shape[1:])
         # create an empty numpy local array
-        arr = np.ndarray.__new__(cls, local_shape, dtype)
+        arr = super().__new__(cls, local_shape, dtype)
         arr._global_shape = global_shape
         arr._local_shape = tuple(local_shape)
         arr._base_comm = base_comm
@@ -96,6 +96,29 @@ class DistributedArray(np.ndarray):
         """
         final_array = self.base_comm.allgather(self.local_array)
         return final_array
+
+    @classmethod
+    def to_dist(cls, x: NDArray, base_comm: MPI.Comm = MPI.COMM_WORLD):
+        """Convert A Global Array to a Distributed Array
+
+        Parameters
+        ----------
+        x : :obj:`numpy.ndarray`
+            Global array.
+        base_comm : :obj:`MPI.Comm`, optional
+            Type of elements in input array. Defaults to ``MPI.COMM_WORLD``
+
+        Returns
+        ----------
+        dist_array : :obj:`DistributedArray`
+            Distributed Array of the Global Array
+
+        """
+        dist_array = DistributedArray(x.shape, x.dtype)
+        local_shapes = np.append([0], base_comm.allgather(dist_array.local_shape))
+        sum_shapes = np.cumsum(local_shapes)
+        dist_array[:] = x[slice(sum_shapes[base_comm.Get_rank()], sum_shapes[base_comm.Get_rank() + 1], None)]
+        return dist_array
 
     def __add__(self, x):
         return self.add(x)
