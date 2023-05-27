@@ -115,7 +115,7 @@ class DistributedArray(np.ndarray):
 
         """
         dist_array = DistributedArray(x.shape, x.dtype)
-        local_shapes = np.append([0], base_comm.allgather(dist_array.local_shape))
+        local_shapes = np.append([0], base_comm.allgather(dist_array.local_shape[0]))
         sum_shapes = np.cumsum(local_shapes)
         dist_array[:] = x[slice(sum_shapes[base_comm.Get_rank()], sum_shapes[base_comm.Get_rank() + 1], None)]
         return dist_array
