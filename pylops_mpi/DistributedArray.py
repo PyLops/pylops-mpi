@@ -17,22 +17,22 @@ class DistributedArray(np.ndarray):
     ----------
     global_shape : :obj:`tuple`
         Shape of the global array.
-    dtype : :obj:`str`, optional
-        Type of elements in input array. Defaults to ``float``.
     base_comm : :obj:`MPI.Comm`, optional
         MPI Communicator over which array is distributed. Defaults to ``MPI.COMM_WORLD``.
-    type_part : :obj:`str`, optional
+    partition : :obj:`str`, optional
         Broadcast or Scatter the array. Defaults to ``S``.
+    dtype : :obj:`str`, optional
+        Type of elements in input array. Defaults to ``float``.
     """
 
-    def __new__(cls, global_shape: Union[Tuple, Integral], dtype: Optional[DTypeLike] = "float",
-                base_comm: Optional[MPI.Comm] = MPI.COMM_WORLD, type_part: str = "S"):
-        if type_part not in ["B", "S"]:
+    def __new__(cls, global_shape: Union[Tuple, Integral], base_comm: Optional[MPI.Comm] = MPI.COMM_WORLD,
+                partition: str = "S", dtype: Optional[DTypeLike] = np.float64):
+        if partition not in ["B", "S"]:
             raise ValueError("Should be either B or S")
         if isinstance(global_shape, Integral):
             global_shape = (global_shape,)
         # Broadcast the array
-        if type_part == "B":
+        if partition == "B":
             local_shape = global_shape
         # Scatter the array
         else:
@@ -41,10 +41,13 @@ class DistributedArray(np.ndarray):
                     global_shape[0] % base_comm.Get_size())
                            else global_shape[0] // base_comm.Get_size()] + list(global_shape[1:])
         # create an empty numpy local array
-        arr = super().__new__(cls, local_shape, dtype)
+        arr = np.ndarray.__new__(cls, shape=local_shape, dtype=dtype)
         arr._global_shape = global_shape
         arr._local_shape = tuple(local_shape)
         arr._base_comm = base_comm
+        arr._partition_ = partition
+        arr._rank = base_comm.Get_rank()
+        arr._size = base_comm.Get_size()
         return arr
 
     @property
@@ -87,6 +90,37 @@ class DistributedArray(np.ndarray):
         """
         return self.view(np.ndarray)
 
+    @property
+    def rank(self):
+        """Rank of the current process
+
+        Returns
+        -------
+        rank : :obj:`int`
+        """
+        return self._rank
+
+    @property
+    def size(self):
+        """Total number of processes
+        Size of parallel environment
+
+        Returns
+        -------
+        size : :obj:`int`
+        """
+        return self._size
+
+    @property
+    def partition_(self):
+        """Type of Distribution
+
+        Returns
+        -------
+        partition_type : :obj:`str`
+        """
+        return self._partition_
+
     def get_local_arrays(self):
         """Gather all the local arrays
         Returns
@@ -98,7 +132,7 @@ class DistributedArray(np.ndarray):
         return final_array
 
     @classmethod
-    def to_dist(cls, x: NDArray, base_comm: MPI.Comm = MPI.COMM_WORLD):
+    def to_dist(cls, x: NDArray, base_comm: MPI.Comm = MPI.COMM_WORLD, partition: str = "S"):
         """Convert A Global Array to a Distributed Array
 
         Parameters
@@ -107,24 +141,32 @@ class DistributedArray(np.ndarray):
             Global array.
         base_comm : :obj:`MPI.Comm`, optional
             Type of elements in input array. Defaults to ``MPI.COMM_WORLD``
-
+        partition : :obj:`str`, optional
+            Distributes the array, Defaults to ``S``.
         Returns
         ----------
         dist_array : :obj:`DistributedArray`
             Distributed Array of the Global Array
 
         """
-        dist_array = DistributedArray(x.shape, x.dtype)
-        local_shapes = np.append([0], base_comm.allgather(dist_array.local_shape[0]))
+        dist_array = DistributedArray(global_shape=x.shape, base_comm=base_comm,
+                                      partition=partition, dtype=x.dtype)
+        local_shapes = np.append([0], dist_array.base_comm.allgather(dist_array.local_shape[0]))
         sum_shapes = np.cumsum(local_shapes)
-        dist_array[:] = x[slice(sum_shapes[base_comm.Get_rank()], sum_shapes[base_comm.Get_rank() + 1], None)]
+        dist_array[:] = x[slice(sum_shapes[dist_array.rank], sum_shapes[dist_array.rank + 1], None)]
         return dist_array
+
+    def __neg__(self):
+        arr = DistributedArray(global_shape=self.global_shape, base_comm=self.base_comm,
+                               partition=self.partition_, dtype=self.dtype)
+        arr[:] = -self.local_array
+        return arr
 
     def __add__(self, x):
         return self.add(x)
 
     def __sub__(self, x):
-        return self.add(-x)
+        return self.__add__(-x)
 
     def __mul__(self, x):
         return self.multiply(x)
@@ -132,18 +174,24 @@ class DistributedArray(np.ndarray):
     def add(self, dist_array):
         """Distributed Addition of arrays
         """
+        if self.partition_ != dist_array.partition_:
+            raise ValueError("Partition of both the Distributed Array must be same")
         if self.shape != dist_array.shape:
             raise ValueError("Shape Mismatch")
-        SumArray = DistributedArray(self.global_shape, dtype=self.dtype)
+        SumArray = DistributedArray(global_shape=self.global_shape,
+                                    dtype=self.dtype, partition=self.partition_)
         SumArray[:] = self.local_array + dist_array.local_array
         return SumArray
 
     def multiply(self, dist_array):
         """Distributed Element-wise multiplication
         """
+        if self.partition_ != dist_array.partition_:
+            raise ValueError("Partition of both the Distributed Array must be same")
         if self.shape != dist_array.shape:
             raise ValueError("Shape Mismatch")
-        ProductArray = DistributedArray(self.global_shape, self.dtype)
+        ProductArray = DistributedArray(global_shape=self.global_shape,
+                                        dtype=self.dtype, partition=self.partition_)
         ProductArray[:] = self.local_array * dist_array.local_array
         return ProductArray
 
@@ -160,44 +208,10 @@ class DistributedArray(np.ndarray):
     def __repr__(self):
         return f"<DistributedArray with global shape={self.global_shape}), local shape={self.local_shape}" \
                f", dtype={self.dtype}, " \
-               f"processes={[i for i in range(self.base_comm.Get_size())]})> "
+               f"processes={[i for i in range(self.size)]})> "
 
     def __str__(self):
         return f"<DistributedArray with global shape={self.global_shape}), local shape={self.local_shape}" \
                f", dtype={self.dtype}, " \
-               f"processes={[i for i in range(self.base_comm.Get_size())]})> "
+               f"processes={[i for i in range(self.size)]})> "
 
-    # def broadcast(self, x: NDArray) -> None:
-    #     """Broadcast the NumPy Array
-    #
-    #     Parameters
-    #     ----------
-    #     x : :obj:`np.ndarray`
-    #         Array to be broadcasted
-    #     """
-    #     local_array = None
-    #     if x is not None:
-    #         local_array = np.empty(x.shape, dtype=self.dtype)
-    #         if self.base_comm.Get_rank() == 0:
-    #             local_array = x.astype(self.dtype)
-    #     self.base_comm.bcast(local_array, root=0)
-    #
-    # def scatter(self, x: NDArray):
-    #     """Scatter the NumPy Array
-    #
-    #     Parameters
-    #     ----------
-    #     x : :obj:`np.ndarray`
-    #         Array to be scattered
-    #     """
-    #     send_data = None
-    #     if self.base_comm.Get_rank() == 0:
-    #         arrs = np.array_split(x, self.size)
-    #         raveled = [np.ravel(arr) for arr in arrs]
-    #         send_data = np.concatenate(raveled, dtype=self.dtype)
-    #     recv_shape = list(x.shape)
-    #     recv_shape_new = [((recv_shape[0] // self.size) + 1) if self.base_comm.Get_rank() < (
-    #             recv_shape[0] % self.size)
-    #                       else recv_shape[0] // self.size] + recv_shape[1:]
-    #     self.local_array = np.empty(recv_shape_new, dtype=self.dtype)
-    #     self.base_comm.Scatterv(send_data, self.local_array, root=0)
