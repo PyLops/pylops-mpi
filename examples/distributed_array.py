@@ -7,12 +7,12 @@ distr = DistributedArray.to_dist(np.random.randint(1, 10, (100, )))
 print(distr.local_shape, distr.local_array)
 
 # Broadcast
-arr = DistributedArray(global_shape=(1000, 100), dtype=int, type_part="B")
-arr[:] = np.random.normal(10, 1, arr.shape)
+arr = DistributedArray(global_shape=(1000, 100), dtype=int, partition="B")
+arr[:] = np.random.normal(10, 1, arr.local_shape)
 
 # Scatter
-arr1 = DistributedArray(global_shape=(1000, 100), dtype=float, type_part="S")
-arr1[:] = np.random.normal(108, 2, arr1.shape)
+arr1 = DistributedArray(global_shape=(1000, 100), dtype=float, partition="S")
+arr1[:] = np.random.normal(108, 2, arr1.local_shape)
 
 # Distributed Array of ones and zeroes
 arr2 = DistributedArray(global_shape=(1000, 100), dtype=int)

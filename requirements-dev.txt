@@ -3,5 +3,6 @@ scipy>=1.4.0
 pylops
 mpi4py
 pytest
+pytest-mpi
 sphinx
 flake8

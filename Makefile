@@ -1,5 +1,8 @@
-PIP := $(shell command -v pip3 2> /dev/null || command which pip 2> /dev/null)
-PYTHON := $(shell command -v python3 2> /dev/null || command which python 2> /dev/null)
+PIP := "D:\main_pylops_mpi\pylops-mpi\venv\Scripts\pip.exe"
+PYTHON := "D:\main_pylops_mpi\pylops-mpi\venv\Scripts\python.exe"
+NUM_PROCESSES = 10
+
+.PHONY: install dev-install lint tests
 
 pipcheck:
 ifndef PIP
@@ -22,4 +25,7 @@ dev-install:
 	$(PIP) install -r requirements-dev.txt && $(PIP) install -e .
 
 lint:
-	flake8 pylops_mpi/
+	flake8 pylops_mpi/ tests/ examples/
+
+tests:
+	mpiexec -n $(NUM_PROCESSES) pytest tests/ --with-mpi

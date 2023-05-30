@@ -29,11 +29,11 @@ setup(
         'Topic :: Scientific/Engineering :: Mathematics'
     ],
     install_requires=['numpy >= 1.15.0', 'scipy >= 1.4.0', 'mpi4py', 'pylops'],
-    packages=find_packages(exclude=['pytests']),
+    packages=find_packages(exclude=['tests']),
     use_scm_version=dict(root='.',
                          relative_to=__file__,
                          write_to=src('pylops_mpi/version.py')),
     setup_requires=['pytest-runner', 'setuptools_scm'],
-    test_suite='pytests',
+    test_suite='tests',
     tests_require=['pytest'],
     zip_safe=True)
