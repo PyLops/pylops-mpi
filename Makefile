@@ -1,5 +1,5 @@
-PIP := "D:\main_pylops_mpi\pylops-mpi\venv\Scripts\pip.exe"
-PYTHON := "D:\main_pylops_mpi\pylops-mpi\venv\Scripts\python.exe"
+PIP := $(shell command -v pip3 2> /dev/null || command which pip 2> /dev/null)
+PYTHON := $(shell command -v python3 2> /dev/null || command which python 2> /dev/null)
 NUM_PROCESSES = 10
 
 .PHONY: install dev-install lint tests
