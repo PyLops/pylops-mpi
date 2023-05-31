@@ -7,6 +7,22 @@ from pylops.utils import DTypeLike, NDArray
 
 
 def local_split(global_shape: Tuple, base_comm: MPI.Comm, partition: str):
+    """To get the local shape from the global shape
+
+    Parameters
+    ----------
+    global_shape : :obj:`tuple`
+        Shape of the global array.
+    base_comm : :obj:`MPI.Comm`
+        Base MPI Communicator.
+    partition : :obj:`str`
+        Type of partition.
+
+    Returns
+    -------
+    local_shape : :obj:`tuple`
+        Shape of the local array.
+    """
     if partition == "B":
         local_shape = global_shape
     # Scatter the array
@@ -129,26 +145,21 @@ class DistributedArray:
         """
         return self._partition
 
-    def get_local_arrays(self):
-        """Gather all the local arrays
+    def asarray(self):
+        """Global view of the array
+        Gather all the local arrays
         Returns
         -------
         final_array : :obj:`np.ndarray`
             Global Array gathered at all ranks
         """
-        final_array = self.base_comm.allgather(self.local_array)
-        return np.asarray(final_array)
-
-    def asarray(self):
-        """Global View of the Array
-        Returns
-        -------
-        final_array : :obj:`np.ndarray`
-            Global View of the array
-        """
-        if self.partition == "B":
+        # Since the global array was replicated at all ranks
+        if self.partition == 'B':
+            # Get only self.local_array.
             return self.local_array
-        return np.concatenate(self.get_local_arrays())
+        # Gather all the local arrays and apply concatenation.
+        final_array = self.base_comm.allgather(self.local_array)
+        return np.concatenate(final_array)
 
     @classmethod
     def to_dist(cls, x: NDArray,
