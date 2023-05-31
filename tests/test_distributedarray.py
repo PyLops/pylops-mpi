@@ -48,8 +48,16 @@ def test_creation(par):
                                           partition=par['partition'],
                                           dtype=par['dtype'])
     distributed_zeroes[:] = 0
+    # Test for distributed ones
+    assert (distributed_ones.local_array ==
+            np.ones(shape=distributed_ones.local_shape,
+                    dtype=par['dtype'])).all()
     assert (distributed_ones.asarray() ==
             np.ones(shape=par['global_shape'], dtype=par['dtype'])).all()
+    # Test for distributed zeroes
+    assert (distributed_zeroes.local_array ==
+            np.zeros(shape=distributed_zeroes.local_shape,
+                     dtype=par['dtype'])).all()
     assert (distributed_zeroes.asarray() ==
             np.zeros(shape=par['global_shape'], dtype=par['dtype'])).all()
 
