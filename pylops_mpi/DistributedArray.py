@@ -25,7 +25,7 @@ def local_split(global_shape: Tuple, base_comm: MPI.Comm, partition: str):
     """
     if partition == "B":
         local_shape = global_shape
-    # Scatter the array
+    # Split the array
     else:
         local_shape = [((global_shape[0] // base_comm.Get_size()) + 1)
                        if base_comm.Get_rank() < (
@@ -48,7 +48,7 @@ class DistributedArray:
         MPI Communicator over which array is distributed.
         Defaults to ``MPI.COMM_WORLD``.
     partition : :obj:`str`, optional
-        Broadcast or Scatter the array. Defaults to ``S``.
+        Broadcast or Split the array. Defaults to ``S``.
     dtype : :obj:`str`, optional
         Type of elements in input array. Defaults to ``numpy.float64``.
     """
