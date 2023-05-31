@@ -1,6 +1,6 @@
 """Test the DistributedArray class
     Designed to run with n processes
-    $ mpiexec -n 10 pytest -m mpi test_distributedarray.py
+    $ mpiexec -n 10 pytest test_distributedarray.py --with-mpi
 """
 import numpy as np
 import pytest
@@ -48,20 +48,20 @@ def test_creation(par):
                                           partition=par['partition'],
                                           dtype=par['dtype'])
     distributed_zeroes[:] = 0
-    assert (distributed_ones.asarray() == np.ones(shape=par['global_shape'],
-                                                  dtype=par['dtype'])).all()
-    assert (distributed_zeroes.asarray() == np.zeros(shape=par['global_shape'],
-                                                     dtype=par['dtype'])).all()
+    assert (distributed_ones.asarray() ==
+            np.ones(shape=par['global_shape'], dtype=par['dtype'])).all()
+    assert (distributed_zeroes.asarray() ==
+            np.zeros(shape=par['global_shape'], dtype=par['dtype'])).all()
 
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par3_1), (par3_2), (par4_1), (par4_2)])
 def test_to_dist(par):
     """Test the ``to_dist`` method"""
-    x = par['x']
-    dist_array = DistributedArray.to_dist(x=x, partition=par['partition'])
+    dist_array = DistributedArray.to_dist(x=par['x'],
+                                          partition=par['partition'])
     assert isinstance(dist_array, DistributedArray)
-    assert dist_array.global_shape == x.shape
+    assert dist_array.global_shape == par['x'].shape
 
 
 @pytest.mark.mpi(minsize=2)
