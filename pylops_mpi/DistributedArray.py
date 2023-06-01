@@ -60,7 +60,7 @@ class DistributedArray:
         MPI Communicator over which array is distributed.
         Defaults to ``MPI.COMM_WORLD``.
     partition : :obj:`str`, optional
-        Broadcast or Split the array. Defaults to ``S``.
+        Broadcast or Scatter the array. Defaults to ``Partition.SCATTER``.
     dtype : :obj:`str`, optional
         Type of elements in input array. Defaults to ``numpy.float64``.
     """
@@ -187,7 +187,7 @@ class DistributedArray:
         base_comm : :obj:`MPI.Comm`, optional
             Type of elements in input array. Defaults to ``MPI.COMM_WORLD``
         partition : :obj:`str`, optional
-            Distributes the array, Defaults to ``S``.
+            Distributes the array, Defaults to ``Partition.Scatter``.
         Returns
         ----------
         dist_array : :obj:`DistributedArray`
