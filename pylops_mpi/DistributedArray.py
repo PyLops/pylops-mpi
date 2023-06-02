@@ -2,11 +2,23 @@ import numpy as np
 from typing import Optional, Union, Tuple
 from numbers import Integral
 from mpi4py import MPI
+from enum import Enum
 
 from pylops.utils import DTypeLike, NDArray
 
 
-def local_split(global_shape: Tuple, base_comm: MPI.Comm, partition: str):
+class Partition(Enum):
+    """Distributing data among different processes.
+
+    - BROADCAST: Distributes data to all processes.
+    - SCATTER: Distributes unique portions to each process.
+    """
+    BROADCAST = "Broadcast"
+    SCATTER = "Scatter"
+
+
+def local_split(global_shape: Tuple,
+                base_comm: MPI.Comm, partition: Partition):
     """To get the local shape from the global shape
 
     Parameters
@@ -15,7 +27,7 @@ def local_split(global_shape: Tuple, base_comm: MPI.Comm, partition: str):
         Shape of the global array.
     base_comm : :obj:`MPI.Comm`
         Base MPI Communicator.
-    partition : :obj:`str`
+    partition : :obj:`Partition`
         Type of partition.
 
     Returns
@@ -23,7 +35,7 @@ def local_split(global_shape: Tuple, base_comm: MPI.Comm, partition: str):
     local_shape : :obj:`tuple`
         Shape of the local array.
     """
-    if partition == "B":
+    if partition == Partition.BROADCAST:
         local_shape = global_shape
     # Split the array
     else:
@@ -47,18 +59,19 @@ class DistributedArray:
     base_comm : :obj:`MPI.Comm`, optional
         MPI Communicator over which array is distributed.
         Defaults to ``MPI.COMM_WORLD``.
-    partition : :obj:`str`, optional
-        Broadcast or Split the array. Defaults to ``S``.
+    partition : :obj:`Partition`, optional
+        Broadcast or Scatter the array. Defaults to ``Partition.SCATTER``.
     dtype : :obj:`str`, optional
         Type of elements in input array. Defaults to ``numpy.float64``.
     """
 
     def __init__(self, global_shape: Union[Tuple, Integral],
                  base_comm: Optional[MPI.Comm] = MPI.COMM_WORLD,
-                 partition: str = "S",
+                 partition: Partition = Partition.SCATTER,
                  dtype: Optional[DTypeLike] = np.float64):
-        if partition not in ["B", "S"]:
-            raise ValueError("Should be either B or S")
+        if partition not in Partition:
+            raise ValueError(f"Should be either "
+                             f"{Partition.BROADCAST} or {Partition.SCATTER}")
         if isinstance(global_shape, Integral):
             global_shape = (global_shape,)
         self.dtype = dtype
@@ -154,7 +167,7 @@ class DistributedArray:
             Global Array gathered at all ranks
         """
         # Since the global array was replicated at all ranks
-        if self.partition == 'B':
+        if self.partition == Partition.BROADCAST:
             # Get only self.local_array.
             return self.local_array
         # Gather all the local arrays and apply concatenation.
@@ -164,7 +177,7 @@ class DistributedArray:
     @classmethod
     def to_dist(cls, x: NDArray,
                 base_comm: MPI.Comm = MPI.COMM_WORLD,
-                partition: str = "S"):
+                partition: Partition = Partition.SCATTER):
         """Convert A Global Array to a Distributed Array
 
         Parameters
@@ -173,8 +186,8 @@ class DistributedArray:
             Global array.
         base_comm : :obj:`MPI.Comm`, optional
             Type of elements in input array. Defaults to ``MPI.COMM_WORLD``
-        partition : :obj:`str`, optional
-            Distributes the array, Defaults to ``S``.
+        partition : :obj:`Partition`, optional
+            Distributes the array, Defaults to ``Partition.SCATTER``.
         Returns
         ----------
         dist_array : :obj:`DistributedArray`
@@ -184,7 +197,7 @@ class DistributedArray:
                                       base_comm=base_comm,
                                       partition=partition,
                                       dtype=x.dtype)
-        if partition == "B":
+        if partition == Partition.BROADCAST:
             dist_array[:] = x
         else:
             local_shapes = np.append([0], base_comm.allgather(
