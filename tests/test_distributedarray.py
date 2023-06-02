@@ -6,22 +6,29 @@ import numpy as np
 import pytest
 from numpy.testing import assert_array_almost_equal
 
-from pylops_mpi.DistributedArray import DistributedArray, local_split
+from pylops_mpi import DistributedArray, Partition
+from pylops_mpi.DistributedArray import local_split
 
 np.random.seed(42)
 
-par1 = {'global_shape': (1000, 1000), 'partition': 'S', 'dtype': np.float64}
+par1 = {'global_shape': (1000, 1000),
+        'partition': Partition.SCATTER, 'dtype': np.float64}
 par1j = {'global_shape': (1000, 1000),
-         'partition': 'S', 'dtype': np.complex128}
-par2 = {'global_shape': (1000, 1000), 'partition': 'B', 'dtype': np.float64}
+         'partition': Partition.SCATTER, 'dtype': np.complex128}
+par2 = {'global_shape': (1000, 1000),
+        'partition': Partition.BROADCAST, 'dtype': np.float64}
 par2j = {'global_shape': (1000, 1000),
-         'partition': 'B', 'dtype': np.complex128}
+         'partition': Partition.BROADCAST, 'dtype': np.complex128}
 
-par3_1 = {'x': np.random.normal(100, 100, (1000, 1000)), 'partition': 'S'}
-par3_2 = {'x': np.random.normal(300, 300, (1000, 1000)), 'partition': 'S'}
+par3_1 = {'x': np.random.normal(100, 100, (1000, 1000)),
+          'partition': Partition.SCATTER}
+par3_2 = {'x': np.random.normal(300, 300, (1000, 1000)),
+          'partition': Partition.SCATTER}
 
-par4_1 = {'x': np.random.normal(100, 100, (1000, 1000)), 'partition': 'B'}
-par4_2 = {'x': np.random.normal(300, 300, (1000, 1000)), 'partition': 'B'}
+par4_1 = {'x': np.random.normal(100, 100, (1000, 1000)),
+          'partition': Partition.BROADCAST}
+par4_2 = {'x': np.random.normal(300, 300, (1000, 1000)),
+          'partition': Partition.BROADCAST}
 
 
 @pytest.mark.mpi(min_size=2)
