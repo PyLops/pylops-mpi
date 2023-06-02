@@ -27,7 +27,7 @@ def local_split(global_shape: Tuple,
         Shape of the global array.
     base_comm : :obj:`MPI.Comm`
         Base MPI Communicator.
-    partition : :obj:`str`
+    partition : :obj:`Partition`
         Type of partition.
 
     Returns
@@ -59,7 +59,7 @@ class DistributedArray:
     base_comm : :obj:`MPI.Comm`, optional
         MPI Communicator over which array is distributed.
         Defaults to ``MPI.COMM_WORLD``.
-    partition : :obj:`str`, optional
+    partition : :obj:`Partition`, optional
         Broadcast or Scatter the array. Defaults to ``Partition.SCATTER``.
     dtype : :obj:`str`, optional
         Type of elements in input array. Defaults to ``numpy.float64``.
@@ -186,8 +186,8 @@ class DistributedArray:
             Global array.
         base_comm : :obj:`MPI.Comm`, optional
             Type of elements in input array. Defaults to ``MPI.COMM_WORLD``
-        partition : :obj:`str`, optional
-            Distributes the array, Defaults to ``Partition.Scatter``.
+        partition : :obj:`Partition`, optional
+            Distributes the array, Defaults to ``Partition.SCATTER``.
         Returns
         ----------
         dist_array : :obj:`DistributedArray`
