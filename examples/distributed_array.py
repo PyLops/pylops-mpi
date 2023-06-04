@@ -1,23 +1,42 @@
+from matplotlib import pyplot as plt
 import numpy as np
+import pylops_mpi
 
-from pylops_mpi import DistributedArray, Partition
+plt.close("all")
+np.random.seed(42)
 
-# For global arrays use to_dist
-distr = DistributedArray.to_dist(np.random.randint(1, 10, (100, )))
-print(distr.local_shape, distr.local_array)
+global_shape = (10, 10)
 
-# Broadcast
-arr = DistributedArray(global_shape=(1000, 100), dtype=int,
-                       partition=Partition.SCATTER)
-arr[:] = np.random.normal(10, 1, arr.local_shape)
+# Distribution along axis = 0
+distributed_array = pylops_mpi.DistributedArray(global_shape=global_shape,
+                                                partition=pylops_mpi.Partition.SCATTER,
+                                                axis=0)
+start = distributed_array.local_shape[0] * distributed_array.local_shape[1] * distributed_array.rank
+end = distributed_array.local_shape[0] * distributed_array.local_shape[1] * (distributed_array.rank + 1)
+distributed_array[:] = np.arange(start, end).reshape(distributed_array.local_shape)
+pylops_mpi.plot_distributed_array(distributed_array)
 
-# Scatter
-arr1 = DistributedArray(global_shape=(1000, 100), dtype=float,
-                        partition=Partition.SCATTER)
-arr1[:] = np.random.normal(108, 2, arr1.local_shape)
+# Distribution along axis = 1
+distributed_array = pylops_mpi.DistributedArray(global_shape=global_shape,
+                                                partition=pylops_mpi.Partition.SCATTER,
+                                                axis=1)
 
-# Distributed Array of ones and zeroes
-arr2 = DistributedArray(global_shape=(1000, 100), dtype=int)
-arr3 = DistributedArray(global_shape=(1000, 100), dtype=int)
-arr2[:] = 0
-arr3[:] = 1
+start = distributed_array.local_shape[0] * distributed_array.local_shape[1] * distributed_array.rank
+end = distributed_array.local_shape[0] * distributed_array.local_shape[1] * (distributed_array.rank + 1)
+distributed_array[:] = np.arange(start, end).reshape(distributed_array.local_shape)
+pylops_mpi.plot_distributed_array(distributed_array)
+
+
+arr1 = pylops_mpi.DistributedArray.to_dist(np.random.normal(100, 100, (10, 10)))
+arr2 = pylops_mpi.DistributedArray.to_dist(np.random.normal(300, 300, (10, 10)))
+pylops_mpi.plot_distributed_array(arr1)
+pylops_mpi.plot_distributed_array(arr2)
+
+# Element-wise Addition
+sum_arr = arr1 + arr2
+
+# Element-wise Subtraction
+diff_arr = arr1 - arr2
+
+# Element-wise Multiplication
+mult_array = arr1 * arr2
