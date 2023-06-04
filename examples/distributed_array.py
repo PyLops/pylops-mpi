@@ -26,7 +26,7 @@ end = distributed_array.local_shape[0] * distributed_array.local_shape[1] * (dis
 distributed_array[:] = np.arange(start, end).reshape(distributed_array.local_shape)
 pylops_mpi.plot_distributed_array(distributed_array)
 
-
+# Example of ``to_dist``
 arr1 = pylops_mpi.DistributedArray.to_dist(np.random.normal(100, 100, (10, 10)))
 arr2 = pylops_mpi.DistributedArray.to_dist(np.random.normal(300, 300, (10, 10)))
 pylops_mpi.plot_distributed_array(arr1)
