@@ -29,4 +29,4 @@ def plot_distributed_array(arr: DistributedArray):
         ax2.set_title(f"Distributed over axis {arr.axis}")
         cbar = figure.colorbar(im2)
         cbar.set_ticks(np.arange(arr.size))
-        cbar.set_label("Processes")
+        cbar.set_label("Ranks")
