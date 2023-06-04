@@ -11,3 +11,7 @@ venv/
 # Build
 pylops_mpi.egg-info/
 .eggs/
+
+# Documentation
+docs/source/gallery
+docs/source/api/generated
