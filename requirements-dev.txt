@@ -2,6 +2,7 @@ numpy>=1.21.0
 scipy>=1.4.0
 pylops
 mpi4py
+matplotlib
 pytest
 pytest-mpi
 sphinx
