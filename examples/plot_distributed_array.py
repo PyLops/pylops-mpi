@@ -1,7 +1,7 @@
 """
 Distributed Array
 =========================
-This example shows how to use the :py:class:`pylops_mpi.DistributedArray'.
+This example shows how to use the :py:class:`pylops_mpi.DistributedArray`.
 This class provides a way to distribute arrays across multiple processes in
 a parallel computing environment.
 """
