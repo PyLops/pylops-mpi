@@ -7,24 +7,26 @@ np.random.seed(42)
 
 global_shape = (10, 10)
 
+
+def fill_arrays(arr: pylops_mpi.DistributedArray):
+    start = arr.local_shape[0] * arr.local_shape[1] * arr.rank
+    end = arr.local_shape[0] * arr.local_shape[1] * (arr.rank + 1)
+    arr[:] = np.arange(start, end).reshape(arr.local_shape)
+    return arr
+
+
 # Distribution along axis = 0
 distributed_array = pylops_mpi.DistributedArray(global_shape=global_shape,
                                                 partition=pylops_mpi.Partition.SCATTER,
                                                 axis=0)
-start = distributed_array.local_shape[0] * distributed_array.local_shape[1] * distributed_array.rank
-end = distributed_array.local_shape[0] * distributed_array.local_shape[1] * (distributed_array.rank + 1)
-distributed_array[:] = np.arange(start, end).reshape(distributed_array.local_shape)
-pylops_mpi.plot_distributed_array(distributed_array)
+pylops_mpi.plot_distributed_array(fill_arrays(distributed_array))
 
 # Distribution along axis = 1
 distributed_array = pylops_mpi.DistributedArray(global_shape=global_shape,
                                                 partition=pylops_mpi.Partition.SCATTER,
                                                 axis=1)
 
-start = distributed_array.local_shape[0] * distributed_array.local_shape[1] * distributed_array.rank
-end = distributed_array.local_shape[0] * distributed_array.local_shape[1] * (distributed_array.rank + 1)
-distributed_array[:] = np.arange(start, end).reshape(distributed_array.local_shape)
-pylops_mpi.plot_distributed_array(distributed_array)
+pylops_mpi.plot_distributed_array(fill_arrays(distributed_array))
 
 # Example of ``to_dist``
 arr1 = pylops_mpi.DistributedArray.to_dist(np.random.normal(100, 100, (10, 10)))
