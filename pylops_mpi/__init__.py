@@ -1,4 +1,5 @@
 from .DistributedArray import DistributedArray, Partition
+from .plotting.plotting import *
 
 try:
     from .version import version as __version__
