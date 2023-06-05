@@ -41,9 +41,9 @@ def local_split(global_shape: Tuple,
     else:
         local_shape = [((global_shape[0] // base_comm.Get_size()) + 1)
                        if base_comm.Get_rank() < (
-                global_shape[0] % base_comm.Get_size())
-                       else global_shape[0] // base_comm.Get_size()] + \
-                      list(global_shape[1:])
+            global_shape[0] % base_comm.Get_size())
+            else global_shape[0] // base_comm.Get_size()] + \
+            list(global_shape[1:])
     return tuple(local_shape)
 
 
