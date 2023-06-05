@@ -23,6 +23,7 @@ global_shape = (10, 10)
 arr = pylops_mpi.DistributedArray(global_shape=global_shape,
                                   partition=pylops_mpi.Partition.SCATTER,
                                   axis=0)
+# Filling the local arrays
 arr[:] = np.arange(arr.local_shape[0] * arr.local_shape[1] * arr.rank,
                    arr.local_shape[0] * arr.local_shape[1] * (arr.rank + 1)).reshape(arr.local_shape)
 pylops_mpi.plot_distributed_array(arr)
@@ -33,6 +34,7 @@ pylops_mpi.plot_distributed_array(arr)
 arr = pylops_mpi.DistributedArray(global_shape=global_shape,
                                   partition=pylops_mpi.Partition.SCATTER,
                                   axis=1)
+# Filling the local arrays
 arr[:] = np.arange(arr.local_shape[0] * arr.local_shape[1] * arr.rank,
                    arr.local_shape[0] * arr.local_shape[1] * (arr.rank + 1)).reshape(arr.local_shape)
 pylops_mpi.plot_distributed_array(arr)
