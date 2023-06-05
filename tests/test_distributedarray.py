@@ -12,48 +12,61 @@ from pylops_mpi.DistributedArray import local_split
 np.random.seed(42)
 
 par1 = {'global_shape': (1000, 1000),
-        'partition': Partition.SCATTER, 'dtype': np.float64}
+        'partition': Partition.SCATTER, 'dtype': np.float64,
+        'axis': 1}
 par1j = {'global_shape': (1000, 1000),
-         'partition': Partition.SCATTER, 'dtype': np.complex128}
+         'partition': Partition.SCATTER, 'dtype': np.complex128,
+         'axis': 0}
 par2 = {'global_shape': (1000, 1000),
-        'partition': Partition.BROADCAST, 'dtype': np.float64}
+        'partition': Partition.BROADCAST, 'dtype': np.float64,
+        'axis': 1}
 par2j = {'global_shape': (1000, 1000),
-         'partition': Partition.BROADCAST, 'dtype': np.complex128}
+         'partition': Partition.BROADCAST, 'dtype': np.complex128,
+         'axis': 0}
 
 par3_1 = {'x': np.random.normal(100, 100, (1000, 1000)),
-          'partition': Partition.SCATTER}
+          'partition': Partition.SCATTER, 'axis': 1}
 par3_2 = {'x': np.random.normal(300, 300, (1000, 1000)),
-          'partition': Partition.SCATTER}
+          'partition': Partition.SCATTER, 'axis': 1}
 
 par4_1 = {'x': np.random.normal(100, 100, (1000, 1000)),
-          'partition': Partition.BROADCAST}
+          'partition': Partition.BROADCAST, 'axis': 0}
 par4_2 = {'x': np.random.normal(300, 300, (1000, 1000)),
-          'partition': Partition.BROADCAST}
+          'partition': Partition.BROADCAST, 'axis': 0}
+
+par5 = {'global_shape': (200, 200, 100),
+        'partition': Partition.SCATTER,
+        'dtype': np.float64, 'axis': 1}
+
+par5j = {'global_shape': (200, 200, 100),
+         'partition': Partition.SCATTER,
+         'dtype': np.complex128, 'axis': 2}
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2),
+                                 (par2j), (par5), (par5j)])
 def test_creation(par):
-    pass
     """Test creation of local arrays"""
     distributed_array = DistributedArray(global_shape=par['global_shape'],
                                          partition=par['partition'],
-                                         dtype=par['dtype'])
+                                         dtype=par['dtype'], axis=par['axis'])
     loc_shape = local_split(distributed_array.global_shape,
                             distributed_array.base_comm,
-                            distributed_array.partition)
-    assert distributed_array.global_shape == (1000, 1000)
+                            distributed_array.partition,
+                            distributed_array.axis)
+    assert distributed_array.global_shape == par['global_shape']
     assert distributed_array.local_shape == loc_shape
     assert isinstance(distributed_array, DistributedArray)
     # Distributed array of ones
     distributed_ones = DistributedArray(global_shape=par['global_shape'],
                                         partition=par['partition'],
-                                        dtype=par['dtype'])
+                                        dtype=par['dtype'], axis=par['axis'])
     distributed_ones[:] = 1
     # Distributed array of zeroes
     distributed_zeroes = DistributedArray(global_shape=par['global_shape'],
                                           partition=par['partition'],
-                                          dtype=par['dtype'])
+                                          dtype=par['dtype'], axis=par['axis'])
     distributed_zeroes[:] = 0
     # Test for distributed ones
     assert (distributed_ones.local_array
@@ -74,9 +87,11 @@ def test_creation(par):
 def test_to_dist(par):
     """Test the ``to_dist`` method"""
     dist_array = DistributedArray.to_dist(x=par['x'],
-                                          partition=par['partition'])
+                                          partition=par['partition'],
+                                          axis=par['axis'])
     assert isinstance(dist_array, DistributedArray)
     assert dist_array.global_shape == par['x'].shape
+    assert dist_array.axis == par['axis']
 
 
 @pytest.mark.mpi(minsize=2)
