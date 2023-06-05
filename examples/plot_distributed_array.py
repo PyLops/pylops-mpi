@@ -44,22 +44,22 @@ pylops_mpi.plot_distributed_array(fill_arrays(distributed_array))
 # Convert a random numpy array to a `pylops_mpi.DistributedArray`.
 arr1 = pylops_mpi.DistributedArray.to_dist(np.random.normal(100, 100, global_shape))
 arr2 = pylops_mpi.DistributedArray.to_dist(np.random.normal(300, 300, global_shape))
-pylops_mpi.plot_local_arrays(arr1)
-pylops_mpi.plot_local_arrays(arr2)
+pylops_mpi.plot_local_arrays(arr1, "Distributed Array - 1")
+pylops_mpi.plot_local_arrays(arr2, "Distributed Array - 2")
 
 ###############################################################################
 # Element-wise Addition
 sum_arr = arr1 + arr2
-pylops_mpi.plot_local_arrays(sum_arr)
+pylops_mpi.plot_local_arrays(sum_arr, "Addition")
 
 
 ###############################################################################
 # Element-wise Subtraction
 diff_arr = arr1 - arr2
-pylops_mpi.plot_local_arrays(diff_arr)
+pylops_mpi.plot_local_arrays(diff_arr, "Subtraction")
 
 
 ###############################################################################
 # Element-wise Multiplication
 mult_array = arr1 * arr2
-pylops_mpi.plot_local_arrays(mult_array)
+pylops_mpi.plot_local_arrays(mult_array, "Multiplication")
