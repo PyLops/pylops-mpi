@@ -69,17 +69,17 @@ def test_creation(par):
                                           dtype=par['dtype'], axis=par['axis'])
     distributed_zeroes[:] = 0
     # Test for distributed ones
-    assert (distributed_ones.local_array ==
-            np.ones(shape=distributed_ones.local_shape,
-                    dtype=par['dtype'])).all()
-    assert (distributed_ones.asarray() ==
-            np.ones(shape=par['global_shape'], dtype=par['dtype'])).all()
+    assert (distributed_ones.local_array
+            == np.ones(shape=distributed_ones.local_shape,
+                       dtype=par['dtype'])).all()
+    assert (distributed_ones.asarray()
+            == np.ones(shape=par['global_shape'], dtype=par['dtype'])).all()
     # Test for distributed zeroes
-    assert (distributed_zeroes.local_array ==
-            np.zeros(shape=distributed_zeroes.local_shape,
-                     dtype=par['dtype'])).all()
-    assert (distributed_zeroes.asarray() ==
-            np.zeros(shape=par['global_shape'], dtype=par['dtype'])).all()
+    assert (distributed_zeroes.local_array
+            == np.zeros(shape=distributed_zeroes.local_shape,
+                        dtype=par['dtype'])).all()
+    assert (distributed_zeroes.asarray()
+            == np.zeros(shape=par['global_shape'], dtype=par['dtype'])).all()
 
 
 @pytest.mark.mpi(min_size=2)
