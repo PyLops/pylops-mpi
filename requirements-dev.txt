@@ -4,5 +4,9 @@ pylops
 mpi4py
 pytest
 pytest-mpi
+pydata-sphinx-theme
 sphinx
+numpydoc
+nbsphinx
+sphinx_gallery
 flake8
