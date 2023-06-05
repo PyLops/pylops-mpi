@@ -50,13 +50,16 @@ pylops_mpi.plot_local_arrays(arr2)
 ###############################################################################
 # Element-wise Addition
 sum_arr = arr1 + arr2
+pylops_mpi.plot_local_arrays(sum_arr)
 
 
 ###############################################################################
 # Element-wise Subtraction
 diff_arr = arr1 - arr2
+pylops_mpi.plot_local_arrays(diff_arr)
 
 
 ###############################################################################
 # Element-wise Multiplication
 mult_array = arr1 * arr2
+pylops_mpi.plot_local_arrays(mult_array)
