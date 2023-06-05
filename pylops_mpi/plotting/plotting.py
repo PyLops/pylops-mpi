@@ -9,7 +9,14 @@ from pylops_mpi import DistributedArray, Partition
 
 
 # Plot how the global array is distributed among ranks
-def plot_distributed_array(arr: DistributedArray):
+def plot_distributed_array(arr: DistributedArray) -> None:
+    """Visualize distribution of the global array among different ranks.
+
+    Parameters
+    ----------
+    arr : :obj:`pylops_mpi.DistributedArray`
+        DistributedArray
+    """
     if not isinstance(arr, DistributedArray):
         raise TypeError("Not a DistributedArray")
     if arr.partition is Partition.BROADCAST:
@@ -35,7 +42,16 @@ def plot_distributed_array(arr: DistributedArray):
 
 
 # Plot the local arrays of each rank
-def plot_local_arrays(arr: DistributedArray):
+def plot_local_arrays(arr: DistributedArray, title: str = None) -> None:
+    """Visualize the local arrays of the given DistributedArray
+
+    Parameters
+    ----------
+    arr : :obj:`pylops_mpi.DistributedArray`
+        DistributedArray
+    title : :obj:`str`
+        Main Title of the figure
+    """
     global_gather = arr.base_comm.gather(arr.local_array, root=0)
     if arr.rank == 0:
         plt.figure(figsize=(18, 5))
@@ -45,4 +61,6 @@ def plot_local_arrays(arr: DistributedArray):
             plt.xticks(np.arange(global_gather[i].shape[1]))
             plt.yticks(np.arange(global_gather[i].shape[0]))
             plt.title(f"Rank-{i}")
+        plt.suptitle(title)
         plt.tight_layout()
+
