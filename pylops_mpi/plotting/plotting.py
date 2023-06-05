@@ -8,6 +8,7 @@ import numpy as np
 from pylops_mpi import DistributedArray, Partition
 
 
+# Plot how the global array is distributed among ranks
 def plot_distributed_array(arr: DistributedArray):
     if not isinstance(arr, DistributedArray):
         raise TypeError("Not a DistributedArray")
@@ -30,3 +31,18 @@ def plot_distributed_array(arr: DistributedArray):
         cbar = figure.colorbar(im2)
         cbar.set_ticks(np.arange(arr.size))
         cbar.set_label("Ranks")
+        plt.tight_layout()
+
+
+# Plot the local arrays of each rank
+def plot_local_arrays(arr: DistributedArray):
+    global_gather = arr.base_comm.gather(arr.local_array, root=0)
+    if arr.rank == 0:
+        plt.figure(figsize=(18, 5))
+        for i in range(arr.size):
+            plt.subplot(2, arr.size, i + 1)
+            plt.imshow(global_gather[i], cmap='rainbow')
+            plt.xticks(np.arange(global_gather[i].shape[1]))
+            plt.yticks(np.arange(global_gather[i].shape[0]))
+            plt.title(f"Rank-{i}")
+        plt.tight_layout()

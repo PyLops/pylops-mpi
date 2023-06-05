@@ -42,11 +42,10 @@ pylops_mpi.plot_distributed_array(fill_arrays(distributed_array))
 
 ###############################################################################
 # Convert a random numpy array to a `pylops_mpi.DistributedArray`.
-arr1 = pylops_mpi.DistributedArray.to_dist(np.random.normal(100, 100, (10, 10)))
-arr2 = pylops_mpi.DistributedArray.to_dist(np.random.normal(300, 300, (10, 10)))
-pylops_mpi.plot_distributed_array(arr1)
-pylops_mpi.plot_distributed_array(arr2)
-
+arr1 = pylops_mpi.DistributedArray.to_dist(np.random.normal(100, 100, global_shape))
+arr2 = pylops_mpi.DistributedArray.to_dist(np.random.normal(300, 300, global_shape))
+pylops_mpi.plot_local_arrays(arr1)
+pylops_mpi.plot_local_arrays(arr2)
 
 ###############################################################################
 # Element-wise Addition
