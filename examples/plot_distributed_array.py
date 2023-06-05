@@ -52,15 +52,24 @@ pylops_mpi.plot_local_arrays(arr2, "Distributed Array - 2")
 
 ###############################################################################
 # Element-wise Addition
+#
+# Each process operates on its local portion of the arrays
+# and adds the corresponding elements together.
 sum_arr = arr1 + arr2
 pylops_mpi.plot_local_arrays(sum_arr, "Addition")
 
 ###############################################################################
 # Element-wise Subtraction
+#
+# Each process operates on its local portion of the arrays
+# and subtracts the corresponding elements together.
 diff_arr = arr1 - arr2
 pylops_mpi.plot_local_arrays(diff_arr, "Subtraction")
 
 ###############################################################################
 # Element-wise Multiplication
+#
+# Each process operates on its local portion of the arrays
+# and multiplies the corresponding elements together.
 mult_array = arr1 * arr2
 pylops_mpi.plot_local_arrays(mult_array, "Multiplication")
