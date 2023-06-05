@@ -63,4 +63,3 @@ def plot_local_arrays(arr: DistributedArray, title: str = None) -> None:
             plt.title(f"Rank-{i}")
         plt.suptitle(title)
         plt.tight_layout()
-
