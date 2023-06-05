@@ -1,3 +1,11 @@
+"""
+Distributed Array
+=========================
+This example shows how to use the :py:class:`pylops_mpi.DistributedArray`.
+This class provides a way to distribute arrays across multiple processes in
+a parallel computing environment.
+"""
+
 import numpy as np
 
 from pylops_mpi import DistributedArray, Partition
