@@ -13,33 +13,29 @@ import pylops_mpi
 plt.close("all")
 np.random.seed(42)
 
+# Defining the global shape of the distributed array
 global_shape = (10, 10)
-
-
-# filling the distributed array
-def fill_arrays(arr: pylops_mpi.DistributedArray):
-    start = arr.local_shape[0] * arr.local_shape[1] * arr.rank
-    end = arr.local_shape[0] * arr.local_shape[1] * (arr.rank + 1)
-    arr[:] = np.arange(start, end).reshape(arr.local_shape)
-    return arr
-
 
 ###############################################################################
 # Let's start by defining the
 # class with the input parameters ``global_shape``,
 # ``partition``, and ``axis``. Here's an example implementation of the class with ``axis=0``.
-distributed_array = pylops_mpi.DistributedArray(global_shape=global_shape,
-                                                partition=pylops_mpi.Partition.SCATTER,
-                                                axis=0)
-pylops_mpi.plot_distributed_array(fill_arrays(distributed_array))
+arr = pylops_mpi.DistributedArray(global_shape=global_shape,
+                                  partition=pylops_mpi.Partition.SCATTER,
+                                  axis=0)
+arr[:] = np.arange(arr.local_shape[0] * arr.local_shape[1] * arr.rank,
+                   arr.local_shape[0] * arr.local_shape[1] * (arr.rank + 1)).reshape(arr.local_shape)
+pylops_mpi.plot_distributed_array(arr)
 
 ###############################################################################
 # Below is an implementation to show how the global array is distributed along
 # the second axis.
-distributed_array = pylops_mpi.DistributedArray(global_shape=global_shape,
-                                                partition=pylops_mpi.Partition.SCATTER,
-                                                axis=1)
-pylops_mpi.plot_distributed_array(fill_arrays(distributed_array))
+arr = pylops_mpi.DistributedArray(global_shape=global_shape,
+                                  partition=pylops_mpi.Partition.SCATTER,
+                                  axis=1)
+arr[:] = np.arange(arr.local_shape[0] * arr.local_shape[1] * arr.rank,
+                   arr.local_shape[0] * arr.local_shape[1] * (arr.rank + 1)).reshape(arr.local_shape)
+pylops_mpi.plot_distributed_array(arr)
 
 ###############################################################################
 # To convert a random NumPy array into a ``pylops_mpi.DistributedArray``,
