@@ -168,6 +168,16 @@ class DistributedArray:
         return self._axis
 
     @property
+    def ndim(self):
+        """Number of dimensions of the global array
+
+        Returns
+        -------
+        ndim : :obj:`int`
+        """
+        return len(self.global_shape)
+
+    @property
     def partition(self):
         """Type of Distribution
 
@@ -282,7 +292,25 @@ class DistributedArray:
     def dot(self, dist_array):
         """Distributed Dot Product
         """
-        pass
+        if self.ndim != 1 and self.axis == self.ndim - 1:
+            raise NotImplementedError("Use another axis to split the array")
+        if self.ndim != 1 and dist_array.ndim != 1 and dist_array.partition != Partition.BROADCAST:
+            raise ValueError(f"Partition for Second Array should be {Partition.BROADCAST}")
+        if self.global_shape[self.ndim - 1] != dist_array.global_shape[self.ndim - 2]:
+            raise ValueError(f"Shape Mismatch {self.global_shape[-1]} "
+                             f"(dim {self.ndim - 1}) != {dist_array.global_shape[-2]} "
+                             f"(dim {dist_array.ndim - 2}) for shapes {self.global_shape} "
+                             f"and {dist_array.global_shape}")
+        if dist_array.ndim == 1 and self.ndim == 1:
+            return self.base_comm.allreduce(np.dot(self.local_array, dist_array.local_array), op=MPI.SUM)
+        global_shape_1 = list(self.global_shape)[:-1]
+        global_shape_2 = list(dist_array.global_shape)[:-2] + [dist_array.global_shape[-1]]
+        dot_global_shape = tuple(global_shape_1 + global_shape_2)
+        DotProduct = DistributedArray(global_shape=dot_global_shape,
+                                      base_comm=self.base_comm, partition=self.partition,
+                                      axis=self.axis, dtype=self.dtype)
+        DotProduct[:] = np.dot(self.local_array, dist_array.local_array)
+        return DotProduct
 
     def norm(self, x: NDArray,
              ord: Union[int, None] = None,
