@@ -312,12 +312,22 @@ class DistributedArray:
         DotProduct[:] = np.dot(self.local_array, dist_array.local_array)
         return DotProduct
 
-    def norm(self, x: NDArray,
-             ord: Union[int, None] = None,
-             axis: Optional[int] = None):
+    def norm(self, ord: Union[int, None] = None) -> NDArray:
         """Distributed np.linalg.norm method
         """
-        pass
+        ord = 2 if ord is None else ord
+        recv_buf = np.empty(shape=1, dtype=self.dtype) if self.ndim == 1 else np.empty(shape=self.local_shape,
+                                                                                       dtype=self.dtype)
+        if ord == 0:
+            # count non-zero and apply sum-reduction
+            self.base_comm.Allreduce(np.count_nonzero(self.local_array, axis=self.axis), recv_buf, op=MPI.SUM)
+        elif ord == np.inf:
+            # max in local array and then max-reduction
+            self.base_comm.Allreduce(np.max(self.local_array, axis=self.axis), recv_buf, op=MPI.MAX)
+        else:
+            self.base_comm.Allreduce(np.sum(self.local_array ** ord, axis=self.axis), recv_buf, op=MPI.SUM)
+            recv_buf = np.power(recv_buf, 1. / ord)
+        return recv_buf
 
     def __repr__(self):
         return f"<DistributedArray with global shape={self.global_shape}), " \
