@@ -51,4 +51,4 @@ jobs:
       - name: Install pylops-mpi
         run: pip install .
       - name: Testing using pytest-mpi
-        run: mpiexec -n 10 pytest ./tests/ --with-mpi
+        run: mpiexec -n 10 pytest
