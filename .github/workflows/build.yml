@@ -19,6 +19,19 @@ jobs:
         exclude:
           - os: macos-latest
             mpi: 'intelmpi'
+        # MPICH v4 fails on Ubuntu for Python <3.10
+        # ”libfabric EFA provider is operating in a
+        # condition that could result in memory
+        # corruption”
+          - os: ubuntu-latest
+            python-version: '3.7'
+            mpi: 'mpich'
+          - os: ubuntu-latest
+            python-version: '3.8'
+            mpi: 'mpich'
+          - os: ubuntu-latest
+            python-version: '3.9'
+            mpi: 'mpich'
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
