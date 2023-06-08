@@ -1,0 +1,13 @@
+
+:orphan:
+
+.. _sphx_glr_gallery_sg_execution_times:
+
+
+Computation times
+=================
+**00:01.823** total execution time for **gallery** files:
+
++-----------------------------------------------------------------------------------+-----------+--------+
+| :ref:`sphx_glr_gallery_plot_distributed_array.py` (``plot_distributed_array.py``) | 00:01.823 | 0.0 MB |
++-----------------------------------------------------------------------------------+-----------+--------+
