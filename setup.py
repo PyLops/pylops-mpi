@@ -28,7 +28,8 @@ setup(
         'Programming Language :: Python :: 3.9',
         'Topic :: Scientific/Engineering :: Mathematics'
     ],
-    install_requires=['numpy >= 1.15.0', 'scipy >= 1.4.0', 'mpi4py', 'pylops'],
+    install_requires=['numpy >= 1.15.0', 'scipy >= 1.4.0', 'pylops >= 2.0',
+                      'mpi4py', 'matplotlib'],
     packages=find_packages(exclude=['tests']),
     use_scm_version=dict(root='.',
                          relative_to=__file__,
