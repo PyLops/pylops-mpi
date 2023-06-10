@@ -24,6 +24,12 @@ dev-install:
 	make pipcheck
 	$(PIP) install -r requirements-dev.txt && $(PIP) install -e .
 
+install_conda:
+	conda env create -f environment.yml && conda activate pylops_mpi && pip install .
+
+dev-install_conda:
+	conda env create -f environment-dev.yml && conda activate pylops_mpi && pip install -e .
+
 lint:
 	flake8 pylops_mpi/ tests/ examples/
 
