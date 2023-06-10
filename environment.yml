@@ -1,0 +1,11 @@
+name: pylops_mpi
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python>=3.6.4
+  - numpy>=1.21.0
+  - scipy>=1.4.0
+  - pylops>=2.0
+  - matplotlib
+  - mpi4py
