@@ -113,8 +113,6 @@ html_show_copyright = True
 # Theme config
 html_theme = "pydata_sphinx_theme"
 html_theme_options = {
-    "logo_only": True,
-    "display_version": True,
     "logo": {
         "image_light": "pylops_b.png",
         "image_dark": "pylops.png",
