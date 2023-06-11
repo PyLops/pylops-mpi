@@ -35,3 +35,13 @@ lint:
 
 tests:
 	mpiexec -n $(NUM_PROCESSES) pytest tests/ --with-mpi
+
+doc:
+	cd docs  && rm -rf source/api/generated && rm -rf source/gallery &&\
+	rm -rf build && cd .. && sphinx-build -b html docs/source docs/build
+
+docupdate:
+	cd docs && make html && cd ..
+
+servedoc:
+	$(PYTHON) -m http.server --directory docs/build/html/
