@@ -1,0 +1,40 @@
+﻿pylops\_mpi.Partition
+=====================
+
+.. currentmodule:: pylops_mpi
+
+.. autoclass:: Partition
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.Partition.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+

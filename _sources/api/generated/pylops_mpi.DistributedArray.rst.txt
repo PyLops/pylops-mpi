@@ -1,0 +1,47 @@
+﻿pylops\_mpi.DistributedArray
+============================
+
+.. currentmodule:: pylops_mpi
+
+.. autoclass:: DistributedArray
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~DistributedArray.__init__
+        ~DistributedArray.add
+        ~DistributedArray.asarray
+        ~DistributedArray.dot
+        ~DistributedArray.multiply
+        ~DistributedArray.norm
+        ~DistributedArray.to_dist
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.DistributedArray.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+
