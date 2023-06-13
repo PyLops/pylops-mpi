@@ -8,10 +8,12 @@ from pylops.utils import DTypeLike, NDArray
 
 
 class Partition(Enum):
-    """Distributing data among different processes.
+    r"""Enum class
 
-    - BROADCAST: Distributes data to all processes.
-    - SCATTER: Distributes unique portions to each process.
+    Distributing data among different processes.
+
+    - ``BROADCAST``: Distributes data to all processes.
+    - ``SCATTER``: Distributes unique portions to each process.
     """
     BROADCAST = "Broadcast"
     SCATTER = "Scatter"
@@ -50,17 +52,18 @@ def local_split(global_shape: Tuple, base_comm: MPI.Comm,
 
 
 class DistributedArray:
-    """Distributed Numpy Arrays
-    Multidimensional NumPy-like distributed arrays.
-    It brings NumPy arrays to high-performance computing
+    r"""Distributed Numpy Arrays
 
-    Attributes
+    Multidimensional NumPy-like distributed arrays.
+    It brings NumPy arrays to high-performance computing.
+
+    Parameters
     ----------
     global_shape : :obj:`tuple`
         Shape of the global array.
-    base_comm : :obj:`MPI.Comm`, optional
+    base_comm : :obj:`mpi4py.MPI.Comm`, optional
         MPI Communicator over which array is distributed.
-        Defaults to ``MPI.COMM_WORLD``.
+        Defaults to ``mpi4py.MPI.COMM_WORLD``.
     partition : :obj:`Partition`, optional
         Broadcast or Scatter the array. Defaults to ``Partition.SCATTER``.
     dtype : :obj:`str`, optional
@@ -132,7 +135,7 @@ class DistributedArray:
 
         Returns
         -------
-        local_array : :obj:`np.ndarray`
+        local_array : :obj:`numpy.ndarray`
         """
         return self._local_array
 
@@ -179,10 +182,12 @@ class DistributedArray:
 
     def asarray(self):
         """Global view of the array
+
         Gather all the local arrays
+
         Returns
         -------
-        final_array : :obj:`np.ndarray`
+        final_array : :obj:`numpy.ndarray`
             Global Array gathered at all ranks
         """
         # Since the global array was replicated at all ranks
@@ -287,7 +292,7 @@ class DistributedArray:
     def norm(self, x: NDArray,
              ord: Union[int, None] = None,
              axis: Optional[int] = None):
-        """Distributed np.linalg.norm method
+        """Distributed numpy.linalg.norm method
         """
         pass
 
