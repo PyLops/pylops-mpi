@@ -135,7 +135,7 @@ class DistributedArray:
 
         Returns
         -------
-        local_array : :obj:`np.ndarray`
+        local_array : :obj:`numpy.ndarray`
         """
         return self._local_array
 
@@ -292,7 +292,7 @@ class DistributedArray:
     def norm(self, x: NDArray,
              ord: Union[int, None] = None,
              axis: Optional[int] = None):
-        """Distributed np.linalg.norm method
+        """Distributed numpy.linalg.norm method
         """
         pass
 
