@@ -59,7 +59,7 @@ class DistributedArray:
 
     Parameters
     ----------
-    global_shape : :obj:`tuple`
+    global_shape : :obj:`tuple` or :obj:`int`
         Shape of the global array.
     base_comm : :obj:`mpi4py.MPI.Comm`, optional
         MPI Communicator over which array is distributed.
