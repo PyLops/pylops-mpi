@@ -1,7 +1,7 @@
 # pylops-mpi
 [![pages-build-deployment](https://github.com/PyLops/pylops-mpi/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/PyLops/pylops-mpi/actions/workflows/pages/pages-build-deployment)
 [![PyLops-MPI](https://github.com/PyLops/pylops-mpi/actions/workflows/build.yml/badge.svg)](https://github.com/PyLops/pylops-mpi/actions/workflows/build.yml)
-![OS-support](https://img.shields.io/badge/OS-linux,win,osx-850A8B.svg)
+![OS-support](https://img.shields.io/badge/OS-linux,osx-850A8B.svg)
 [![Slack Status](https://img.shields.io/badge/chat-slack-green.svg)](https://pylops.slack.com)
 
 ## PyLops MPI
@@ -22,12 +22,12 @@ and running the following command:
    ```
  3. **Install pylops-mpi**: Once MPI is installed and verified, you can proceed to install `pylops-mpi`. 
    
-   You can install with `make` and `pip`
+   You can install with `make` and `pip`:
       ```
       make install
       ```
    
-   You can install with `make` and `conda`
+   You can install with `make` and `conda`:
       ```
       make install_conda
       ```
@@ -84,10 +84,19 @@ The DistributedArray also provides fundamental mathematical operations, like ele
 as well as dot product and the [`np.linalg.norm`](https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html) function in a distributed fashion, 
 thus utilizing the efficiency of the MPI protocol. This enables efficient computation and processing of large-scale distributed arrays.
 
+## Running Tests
+The test scripts are located in the tests folder.
+Use the following command to run the tests:
+```
+mpiexec -n <NUM_PROCESSES> pytest --with-mpi
+```
+The `--with-mpi` option tells pytest to enable the `pytest-mpi` plugin, 
+allowing the tests to utilize the MPI functionality.
+
 ## Documentation 
 The official documentation of Pylops-MPI is available [here](https://pylops.github.io/pylops-mpi/).
 Visit the official docs to learn more about pylops-mpi.
 
 ## Contributors
-* Matteo Ravasi, mrava87
 * Rohan Babbar, rohanbabbar04
+* Matteo Ravasi, mrava87
