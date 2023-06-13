@@ -14,7 +14,7 @@ plt.close("all")
 np.random.seed(42)
 
 # Defining the global shape of the distributed array
-global_shape = (10, 10)
+global_shape = (10, 5)
 
 ###############################################################################
 # Let's start by defining the
