@@ -11,34 +11,34 @@ from pylops_mpi.DistributedArray import local_split
 
 np.random.seed(42)
 
-par1 = {'global_shape': (1000, 1000),
+par1 = {'global_shape': (500, 501),
         'partition': Partition.SCATTER, 'dtype': np.float64,
         'axis': 1}
-par1j = {'global_shape': (1000, 1000),
+par1j = {'global_shape': (501, 500),
          'partition': Partition.SCATTER, 'dtype': np.complex128,
          'axis': 0}
-par2 = {'global_shape': (1000, 1000),
+par2 = {'global_shape': (500, 501),
         'partition': Partition.BROADCAST, 'dtype': np.float64,
         'axis': 1}
-par2j = {'global_shape': (1000, 1000),
+par2j = {'global_shape': (501, 500),
          'partition': Partition.BROADCAST, 'dtype': np.complex128,
          'axis': 0}
 
-par3_1 = {'x': np.random.normal(100, 100, (1000, 1000)),
+par3_1 = {'x': np.random.normal(100, 100, (500, 501)),
           'partition': Partition.SCATTER, 'axis': 1}
-par3_2 = {'x': np.random.normal(300, 300, (1000, 1000)),
+par3_2 = {'x': np.random.normal(300, 300, (500, 501)),
           'partition': Partition.SCATTER, 'axis': 1}
 
-par4_1 = {'x': np.random.normal(100, 100, (1000, 1000)),
+par4_1 = {'x': np.random.normal(100, 100, (500, 501)),
           'partition': Partition.BROADCAST, 'axis': 0}
-par4_2 = {'x': np.random.normal(300, 300, (1000, 1000)),
+par4_2 = {'x': np.random.normal(300, 300, (500, 501)),
           'partition': Partition.BROADCAST, 'axis': 0}
 
-par5 = {'global_shape': (200, 200, 100),
+par5 = {'global_shape': (200, 201, 101),
         'partition': Partition.SCATTER,
         'dtype': np.float64, 'axis': 1}
 
-par5j = {'global_shape': (200, 200, 100),
+par5j = {'global_shape': (200, 201, 101),
          'partition': Partition.SCATTER,
          'dtype': np.complex128, 'axis': 2}
 
