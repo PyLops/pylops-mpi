@@ -129,8 +129,12 @@ def test_distributed_dot(par1, par2):
 def test_distributed_norm(par):
     """Test Distributed norm method"""
     arr = DistributedArray.to_dist(x=par['x'], axis=par['axis'])
-    assert_array_almost_equal(arr.norm(ord=1), np.linalg.norm(par['x'], ord=1, axis=par['axis']),
-                              decimal=3)
-    assert_array_almost_equal(arr.norm(ord=np.inf), np.linalg.norm(par['x'], ord=np.inf, axis=par['axis']),
-                              decimal=3)
-    assert_almost_equal(arr.norm(flatten=True), np.linalg.norm(par['x'].flatten()))
+    assert_array_almost_equal(arr.norm(ord=1, axis=par['axis']),
+                              np.linalg.norm(par['x'], ord=1, axis=par['axis']), decimal=3)
+    with pytest.raises(NotImplementedError):
+        arr.norm(ord=1, axis=0)
+    assert_array_almost_equal(arr.norm(ord=np.inf, axis=par['axis']),
+                              np.linalg.norm(par['x'], ord=np.inf, axis=par['axis']), decimal=3)
+    with pytest.raises(NotImplementedError):
+        arr.norm(ord=np.inf, axis=0)
+    assert_almost_equal(arr.norm(), np.linalg.norm(par['x'].flatten()))
