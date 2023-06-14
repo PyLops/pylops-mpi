@@ -344,21 +344,23 @@ class DistributedArray:
             recv_buf = np.power(recv_buf, 1. / ord)
         return recv_buf
 
-    def norm(self, ord=None,
-             flatten: bool = False):
+    def norm(self, ord: Optional[int] = None,
+             axis: int = -1):
         """Distributed numpy.linalg.norm method
 
         Parameters
         ----------
         ord : :obj:`int`, optional
-            Order of the norm
-        flatten : :obj:`bool`, optional
-            Flatten the array before computing vector norms.
+            Order of the norm.
+        axis : :obj:`int`, optional
+            Axis along which vector norm needs to be computed. Defaults to ``-1``
         """
-        if flatten:
+        if axis == -1:
             # Flatten the local arrays and calculate norm
-            return self._compute_vector_norm(self.local_array.flatten(), axis=0, ord=ord)  # if local array is not 1-d
-        # This will calculate vector norm along the partition axis for ND arrays
+            return self._compute_vector_norm(self.local_array.flatten(), axis=0, ord=ord)
+        if axis != self.axis:
+            raise NotImplementedError("Choose axis along the partition.")
+        # Calculate vector norm along the axis
         return self._compute_vector_norm(self.local_array, axis=self.axis, ord=ord)
 
     def __repr__(self):
