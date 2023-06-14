@@ -356,7 +356,7 @@ class DistributedArray:
             Flatten the array before computing vector norms.
         """
         if flatten:
-            # Flatten the local arrays and calulcate norm
+            # Flatten the local arrays and calculate norm
             return self._compute_vector_norm(self.local_array.flatten(), axis=0, ord=ord)  # if local array is not 1-d
         # This will calculate vector norm along the partition axis for ND arrays
         return self._compute_vector_norm(self.local_array, axis=self.axis, ord=ord)
