@@ -28,7 +28,8 @@ intersphinx_mapping = {
     "numpy": ("https://docs.scipy.org/doc/numpy/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/reference", None),
     "matplotlib": ("https://matplotlib.org/", None),
-    "mpi4py": ("https://mpi4py.readthedocs.io/en/stable/", None)
+    "mpi4py": ("https://mpi4py.readthedocs.io/en/stable/", None),
+    "pylops": ("https://pylops.readthedocs.io/en/stable/", None)
 }
 
 # Generate autodoc stubs with summaries from code
@@ -113,8 +114,6 @@ html_show_copyright = True
 # Theme config
 html_theme = "pydata_sphinx_theme"
 html_theme_options = {
-    "logo_only": True,
-    "display_version": True,
     "logo": {
         "image_light": "pylops_b.png",
         "image_dark": "pylops.png",
