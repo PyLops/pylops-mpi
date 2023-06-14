@@ -8,10 +8,12 @@ from pylops.utils import DTypeLike, NDArray
 
 
 class Partition(Enum):
-    """Distributing data among different processes.
+    r"""Enum class
 
-    - BROADCAST: Distributes data to all processes.
-    - SCATTER: Distributes unique portions to each process.
+    Distributing data among different processes.
+
+    - ``BROADCAST``: Distributes data to all processes.
+    - ``SCATTER``: Distributes unique portions to each process.
     """
     BROADCAST = "Broadcast"
     SCATTER = "Scatter"
@@ -50,17 +52,18 @@ def local_split(global_shape: Tuple, base_comm: MPI.Comm,
 
 
 class DistributedArray:
-    """Distributed Numpy Arrays
-    Multidimensional NumPy-like distributed arrays.
-    It brings NumPy arrays to high-performance computing
+    r"""Distributed Numpy Arrays
 
-    Attributes
+    Multidimensional NumPy-like distributed arrays.
+    It brings NumPy arrays to high-performance computing.
+
+    Parameters
     ----------
-    global_shape : :obj:`tuple`
+    global_shape : :obj:`tuple` or :obj:`int`
         Shape of the global array.
-    base_comm : :obj:`MPI.Comm`, optional
+    base_comm : :obj:`mpi4py.MPI.Comm`, optional
         MPI Communicator over which array is distributed.
-        Defaults to ``MPI.COMM_WORLD``.
+        Defaults to ``mpi4py.MPI.COMM_WORLD``.
     partition : :obj:`Partition`, optional
         Broadcast or Scatter the array. Defaults to ``Partition.SCATTER``.
     dtype : :obj:`str`, optional
@@ -132,7 +135,7 @@ class DistributedArray:
 
         Returns
         -------
-        local_array : :obj:`np.ndarray`
+        local_array : :obj:`numpy.ndarray`
         """
         return self._local_array
 
@@ -189,10 +192,12 @@ class DistributedArray:
 
     def asarray(self):
         """Global view of the array
+
         Gather all the local arrays
+
         Returns
         -------
-        final_array : :obj:`np.ndarray`
+        final_array : :obj:`numpy.ndarray`
             Global Array gathered at all ranks
         """
         # Since the global array was replicated at all ranks
@@ -242,6 +247,20 @@ class DistributedArray:
             dist_array[:] = x[tuple(slices)]
         return dist_array
 
+    def _check_partition_shape(self, dist_array):
+        if self.partition != dist_array.partition:
+            raise ValueError("Partition of both the arrays must be same")
+        if self.local_shape != dist_array.local_shape:
+            raise ValueError(f"Local Array Shape Mismatch - "
+                             f"{self.local_shape} != {dist_array.local_shape}")
+
+    def _allreduce(self, send_buf, recv_buf=None, op: MPI.Op = MPI.SUM):
+        if op is MPI.SUM:
+            return self.base_comm.allreduce(send_buf, MPI.SUM)
+        # For MIN and MAX which require recv_buf
+        self.base_comm.Allreduce(send_buf, recv_buf, op)
+        return recv_buf
+
     def __neg__(self):
         arr = DistributedArray(global_shape=self.global_shape,
                                base_comm=self.base_comm,
@@ -263,11 +282,7 @@ class DistributedArray:
     def add(self, dist_array):
         """Distributed Addition of arrays
         """
-        if self.partition != dist_array.partition:
-            raise ValueError("Partition of both the arrays must be same")
-        if self.local_shape != dist_array.local_shape:
-            raise ValueError(f"Local Array Shape Mismatch - "
-                             f"{self.local_shape} != {dist_array.local_shape}")
+        self._check_partition_shape(dist_array)
         SumArray = DistributedArray(global_shape=self.global_shape,
                                     dtype=self.dtype, partition=self.partition,
                                     axis=self.axis)
@@ -277,11 +292,7 @@ class DistributedArray:
     def multiply(self, dist_array):
         """Distributed Element-wise multiplication
         """
-        if self.partition != dist_array.partition:
-            raise ValueError("Partition of both the arrays must be same")
-        if self.local_shape != dist_array.local_shape:
-            raise ValueError(f"Local Array Shape Mismatch - "
-                             f"{self.local_shape} != {dist_array.local_shape}")
+        self._check_partition_shape(dist_array)
         ProductArray = DistributedArray(global_shape=self.global_shape,
                                         dtype=self.dtype,
                                         partition=self.partition,
@@ -292,42 +303,63 @@ class DistributedArray:
     def dot(self, dist_array):
         """Distributed Dot Product
         """
-        if self.ndim != 1 and self.axis == self.ndim - 1:
-            raise NotImplementedError("Use another axis to split the array")
-        if self.ndim != 1 and dist_array.ndim != 1 and dist_array.partition != Partition.BROADCAST:
-            raise ValueError(f"Partition for Second Array should be {Partition.BROADCAST}")
         if self.global_shape[self.ndim - 1] != dist_array.global_shape[self.ndim - 2]:
             raise ValueError(f"Shape Mismatch {self.global_shape[-1]} "
                              f"(dim {self.ndim - 1}) != {dist_array.global_shape[-2]} "
                              f"(dim {dist_array.ndim - 2}) for shapes {self.global_shape} "
                              f"and {dist_array.global_shape}")
-        if dist_array.ndim == 1 and self.ndim == 1:
-            return self.base_comm.allreduce(np.dot(self.local_array, dist_array.local_array), op=MPI.SUM)
-        global_shape_1 = list(self.global_shape)[:-1]
-        global_shape_2 = list(dist_array.global_shape)[:-2] + [dist_array.global_shape[-1]]
-        dot_global_shape = tuple(global_shape_1 + global_shape_2)
-        DotProduct = DistributedArray(global_shape=dot_global_shape,
-                                      base_comm=self.base_comm, partition=self.partition,
-                                      axis=self.axis, dtype=self.dtype)
-        DotProduct[:] = np.dot(self.local_array, dist_array.local_array)
-        return DotProduct
+        self._check_partition_shape(dist_array)
+        if self.ndim == 1 and dist_array.ndim == 1:
+            return self._allreduce(np.dot(self.local_array, dist_array.local_array))
+        pass
 
-    def norm(self, ord: Union[int, None] = None) -> NDArray:
-        """Distributed np.linalg.norm method
-        """
+    def _compute_vector_norm(self, local_array: NDArray,
+                             axis: int, ord: Optional[int] = None):
+        # Compute along any axis
         ord = 2 if ord is None else ord
-        recv_buf = np.empty(shape=1, dtype=self.dtype) if self.ndim == 1 else np.empty(shape=self.local_shape,
-                                                                                       dtype=self.dtype)
-        if ord == 0:
-            # count non-zero and apply sum-reduction
-            self.base_comm.Allreduce(np.count_nonzero(self.local_array, axis=self.axis), recv_buf, op=MPI.SUM)
-        elif ord == np.inf:
-            # max in local array and then max-reduction
-            self.base_comm.Allreduce(np.max(self.local_array, axis=self.axis), recv_buf, op=MPI.MAX)
+        if local_array.ndim == 1:
+            recv_buf = np.empty(shape=1, dtype=np.float64)
         else:
-            self.base_comm.Allreduce(np.sum(self.local_array ** ord, axis=self.axis), recv_buf, op=MPI.SUM)
+            global_shape = list(self.global_shape)
+            global_shape[axis] = 1
+            recv_buf = np.empty(shape=global_shape, dtype=np.float64)
+        if ord in ['fro', 'nuc']:
+            raise ValueError(f"norm-{ord} not possible for vectors")
+        elif ord == 0:
+            # Count non-zero then sum reduction
+            recv_buf = self._allreduce(np.count_nonzero(local_array, axis=axis).astype(np.float64))
+        elif ord == np.inf:
+            # Calculate max followed by max reduction
+            recv_buf = self._allreduce(np.max(np.abs(local_array), axis=axis).astype(np.float64),
+                                       recv_buf, op=MPI.MAX)
+            recv_buf = np.squeeze(recv_buf, axis=axis)
+        elif ord == -np.inf:
+            # Calculate min followed by min reduction
+            recv_buf = self._allreduce(np.min(np.abs(local_array), axis=axis).astype(np.float64),
+                                       recv_buf, op=MPI.MIN)
+            recv_buf = np.squeeze(recv_buf, axis=axis)
+
+        else:
+            recv_buf = self._allreduce(np.sum(np.abs(np.float_power(local_array, ord)), axis=axis))
             recv_buf = np.power(recv_buf, 1. / ord)
         return recv_buf
+
+    def norm(self, ord=None,
+             flatten: bool = False):
+        """Distributed numpy.linalg.norm method
+
+        Parameters
+        ----------
+        ord : :obj:`int`, optional
+            Order of the norm
+        flatten : :obj:`bool`, optional
+            Flatten the array before computing vector norms.
+        """
+        if flatten:
+            # Flatten the local arrays and calulcate norm
+            return self._compute_vector_norm(self.local_array.flatten(), axis=0, ord=ord)  # if local array is not 1-d
+        # This will calculate vector norm along the partition axis for ND arrays
+        return self._compute_vector_norm(self.local_array, axis=self.axis, ord=ord)
 
     def __repr__(self):
         return f"<DistributedArray with global shape={self.global_shape}), " \

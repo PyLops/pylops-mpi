@@ -4,7 +4,7 @@
 """
 import numpy as np
 import pytest
-from numpy.testing import assert_array_almost_equal
+from numpy.testing import assert_array_almost_equal, assert_almost_equal
 
 from pylops_mpi import DistributedArray, Partition
 from pylops_mpi.DistributedArray import local_split
@@ -125,7 +125,12 @@ def test_distributed_dot(par1, par2):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par1, par2", [(par3_1, par3_2), (par4_1, par4_2)])
-def test_distributed_norm(par1, par2):
+@pytest.mark.parametrize("par", [(par3_1), (par3_2)])
+def test_distributed_norm(par):
     """Test Distributed norm method"""
-    pass
+    arr = DistributedArray.to_dist(x=par['x'], axis=par['axis'])
+    assert_array_almost_equal(arr.norm(ord=1), np.linalg.norm(par['x'], ord=1, axis=par['axis']),
+                              decimal=3)
+    assert_array_almost_equal(arr.norm(ord=np.inf), np.linalg.norm(par['x'], ord=np.inf, axis=par['axis']),
+                              decimal=3)
+    assert_almost_equal(arr.norm(flatten=True), np.linalg.norm(par['x'].flatten()))
