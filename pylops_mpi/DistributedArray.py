@@ -311,10 +311,20 @@ class DistributedArray:
         self._check_partition_shape(dist_array)
         if self.ndim == 1 and dist_array.ndim == 1:
             return self._allreduce(np.dot(self.local_array, dist_array.local_array))
-        pass
 
     def _compute_vector_norm(self, local_array: NDArray,
                              axis: int, ord: Optional[int] = None):
+        """Compute Vector norm using MPI
+
+        Parameters
+        ----------
+        local_array : :obj:`numpy.ndarray`
+            Local Array at each rank
+        axis : :obj:`int`
+            Axis along which norm is computed
+        ord : :obj:`int`, optional
+            Order of the norm
+        """
         # Compute along any axis
         ord = 2 if ord is None else ord
         if local_array.ndim == 1:
