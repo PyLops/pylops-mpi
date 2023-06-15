@@ -6,8 +6,8 @@
 
 Computation times
 =================
-**00:01.189** total execution time for **gallery** files:
+**00:01.195** total execution time for **gallery** files:
 
 +-----------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_gallery_plot_distributed_array.py` (``plot_distributed_array.py``) | 00:01.189 | 0.0 MB |
+| :ref:`sphx_glr_gallery_plot_distributed_array.py` (``plot_distributed_array.py``) | 00:01.195 | 0.0 MB |
 +-----------------------------------------------------------------------------------+-----------+--------+
