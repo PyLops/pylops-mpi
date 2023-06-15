@@ -248,6 +248,8 @@ class DistributedArray:
         return dist_array
 
     def _check_partition_shape(self, dist_array):
+        """Check Partition and Local Shape of the Array
+        """
         if self.partition != dist_array.partition:
             raise ValueError("Partition of both the arrays must be same")
         if self.local_shape != dist_array.local_shape:
@@ -255,8 +257,10 @@ class DistributedArray:
                              f"{self.local_shape} != {dist_array.local_shape}")
 
     def _allreduce(self, send_buf, recv_buf=None, op: MPI.Op = MPI.SUM):
-        if op is MPI.SUM:
-            return self.base_comm.allreduce(send_buf, MPI.SUM)
+        """MPI Allreduce operation
+        """
+        if recv_buf is None:
+            return self.base_comm.allreduce(send_buf, op)
         # For MIN and MAX which require recv_buf
         self.base_comm.Allreduce(send_buf, recv_buf, op)
         return recv_buf
@@ -303,14 +307,9 @@ class DistributedArray:
     def dot(self, dist_array):
         """Distributed Dot Product
         """
-        if self.global_shape[self.ndim - 1] != dist_array.global_shape[self.ndim - 2]:
-            raise ValueError(f"Shape Mismatch {self.global_shape[-1]} "
-                             f"(dim {self.ndim - 1}) != {dist_array.global_shape[-2]} "
-                             f"(dim {dist_array.ndim - 2}) for shapes {self.global_shape} "
-                             f"and {dist_array.global_shape}")
         self._check_partition_shape(dist_array)
-        if self.ndim == 1 and dist_array.ndim == 1:
-            return self._allreduce(np.dot(self.local_array, dist_array.local_array))
+        # Flatten the local arrays and calculate dot product
+        return self._allreduce(np.dot(self.local_array.flatten(), dist_array.local_array.flatten()))
 
     def _compute_vector_norm(self, local_array: NDArray,
                              axis: int, ord: Optional[int] = None):
