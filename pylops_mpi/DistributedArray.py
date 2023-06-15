@@ -76,14 +76,14 @@ class DistributedArray:
                  base_comm: Optional[MPI.Comm] = MPI.COMM_WORLD,
                  partition: Partition = Partition.SCATTER, axis: int = 0,
                  dtype: Optional[DTypeLike] = np.float64):
+        if isinstance(global_shape, Integral):
+            global_shape = (global_shape,)
         if len(global_shape) <= axis:
             raise IndexError(f"Axis {axis} out of range for DistributedArray "
                              f"of shape {global_shape}")
         if partition not in Partition:
             raise ValueError(f"Should be either {Partition.BROADCAST} "
                              f"or {Partition.SCATTER}")
-        if isinstance(global_shape, Integral):
-            global_shape = (global_shape,)
         self.dtype = dtype
         self._global_shape = global_shape
         self._local_shape = local_split(global_shape, base_comm,
