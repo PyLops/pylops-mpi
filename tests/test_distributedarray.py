@@ -4,7 +4,7 @@
 """
 import numpy as np
 import pytest
-from numpy.testing import assert_array_almost_equal, assert_almost_equal
+from numpy.testing import assert_array_almost_equal, assert_almost_equal, assert_allclose
 
 from pylops_mpi import DistributedArray, Partition
 from pylops_mpi.DistributedArray import local_split
@@ -146,8 +146,8 @@ def test_distributed_dot(par1, par2):
 def test_distributed_norm(par):
     """Test Distributed numpy.linalg.norm method"""
     arr = DistributedArray.to_dist(x=par['x'], axis=par['axis'])
-    assert_array_almost_equal(arr.norm(ord=1, axis=par['axis']),
-                              np.linalg.norm(par['x'], ord=1, axis=par['axis']), decimal=3)
-    assert_array_almost_equal(arr.norm(ord=np.inf, axis=par['axis']),
-                              np.linalg.norm(par['x'], ord=np.inf, axis=par['axis']), decimal=3)
-    assert_almost_equal(arr.norm(), np.linalg.norm(par['x'].flatten()))
+    assert_allclose(arr.norm(ord=1, axis=par['axis']),
+                              np.linalg.norm(par['x'], ord=1, axis=par['axis']), rtol=1e-14)
+    assert_allclose(arr.norm(ord=np.inf, axis=par['axis']),
+                              np.linalg.norm(par['x'], ord=np.inf, axis=par['axis']), rtol=1e-14)
+    assert_allclose(arr.norm(), np.linalg.norm(par['x'].flatten()), rtol=1e-14)
