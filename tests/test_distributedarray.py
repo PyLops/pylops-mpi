@@ -4,7 +4,7 @@
 """
 import numpy as np
 import pytest
-from numpy.testing import assert_array_almost_equal, assert_almost_equal, assert_allclose
+from numpy.testing import assert_array_almost_equal, assert_allclose
 
 from pylops_mpi import DistributedArray, Partition
 from pylops_mpi.DistributedArray import local_split
@@ -137,7 +137,7 @@ def test_distributed_dot(par1, par2):
     """Test Distributed Dot product"""
     arr1 = DistributedArray.to_dist(x=par1['x'], partition=par1['partition'], axis=par1['axis'])
     arr2 = DistributedArray.to_dist(x=par2['x'], partition=par2['partition'], axis=par2['axis'])
-    assert_almost_equal(arr1.dot(arr2), np.dot(par1['x'].flatten(), par2['x'].flatten()), decimal=3)
+    assert_allclose(arr1.dot(arr2), np.dot(par1['x'].flatten(), par2['x'].flatten()), rtol=1e-14)
 
 
 @pytest.mark.mpi(min_size=2)
