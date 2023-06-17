@@ -147,7 +147,7 @@ def test_distributed_norm(par):
     """Test Distributed numpy.linalg.norm method"""
     arr = DistributedArray.to_dist(x=par['x'], axis=par['axis'])
     assert_allclose(arr.norm(ord=1, axis=par['axis']),
-                              np.linalg.norm(par['x'], ord=1, axis=par['axis']), rtol=1e-14)
+                    np.linalg.norm(par['x'], ord=1, axis=par['axis']), rtol=1e-14)
     assert_allclose(arr.norm(ord=np.inf, axis=par['axis']),
-                              np.linalg.norm(par['x'], ord=np.inf, axis=par['axis']), rtol=1e-14)
+                    np.linalg.norm(par['x'], ord=np.inf, axis=par['axis']), rtol=1e-14)
     assert_allclose(arr.norm(), np.linalg.norm(par['x'].flatten()), rtol=1e-14)
