@@ -4,7 +4,7 @@
 """
 import numpy as np
 import pytest
-from numpy.testing import assert_array_almost_equal
+from numpy.testing import assert_array_almost_equal, assert_allclose
 
 from pylops_mpi import DistributedArray, Partition
 from pylops_mpi.DistributedArray import local_split
@@ -24,28 +24,42 @@ par2j = {'global_shape': (501, 500),
          'partition': Partition.BROADCAST, 'dtype': np.complex128,
          'axis': 0}
 
-par3_1 = {'x': np.random.normal(100, 100, (500, 501)),
-          'partition': Partition.SCATTER, 'axis': 1}
-par3_2 = {'x': np.random.normal(300, 300, (500, 501)),
-          'partition': Partition.SCATTER, 'axis': 1}
-
-par4_1 = {'x': np.random.normal(100, 100, (500, 501)),
-          'partition': Partition.BROADCAST, 'axis': 0}
-par4_2 = {'x': np.random.normal(300, 300, (500, 501)),
-          'partition': Partition.BROADCAST, 'axis': 0}
-
-par5 = {'global_shape': (200, 201, 101),
+par3 = {'global_shape': (200, 201, 101),
         'partition': Partition.SCATTER,
         'dtype': np.float64, 'axis': 1}
 
-par5j = {'global_shape': (200, 201, 101),
+par3j = {'global_shape': (200, 201, 101),
          'partition': Partition.SCATTER,
          'dtype': np.complex128, 'axis': 2}
+
+par4 = {'x': np.random.normal(100, 100, (500, 501)),
+        'partition': Partition.SCATTER, 'axis': 1}
+
+par4j = {'x': np.random.normal(100, 100, (500, 501)) + 1.0j * np.random.normal(50, 50, (500, 501)),
+         'partition': Partition.SCATTER, 'axis': 1}
+
+par5 = {'x': np.random.normal(300, 300, (500, 501)),
+        'partition': Partition.SCATTER, 'axis': 1}
+
+par5j = {'x': np.random.normal(300, 300, (500, 501)) + 1.0j * np.random.normal(50, 50, (500, 501)),
+         'partition': Partition.SCATTER, 'axis': 1}
+
+par6 = {'x': np.random.normal(100, 100, (500, 500)),
+        'partition': Partition.SCATTER, 'axis': 0}
+
+par7 = {'x': np.random.normal(300, 300, (500, 500)),
+        'partition': Partition.SCATTER, 'axis': 0}
+
+par8 = {'x': np.random.normal(100, 100, (1000,)),
+        'partition': Partition.SCATTER, 'axis': 0}
+
+par9 = {'x': np.random.normal(300, 300, (1000,)),
+        'partition': Partition.SCATTER, 'axis': 0}
 
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par1j), (par2),
-                                 (par2j), (par5), (par5j)])
+                                 (par2j), (par3), (par3j)])
 def test_creation(par):
     """Test creation of local arrays"""
     distributed_array = DistributedArray(global_shape=par['global_shape'],
@@ -83,7 +97,7 @@ def test_creation(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par3_1), (par3_2), (par4_1), (par4_2)])
+@pytest.mark.parametrize("par", [(par4), (par4j), (par5), (par5j)])
 def test_to_dist(par):
     """Test the ``to_dist`` method"""
     dist_array = DistributedArray.to_dist(x=par['x'],
@@ -95,7 +109,7 @@ def test_to_dist(par):
 
 
 @pytest.mark.mpi(minsize=2)
-@pytest.mark.parametrize("par1, par2", [(par3_1, par3_2), (par4_1, par4_2)])
+@pytest.mark.parametrize("par1, par2", [(par4, par5), (par4j, par5j)])
 def test_distributed_math(par1, par2):
     """Test the Element-Wise Addition, Subtraction and Multiplication"""
     arr1 = DistributedArray.to_dist(x=par1['x'], partition=par1['partition'])
@@ -118,14 +132,22 @@ def test_distributed_math(par1, par2):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par1, par2", [(par3_1, par3_2), (par4_1, par4_2)])
+@pytest.mark.parametrize("par1, par2", [(par6, par7), (par8, par9)])
 def test_distributed_dot(par1, par2):
     """Test Distributed Dot product"""
-    pass
+    arr1 = DistributedArray.to_dist(x=par1['x'], partition=par1['partition'], axis=par1['axis'])
+    arr2 = DistributedArray.to_dist(x=par2['x'], partition=par2['partition'], axis=par2['axis'])
+    assert_allclose(arr1.dot(arr2), np.dot(par1['x'].flatten(), par2['x'].flatten()), rtol=1e-14)
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par1, par2", [(par3_1, par3_2), (par4_1, par4_2)])
-def test_distributed_norm(par1, par2):
-    """Test Distributed norm method"""
-    pass
+@pytest.mark.parametrize("par", [(par4), (par4j), (par5), (par5j),
+                                 (par6), (par7), (par8), (par9)])
+def test_distributed_norm(par):
+    """Test Distributed numpy.linalg.norm method"""
+    arr = DistributedArray.to_dist(x=par['x'], axis=par['axis'])
+    assert_allclose(arr.norm(ord=1, axis=par['axis']),
+                    np.linalg.norm(par['x'], ord=1, axis=par['axis']), rtol=1e-14)
+    assert_allclose(arr.norm(ord=np.inf, axis=par['axis']),
+                    np.linalg.norm(par['x'], ord=np.inf, axis=par['axis']), rtol=1e-14)
+    assert_allclose(arr.norm(), np.linalg.norm(par['x'].flatten()), rtol=1e-14)

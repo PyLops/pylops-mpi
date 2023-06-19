@@ -171,6 +171,16 @@ class DistributedArray:
         return self._axis
 
     @property
+    def ndim(self):
+        """Number of dimensions of the global array
+
+        Returns
+        -------
+        ndim : :obj:`int`
+        """
+        return len(self.global_shape)
+
+    @property
     def partition(self):
         """Type of Distribution
 
@@ -237,6 +247,24 @@ class DistributedArray:
             dist_array[:] = x[tuple(slices)]
         return dist_array
 
+    def _check_partition_shape(self, dist_array):
+        """Check Partition and Local Shape of the Array
+        """
+        if self.partition != dist_array.partition:
+            raise ValueError("Partition of both the arrays must be same")
+        if self.local_shape != dist_array.local_shape:
+            raise ValueError(f"Local Array Shape Mismatch - "
+                             f"{self.local_shape} != {dist_array.local_shape}")
+
+    def _allreduce(self, send_buf, recv_buf=None, op: MPI.Op = MPI.SUM):
+        """MPI Allreduce operation
+        """
+        if recv_buf is None:
+            return self.base_comm.allreduce(send_buf, op)
+        # For MIN and MAX which require recv_buf
+        self.base_comm.Allreduce(send_buf, recv_buf, op)
+        return recv_buf
+
     def __neg__(self):
         arr = DistributedArray(global_shape=self.global_shape,
                                base_comm=self.base_comm,
@@ -258,11 +286,7 @@ class DistributedArray:
     def add(self, dist_array):
         """Distributed Addition of arrays
         """
-        if self.partition != dist_array.partition:
-            raise ValueError("Partition of both the arrays must be same")
-        if self.local_shape != dist_array.local_shape:
-            raise ValueError(f"Local Array Shape Mismatch - "
-                             f"{self.local_shape} != {dist_array.local_shape}")
+        self._check_partition_shape(dist_array)
         SumArray = DistributedArray(global_shape=self.global_shape,
                                     dtype=self.dtype, partition=self.partition,
                                     axis=self.axis)
@@ -272,11 +296,7 @@ class DistributedArray:
     def multiply(self, dist_array):
         """Distributed Element-wise multiplication
         """
-        if self.partition != dist_array.partition:
-            raise ValueError("Partition of both the arrays must be same")
-        if self.local_shape != dist_array.local_shape:
-            raise ValueError(f"Local Array Shape Mismatch - "
-                             f"{self.local_shape} != {dist_array.local_shape}")
+        self._check_partition_shape(dist_array)
         ProductArray = DistributedArray(global_shape=self.global_shape,
                                         dtype=self.dtype,
                                         partition=self.partition,
@@ -287,14 +307,70 @@ class DistributedArray:
     def dot(self, dist_array):
         """Distributed Dot Product
         """
-        pass
+        self._check_partition_shape(dist_array)
+        # Flatten the local arrays and calculate dot product
+        return self._allreduce(np.dot(self.local_array.flatten(), dist_array.local_array.flatten()))
 
-    def norm(self, x: NDArray,
-             ord: Union[int, None] = None,
-             axis: Optional[int] = None):
-        """Distributed numpy.linalg.norm method
+    def _compute_vector_norm(self, local_array: NDArray,
+                             axis: int, ord: Optional[int] = None):
+        """Compute Vector norm using MPI
+
+        Parameters
+        ----------
+        local_array : :obj:`numpy.ndarray`
+            Local Array at each rank
+        axis : :obj:`int`
+            Axis along which norm is computed
+        ord : :obj:`int`, optional
+            Order of the norm
         """
-        pass
+        # Compute along any axis
+        ord = 2 if ord is None else ord
+        if local_array.ndim == 1:
+            recv_buf = np.empty(shape=1, dtype=np.float64)
+        else:
+            global_shape = list(self.global_shape)
+            global_shape[axis] = 1
+            recv_buf = np.empty(shape=global_shape, dtype=np.float64)
+        if ord in ['fro', 'nuc']:
+            raise ValueError(f"norm-{ord} not possible for vectors")
+        elif ord == 0:
+            # Count non-zero then sum reduction
+            recv_buf = self._allreduce(np.count_nonzero(local_array, axis=axis).astype(np.float64))
+        elif ord == np.inf:
+            # Calculate max followed by max reduction
+            recv_buf = self._allreduce(np.max(np.abs(local_array), axis=axis).astype(np.float64),
+                                       recv_buf, op=MPI.MAX)
+            recv_buf = np.squeeze(recv_buf, axis=axis)
+        elif ord == -np.inf:
+            # Calculate min followed by min reduction
+            recv_buf = self._allreduce(np.min(np.abs(local_array), axis=axis).astype(np.float64),
+                                       recv_buf, op=MPI.MIN)
+            recv_buf = np.squeeze(recv_buf, axis=axis)
+
+        else:
+            recv_buf = self._allreduce(np.sum(np.abs(np.float_power(local_array, ord)), axis=axis))
+            recv_buf = np.power(recv_buf, 1. / ord)
+        return recv_buf
+
+    def norm(self, ord: Optional[int] = None,
+             axis: int = -1):
+        """Distributed numpy.linalg.norm method
+
+        Parameters
+        ----------
+        ord : :obj:`int`, optional
+            Order of the norm.
+        axis : :obj:`int`, optional
+            Axis along which vector norm needs to be computed. Defaults to ``-1``
+        """
+        if axis == -1:
+            # Flatten the local arrays and calculate norm
+            return self._compute_vector_norm(self.local_array.flatten(), axis=0, ord=ord)
+        if axis != self.axis:
+            raise NotImplementedError("Choose axis along the partition.")
+        # Calculate vector norm along the axis
+        return self._compute_vector_norm(self.local_array, axis=self.axis, ord=ord)
 
     def __repr__(self):
         return f"<DistributedArray with global shape={self.global_shape}), " \
