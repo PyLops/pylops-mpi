@@ -1,8 +1,9 @@
 import numpy as np
-from typing import Optional, Union, Tuple
+from typing import Optional, Union, Tuple, List
 from numbers import Integral
 from mpi4py import MPI
 from enum import Enum
+import warnings
 
 from pylops.utils import DTypeLike, NDArray
 
@@ -68,13 +69,17 @@ class DistributedArray:
         Broadcast or Scatter the array. Defaults to ``Partition.SCATTER``.
     dtype : :obj:`str`, optional
         Type of elements in input array. Defaults to ``numpy.float64``.
+    local_shapes : :obj:`list`, optional
+        List of local shapes of the global array.
     axis : :obj:`int`, optional
         Axis along which distribution occurs. Defaults to ``0``.
     """
 
     def __init__(self, global_shape: Union[Tuple, Integral],
                  base_comm: Optional[MPI.Comm] = MPI.COMM_WORLD,
-                 partition: Partition = Partition.SCATTER, axis: int = 0,
+                 partition: Partition = Partition.SCATTER,
+                 local_shapes: Optional[List[Tuple]] = None,
+                 axis: int = 0,
                  dtype: Optional[DTypeLike] = np.float64):
         if isinstance(global_shape, Integral):
             global_shape = (global_shape,)
@@ -84,11 +89,29 @@ class DistributedArray:
         if partition not in Partition:
             raise ValueError(f"Should be either {Partition.BROADCAST} "
                              f"or {Partition.SCATTER}")
+        if local_shapes:
+            if partition is Partition.SCATTER:
+                if np.sum(np.fromiter((local_shape[axis] for local_shape in local_shapes),
+                                      dtype=dtype)) != global_shape[axis]:
+                    raise ValueError(
+                        f"Local Shapes-{local_shapes} don't sum up to become {global_shape} along axis={axis} "
+                        f"with partition={partition}")
+            elif partition is Partition.BROADCAST:
+                warnings.warn(f"{Partition.BROADCAST} does not allow local shapes, use {Partition.SCATTER} instead.",
+                              category=UserWarning)
         self.dtype = dtype
         self._global_shape = global_shape
-        self._local_shape = local_split(global_shape, base_comm,
-                                        partition, axis)
         self._base_comm = base_comm
+        if local_shapes and partition is Partition.SCATTER:
+            self.local_shapes = local_shapes
+            if self.rank >= len(local_shapes):
+                self._local_shape = list(global_shape)
+                self._local_shape[axis] = 0
+            else:
+                self._local_shape = local_shapes[self.rank]
+        else:
+            self.local_shapes = None
+            self._local_shape = local_split(global_shape, base_comm, partition, axis)
         self._partition = partition
         self._axis = axis
         self._local_array = np.empty(shape=self.local_shape, dtype=self.dtype)
@@ -212,6 +235,7 @@ class DistributedArray:
     def to_dist(cls, x: NDArray,
                 base_comm: MPI.Comm = MPI.COMM_WORLD,
                 partition: Partition = Partition.SCATTER,
+                local_shapes: Optional[List[Tuple]] = None,
                 axis: int = 0):
         """Convert A Global Array to a Distributed Array
 
@@ -223,6 +247,8 @@ class DistributedArray:
             Type of elements in input array. Defaults to ``MPI.COMM_WORLD``
         partition : :obj:`Partition`, optional
             Distributes the array, Defaults to ``Partition.Scatter``.
+        local_shapes : :obj:`list`, optional
+            List of tuple of Local Shapes
         axis : :obj:`int`, optional
             Axis of Distribution
         Returns
@@ -234,6 +260,7 @@ class DistributedArray:
                                       base_comm=base_comm,
                                       partition=partition,
                                       axis=axis,
+                                      local_shapes=local_shapes,
                                       dtype=x.dtype)
         if partition == Partition.BROADCAST:
             dist_array[:] = x
@@ -289,6 +316,7 @@ class DistributedArray:
         self._check_partition_shape(dist_array)
         SumArray = DistributedArray(global_shape=self.global_shape,
                                     dtype=self.dtype, partition=self.partition,
+                                    local_shapes=self.local_shapes,
                                     axis=self.axis)
         SumArray[:] = self.local_array + dist_array.local_array
         return SumArray
@@ -300,6 +328,7 @@ class DistributedArray:
         ProductArray = DistributedArray(global_shape=self.global_shape,
                                         dtype=self.dtype,
                                         partition=self.partition,
+                                        local_shapes=self.local_shapes,
                                         axis=self.axis)
         ProductArray[:] = self.local_array * dist_array.local_array
         return ProductArray
