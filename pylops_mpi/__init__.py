@@ -1,4 +1,6 @@
 from .DistributedArray import DistributedArray, Partition
+from .LinearOperator import MPILinearOperator, asmpilinearoperator
+from .BlockDiag import MPIBlockDiag
 from .plotting.plotting import *
 
 try:
