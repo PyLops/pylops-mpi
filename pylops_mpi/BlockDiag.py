@@ -14,6 +14,7 @@ class MPIBlockDiag(MPILinearOperator):
 
     def __init__(self, ops, base_comm: MPI.Comm = MPI.COMM_WORLD, dtype: Optional[DTypeLike] = None):
         self.ops = self._assign_ops(ops, base_comm)
+        print(self.ops)
         self.kind = "mix"
         mops = np.zeros(len(self.ops), dtype=np.int64)
         nops = np.zeros(len(self.ops), dtype=np.int64)
@@ -37,20 +38,22 @@ class MPIBlockDiag(MPILinearOperator):
         x = np.insert(np.cumsum(base_comm.allgather(local_shapes)), 0, 0)
         return ops[x[base_comm.Get_rank()]:x[base_comm.Get_rank() + 1]]
 
-    def _matvec(self, x: Union[NDArray, DistributedArray]):
+    def _matvec(self, x):
         y = DistributedArray(global_shape=self.shape[0], local_shapes=self.nops)
         if not isinstance(x, DistributedArray):
             x = DistributedArray.to_dist(x=x, local_shapes=self.mops)
+        print(x)
         y1 = []
         for iop, oper in enumerate(self.ops):
             if not isinstance(oper, MPILinearOperator):
                 oper = asmpilinearoperator(Op=oper)
-            y1.append(oper.matvec(x.local_array[self.mmops[iop]: self.mmops[iop+1]]))
+            y1.append(oper.matvec(x.local_array[self.mmops[iop]:
+                                                self.mmops[iop + 1]]))
         if y1:
             y[:] = np.concatenate(y1)
         return y
 
-    def _rmatvec(self, x: Union[NDArray, DistributedArray]):
+    def _rmatvec(self, x):
         y = DistributedArray(global_shape=self.shape[1], local_shapes=self.mops)
         if not isinstance(x, DistributedArray):
             x = DistributedArray.to_dist(x=x, local_shapes=self.nops)
@@ -62,4 +65,3 @@ class MPIBlockDiag(MPILinearOperator):
         if y1:
             y[:] = np.concatenate(y1)
         return y
-
