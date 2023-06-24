@@ -1,8 +1,8 @@
 import numpy as np
 from mpi4py import MPI
-from typing import Optional, Union
+from typing import Optional
 
-from pylops.utils import DTypeLike, NDArray
+from pylops.utils import DTypeLike
 from pylops_mpi import MPILinearOperator, DistributedArray
 from pylops_mpi.LinearOperator import asmpilinearoperator
 from pylops_mpi.DistributedArray import local_split, Partition
