@@ -1,9 +1,18 @@
 import numpy as np
+import scipy as sp
 from mpi4py import MPI
 from typing import Callable
 
-from scipy.sparse.linalg._interface import _get_dtype
-from scipy.sparse._sputils import isintlike
+# need to check scipy version since the interface submodule changed into
+# _interface from scipy>=1.8.0
+sp_version = sp.__version__.split(".")
+if int(sp_version[0]) <= 1 and int(sp_version[1]) < 8:
+    from scipy.sparse.sputils import isintlike
+    from scipy.sparse.linalg.interface import _get_dtype
+else:
+    from scipy.sparse._sputils import isintlike
+    from scipy.sparse.linalg._interface import _get_dtype
+
 from pylops import LinearOperator
 from pylops.utils import DTypeLike, ShapeLike
 
@@ -25,28 +34,32 @@ class MPILinearOperator(LinearOperator):
     def matvec(self, x):
         if self.kind in ("all", "force", "mix"):
             if self.Op:
+                op_shapes = self.base_comm.allgather((self.Op.shape[0], ))
+                y = DistributedArray(global_shape=np.sum(op_shapes), local_shapes=op_shapes)
+                x = DistributedArray.to_dist(x=x)
+                y[:] = self.Op._matvec(x.local_array)
+            else:
+                y = self._matvec(x)
+        elif self.kind == 'master':
+            if self.Op:
                 y = self.Op._matvec(x)
             else:
                 y = self._matvec(x)
-                if isinstance(y, DistributedArray):
-                    y = y.asarray()
-        elif self.kind == 'master':
-            if self.rank == 0:
-                y = self._matvec(x)
-            else:
-                y = None
         else:
             raise KeyError('kind must be all, master, mix or force')
+        if isinstance(y, DistributedArray):
+            y = y.asarray()
         return y
 
     def rmatvec(self, x):
         if self.kind in ('all', 'mix', 'force'):
             if self.Op:
-                y = self.Op._rmatvec(x)
+                op_shapes = self.base_comm.allgather((self.Op.shape[1],))
+                y = DistributedArray(global_shape=np.sum(op_shapes), local_shapes=op_shapes)
+                x = DistributedArray.to_dist(x=x)
+                y[:] = self.Op._rmatvec(x.local_array)
             else:
                 y = self._rmatvec(x)
-                if isinstance(y, DistributedArray):
-                    y = y.asarray()
         elif self.kind == 'master':
             if self.rank == 0:
                 y = self._rmatvec(x)
@@ -54,6 +67,8 @@ class MPILinearOperator(LinearOperator):
                 y = None
         else:
             raise KeyError('kind must be all, master, mix or force')
+        if isinstance(y, DistributedArray):
+            y = y.asarray()
         return y
 
     def dot(self, x):
@@ -161,7 +176,13 @@ class _ProductLinearOperator(MPILinearOperator):
     def __init__(self, A: MPILinearOperator, B: MPILinearOperator):
         if not isinstance(A, MPILinearOperator) or not isinstance(B, MPILinearOperator):
             raise ValueError('both operands have to be a LinearOperator')
-        if A.shape[1] != B.shape[0]:
+        # Make sure it works with different kinds
+        shape_A, shape_B = (A.shape, B.shape)
+        if A.kind == "all":
+            shape_A = tuple(np.sum(A.base_comm.allgather(A.shape), axis=0))
+        if B.kind == "all":
+            shape_B = tuple(np.sum(B.base_comm.allgather(B.shape), axis=0))
+        if shape_A[1] != shape_B[0]:
             raise ValueError('cannot multiply %r and %r: shape mismatch' % (A, B))
         self.args = (A, B)
         self.kind = 'mix'
@@ -217,7 +238,13 @@ class _SumLinearOperator(MPILinearOperator):
     def __init__(self, A: MPILinearOperator, B: MPILinearOperator):
         if not isinstance(A, MPILinearOperator) or not isinstance(B, MPILinearOperator):
             raise ValueError('both operands have to be a MPILinearOperator')
-        if A.shape != B.shape:
+        # Make sure it works with different kinds
+        shape_A, shape_B = (A.shape, B.shape)
+        if A.kind == "all":
+            shape_A = tuple(np.sum(A.base_comm.allgather(A.shape), axis=0))
+        if B.kind == "all":
+            shape_B = tuple(np.sum(B.base_comm.allgather(B.shape), axis=0))
+        if shape_A != shape_B:
             raise ValueError("cannot add %r and %r: shape mismatch" % (A, B))
         self.args = (A, B)
         self.kind = 'mix'
@@ -284,13 +311,13 @@ class _ConjLinearOperator(MPILinearOperator):
     def _matvec(self, x):
         y = DistributedArray.to_dist(x=self.A.matvec(x.conj()))
         if y is not None:
-            y[:] = y.conj()
+            y[:] = y.local_array.conj()
         return y.asarray()
 
     def _rmatvec(self, x):
         y = DistributedArray.to_dist(x=self.A.rmatvec(x.conj()))
         if y is not None:
-            y[:] = y.conj()
+            y[:] = y.local_array.conj()
         return y.asarray()
 
     def _adjoint(self):
