@@ -1,20 +1,23 @@
 import numpy as np
+import scipy as sp
 from mpi4py import MPI
 from typing import Optional
 
 from pylops.utils import DTypeLike
 from pylops_mpi import MPILinearOperator, DistributedArray
-from pylops_mpi.LinearOperator import asmpilinearoperator
 from pylops_mpi.DistributedArray import local_split, Partition
 
-from scipy.sparse.linalg._interface import _get_dtype
+sp_version = sp.__version__.split(".")
+if int(sp_version[0]) <= 1 and int(sp_version[1]) < 8:
+    from scipy.sparse.linalg.interface import _get_dtype
+else:
+    from scipy.sparse.linalg._interface import _get_dtype
 
 
 class MPIBlockDiag(MPILinearOperator):
 
     def __init__(self, ops, base_comm: MPI.Comm = MPI.COMM_WORLD, dtype: Optional[DTypeLike] = None):
         self.ops = self._assign_ops(ops, base_comm)
-        print(self.ops)
         self.kind = "mix"
         mops = np.zeros(len(self.ops), dtype=np.int64)
         nops = np.zeros(len(self.ops), dtype=np.int64)
@@ -42,11 +45,8 @@ class MPIBlockDiag(MPILinearOperator):
         y = DistributedArray(global_shape=self.shape[0], local_shapes=self.nops)
         if not isinstance(x, DistributedArray):
             x = DistributedArray.to_dist(x=x, local_shapes=self.mops)
-        print(x)
         y1 = []
         for iop, oper in enumerate(self.ops):
-            if not isinstance(oper, MPILinearOperator):
-                oper = asmpilinearoperator(Op=oper)
             y1.append(oper.matvec(x.local_array[self.mmops[iop]:
                                                 self.mmops[iop + 1]]))
         if y1:
@@ -59,8 +59,6 @@ class MPIBlockDiag(MPILinearOperator):
             x = DistributedArray.to_dist(x=x, local_shapes=self.nops)
         y1 = []
         for iop, oper in enumerate(self.ops):
-            if not isinstance(oper, MPILinearOperator):
-                oper = asmpilinearoperator(Op=oper)
             y1.append(oper.rmatvec(x.local_array[self.nnops[iop]: self.nnops[iop + 1]]))
         if y1:
             y[:] = np.concatenate(y1)
