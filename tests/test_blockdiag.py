@@ -26,5 +26,6 @@ def test_blockdiag(par):
     block_diag = pylops.BlockDiag(ops=ops)
     x = np.random.normal(100, 100, (block_diag.shape[1], ))
     y = np.random.normal(100, 100, (block_diag.shape[0], ))
+    assert mpi_block_diag.shape == block_diag.shape
     assert_allclose(mpi_block_diag * x, block_diag * x, rtol=1e-14)
     assert_allclose(mpi_block_diag.H * y, block_diag.H * y, rtol=1e-14)
