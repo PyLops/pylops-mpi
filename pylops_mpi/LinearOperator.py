@@ -42,9 +42,9 @@ class MPILinearOperator(LinearOperator):
                 y = self._matvec(x)
         elif self.kind == 'master':
             if self.Op:
-                y = self.Op._matvec(x)
+                y = self.Op._matvec(x) if self.rank == 0 else None
             else:
-                y = self._matvec(x)
+                y = self._matvec(x) if self.rank == 0 else None
         else:
             raise KeyError('kind must be all, master, mix or force')
         if isinstance(y, DistributedArray):
@@ -61,10 +61,10 @@ class MPILinearOperator(LinearOperator):
             else:
                 y = self._rmatvec(x)
         elif self.kind == 'master':
-            if self.rank == 0:
-                y = self._rmatvec(x)
+            if self.Op:
+                y = self.Op._rmatvec(x) if self.rank == 0 else None
             else:
-                y = None
+                y = self._rmatvec(x) if self.rank == 0 else None
         else:
             raise KeyError('kind must be all, master, mix or force')
         if isinstance(y, DistributedArray):
@@ -83,7 +83,6 @@ class MPILinearOperator(LinearOperator):
             if x is None or x.ndim == 1:
                 return self.matvec(x)
             elif x.ndim == 2:
-                # x = DistributedArray.to_dist(x=x)
                 return self.matmat(x)
             else:
                 raise ValueError('expected 1-d or 2-d array or matrix, got %r'
