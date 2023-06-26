@@ -53,7 +53,7 @@ def test_scaledop(par):
     SSop = Mop * -7
 
     A = DistributedArray.to_dist(x=A)
-    Mop = pylops_mpi.MatrixMult(A=A.local_array)
+    Mop = pylops_mpi.MPIMatrixMult(A=A.local_array)
     Sop_MPI = Mop * 5
     SSop_MPI = Mop * -7
 
@@ -73,7 +73,7 @@ def test_conj(par):
     Cop = Mop.conj()
 
     A = DistributedArray.to_dist(x=A)
-    Mop = pylops_mpi.MatrixMult(A=A.local_array)
+    Mop = pylops_mpi.MPIMatrixMult(A=A.local_array)
     Cop_MPI = Mop.conj()
 
     x = np.arange(par['nx'])

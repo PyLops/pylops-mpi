@@ -12,7 +12,7 @@ from pylops_mpi import MPILinearOperator, DistributedArray, Partition
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.WARNING)
 
 
-class MatrixMult(MPILinearOperator):
+class MPIMatrixMult(MPILinearOperator):
     def __init__(
             self,
             A: NDArray,
