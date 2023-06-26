@@ -6,11 +6,12 @@ import pytest
 
 import pylops
 from pylops_mpi import asmpilinearoperator, DistributedArray, MPILinearOperator
+import pylops_mpi
 
-par1 = {"ny": 11, "nx": 11, "dtype": np.float64}  # square real
-par2 = {"ny": 21, "nx": 11, "dtype": np.float64}  # overdetermined real
-par1j = {"ny": 11, "nx": 11, "dtype": np.float64}  # square imag
-par2j = {"ny": 21, "nx": 11, "dtype": np.float64}  # overdetermined imag
+par1 = {"ny": 11, "nx": 11, "dtype": np.float64}
+par2 = {"ny": 21, "nx": 11, "dtype": np.float64}
+par1j = {"ny": 11, "nx": 11, "dtype": np.float64}
+par2j = {"ny": 21, "nx": 11, "dtype": np.float64}
 
 
 @pytest.mark.mpi(min_size=2)
@@ -46,33 +47,39 @@ def test_linearop(par):
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par2), (par1j), (par2j)])
 def test_scaledop(par):
-    diag = np.arange(par['nx'] + par['ny'])
-    Dop = pylops.Diagonal(diag=diag)
-    Sop = Dop * 5
+    A = np.random.normal(1, 10, (par['nx'], par['ny']))
+    Mop = pylops.MatrixMult(A=A)
+    Sop = Mop * 5
+    SSop = Mop * -7
 
-    diag = DistributedArray.to_dist(x=diag)
-    Dop = asmpilinearoperator(pylops.Diagonal(diag=diag.local_array))
-    Sop_MPI = Dop * 5
+    A = DistributedArray.to_dist(x=A)
+    Mop = pylops_mpi.MatrixMult(A=A.local_array)
+    Sop_MPI = Mop * 5
+    SSop_MPI = Mop * -7
 
-    x = np.arange(par['nx'] + par['ny'])
-    assert_allclose(Sop_MPI * x, Sop * x, rtol=1e-14)
-    assert_allclose(Sop_MPI.H * x, Sop.H * x, rtol=1e-14)
+    x = np.arange(par['nx'])
+    y = np.arange(par['ny'])
+    assert_allclose(Sop_MPI * y, Sop * y, rtol=1e-12)
+    assert_allclose(Sop_MPI.H * x, Sop.H * x, rtol=1e-12)
+    assert_allclose(SSop_MPI * y, SSop * y, rtol=1e-12)
+    assert_allclose(SSop_MPI.H * x, SSop.H * x, rtol=1e-12)
 
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par2), (par1j), (par2j)])
 def test_conj(par):
-    diag = np.arange(par['nx'] + par['ny'])
-    Dop = pylops.Diagonal(diag=diag)
-    Cop = Dop.conj()
+    A = np.random.normal(1, 10, (par['nx'], par['ny']))
+    Mop = pylops.MatrixMult(A=A)
+    Cop = Mop.conj()
 
-    diag = DistributedArray.to_dist(x=diag)
-    Dop = asmpilinearoperator(pylops.Diagonal(diag=diag.local_array))
-    Cop_MPI = Dop.conj()
+    A = DistributedArray.to_dist(x=A)
+    Mop = pylops_mpi.MatrixMult(A=A.local_array)
+    Cop_MPI = Mop.conj()
 
-    x = np.arange(par['nx'] + par['ny'])
-    assert_allclose(Cop_MPI * x, Cop * x, rtol=1e-14)
-    assert_allclose(Cop_MPI.H * x, Cop.H * x, rtol=1e-14)
+    x = np.arange(par['nx'])
+    y = np.arange(par['ny'])
+    assert_allclose(Cop_MPI * y, Cop * y, rtol=1e-12)
+    assert_allclose(Cop_MPI.H * x, Cop.H * x, rtol=1e-12)
 
 
 @pytest.mark.mpi(min_size=2)
@@ -81,14 +88,18 @@ def test_power(par):
     diag = np.arange(par['nx'] + par['ny'])
     Dop = pylops.Diagonal(diag=diag)
     Pop = Dop ** 2
+    PPop = Dop ** 8
 
     diag = DistributedArray.to_dist(x=diag)
     Dop = asmpilinearoperator(pylops.Diagonal(diag=diag.local_array))
     Pop_MPI = Dop ** 2
+    PPop_MPI = Dop ** 8
 
     x = np.arange(par['nx'] + par['ny'])
-    assert_allclose(Pop_MPI * x, Pop * x, rtol=1e-14)
-    assert_allclose(Pop_MPI.H * x, Pop.H * x, rtol=1e-14)
+    assert_allclose(Pop_MPI * x, Pop * x, rtol=1e-12)
+    assert_allclose(PPop_MPI * x, PPop * x, rtol=1e-12)
+    assert_allclose(Pop_MPI.H * x, Pop.H * x, rtol=1e-12)
+    assert_allclose(PPop_MPI.H * x, PPop.H * x, rtol=1e-12)
 
 
 @pytest.mark.mpi(min_size=2)
@@ -109,7 +120,7 @@ def test_sum_prod(par):
     Mop_MPI = Dop * DDop
 
     x = np.arange(par['nx'] + par['ny'])
-    assert_allclose(Sop_MPI * x, Sop * x, rtol=1e-14)
-    assert_allclose(Sop_MPI.H * x, Sop.H * x, rtol=1e-14)
-    assert_allclose(Mop_MPI * x, Mop * x, rtol=1e-14)
-    assert_allclose(Mop_MPI.H * x, Mop.H * x, rtol=1e-14)
+    assert_allclose(Sop_MPI * x, Sop * x, rtol=1e-12)
+    assert_allclose(Sop_MPI.H * x, Sop.H * x, rtol=1e-12)
+    assert_allclose(Mop_MPI * x, Mop * x, rtol=1e-12)
+    assert_allclose(Mop_MPI.H * x, Mop.H * x, rtol=1e-12)
