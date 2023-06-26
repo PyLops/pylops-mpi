@@ -1,5 +1,6 @@
 from .DistributedArray import DistributedArray, Partition
 from .LinearOperator import MPILinearOperator, asmpilinearoperator
+from .MatrixMult import MatrixMult
 from .BlockDiag import MPIBlockDiag
 from .plotting.plotting import *
 
