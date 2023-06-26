@@ -22,11 +22,11 @@ def test_blockdiag(par):
     ops = [pylops.Identity(par['ny'], par['nx']),
            pylops.Zero(par['ny'], par['nx']), pylops.MatrixMult(G1),
            pylops.MatrixMult(G2)]
-    mpi_block_diag = pylops_mpi.MPIBlockDiag(ops=ops)
-    assert isinstance(mpi_block_diag, MPILinearOperator)
-    block_diag = pylops.BlockDiag(ops=ops)
-    x = np.random.normal(100, 100, (block_diag.shape[1],))
-    y = np.random.normal(100, 100, (block_diag.shape[0],))
-    assert mpi_block_diag.shape == block_diag.shape
-    assert_allclose(mpi_block_diag * x, block_diag * x, rtol=1e-12)
-    assert_allclose(mpi_block_diag.H * y, block_diag.H * y, rtol=1e-12)
+    BDiag_MPI = pylops_mpi.MPIBlockDiag(ops=ops)
+    assert isinstance(BDiag_MPI, MPILinearOperator)
+    BDiag = pylops.BlockDiag(ops=ops)
+    x = np.random.normal(100, 100, (BDiag.shape[1],))
+    y = np.random.normal(100, 100, (BDiag.shape[0],))
+    assert BDiag_MPI.shape == BDiag.shape
+    assert_allclose(BDiag_MPI * x, BDiag * x, rtol=1e-12)
+    assert_allclose(BDiag_MPI.H * y, BDiag.H * y, rtol=1e-12)
