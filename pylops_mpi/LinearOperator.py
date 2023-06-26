@@ -161,12 +161,12 @@ class _TransposedLinearOperator(MPILinearOperator):
     def _matvec(self, x):
         arr = DistributedArray.to_dist(x=self.A.rmatvec(np.conj(x)))
         arr[:] = np.conj(arr.local_array)
-        return arr.asarray()
+        return arr
 
     def _rmatvec(self, x):
         arr = DistributedArray.to_dist(x=self.A.matvec(np.conj(x)))
         arr[:] = np.conj(arr.local_array)
-        return arr.asarray()
+        return arr
 
 
 class _ProductLinearOperator(MPILinearOperator):
@@ -217,13 +217,13 @@ class _ScaledLinearOperator(MPILinearOperator):
         y = DistributedArray.to_dist(self.args[0].matvec(x))
         if y is not None:
             y[:] *= self.args[1]
-        return y.asarray()
+        return y
 
     def _rmatvec(self, x):
         y = DistributedArray.to_dist(x=self.args[0].rmatvec(x))
         if y is not None:
             y[:] *= np.conj(self.args[1])
-        return y.asarray()
+        return y
 
     def _adjoint(self):
         A, alpha = self.args
@@ -253,12 +253,12 @@ class _SumLinearOperator(MPILinearOperator):
     def _matvec(self, x):
         arr1 = DistributedArray.to_dist(x=self.args[0].matvec(x))
         arr2 = DistributedArray.to_dist(x=self.args[1].matvec(x))
-        return (arr1 + arr2).asarray()
+        return arr1 + arr2
 
     def _rmatvec(self, x):
         arr1 = DistributedArray.to_dist(x=self.args[0].rmatvec(x))
         arr2 = DistributedArray.to_dist(x=self.args[1].rmatvec(x))
-        return (arr1 + arr2).asarray()
+        return arr1 + arr2
 
     def _adjoint(self):
         A, B = self.args
@@ -311,13 +311,13 @@ class _ConjLinearOperator(MPILinearOperator):
         y = DistributedArray.to_dist(x=self.A.matvec(x.conj()))
         if y is not None:
             y[:] = y.local_array.conj()
-        return y.asarray()
+        return y
 
     def _rmatvec(self, x):
         y = DistributedArray.to_dist(x=self.A.rmatvec(x.conj()))
         if y is not None:
             y[:] = y.local_array.conj()
-        return y.asarray()
+        return y
 
     def _adjoint(self):
         return _ConjLinearOperator(self.A.H)
