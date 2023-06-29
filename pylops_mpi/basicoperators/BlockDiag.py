@@ -1,5 +1,5 @@
 import numpy as np
-import scipy as sp
+from scipy.sparse.linalg._interface import _get_dtype
 from mpi4py import MPI
 from typing import Optional, Sequence
 
@@ -7,12 +7,6 @@ from pylops.utils import DTypeLike
 from pylops import LinearOperator, MatrixMult
 
 from pylops_mpi.DistributedArray import local_split, Partition
-
-sp_version = sp.__version__.split(".")
-if int(sp_version[0]) <= 1 and int(sp_version[1]) < 8:
-    from scipy.sparse.linalg.interface import _get_dtype
-else:
-    from scipy.sparse.linalg._interface import _get_dtype
 
 
 class MPIBlockDiag(LinearOperator):
