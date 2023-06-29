@@ -1,6 +1,6 @@
 from .DistributedArray import DistributedArray, Partition
 from .plotting.plotting import *
-from .basicoperators import MPIBlockDiag
+from .basicoperators import *
 
 try:
     from .version import version as __version__
