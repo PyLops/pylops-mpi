@@ -4,9 +4,9 @@ from mpi4py import MPI
 from typing import Optional, Sequence
 
 from pylops.utils import DTypeLike
-from pylops import LinearOperator, MatrixMult
+from pylops import LinearOperator
 
-from pylops_mpi.DistributedArray import local_split, Partition
+from pylops_mpi import DistributedArray
 
 
 class MPIBlockDiag(LinearOperator):
@@ -45,13 +45,10 @@ class MPIBlockDiag(LinearOperator):
         self.base_comm = base_comm
         self.rank = base_comm.Get_rank()
         self.size = base_comm.Get_size()
-        # Assign ops to different ranks
-        self.ops = self._assign_ops(ops)
+        self.ops = ops
         mops = np.zeros(len(self.ops), dtype=np.int64)
         nops = np.zeros(len(self.ops), dtype=np.int64)
         for iop, oper in enumerate(self.ops):
-            if not isinstance(oper, LinearOperator):
-                self.ops[iop] = MatrixMult(oper, dtype=oper.dtype)
             nops[iop] = oper.shape[0]
             mops[iop] = oper.shape[1]
         self.mops = mops.sum()
@@ -59,7 +56,9 @@ class MPIBlockDiag(LinearOperator):
         self.nnops = np.insert(np.cumsum(nops), 0, 0)
         self.mmops = np.insert(np.cumsum(mops), 0, 0)
         # Shape of the operator is equal to the sum of nops and mops at all ranks
-        self.shape = (base_comm.allreduce(self.nops), base_comm.allreduce(self.mops))
+        self.shape = (self.base_comm.allreduce(self.nops), self.base_comm.allreduce(self.mops))
+        # Shape of the operator at each rank
+        self.localop_shape = (self.nops, self.mops)
         if dtype:
             self.dtype = _get_dtype(dtype)
         else:
@@ -67,43 +66,28 @@ class MPIBlockDiag(LinearOperator):
         clinear = all([getattr(oper, "clinear", True) for oper in self.ops])
         super().__init__(shape=self.shape, dtype=self.dtype, clinear=clinear)
 
-    def _assign_ops(self, ops):
-        r"""Assign operators to different ranks
-
-           Parameters
-           ----------
-           ops : :obj:`list`
-               Linear operators to be stacked.
-
-           Returns
-           -------
-           ops : :obj:`list`
-               Linear Operators allocated at each rank.
-        """
-        local_shapes = local_split((len(ops),), self.base_comm, Partition.SCATTER, 0)
-        x = np.insert(np.cumsum(self.base_comm.allgather(local_shapes)), 0, 0)
-        return ops[x[self.rank]:x[self.rank + 1]]
-
-    def _matvec(self, x):
-        # Calculate x_local using mops for different ranks
-        mops_sum = np.insert(np.cumsum(self.base_comm.allgather(self.mops)), 0, 0)
-        x_local = x[mops_sum[self.rank]: mops_sum[self.rank + 1]]
-        y = []
+    def _matvec(self, x: DistributedArray) -> DistributedArray:
+        if x.local_shape != (self.mops, ):
+            raise ValueError(f"Dimension mismatch: x shape-{x.local_shape} does not match operator shape "
+                             f"{self.localop_shape}; {x.local_shape[0]} != {self.mops} (dim1) at rank={self.rank}")
+        y = DistributedArray(global_shape=self.shape[0], dtype=x.dtype)
+        y1 = []
         for iop, oper in enumerate(self.ops):
-            y.append(oper.matvec(x_local[self.mmops[iop]:
-                                         self.mmops[iop + 1]]))
-        if y:
-            y = np.concatenate(y)
-        return np.hstack(self.base_comm.allgather(y))
+            y1.append(oper.matvec(x.local_array[self.mmops[iop]:
+                                                self.mmops[iop + 1]]))
+        if y1:
+            y[:] = np.concatenate(y1)
+        return y
 
-    def _rmatvec(self, x):
-        # Calculate x_local using nops for different ranks
-        nops_sum = np.insert(np.cumsum(self.base_comm.allgather(self.nops)), 0, 0)
-        x_local = x[nops_sum[self.rank]: nops_sum[self.rank + 1]]
-        y = []
+    def _rmatvec(self, x: DistributedArray) -> DistributedArray:
+        if x.local_shape != (self.nops, ):
+            raise ValueError(f"Dimension mismatch: x shape-{x.local_shape} does not match operator shape "
+                             f"{self.localop_shape}; {x.local_shape[0]} != {self.nops} (dim0) at rank={self.rank}")
+        y = DistributedArray(global_shape=self.shape[1], dtype=x.dtype)
+        y1 = []
         for iop, oper in enumerate(self.ops):
-            y.append(oper.rmatvec(x_local[self.nnops[iop]:
-                                          self.nnops[iop + 1]]))
-        if y:
-            y = np.concatenate(y)
-        return np.hstack(self.base_comm.allgather(y))
+            y1.append(oper.rmatvec(x.local_array[self.nnops[iop]:
+                                                 self.nnops[iop + 1]]))
+        if y1:
+            y[:] = np.concatenate(y1)
+        return y
