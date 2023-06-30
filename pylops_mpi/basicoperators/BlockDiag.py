@@ -35,8 +35,9 @@ class MPIBlockDiag(LinearOperator):
         Notes
         -----
         An MPI Block Diagonal operator is composed of N linear operators, represented by **L**.
-        Each operator performs forward mode operations using its corresponding data, denoted as **m**.
-        The data is a DistributedArray located at each rank.
+        Each operator performs forward mode operations using its corresponding model vector, denoted as **m**.
+        This vector is effectively a :class:`pylops_mpi.DistributedArray` partitioned at each rank in such a way that
+        its local shapes agree with those of the corresponding linear operators.
         The forward mode of each operator is then collected from all ranks as a DistributedArray, referred to as **d**.
 
         .. math::
@@ -60,7 +61,8 @@ class MPIBlockDiag(LinearOperator):
           \end{bmatrix}
 
         Likewise, for the adjoint mode, each operator executes operations in the adjoint mode,
-        and the results are gathered from each rank to form a DistributedArray represented by **d**.
+        the adjoint mode of each operator is then collected from all ranks as a DistributedArray
+        referred as **d**.
 
         .. math::
           \begin{bmatrix}
