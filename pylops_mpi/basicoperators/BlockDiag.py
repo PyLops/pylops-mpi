@@ -30,12 +30,58 @@ class MPIBlockDiag(LinearOperator):
         shape : :obj:`tuple`
             Operator shape
         explicit : :obj:`bool`
-            Operator contains a matrix that can be solved explicitly (``True``) or
-            not (``False``)
+            Operator contains a matrix that can be solved explicitly (``True``) or not (``False``)
 
         Notes
         -----
-        Refer to :obj:pylops.BlockDiag for more details.
+        An MPI Block Diagonal operator is composed of N linear operators, represented by **L**.
+        Each operator performs forward mode operations using its corresponding data, denoted as **m**.
+        The data is a DistributedArray located at each rank.
+        The forward mode of each operator is then collected from all ranks as a DistributedArray, referred to as **d**.
+
+        .. math::
+          \begin{bmatrix}
+            \mathbf{d}_1 \\
+            \mathbf{d}_2 \\
+            \vdots \\
+            \mathbf{d}_n
+          \end{bmatrix} =
+          \begin{bmatrix}
+            \mathbf{L}_1 & \mathbf{0} & \ldots & \mathbf{0} \\
+            \mathbf{0} & \mathbf{L}_2 & \ldots & \mathbf{0} \\
+            \vdots & \vdots & \ddots & \vdots \\
+            \mathbf{0} & \mathbf{0} & \ldots & \mathbf{L}_n
+          \end{bmatrix}
+          \begin{bmatrix}
+            \mathbf{m}_1 \\
+            \mathbf{m}_2 \\
+            \vdots \\
+            \mathbf{m}_n
+          \end{bmatrix}
+
+        Likewise, for the adjoint mode, each operator executes operations in the adjoint mode,
+        and the results are gathered from each rank to form a DistributedArray represented by **d**.
+
+        .. math::
+          \begin{bmatrix}
+            \mathbf{d}_1 \\
+            \mathbf{d}_2 \\
+            \vdots \\
+            \mathbf{d}_n
+          \end{bmatrix} =
+          \begin{bmatrix}
+            \mathbf{L}_1^H & \mathbf{0} & \ldots & \mathbf{0} \\
+            \mathbf{0} & \mathbf{L}_2^H & \ldots & \mathbf{0} \\
+            \vdots & \vdots & \ddots & \vdots \\
+            \mathbf{0} & \mathbf{0} & \ldots & \mathbf{L}_n^H
+          \end{bmatrix}
+          \begin{bmatrix}
+            \mathbf{m}_1 \\
+            \mathbf{m}_2 \\
+            \vdots \\
+            \mathbf{m}_n
+          \end{bmatrix}
+
     """
 
     def __init__(self, ops: Sequence[LinearOperator],
