@@ -17,6 +17,7 @@ DistributedArray
 
     Partition
     DistributedArray
+    MPILinearOperator
 
 Basic operators
 ----------------
