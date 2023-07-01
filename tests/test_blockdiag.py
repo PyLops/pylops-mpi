@@ -30,8 +30,8 @@ def test_blockdiag(par):
     y[:] = np.ones(shape=par['ny'], dtype=par['dtype'])
     y_global = y.asarray()
 
-    x_mat = BDiag_MPI._matvec(x)
-    y_rmat = BDiag_MPI._rmatvec(y)
+    x_mat = BDiag_MPI @ x
+    y_rmat = BDiag_MPI.H @ y
     assert isinstance(x_mat, pylops_mpi.DistributedArray)
     assert isinstance(y_rmat, pylops_mpi.DistributedArray)
 
@@ -42,7 +42,6 @@ def test_blockdiag(par):
         ops = [pylops.MatrixMult((i + 1) * np.ones(shape=(par['ny'], par['nx'])).astype(par['dtype'])) for i in range(size)]
         BDiag = pylops.BlockDiag(ops=ops)
 
-        print(x_global.shape)
         x_mat_np = BDiag @ x_global
         y_rmat_np = BDiag.H @ y_global
         assert_allclose(x_mat_mpi, x_mat_np, rtol=1e-14)
