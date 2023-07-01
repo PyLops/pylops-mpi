@@ -1,4 +1,5 @@
 from .DistributedArray import DistributedArray, Partition
+from .LinearOperator import MPILinearOperator, asmpilinearoperator
 from .plotting.plotting import *
 from .basicoperators import *
 
