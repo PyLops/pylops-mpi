@@ -6,20 +6,24 @@ from typing import Optional, Sequence
 from pylops.utils import DTypeLike
 from pylops import LinearOperator
 
+from pylops_mpi import MPILinearOperator
 from pylops_mpi import DistributedArray
 
 
-class MPIBlockDiag(LinearOperator):
+class MPIBlockDiag(MPILinearOperator):
     r"""MPI Block-diagonal operator.
 
-        Create a block-diagonal operator from N linear operators using MPI.
+        Create a block-diagonal operator from a set of linear operators using MPI.
+        Each rank must initialize this operator by providing one or more linear operators
+        which will be computed within such rank.
+
+        Both model and data vectors must be of :class:`pylops_mpi.DistributedArray` type and partitioned between ranks
+        according to the shapes of the different linear operators.
 
         Parameters
         ----------
         ops : :obj:`list`
-            Linear operators to be stacked. Alternatively,
-            :obj:`numpy.ndarray` or :obj:`scipy.sparse` matrices can be passed
-            in place of one or more operators.
+            One or more :class:`pylops.LinearOperator` to be stacked.
         base_comm : :obj:`mpi4py.MPI.Comm`, optional
             Base MPI Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.
         dtype : :obj:`str`, optional
@@ -35,6 +39,9 @@ class MPIBlockDiag(LinearOperator):
         Notes
         -----
         An MPI Block Diagonal operator is composed of N linear operators, represented by **L**.
+        Each rank has one or more :class:`pylops.LinearOperator`, which we represent here compactly
+        as :math:`\mathbf{L}_i` for rank :math:`i`.
+
         Each operator performs forward mode operations using its corresponding model vector, denoted as **m**.
         This vector is effectively a :class:`pylops_mpi.DistributedArray` partitioned at each rank in such a way that
         its local shapes agree with those of the corresponding linear operators.
@@ -89,10 +96,6 @@ class MPIBlockDiag(LinearOperator):
     def __init__(self, ops: Sequence[LinearOperator],
                  base_comm: MPI.Comm = MPI.COMM_WORLD,
                  dtype: Optional[DTypeLike] = None):
-        # Required for MPI
-        self.base_comm = base_comm
-        self.rank = base_comm.Get_rank()
-        self.size = base_comm.Get_size()
         self.ops = ops
         mops = np.zeros(len(self.ops), dtype=np.int64)
         nops = np.zeros(len(self.ops), dtype=np.int64)
@@ -103,16 +106,11 @@ class MPIBlockDiag(LinearOperator):
         self.nops = nops.sum()
         self.nnops = np.insert(np.cumsum(nops), 0, 0)
         self.mmops = np.insert(np.cumsum(mops), 0, 0)
-        # Shape of the operator is equal to the sum of nops and mops at all ranks
-        self.shape = (self.base_comm.allreduce(self.nops), self.base_comm.allreduce(self.mops))
+        shape = (base_comm.allreduce(self.nops), base_comm.allreduce(self.mops))
         # Shape of the operator at each rank
         self.localop_shape = (self.nops, self.mops)
-        if dtype:
-            self.dtype = _get_dtype(dtype)
-        else:
-            self.dtype = np.dtype(dtype)
-        clinear = all([getattr(oper, "clinear", True) for oper in self.ops])
-        super().__init__(shape=self.shape, dtype=self.dtype, clinear=clinear)
+        dtype = _get_dtype(ops) if dtype is None else np.dtype(dtype)
+        super().__init__(shape=shape, dtype=dtype, base_comm=base_comm)
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         if x.local_shape != (self.mops, ):
@@ -123,8 +121,7 @@ class MPIBlockDiag(LinearOperator):
         for iop, oper in enumerate(self.ops):
             y1.append(oper.matvec(x.local_array[self.mmops[iop]:
                                                 self.mmops[iop + 1]]))
-        if y1:
-            y[:] = np.concatenate(y1)
+        y[:] = np.concatenate(y1)
         return y
 
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
@@ -136,6 +133,5 @@ class MPIBlockDiag(LinearOperator):
         for iop, oper in enumerate(self.ops):
             y1.append(oper.rmatvec(x.local_array[self.nnops[iop]:
                                                  self.nnops[iop + 1]]))
-        if y1:
-            y[:] = np.concatenate(y1)
+        y[:] = np.concatenate(y1)
         return y
