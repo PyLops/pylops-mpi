@@ -108,7 +108,7 @@ class MPILinearOperator:
         return self._rmatvec(x)
 
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
-        if self.Op is not None:
+        if self.Op:
             y = DistributedArray(global_shape=self.shape[0])
             y[:] = self.Op._rmatvec(x.local_array)
             return y
