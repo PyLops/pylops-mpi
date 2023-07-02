@@ -39,8 +39,8 @@ class MPILinearOperator:
                  dtype: Optional[DTypeLike] = None, base_comm: MPI.Comm = MPI.COMM_WORLD):
         if Op:
             self.Op = Op
-            self.shape = Op.shape
-            self.dtype = Op.dtype
+            dtype = self.Op.dtype if dtype is None else dtype
+            shape = self.Op.shape if shape is None else shape
         if shape:
             self.shape = shape
         if dtype:
