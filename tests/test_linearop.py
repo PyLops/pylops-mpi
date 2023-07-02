@@ -21,6 +21,9 @@ par2j = {'ny': 301, 'nx': 101, 'dtype': np.complex128}
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
 def test_linearop(par):
+    """Apply various overloaded operators (.H, .T, +, *, conj()) and ensure that the
+    returned operator is still of `pylops_mpi.MPILinearOperator` type
+    """
     Op = pylops.MatrixMult(A=((rank + 1) * np.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
     BDiag_MPI = MPIBlockDiag(ops=[Op, ])
     assert isinstance(BDiag_MPI, MPILinearOperator)
@@ -34,6 +37,9 @@ def test_linearop(par):
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par1j)])
 def test_square_linearop(par):
+    """Apply overloaded operators (**, *) to square operators and
+    ensure that the returned operator is still of `pylops_mpi.MPILinearOperator` type
+    """
     Op = pylops.MatrixMult(A=((rank + 1) * np.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
     BDiag_MPI = MPIBlockDiag(ops=[Op, ])
     assert isinstance(BDiag_MPI ** 4, MPILinearOperator)
