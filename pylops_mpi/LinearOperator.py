@@ -1,6 +1,6 @@
 import numpy as np
 from mpi4py import MPI
-from typing import Callable
+from typing import Callable, Optional
 
 from scipy.sparse._sputils import isintlike
 from scipy.sparse.linalg._interface import _get_dtype
@@ -24,22 +24,27 @@ class MPILinearOperator:
 
     Parameters
     ----------
-    shape : :obj:`tuple(int, int)`
-        Shape of the MPI Linear Operator.
-    dtype : :obj:`str`
-        Type of elements in input array.
     Op : :obj:`pylops.LinearOperator`, optional
         Linear Operator. Defaults to ``None``.
+    shape : :obj:`tuple(int, int)`, optional
+        Shape of the MPI Linear Operator. Defaults to ``None``.
+    dtype : :obj:`str`, optional
+        Type of elements in input array. Defaults to ``None``.
     base_comm : :obj:`mpi4py.MPI.Comm`, optional
         MPI Base Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.
 
     """
 
-    def __init__(self, shape: ShapeLike, dtype: DTypeLike, Op: LinearOperator = None,
-                 base_comm: MPI.Comm = MPI.COMM_WORLD):
-        self.Op = Op
-        self.shape = shape
-        self.dtype = dtype
+    def __init__(self, Op: Optional[LinearOperator] = None, shape: Optional[ShapeLike] = None,
+                 dtype: Optional[DTypeLike] = None, base_comm: MPI.Comm = MPI.COMM_WORLD):
+        if Op:
+            self.Op = Op
+            self.shape = Op.shape
+            self.dtype = Op.dtype
+        if shape:
+            self.shape = shape
+        if dtype:
+            self.dtype = dtype
         # For MPI
         self.base_comm = base_comm
         self.size = self.base_comm.Get_size()
@@ -71,7 +76,7 @@ class MPILinearOperator:
         return self._matvec(x)
 
     def _matvec(self, x: DistributedArray):
-        if self.Op is not None:
+        if self.Op:
             y = DistributedArray(global_shape=self.shape[1])
             y[:] = self.Op._matvec(x.local_array)
             return y
@@ -405,5 +410,4 @@ def asmpilinearoperator(Op):
     if isinstance(Op, MPILinearOperator):
         return Op
     else:
-        return MPILinearOperator(shape=Op.shape, dtype=Op.dtype, Op=Op,
-                                 base_comm=MPI.COMM_WORLD)
+        return MPILinearOperator(Op=Op, base_comm=MPI.COMM_WORLD)
