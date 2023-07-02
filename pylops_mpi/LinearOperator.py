@@ -11,10 +11,9 @@ from pylops.utils import DTypeLike, ShapeLike
 from pylops_mpi import DistributedArray
 
 
-class MPILinearOperator(LinearOperator):
+class MPILinearOperator:
     """Common interface for performing matrix-vector products in distributed fashion.
 
-    This class extends the :class:`pylops.LinearOperator`.
     This class provides methods to perform matrix-vector product and adjoint matrix-vector
     products using MPI.
 
@@ -39,55 +38,125 @@ class MPILinearOperator(LinearOperator):
     def __init__(self, shape: ShapeLike, dtype: DTypeLike, Op: LinearOperator = None,
                  base_comm: MPI.Comm = MPI.COMM_WORLD):
         self.Op = Op
+        self.shape = shape
+        self.dtype = dtype
         # For MPI
         self.base_comm = base_comm
         self.size = self.base_comm.Get_size()
         self.rank = self.base_comm.Get_rank()
-        super().__init__(Op=Op, dtype=dtype, shape=shape)
 
     def matvec(self, x: DistributedArray) -> DistributedArray:
-        if self.Op:
-            y = DistributedArray(global_shape=self.base_comm.allreduce(self.shape[1]), dtype=x.dtype)
-            if isinstance(x, DistributedArray):
-                x = x.local_array
-            y[:] = self.Op._matvec(x)
-        else:
-            y = self._matvec(x)
-        return y
+        """Matrix-vector multiplication.
+
+        Modified version of pylops matvec
+        This method makes use of :class:`pylops_mpi.DistributedArray` to calculate
+        matrix vector multiplication in a distributed fashion.
+
+        Parameters
+        ----------
+        x : :obj:`pylops_mpi.DistributedArray`
+            A DistributedArray of global shape (N, ).
+
+        Returns
+        -------
+        y : :obj:`pylops_mpi.DistributedArray`
+            DistributedArray of global shape (M, )
+
+        """
+        M, N = self.shape
+
+        if x.global_shape != (N,):
+            raise ValueError("dimension mismatch")
+
+        return self._matvec(x)
+
+    def _matvec(self, x: DistributedArray):
+        if self.Op is not None:
+            y = DistributedArray(global_shape=self.shape[1])
+            y[:] = self.Op._matvec(x.local_array)
+            return y
 
     def rmatvec(self, x: DistributedArray) -> DistributedArray:
-        if self.Op:
-            y = DistributedArray(global_shape=self.base_comm.allreduce(self.shape[1]), dtype=x.dtype)
-            if isinstance(x, DistributedArray):
-                x = x.local_array
-            y[:] = self.Op._rmatvec(x)
-        else:
-            y = self._rmatvec(x)
-        return y
+        """Adjoint Matrix-vector multiplication.
 
-    def dot(self, x: DistributedArray):
+        Modified version of pylops rmatvec
+        This method makes use of :class:`pylops_mpi.DistributedArray` to
+        calculate adjoint matrix vector multiplication in a distributed fashion.
+
+        Parameters
+        ----------
+        x : :obj:`pylops_mpi.DistributedArray`
+            A DistributedArray of global shape (M, ).
+
+        Returns
+        -------
+        y : :obj:`pylops_mpi.DistributedArray`
+            DistributedArray of global shape (N, )
+
+        """
+
+        M, N = self.shape
+
+        if x.global_shape != (M,):
+            raise ValueError("dimension mismatch")
+
+        return self._rmatvec(x)
+
+    def _rmatvec(self, x: DistributedArray) -> DistributedArray:
+        if self.Op is not None:
+            y = DistributedArray(global_shape=self.shape[0])
+            y[:] = self.Op._rmatvec(x.local_array)
+            return y
+
+    def dot(self, x):
+        """Matrix Vector Multiplication
+
+        Parameters
+        ----------
+        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.MPILinearOperator
+            DistributedArray or a MPILinearOperator.
+
+        Returns
+        -------
+        y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.MPILinearOperator`
+            DistributedArray or a MPILinearOperator.
+
+        """
         if isinstance(x, MPILinearOperator):
-            Op = _ProductLinearOperator(self, x)
-            Op.clinear = (getattr(self, 'clinear', True)
-                          and getattr(x, 'clinear', True))
-            return Op
+            return _ProductLinearOperator(self, x)
         elif np.isscalar(x):
             return _ScaledLinearOperator(self, x)
         else:
             if x is None or x.ndim == 1:
                 return self.matvec(x)
-            elif x.ndim == 2:
-                return self.matmat(x)
             else:
-                raise ValueError('expected 1-d or 2-d array or matrix, got %r'
-                                 % x)
+                raise ValueError('expected 1-d DistributedArray, got %r'
+                                 % x.global_shape)
 
     def adjoint(self):
+        """Adjoint MPI LinearOperator
+
+        Returns
+        -------
+        op : :obj:`pylops_mpi.MPILinearOperator`
+            Adjoint of Operator
+
+        """
+
         return self._adjoint()
 
     H = property(adjoint)
 
     def transpose(self):
+        """Transposition of MPI LinearOperator
+
+        Returns
+        -------
+        op : :obj:`pylops_mpi.MPILinearOperator`
+            Transpose Linear Operator
+
+        """
+
         return self._transpose()
 
     T = property(transpose)
@@ -130,6 +199,14 @@ class MPILinearOperator(LinearOperator):
         return _TransposedLinearOperator(self)
 
     def conj(self):
+        """Complex conjugate operator
+
+        Returns
+        -------
+        conjop : :obj:`pylops_mpi.MPILinearOperator`
+            Complex conjugate operator
+
+        """
         return _ConjLinearOperator(self)
 
 
