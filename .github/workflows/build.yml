@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10']
         mpi: ['mpich', 'openmpi', 'intelmpi']
         exclude:
           - os: macos-latest
@@ -23,9 +23,6 @@ jobs:
         # ”libfabric EFA provider is operating in a
         # condition that could result in memory
         # corruption”
-          - os: ubuntu-latest
-            python-version: '3.7'
-            mpi: 'mpich'
           - os: ubuntu-latest
             python-version: '3.8'
             mpi: 'mpich'
