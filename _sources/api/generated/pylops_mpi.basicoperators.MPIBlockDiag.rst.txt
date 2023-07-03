@@ -1,0 +1,47 @@
+﻿pylops\_mpi.basicoperators.MPIBlockDiag
+=======================================
+
+.. currentmodule:: pylops_mpi.basicoperators
+
+.. autoclass:: MPIBlockDiag
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~MPIBlockDiag.__init__
+        ~MPIBlockDiag.adjoint
+        ~MPIBlockDiag.conj
+        ~MPIBlockDiag.dot
+        ~MPIBlockDiag.matvec
+        ~MPIBlockDiag.rmatvec
+        ~MPIBlockDiag.transpose
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.basicoperators.MPIBlockDiag.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+

@@ -291,6 +291,10 @@ document.write(`
   <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.Partition.html">pylops_mpi.Partition</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.DistributedArray.html">pylops_mpi.DistributedArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.MPILinearOperator.html">pylops_mpi.MPILinearOperator</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIBlockDiag.html">pylops_mpi.basicoperators.MPIBlockDiag</a></li>
 </ul>
 </div>
 </nav></div>
@@ -359,6 +363,19 @@ large-scale linear algebra operations, inversions and computations.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DistributedArray</span></code></a>(global_shape[, base_comm, ...])</p></td>
 <td><p>Distributed Numpy Arrays</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.MPILinearOperator.html#pylops_mpi.MPILinearOperator" title="pylops_mpi.MPILinearOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPILinearOperator</span></code></a>([Op, shape, dtype, base_comm])</p></td>
+<td><p>Common interface for performing matrix-vector products in distributed fashion.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="basic-operators">
+<h2>Basic operators<a class="headerlink" href="#basic-operators" title="Permalink to this heading">#</a></h2>
+<table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIBlockDiag.html#pylops_mpi.basicoperators.MPIBlockDiag" title="pylops_mpi.basicoperators.MPIBlockDiag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIBlockDiag</span></code></a>(ops[, base_comm, dtype])</p></td>
+<td><p>MPI Block-diagonal operator.</p></td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -412,6 +429,7 @@ large-scale linear algebra operations, inversions and computations.</p>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#distributedarray">DistributedArray</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-operators">Basic operators</a></li>
 </ul>
   </nav></div>
 

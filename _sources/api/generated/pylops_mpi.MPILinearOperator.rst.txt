@@ -1,0 +1,47 @@
+﻿pylops\_mpi.MPILinearOperator
+=============================
+
+.. currentmodule:: pylops_mpi
+
+.. autoclass:: MPILinearOperator
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~MPILinearOperator.__init__
+        ~MPILinearOperator.adjoint
+        ~MPILinearOperator.conj
+        ~MPILinearOperator.dot
+        ~MPILinearOperator.matvec
+        ~MPILinearOperator.rmatvec
+        ~MPILinearOperator.transpose
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.MPILinearOperator.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+

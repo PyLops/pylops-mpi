@@ -17,3 +17,14 @@ DistributedArray
 
     Partition
     DistributedArray
+    MPILinearOperator
+
+Basic operators
+----------------
+
+.. currentmodule:: pylops_mpi.basicoperators
+
+.. autosummary::
+   :toctree: generated/
+
+    MPIBlockDiag
