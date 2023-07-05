@@ -33,14 +33,14 @@ m = np.log(model['model'][:, ::3])  # shape=(nz, nx)
 # Size of y at all ranks
 ny = MPI.COMM_WORLD.allreduce(ny_i)
 # Extending over first axis
-m3d = np.tile(m[np.newaxis, :, :], (ny_i, 1, 1))
+m3d_i = np.tile(m[np.newaxis, :, :], (ny_i, 1, 1))
 
 # Smooth model
 nsmoothz, nsmoothx = 30, 20
-mback = filtfilt(np.ones(nsmoothz) / float(nsmoothz), 1, m, axis=0)
-mback = filtfilt(np.ones(nsmoothx) / float(nsmoothx), 1, mback, axis=1)
+mback_i = filtfilt(np.ones(nsmoothz) / float(nsmoothz), 1, m, axis=0)
+mback_i = filtfilt(np.ones(nsmoothx) / float(nsmoothx), 1, mback_i, axis=1)
 # Extending over first axis
-mback3d = np.tile(mback[np.newaxis, :, :], (ny_i, 1, 1))
+mback3d_i = np.tile(mback_i[np.newaxis, :, :], (ny_i, 1, 1))
 
 # wavelet
 ntwav = 41
@@ -53,12 +53,17 @@ wav, twav, wavc = ricker(t0[:ntwav // 2 + 1], 20)
 # we use this MPIBlockDiag to perform forward and adjoint operations of
 # each operator at different ranks.
 
+# Distributed Model vector
+m3d_dist = DistributedArray(global_shape=nx * ny * nz)
+m3d_dist[:] = m3d_i.flatten()
+m3d = m3d_dist.asarray().reshape((ny, nz, nx))
+mback3d_dist = DistributedArray(global_shape=nx * ny * nz)
+mback3d_dist[:] = mback3d_i.flatten()
+mback3d = mback3d_dist.asarray().reshape((ny, nz, nx))
+
 # Linear PostStackLinearModelling
 PPop = PoststackLinearModelling(wav, nt0=nz, spatdims=(ny_i, nx))
 BDiag = MPIBlockDiag(ops=[PPop, ])
-# DistributedArray
-m3d_dist = DistributedArray(global_shape=nx * ny * nz)
-m3d_dist[:] = m3d.flatten()
 # Forward
 d_dist = BDiag * m3d_dist
 # Adjoint
@@ -93,3 +98,4 @@ if rank == 0:
     axs[3].imshow(mback3d[3, :, :], cmap="gist_rainbow", vmin=m.min(), vmax=m.max(), extent=(x[0], x[-1], z[-1], z[0]))
     axs[3].set_title("Smooth Model")
     axs[3].axis("tight")
+plt.show()
