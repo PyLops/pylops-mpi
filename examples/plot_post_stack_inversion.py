@@ -98,4 +98,3 @@ if rank == 0:
     axs[3].imshow(mback3d[3, :, :], cmap="gist_rainbow", vmin=m.min(), vmax=m.max(), extent=(x[0], x[-1], z[-1], z[0]))
     axs[3].set_title("Smooth Model")
     axs[3].axis("tight")
-plt.show()
