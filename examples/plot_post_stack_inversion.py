@@ -13,7 +13,6 @@ from mpi4py import MPI
 from pylops_mpi import MPIBlockDiag, DistributedArray
 
 plt.close("all")
-np.random.seed(42)
 rank = MPI.COMM_WORLD.Get_rank()
 size = MPI.COMM_WORLD.Get_size()
 
@@ -22,79 +21,92 @@ size = MPI.COMM_WORLD.Get_size()
 # ``pylops.avo.poststack.PoststackLinearModelling`` operator.
 
 # Model
-nt0 = 301
-dt0 = 0.004
-t0 = np.arange(nt0) * dt0
 model = np.load("../testdata/poststack_model.npz")
-x = model['x'][::3] / 1000.0
-z = model['z'] / 1000.0
-nx, nz, ny_i = len(x), len(z), 10
-m = np.log(model['model'][:, ::3])  # shape=(nz, nx)
+x, z, m = model['x'], model['z'], np.log(model['model'])
+
+# Making m a 3-D
+ny_i = 10
+y = np.arange(ny_i)
+m3d_i = np.tile(m[:, :, np.newaxis], (1, 1, ny_i)).transpose((2, 1, 0))
+ny_i, nx, nz = m3d_i.shape
+
 # Size of y at all ranks
 ny = MPI.COMM_WORLD.allreduce(ny_i)
-# Extending over first axis
-m3d_i = np.tile(m[np.newaxis, :, :], (ny_i, 1, 1))
 
 # Smooth model
 nsmoothz, nsmoothx = 30, 20
-mback_i = filtfilt(np.ones(nsmoothz) / float(nsmoothz), 1, m, axis=0)
-mback_i = filtfilt(np.ones(nsmoothx) / float(nsmoothx), 1, mback_i, axis=1)
-# Extending over first axis
-mback3d_i = np.tile(mback_i[np.newaxis, :, :], (ny_i, 1, 1))
+mback = filtfilt(np.ones(nsmoothz) / float(nsmoothz), 1, m, axis=0)
+mback = filtfilt(np.ones(nsmoothx) / float(nsmoothx), 1, mback, axis=1)
+# Making mback a 3-D
+mback3d_i = np.tile(mback[:, :, np.newaxis], (1, 1, ny_i)).transpose((2, 1, 0))
 
 # wavelet
+dt = 0.004
+t0 = np.arange(nz) * dt
 ntwav = 41
-wav, twav, wavc = ricker(t0[:ntwav // 2 + 1], 20)
+wav = ricker(t0[:ntwav // 2 + 1], 15)[0]
+
+# Collecting all the m3d and mback3d at all ranks
+m3d = np.concatenate(MPI.COMM_WORLD.allgather(m3d_i))
+mback3d = np.concatenate(MPI.COMM_WORLD.allgather(mback3d_i))
 
 ###############################################################################
 # We model the data using both the dense and linear operator version of
 # ``pylops.avo.poststack.PostStackLinearModelling`` at each rank and pass
 # these operators to the ``pylops_mpi.MPIBlockDiag`` operator. Furthermore,
-# we use this MPIBlockDiag to perform forward and adjoint operations of
-# each operator at different ranks.
+# we use this MPIBlockDiag to perform forward operation on each operator
+# at different ranks to get the ``data``.
 
-# Distributed Model vector
+# Flattening modelling data
 m3d_dist = DistributedArray(global_shape=nx * ny * nz)
-m3d_dist[:] = m3d_i.flatten()
-m3d = m3d_dist.asarray().reshape((ny, nz, nx))
-mback3d_dist = DistributedArray(global_shape=nx * ny * nz)
-mback3d_dist[:] = mback3d_i.flatten()
-mback3d = mback3d_dist.asarray().reshape((ny, nz, nx))
+m3d_dist[:] = m3d_i.transpose((2, 0, 1)).flatten()
 
 # Linear PostStackLinearModelling
 PPop = PoststackLinearModelling(wav, nt0=nz, spatdims=(ny_i, nx))
 BDiag = MPIBlockDiag(ops=[PPop, ])
-# Forward
+
+# Data
 d_dist = BDiag * m3d_dist
-# Adjoint
-d_adjoint_dist = BDiag.H * m3d_dist
+d_local = d_dist.local_array.reshape((nz, ny_i, nx)).transpose(1, 2, 0)
+d = d_dist.asarray().reshape((nz, ny, nx)).transpose(1, 2, 0)
 
 # Dense PostStackLinearModelling
 PPop_dense = PoststackLinearModelling(wav, nt0=nz, spatdims=(ny_i, nx), explicit=True)
 BDiag_dense = MPIBlockDiag(ops=[PPop_dense, ])
-# Forward
+
+# Dense Data
 d_dense_dist = BDiag_dense * m3d_dist
-d_dense = d_dense_dist.asarray().reshape((ny, nz, nx))
-# Adjoint
-d_dense_adj_dist = BDiag_dense.H * m3d_dist
-d_dense_adj = d_dense_adj_dist.asarray().reshape((ny, nz, nx))
+d_dense_local = d_dense_dist.local_array.reshape((nz, ny_i, nx)).transpose(1, 2, 0)
+d_dense = d_dense_dist.asarray().reshape((nz, ny, nx)).transpose(1, 2, 0)
 
 if rank == 0:
-    fig, axs = plt.subplots(nrows=1, ncols=4, figsize=(15, 9))
-    axs[0].imshow(d_dense[3, :, :], cmap="gray", vmin=d_dense.min(), vmax=d_dense.max(),
-                  extent=(x[0], x[-1], z[-1], z[0]))
-    axs[0].set_title("Data")
-    axs[0].axis("tight")
+    fig, axs = plt.subplots(nrows=3, ncols=3, figsize=(9, 12), constrained_layout=True)
+    axs[0][0].imshow(d_dense[5, :, :].T, cmap="gray", vmin=-1, vmax=1)
+    axs[0][0].set_title("Data x-z")
+    axs[0][0].axis("tight")
+    axs[0][1].imshow(d_dense[:, 400, :].T, cmap='gray', vmin=-1, vmax=1)
+    axs[0][1].set_title('Data y-z')
+    axs[0][1].axis('tight')
+    axs[0][2].imshow(d_dense[:, :, 220].T, cmap='gray', vmin=-1, vmax=1)
+    axs[0][2].set_title('Data x-y')
+    axs[0][2].axis('tight')
 
-    axs[1].imshow(d_dense_adj[3, :, :], cmap="gray", vmin=d_dense_adj.min(), vmax=d_dense_adj.max(),
-                  extent=(x[0], x[-1], z[-1], z[0]))
-    axs[1].set_title("Adjoint")
-    axs[1].axis("tight")
+    axs[1][0].imshow(m3d[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+    axs[1][0].set_title("Model x-z")
+    axs[1][0].axis("tight")
+    axs[1][1].imshow(m3d[:, 400, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+    axs[1][1].set_title("Model y-z")
+    axs[1][1].axis("tight")
+    axs[1][2].imshow(m3d[:, :, 220].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+    axs[1][2].set_title("Model y-z")
+    axs[1][2].axis("tight")
 
-    axs[2].imshow(m3d[3, :, :], cmap="gist_rainbow", vmin=m.min(), vmax=m.max(), extent=(x[0], x[-1], z[-1], z[0]))
-    axs[2].set_title("Model")
-    axs[2].axis("tight")
-
-    axs[3].imshow(mback3d[3, :, :], cmap="gist_rainbow", vmin=m.min(), vmax=m.max(), extent=(x[0], x[-1], z[-1], z[0]))
-    axs[3].set_title("Smooth Model")
-    axs[3].axis("tight")
+    axs[2][0].imshow(mback3d[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+    axs[2][0].set_title("Smooth Model x-z")
+    axs[2][0].axis("tight")
+    axs[2][1].imshow(mback3d[:, 400, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+    axs[2][1].set_title("Smooth Model y-z")
+    axs[2][1].axis("tight")
+    axs[2][2].imshow(mback3d[:, :, 220].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+    axs[2][2].set_title("Smooth Model y-z")
+    axs[2][2].axis("tight")
