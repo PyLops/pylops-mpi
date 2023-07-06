@@ -21,7 +21,7 @@ size = MPI.COMM_WORLD.Get_size()
 # ``pylops.avo.poststack.PoststackLinearModelling`` operator.
 
 # Model
-model = np.load("../testdata/poststack_model.npz")
+model = np.load("../testdata/avo/poststack_model.npz")
 x, z, m = model['x'], model['z'], np.log(model['model'])
 
 # Making m a 3-D
