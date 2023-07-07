@@ -28,3 +28,20 @@ Basic operators
    :toctree: generated/
 
     MPIBlockDiag
+
+Basic
+~~~~~
+
+.. currentmodule:: pylops_mpi.optimization.cls_basic
+
+.. autosummary::
+   :toctree: generated/
+
+    CGLS
+
+.. currentmodule:: pylops_mpi.optimization.basic
+
+.. autosummary::
+   :toctree: generated/
+
+    cgls
