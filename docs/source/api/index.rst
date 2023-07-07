@@ -29,6 +29,9 @@ Basic operators
 
     MPIBlockDiag
 
+Solvers
+-------
+
 Basic
 ~~~~~
 
