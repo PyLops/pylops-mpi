@@ -18,13 +18,13 @@ def cgls(
 ) -> Tuple[DistributedArray, int, int, float, float, NDArray]:
     r"""Conjugate gradient least squares
 
-    Solve an overdetermined system of equations given an operator ``Op`` and
-    data ``y`` using conjugate gradient iterations.
+    Solve an overdetermined system of equations given a MPILinearOperator ``Op`` and
+    distributed data ``y`` using conjugate gradient iterations.
 
     Parameters
     ----------
     Op : :obj:`pylops_mpi.MPILinearOperator`
-        Linear Operator to invert of size :math:`[N \times M]`
+        MPI Linear Operator to invert of size :math:`[N \times M]`
     y : :obj:`pylops_mpi.DistributedArray`
         DistributedArray of size (N,)
     x0 : :obj:`pylops_mpi.DistributedArray`, optional
