@@ -372,6 +372,20 @@ class DistributedArray:
         # Calculate vector norm along the axis
         return self._compute_vector_norm(self.local_array, axis=self.axis, ord=ord)
 
+    def conj(self):
+        """Distributed conj() method
+        """
+        conj = DistributedArray(global_shape=self.global_shape, dtype=self.dtype)
+        conj[:] = self.local_array.conj()
+        return conj
+
+    def copy(self):
+        """Creates a copy of the DistributedArray
+        """
+        arr = DistributedArray(global_shape=self.global_shape, dtype=self.dtype)
+        arr[:] = self.local_array
+        return arr
+
     def __repr__(self):
         return f"<DistributedArray with global shape={self.global_shape}), " \
                f"local shape={self.local_shape}" \
