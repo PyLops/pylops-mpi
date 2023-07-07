@@ -11,8 +11,8 @@ from pylops_mpi import DistributedArray
 class CGLS(Solver):
     r"""Conjugate gradient least squares
 
-    Solve an overdetermined system of equations given an operator ``Op`` and
-    data ``y`` using conjugate gradient iterations.
+    Solve an overdetermined system of equations given a MPILinearOperator ``Op``
+    and distributed data ``y`` using conjugate gradient iterations.
 
     Parameters
     ----------
@@ -72,8 +72,8 @@ class CGLS(Solver):
         y : :obj:`pylops_mpi.DistributedArray`
             Data of size :math:`[N \times 1]`
         x0 : :obj:`pylops_mpi.DistributedArray`, optional
-            Initial guess  of size (M,). If ``None``, initialize
-            internally as zero vector
+            Initial guess  of size (M,). If ``None``, Defaults to a
+            zero vector
         niter : :obj:`int`, optional
             Number of iterations (default to ``None`` in case a user wants to
             manually step over the solver)
@@ -100,15 +100,13 @@ class CGLS(Solver):
             x = DistributedArray(global_shape=self.Op.shape[1], dtype=y.dtype)
             x[:] = 0
             self.s = y.copy()
-            self.damped_x = DistributedArray(global_shape=x.global_shape, dtype=x.dtype)
-            self.damped_x[:] = damp * x.local_array
             r = self.Op.rmatvec(self.s)
         else:
             x = x0.copy()
             self.s = self.y - self.Op.matvec(x)
-            self.damped_x = DistributedArray(global_shape=x.global_shape, dtype=x.dtype)
-            self.damped_x[:] = damp * x.local_array
-            r = self.Op.rmatvec(self.s) - self.damped_x
+            damped_x = DistributedArray(global_shape=x.global_shape, dtype=x.dtype)
+            damped_x[:] = damp * x.local_array
+            r = self.Op.rmatvec(self.s) - damped_x
         self.c = r.copy()
         self.q = self.Op.matvec(self.c)
         self.kold = np.abs(r.dot(r.conj()))
@@ -145,7 +143,9 @@ class CGLS(Solver):
         a = self.kold / (self.q.dot(self.q.conj()) + self.damp * self.c.dot(self.c.conj()))
         x[:] = x.local_array + a * self.c.local_array
         self.s[:] = self.s.local_array - a * self.q.local_array
-        r = self.Op.rmatvec(self.s) - self.damped_x
+        damped_x = DistributedArray(global_shape=x.global_shape, dtype=x.dtype)
+        damped_x[:] = self.damp * x.local_array
+        r = self.Op.rmatvec(self.s) - damped_x
         k = np.abs(r.dot(r.conj()))
         b = k / self.kold
         self.c[:] = r.local_array + b * self.c.local_array
@@ -153,7 +153,7 @@ class CGLS(Solver):
         self.kold = k
         self.iiter += 1
         self.cost.append(float(self.s.norm()))
-        self.cost1.append(np.sqrt(float(self.cost[self.iiter] ** 2 + self.damp * x.dot(x.conj()))))
+        self.cost1.append(np.sqrt(float(self.cost[self.iiter] ** 2 + self.damp * np.abs(x.dot(x.conj())))))
         if show:
             self._print_step(x)
         return x
@@ -189,7 +189,6 @@ class CGLS(Solver):
         if niter is None:
             raise ValueError("niter must not be None")
         while self.iiter < niter and self.kold > self.tol:
-            print("this is kold", self.kold)
             showstep = (
                 True
                 if show
@@ -201,8 +200,24 @@ class CGLS(Solver):
                 else False
             )
             x = self.step(x, showstep)
-            self.callback(x.local_array)
+            self.callback(x)
         return x
+
+    def callback(self, x: DistributedArray, **kwargs) -> None:
+        """Callback routine
+
+        This routine must be passed by the user. Its function signature must contain
+        a single input that contains the current solution. It will be invoked at each step
+        of the `solve` method.
+
+        Parameters
+        ----------
+        x::obj: `pylops_mpi.DistributedArray`
+            Current solution
+
+        """
+
+        pass
 
     def finalize(self, show: bool = False, **kwargs) -> None:
         r"""Finalize solver
