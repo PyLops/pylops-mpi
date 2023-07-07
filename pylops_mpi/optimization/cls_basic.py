@@ -203,22 +203,6 @@ class CGLS(Solver):
             self.callback(x)
         return x
 
-    def callback(self, x: DistributedArray, **kwargs) -> None:
-        """Callback routine
-
-        This routine must be passed by the user. Its function signature must contain
-        a single input that contains the current solution. It will be invoked at each step
-        of the `solve` method.
-
-        Parameters
-        ----------
-        x::obj: `pylops_mpi.DistributedArray`
-            Current solution
-
-        """
-
-        pass
-
     def finalize(self, show: bool = False, **kwargs) -> None:
         r"""Finalize solver
 

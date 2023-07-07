@@ -43,7 +43,7 @@ def cgls(
         three element of the list.
     callback : :obj:`callable`, optional
         Function with signature (``callback(x)``) to call after each iteration
-        where ``x`` is the current model vector
+        where ``x`` is the DistributedArray.
 
     Returns
     -------
