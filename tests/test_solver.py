@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.testing import assert_array_almost_equal
+from numpy.testing import assert_allclose
 from mpi4py import MPI
 import pytest
 import pylops
@@ -16,56 +16,56 @@ par1 = {
     "nx": 11,
     "imag": 0,
     "x0": False,
-    "dtype": "float64",
+    "dtype": "float128",
 }  # square real, zero initial guess
 par2 = {
     "ny": 11,
     "nx": 11,
     "imag": 0,
     "x0": True,
-    "dtype": "float64",
+    "dtype": "float128",
 }  # square real, non-zero initial guess
 par3 = {
     "ny": 31,
     "nx": 11,
     "imag": 0,
     "x0": False,
-    "dtype": "float64",
+    "dtype": "float128",
 }  # overdetermined real, zero initial guess
 par4 = {
     "ny": 31,
     "nx": 11,
     "imag": 0,
     "x0": True,
-    "dtype": "float64",
+    "dtype": "float128",
 }  # overdetermined real, non-zero initial guess
 par1j = {
     "ny": 11,
     "nx": 11,
     "imag": 1j,
     "x0": False,
-    "dtype": "complex64",
+    "dtype": "complex256",
 }  # square complex, zero initial guess
 par2j = {
     "ny": 11,
     "nx": 11,
     "imag": 1j,
     "x0": True,
-    "dtype": "complex64",
+    "dtype": "complex256",
 }  # square complex, non-zero initial guess
 par3j = {
     "ny": 31,
     "nx": 11,
     "imag": 1j,
     "x0": False,
-    "dtype": "complex64",
+    "dtype": "complex256",
 }  # overdetermined complex, zero initial guess
 par4j = {
     "ny": 31,
     "nx": 11,
     "imag": 1j,
     "x0": True,
-    "dtype": "complex64",
+    "dtype": "complex256",
 }  # overdetermined complex, non-zero initial guess
 
 
@@ -82,12 +82,12 @@ def test_cgls(par):
     BDiag_MPI = MPIBlockDiag(ops=[Aop, ])
 
     x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
-    x[:] = np.random.normal(1, 10, par["nx"]) + par["imag"] * np.random.normal(1, 10, par["nx"])
+    x[:] = np.random.normal(1, 10, par["nx"]) + par["imag"] * np.random.normal(10, 10, par["nx"])
     x_global = x.asarray()
     if par["x0"]:
         x0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
         x0[:] = np.random.normal(0, 10, par["nx"]) + par["imag"] * np.random.normal(
-            0, 10, par["nx"]
+            10, 10, par["nx"]
         )
         x0_global = x0.asarray()
     else:
@@ -95,7 +95,7 @@ def test_cgls(par):
     y = BDiag_MPI * x
     xinv = cgls(BDiag_MPI, y, x0=x0, niter=par["nx"], tol=1e-5, show=True)[0]
     assert isinstance(xinv, DistributedArray)
-    xinv_final = xinv.asarray()
+    xinv_array = xinv.asarray()
     if rank == 0:
         ops = [MatrixMult((i + 1) * np.ones((par["ny"], par["nx"])) + (i + 2) * par[
             "imag"
@@ -107,4 +107,4 @@ def test_cgls(par):
             x0 = None
         y1 = BDiag * x_global
         xinv1 = pylops.cgls(BDiag, y1, x0=x0, niter=par["nx"], tol=1e-5, show=True)[0]
-        assert_array_almost_equal(xinv_final, xinv1, decimal=4)
+        assert_allclose(xinv_array, xinv1, rtol=1e-14)
