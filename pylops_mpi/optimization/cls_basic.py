@@ -49,7 +49,7 @@ class CGLS(Solver):
         print(head1)
 
     def _print_step(self, x: DistributedArray) -> None:
-        strx = f"{x[0]:1.2e}   " if np.iscomplexobj(x) else f"{x[0]:11.4e}        "
+        strx = f"{x[0]:1.2e}   " if np.iscomplexobj(x.local_array) else f"{x[0]:11.4e}        "
         msg = (
             f"{self.iiter:6g}       "
             + strx
@@ -120,7 +120,7 @@ class CGLS(Solver):
 
         # print setup
         if show:
-            self._print_setup(np.issubdtype(x.dtype, np.complex128))
+            self._print_setup(np.iscomplexobj(x.local_array))
         return x
 
     def step(self, x: DistributedArray, show: bool = False) -> DistributedArray:
