@@ -2,7 +2,7 @@
 Post Stack Inversion - 3D
 =========================
 This illustration demonstrates the implementation of a distributed 3D Post-stack inversion. It involves
-modelling a 3-D synthetic post-stack seismic data from a profile of the subsurface acoustic impedence.
+modelling a 3D synthetic post-stack seismic data from a 3D model of the subsurface acoustic impedence.
 """
 
 import numpy as np
@@ -27,8 +27,8 @@ size = MPI.COMM_WORLD.Get_size()
 model = np.load("../testdata/avo/poststack_model.npz")
 x, z, m = model['x'], model['z'], np.log(model['model'])
 
-# Making m a 3-D
-ny_i = 10 # size of model in y direction for rank i
+# Making m a 3D model
+ny_i = 20  # size of model in y direction for rank i
 y = np.arange(ny_i)
 m3d_i = np.tile(m[:, :, np.newaxis], (1, 1, ny_i)).transpose((2, 1, 0))
 ny_i, nx, nz = m3d_i.shape
@@ -37,12 +37,10 @@ ny_i, nx, nz = m3d_i.shape
 ny = MPI.COMM_WORLD.allreduce(ny_i)
 
 # Smooth model
-nsmoothz, nsmoothx = 30, 20
-mback = filtfilt(np.ones(nsmoothz) / float(nsmoothz), 1, m, axis=0)
-mback = filtfilt(np.ones(nsmoothx) / float(nsmoothx), 1, mback, axis=1)
-
-# Making mback a 3-D
-mback3d_i = np.tile(mback[:, :, np.newaxis], (1, 1, ny_i)).transpose((2, 1, 0))
+nsmoothy, nsmoothx, nsmoothz = 5, 30, 20
+mback3d_i = filtfilt(np.ones(nsmoothy) / float(nsmoothy), 1, m3d_i, axis=0)
+mback3d_i = filtfilt(np.ones(nsmoothx) / float(nsmoothx), 1, mback3d_i, axis=1)
+mback3d_i = filtfilt(np.ones(nsmoothz) / float(nsmoothz), 1, mback3d_i, axis=2)
 
 # Wavelet
 dt = 0.004
@@ -91,16 +89,6 @@ if rank == 0:
 
     # Visualize
     fig, axs = plt.subplots(nrows=3, ncols=3, figsize=(9, 12), constrained_layout=True)
-    axs[2][0].imshow(d[5, :, :].T, cmap="gray", vmin=-1, vmax=1)
-    axs[2][0].set_title("Data x-z")
-    axs[2][0].axis("tight")
-    axs[2][1].imshow(d[:, 400, :].T, cmap='gray', vmin=-1, vmax=1)
-    axs[2][1].set_title('Data y-z')
-    axs[2][1].axis('tight')
-    axs[2][2].imshow(d[:, :, 220].T, cmap='gray', vmin=-1, vmax=1)
-    axs[2][2].set_title('Data x-y')
-    axs[2][2].axis('tight')
-
     axs[0][0].imshow(m3d[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
     axs[0][0].set_title("Model x-z")
     axs[0][0].axis("tight")
@@ -121,4 +109,14 @@ if rank == 0:
     axs[1][2].set_title("Smooth Model y-z")
     axs[1][2].axis("tight")
 
-    plt.savefig('Poststack.png')
+    axs[2][0].imshow(d[5, :, :].T, cmap="gray", vmin=-1, vmax=1)
+    axs[2][0].set_title("Data x-z")
+    axs[2][0].axis("tight")
+    axs[2][1].imshow(d[:, 400, :].T, cmap='gray', vmin=-1, vmax=1)
+    axs[2][1].set_title('Data y-z')
+    axs[2][1].axis('tight')
+    axs[2][2].imshow(d[:, :, 220].T, cmap='gray', vmin=-1, vmax=1)
+    axs[2][2].set_title('Data x-y')
+    axs[2][2].axis('tight')
+
+    plt.savefig('./plots/Poststack.png')
