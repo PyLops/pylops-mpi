@@ -56,10 +56,10 @@ mback3d = np.concatenate(MPI.COMM_WORLD.allgather(mback3d_i))
 # We now create the linear operator version of
 # ``pylops.avo.poststack.PostStackLinearModelling`` at each rank to model a
 # subset of the data along the y-axis. Such operators are passes
-# to the ``pylops_mpi.MPIBlockDiag`` operator, which is then used to perform 
+# to the ``pylops_mpi.MPIBlockDiag`` operator, which is then used to perform
 # the different forward operations of each individual operator
 # at different ranks to compute the overall data. Note that to simplify the
-# handling of the model and data, we split and distribute the first axis, 
+# handling of the model and data, we split and distribute the first axis,
 # and use ``pylops.basicoperators.Transpose`` to rearrange the model and data
 # in the form required by the ``pylops.avo.poststack.PostStackLinearModelling``
 # operator
@@ -79,7 +79,7 @@ d_local = d_dist.local_array.reshape((ny_i, nx, nz))
 d = d_dist.asarray().reshape((ny, nx, nz))
 
 if rank == 0:
-    # Check the distributed implementation gives the same result 
+    # Check the distributed implementation gives the same result
     # as the one running only on rank0
     PPop0 = PoststackLinearModelling(wav, nt0=nz, spatdims=(ny, nx))
     d0 = (PPop0 @ m3d.transpose(2, 0, 1)).transpose(1, 2, 0)
