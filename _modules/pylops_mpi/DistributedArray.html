@@ -704,6 +704,20 @@ document.write(`
         <span class="c1"># Calculate vector norm along the axis</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_vector_norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">local_array</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="nb">ord</span><span class="o">=</span><span class="nb">ord</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">conj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Distributed conj() method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">conj</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">global_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">conj</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_array</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">conj</span>
+
+    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a copy of the DistributedArray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">global_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">arr</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_array</span>
+        <span class="k">return</span> <span class="n">arr</span>
+
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;DistributedArray with global shape=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">global_shape</span><span class="si">}</span><span class="s2">), &quot;</span> \
                <span class="sa">f</span><span class="s2">&quot;local shape=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">local_shape</span><span class="si">}</span><span class="s2">&quot;</span> \

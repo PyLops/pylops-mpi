@@ -12,6 +12,8 @@
         ~DistributedArray.__init__
         ~DistributedArray.add
         ~DistributedArray.asarray
+        ~DistributedArray.conj
+        ~DistributedArray.copy
         ~DistributedArray.dot
         ~DistributedArray.multiply
         ~DistributedArray.norm

@@ -1,0 +1,47 @@
+﻿pylops\_mpi.optimization.cls\_basic.CGLS
+========================================
+
+.. currentmodule:: pylops_mpi.optimization.cls_basic
+
+.. autoclass:: CGLS
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~CGLS.__init__
+        ~CGLS.callback
+        ~CGLS.finalize
+        ~CGLS.run
+        ~CGLS.setup
+        ~CGLS.solve
+        ~CGLS.step
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.optimization.cls_basic.CGLS.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+
