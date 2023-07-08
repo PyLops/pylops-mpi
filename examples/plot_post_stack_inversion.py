@@ -118,5 +118,3 @@ if rank == 0:
     axs[2][2].imshow(d[:, :, 220].T, cmap='gray', vmin=-1, vmax=1)
     axs[2][2].set_title('Data x-y')
     axs[2][2].axis('tight')
-
-    plt.savefig('./plots/Poststack.png')
