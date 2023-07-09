@@ -31,6 +31,23 @@ Examples using pylops_mpi
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="Post Stack Inversion - 3D">
+
+.. only:: html
+
+  .. image:: /gallery/images/thumb/sphx_glr_plot_post_stack_inversion_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_gallery_plot_post_stack_inversion.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Post Stack Inversion - 3D</div>
+    </div>
+
+
+.. raw:: html
+
     </div>
 
 
@@ -38,6 +55,7 @@ Examples using pylops_mpi
    :hidden:
 
    /gallery/plot_distributed_array
+   /gallery/plot_post_stack_inversion
 
 
 
