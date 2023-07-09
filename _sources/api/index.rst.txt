@@ -17,10 +17,22 @@ DistributedArray
 
     Partition
     DistributedArray
+
+Linear operators
+----------------
+
+Templates
+~~~~~~~~~
+
+.. currentmodule:: pylops_mpi
+
+.. autosummary::
+   :toctree: generated/
+
     MPILinearOperator
 
-Basic operators
-----------------
+Basic Operators
+~~~~~~~~~~~~~~~
 
 .. currentmodule:: pylops_mpi.basicoperators
 
