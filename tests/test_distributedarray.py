@@ -4,7 +4,7 @@
 """
 import numpy as np
 import pytest
-from numpy.testing import assert_array_almost_equal, assert_allclose
+from numpy.testing import assert_allclose
 
 from pylops_mpi import DistributedArray, Partition
 from pylops_mpi.DistributedArray import local_split
@@ -83,17 +83,17 @@ def test_creation(par):
                                           dtype=par['dtype'], axis=par['axis'])
     distributed_zeroes[:] = 0
     # Test for distributed ones
-    assert (distributed_ones.local_array
-            == np.ones(shape=distributed_ones.local_shape,
-                       dtype=par['dtype'])).all()
-    assert (distributed_ones.asarray()
-            == np.ones(shape=par['global_shape'], dtype=par['dtype'])).all()
+    assert isinstance(distributed_ones, DistributedArray)
+    assert_allclose(distributed_ones.local_array, np.ones(shape=distributed_ones.local_shape,
+                                                          dtype=par['dtype']), rtol=1e-14)
+    assert_allclose(distributed_ones.asarray(), np.ones(shape=distributed_ones.global_shape,
+                                                        dtype=par['dtype']), rtol=1e-14)
     # Test for distributed zeroes
-    assert (distributed_zeroes.local_array
-            == np.zeros(shape=distributed_zeroes.local_shape,
-                        dtype=par['dtype'])).all()
-    assert (distributed_zeroes.asarray()
-            == np.zeros(shape=par['global_shape'], dtype=par['dtype'])).all()
+    assert isinstance(distributed_zeroes, DistributedArray)
+    assert_allclose(distributed_zeroes.local_array, np.zeros(shape=distributed_zeroes.local_shape,
+                                                             dtype=par['dtype']), rtol=1e-14)
+    assert_allclose(distributed_zeroes.asarray(), np.zeros(shape=distributed_zeroes.global_shape,
+                                                           dtype=par['dtype']), rtol=1e-14)
 
 
 @pytest.mark.mpi(min_size=2)
@@ -116,19 +116,22 @@ def test_distributed_math(par1, par2):
     arr2 = DistributedArray.to_dist(x=par2['x'], partition=par2['partition'])
     # Addition
     sum_array = arr1 + arr2
+    assert isinstance(sum_array, DistributedArray)
     # Subtraction
     sub_array = arr1 - arr2
+    assert isinstance(sub_array, DistributedArray)
     # Multiplication
     mult_array = arr1 * arr2
+    assert isinstance(mult_array, DistributedArray)
     # Global array of Sum with np.add
-    assert_array_almost_equal(sum_array.asarray(),
-                              np.add(par1['x'], par2['x']), decimal=3)
+    assert_allclose(sum_array.asarray(), np.add(par1['x'], par2['x']),
+                    rtol=1e-14)
     # Global array of Subtract with np.subtract
-    assert_array_almost_equal(sub_array.asarray(),
-                              np.subtract(par1['x'], par2['x']), decimal=3)
+    assert_allclose(sub_array.asarray(), np.subtract(par1['x'], par2['x']),
+                    rtol=1e-14)
     # Global array of Multiplication with np.multiply
-    assert_array_almost_equal(mult_array.asarray(),
-                              np.multiply(par1['x'], par2['x']), decimal=3)
+    assert_allclose(mult_array.asarray(), np.multiply(par1['x'], par2['x']),
+                    rtol=1e-14)
 
 
 @pytest.mark.mpi(min_size=2)
