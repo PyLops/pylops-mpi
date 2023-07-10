@@ -44,32 +44,30 @@ pylops_mpi.plot_distributed_array(arr)
 # you can use the ``to_dist`` classmethod. This method allows you to distribute
 # the array across multiple processes for parallel computation.
 # Below is an example implementation depicting the same.
-arr1 = pylops_mpi.DistributedArray.to_dist(np.random.normal(100, 100, global_shape))
-arr2 = pylops_mpi.DistributedArray.to_dist(np.random.normal(300, 300, global_shape))
+n = global_shape[0] * global_shape[1]
+# Array to be distributed
+array = np.arange(n) / float(n)
+arr1 = pylops_mpi.DistributedArray.to_dist(x=array.reshape(global_shape), axis=1)
+array = array / 2.0
+arr2 = pylops_mpi.DistributedArray.to_dist(x=array.reshape(global_shape), axis=1)
 # plot local arrays
-pylops_mpi.plot_local_arrays(arr1, "Distributed Array - 1")
-pylops_mpi.plot_local_arrays(arr2, "Distributed Array - 2")
+pylops_mpi.plot_local_arrays(arr1, "Distributed Array - 1", vmin=0, vmax=1)
+pylops_mpi.plot_local_arrays(arr2, "Distributed Array - 2", vmin=0, vmax=1)
 
 ###############################################################################
-# Element-wise Addition
-#
-# Each process operates on its local portion of the arrays
-# and adds the corresponding elements together.
+# **Element-wise Addition** - Each process operates on its local portion of
+# the array and adds the corresponding elements together.
 sum_arr = arr1 + arr2
-pylops_mpi.plot_local_arrays(sum_arr, "Addition")
+pylops_mpi.plot_local_arrays(sum_arr, "Addition", vmin=0, vmax=1)
 
 ###############################################################################
-# Element-wise Subtraction
-#
-# Each process operates on its local portion of the arrays
-# and subtracts the corresponding elements together.
+# **Element-wise Subtraction** - Each process operates on its local portion
+# of the array and subtracts the corresponding elements together.
 diff_arr = arr1 - arr2
-pylops_mpi.plot_local_arrays(diff_arr, "Subtraction")
+pylops_mpi.plot_local_arrays(diff_arr, "Subtraction", vmin=0, vmax=1)
 
 ###############################################################################
-# Element-wise Multiplication
-#
-# Each process operates on its local portion of the arrays
-# and multiplies the corresponding elements together.
-mult_array = arr1 * arr2
-pylops_mpi.plot_local_arrays(mult_array, "Multiplication")
+# **Element-wise Multiplication** - Each process operates on its local portion
+# of the array and multiplies the corresponding elements together.
+mult_arr = arr1 * arr2
+pylops_mpi.plot_local_arrays(mult_arr, "Multiplication", vmin=0, vmax=1)
