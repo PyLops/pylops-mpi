@@ -1,6 +1,6 @@
 PIP := $(shell command -v pip3 2> /dev/null || command which pip 2> /dev/null)
 PYTHON := $(shell command -v python3 2> /dev/null || command which python 2> /dev/null)
-NUM_PROCESSES = 5
+NUM_PROCESSES = 3
 
 .PHONY: install dev-install lint tests
 
@@ -45,3 +45,6 @@ docupdate:
 
 servedoc:
 	$(PYTHON) -m http.server --directory docs/build/
+
+run_examples:
+	cd examples && sh mpi_examples.sh $(NUM_PROCESSES) && cd ..
