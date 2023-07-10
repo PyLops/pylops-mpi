@@ -112,15 +112,19 @@ you can use the ``to_dist`` classmethod. This method allows you to distribute
 the array across multiple processes for parallel computation.
 Below is an example implementation depicting the same.
 
-.. GENERATED FROM PYTHON SOURCE LINES 47-53
+.. GENERATED FROM PYTHON SOURCE LINES 47-57
 
 .. code-block:: default
 
-    arr1 = pylops_mpi.DistributedArray.to_dist(np.random.normal(100, 100, global_shape))
-    arr2 = pylops_mpi.DistributedArray.to_dist(np.random.normal(300, 300, global_shape))
+    n = global_shape[0] * global_shape[1]
+    # Array to be distributed
+    array = np.arange(n) / float(n)
+    arr1 = pylops_mpi.DistributedArray.to_dist(x=array.reshape(global_shape), axis=1)
+    array = array / 2.0
+    arr2 = pylops_mpi.DistributedArray.to_dist(x=array.reshape(global_shape), axis=1)
     # plot local arrays
-    pylops_mpi.plot_local_arrays(arr1, "Distributed Array - 1")
-    pylops_mpi.plot_local_arrays(arr2, "Distributed Array - 2")
+    pylops_mpi.plot_local_arrays(arr1, "Distributed Array - 1", vmin=0, vmax=1)
+    pylops_mpi.plot_local_arrays(arr2, "Distributed Array - 2", vmin=0, vmax=1)
 
 
 
@@ -146,19 +150,17 @@ Below is an example implementation depicting the same.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 54-58
+.. GENERATED FROM PYTHON SOURCE LINES 58-60
 
-Element-wise Addition
+**Element-wise Addition** - Each process operates on its local portion of
+the array and adds the corresponding elements together.
 
-Each process operates on its local portion of the arrays
-and adds the corresponding elements together.
-
-.. GENERATED FROM PYTHON SOURCE LINES 58-61
+.. GENERATED FROM PYTHON SOURCE LINES 60-63
 
 .. code-block:: default
 
     sum_arr = arr1 + arr2
-    pylops_mpi.plot_local_arrays(sum_arr, "Addition")
+    pylops_mpi.plot_local_arrays(sum_arr, "Addition", vmin=0, vmax=1)
 
 
 
@@ -172,19 +174,17 @@ and adds the corresponding elements together.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 62-66
+.. GENERATED FROM PYTHON SOURCE LINES 64-66
 
-Element-wise Subtraction
-
-Each process operates on its local portion of the arrays
-and subtracts the corresponding elements together.
+**Element-wise Subtraction** - Each process operates on its local portion
+of the array and subtracts the corresponding elements together.
 
 .. GENERATED FROM PYTHON SOURCE LINES 66-69
 
 .. code-block:: default
 
     diff_arr = arr1 - arr2
-    pylops_mpi.plot_local_arrays(diff_arr, "Subtraction")
+    pylops_mpi.plot_local_arrays(diff_arr, "Subtraction", vmin=0, vmax=1)
 
 
 
@@ -198,19 +198,17 @@ and subtracts the corresponding elements together.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 70-74
+.. GENERATED FROM PYTHON SOURCE LINES 70-72
 
-Element-wise Multiplication
+**Element-wise Multiplication** - Each process operates on its local portion
+of the array and multiplies the corresponding elements together.
 
-Each process operates on its local portion of the arrays
-and multiplies the corresponding elements together.
-
-.. GENERATED FROM PYTHON SOURCE LINES 74-76
+.. GENERATED FROM PYTHON SOURCE LINES 72-74
 
 .. code-block:: default
 
-    mult_array = arr1 * arr2
-    pylops_mpi.plot_local_arrays(mult_array, "Multiplication")
+    mult_arr = arr1 * arr2
+    pylops_mpi.plot_local_arrays(mult_arr, "Multiplication", vmin=0, vmax=1)
 
 
 
@@ -226,7 +224,7 @@ and multiplies the corresponding elements together.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.174 seconds)
+   **Total running time of the script:** ( 0 minutes  1.243 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_distributed_array.py:
