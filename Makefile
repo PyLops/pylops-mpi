@@ -46,5 +46,6 @@ docupdate:
 servedoc:
 	$(PYTHON) -m http.server --directory docs/build/
 
+# Run examples using mpi
 run_examples:
 	cd examples && sh mpi_examples.sh $(NUM_PROCESSES) && cd ..
