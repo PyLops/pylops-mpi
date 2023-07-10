@@ -2,6 +2,7 @@
     Plotting functions for DistributedArray
 """
 
+from typing import Any, Optional
 from matplotlib import pyplot as plt
 import numpy as np
 
@@ -42,7 +43,8 @@ def plot_distributed_array(arr: DistributedArray) -> None:
 
 
 # Plot the local arrays of each rank
-def plot_local_arrays(arr: DistributedArray, title: str = None) -> None:
+def plot_local_arrays(arr: DistributedArray, title: str = None,
+                      vmin: Optional[Any] = None, vmax: Optional[Any] = None) -> None:
     """Visualize the local arrays of the given DistributedArray
 
     Parameters
@@ -51,15 +53,20 @@ def plot_local_arrays(arr: DistributedArray, title: str = None) -> None:
         DistributedArray
     title : :obj:`str`
         Main Title of the figure
+    vmin : :obj:`numpy.float64`
+        Minimum Value
+    vmax : :obj:`numpy.float64`
+        Maximum Value
     """
     global_gather = arr.base_comm.gather(arr.local_array, root=0)
     if arr.rank == 0:
-        plt.figure(figsize=(18, 5))
+        figure, ax = plt.subplots(nrows=1, ncols=arr.size,
+                                  figsize=(18, 5))
+        ax = [ax] if arr.size == 1 else ax
         for i in range(arr.size):
-            plt.subplot(2, arr.size, i + 1)
-            plt.imshow(global_gather[i], cmap='rainbow')
-            plt.xticks(np.arange(global_gather[i].shape[1]))
-            plt.yticks(np.arange(global_gather[i].shape[0]))
-            plt.title(f"Rank-{i}")
+            ax[i].imshow(global_gather[i], cmap='rainbow', vmin=vmin, vmax=vmax)
+            ax[i].set_xticks(np.arange(global_gather[i].shape[1]))
+            ax[i].set_yticks(np.arange(global_gather[i].shape[0]))
+            ax[i].set_title(f"Rank-{i}")
         plt.suptitle(title)
         plt.tight_layout()
