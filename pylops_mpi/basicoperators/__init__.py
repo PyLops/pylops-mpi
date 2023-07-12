@@ -8,11 +8,14 @@ using MPI.
 
 A list of operators present in pylops_mpi.basicoperators :
     MPIBlockDiag                      Block Diagonal Operator
+    MPIVStack                         Vertical Stacking
 
 """
 
 from .BlockDiag import *
+from .VStack import *
 
 __all__ = [
-    "MPIBlockDiag"
+    "MPIBlockDiag",
+    "MPIVStack"
 ]
