@@ -11,10 +11,10 @@ from pylops_mpi import MPILinearOperator, DistributedArray, Partition
 
 class MPIVStack(MPILinearOperator):
     r"""MPI VStack Operator
-    Create a vertical stack of a set of linear operators using MPI.
 
-    Each rank must initialize this operator by providing one or more linear operators
-    which will be computed within each rank. Both model and data vectors must be of
+    Create a vertical stack of a set of linear operators using MPI. Each rank must
+    initialize this operator by providing one or more linear operators which will
+    be computed within each rank. Both model and data vectors are of
     :class:`pylops_mpi.DistributedArray` type.
 
     Parameters
@@ -47,7 +47,7 @@ class MPIVStack(MPILinearOperator):
     i.e. broadcasted at all ranks in such a way that the global shape is equal to the local shape of the array
     and these local shapes agree with the corresponding linear operators.
 
-    Afterwards, the forward mode of each set of operator is collected from each rank in a
+    Afterwards, the forward mode of each operator is collected from each rank in a
     :class:`pylops_mpi.DistributedArray`, represented by **d**.
 
     .. math::
@@ -69,8 +69,8 @@ class MPIVStack(MPILinearOperator):
     model vector, denoted as **m** which is a :class:`pylops_mpi.DistributedArray` with
     :obj:`pylops_mpi.Partition.SCATTER` i.e. partitioned at each rank.
 
-    Afterwards, a collective reduction operation is performed where values from each set of operators is summed up,
-    and the final sum is broadcasted to all processes in the communicator, represented by **d**.
+    Afterwards, a collective reduction operation is performed where adjoint values from linear operators
+    are summed up, and the final sum is broadcasted to all processes in the communicator, represented by **d**.
 
     .. math::
           d =
