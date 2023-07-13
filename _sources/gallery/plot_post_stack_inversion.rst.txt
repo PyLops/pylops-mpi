@@ -51,8 +51,8 @@ modelling a 3D synthetic post-stack seismic data from a 3D model of the subsurfa
 
 .. GENERATED FROM PYTHON SOURCE LINES 23-25
 
-Let's start by defining all of the parameters required by the
-``pylops.avo.poststack.PoststackLinearModelling`` operator.
+Let's start by defining all the parameters required by the
+:py:func:`pylops.avo.poststack.PoststackLinearModelling` operator.
 
 .. GENERATED FROM PYTHON SOURCE LINES 25-55
 
@@ -98,15 +98,15 @@ Let's start by defining all of the parameters required by the
 .. GENERATED FROM PYTHON SOURCE LINES 56-66
 
 We now create the linear operator version of
-``pylops.avo.poststack.PostStackLinearModelling`` at each rank to model a
-subset of the data along the y-axis. Such operators are passes
-to the ``pylops_mpi.MPIBlockDiag`` operator, which is then used to perform
+:py:func:`pylops.avo.poststack.PoststackLinearModelling` at each rank to model a
+subset of the data along the y-axis. Such operators are passed
+to the :py:class:`pylops_mpi.basicoperators.MPIBlockDiag` operator, which is then used to perform
 the different forward operations of each individual operator
 at different ranks to compute the overall data. Note that to simplify the
 handling of the model and data, we split and distribute the first axis,
-and use ``pylops.basicoperators.Transpose`` to rearrange the model and data
-in the form required by the ``pylops.avo.poststack.PostStackLinearModelling``
-operator
+and use :py:class:`pylops.Transpose` to rearrange the model and data
+in the form required by the :py:func:`pylops.avo.poststack.PoststackLinearModelling`
+operator.
 
 .. GENERATED FROM PYTHON SOURCE LINES 66-121
 
@@ -188,7 +188,7 @@ operator
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  10.105 seconds)
+   **Total running time of the script:** ( 0 minutes  9.857 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_post_stack_inversion.py:
