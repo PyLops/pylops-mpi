@@ -20,8 +20,8 @@ rank = MPI.COMM_WORLD.Get_rank()
 size = MPI.COMM_WORLD.Get_size()
 
 ###############################################################################
-# Let's start by defining all of the parameters required by the
-# ``pylops.avo.poststack.PoststackLinearModelling`` operator.
+# Let's start by defining all the parameters required by the
+# :py:func:`pylops.avo.poststack.PoststackLinearModelling` operator.
 
 # Model
 model = np.load("../testdata/avo/poststack_model.npz")
@@ -54,15 +54,15 @@ mback3d = np.concatenate(MPI.COMM_WORLD.allgather(mback3d_i))
 
 ###############################################################################
 # We now create the linear operator version of
-# ``pylops.avo.poststack.PostStackLinearModelling`` at each rank to model a
-# subset of the data along the y-axis. Such operators are passes
-# to the ``pylops_mpi.MPIBlockDiag`` operator, which is then used to perform
+# :py:func:`pylops.avo.poststack.PoststackLinearModelling` at each rank to model a
+# subset of the data along the y-axis. Such operators are passed
+# to the :py:class:`pylops_mpi.basicoperators.MPIBlockDiag` operator, which is then used to perform
 # the different forward operations of each individual operator
 # at different ranks to compute the overall data. Note that to simplify the
 # handling of the model and data, we split and distribute the first axis,
-# and use ``pylops.basicoperators.Transpose`` to rearrange the model and data
-# in the form required by the ``pylops.avo.poststack.PostStackLinearModelling``
-# operator
+# and use :py:class:`pylops.Transpose` to rearrange the model and data
+# in the form required by the :py:func:`pylops.avo.poststack.PoststackLinearModelling`
+# operator.
 
 # Create flattened model data
 m3d_dist = DistributedArray(global_shape=ny * nx * nz)
