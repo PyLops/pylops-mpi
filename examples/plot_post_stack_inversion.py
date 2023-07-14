@@ -13,7 +13,7 @@ from mpi4py import MPI
 from pylops.utils.wavelets import ricker
 from pylops.basicoperators import Transpose
 from pylops.avo.poststack import PoststackLinearModelling
-from pylops_mpi import MPIBlockDiag, DistributedArray
+from pylops_mpi import MPIBlockDiag, DistributedArray, cgls
 
 plt.close("all")
 rank = MPI.COMM_WORLD.Get_rank()
@@ -25,7 +25,7 @@ size = MPI.COMM_WORLD.Get_size()
 
 # Model
 model = np.load("../testdata/avo/poststack_model.npz")
-x, z, m = model['x'], model['z'], np.log(model['model'])
+x, z, m = model['x'][::3], model['z'], np.log(model['model'])[:, ::3]
 
 # Making m a 3D model
 ny_i = 20  # size of model in y direction for rank i
@@ -67,6 +67,9 @@ mback3d = np.concatenate(MPI.COMM_WORLD.allgather(mback3d_i))
 # Create flattened model data
 m3d_dist = DistributedArray(global_shape=ny * nx * nz)
 m3d_dist[:] = m3d_i.flatten()
+# Create flattened smooth model data
+mback3d_dist = DistributedArray(global_shape=ny * nx * nz)
+mback3d_dist[:] = mback3d_i.flatten()
 
 # LinearOperator PostStackLinearModelling
 PPop = PoststackLinearModelling(wav, nt0=nz, spatdims=(ny_i, nx))
@@ -77,22 +80,39 @@ BDiag = MPIBlockDiag(ops=[Top.H @ PPop @ Top, ])
 d_dist = BDiag @ m3d_dist
 d_local = d_dist.local_array.reshape((ny_i, nx, nz))
 d = d_dist.asarray().reshape((ny, nx, nz))
+d_0_dist = BDiag @ mback3d_dist
+d_0 = d_dist.asarray().reshape((ny, nx, nz))
+
+###############################################################################
+# Finally, we perform 2 different kinds of inversions:
+#
+# * Inversion calculated iteratively using the :py:class:`pylops_mpi.optimization.cls_basic.CGLS` solver.
+#
+# * Inversion with regularization.
+
+# Inversion using CGLS solver
+d_r_iter = d_dist - d_0_dist
+minv3d_iter_dist = cgls(BDiag, d_r_iter, niter=100)[0]
+minv3d_iter_dist = mback3d_dist + minv3d_iter_dist
+minv3d_iter = minv3d_iter_dist.asarray().reshape((ny, nx, nz))
 
 if rank == 0:
     # Check the distributed implementation gives the same result
     # as the one running only on rank0
     PPop0 = PoststackLinearModelling(wav, nt0=nz, spatdims=(ny, nx))
     d0 = (PPop0 @ m3d.transpose(2, 0, 1)).transpose(1, 2, 0)
+    d0_0 = (PPop0 @ m3d.transpose(2, 0, 1)).transpose(1, 2, 0)
 
     # Check the two distributed implementations give the same result
     print('Distr == Local', np.allclose(d, d0))
+    print('Smooth Distr == Local', np.allclose(d_0, d0_0))
 
     # Visualize
-    fig, axs = plt.subplots(nrows=3, ncols=3, figsize=(9, 12), constrained_layout=True)
+    fig, axs = plt.subplots(nrows=4, ncols=3, figsize=(9, 12), constrained_layout=True)
     axs[0][0].imshow(m3d[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
     axs[0][0].set_title("Model x-z")
     axs[0][0].axis("tight")
-    axs[0][1].imshow(m3d[:, 400, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+    axs[0][1].imshow(m3d[:, 200, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
     axs[0][1].set_title("Model y-z")
     axs[0][1].axis("tight")
     axs[0][2].imshow(m3d[:, :, 220].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
@@ -102,7 +122,7 @@ if rank == 0:
     axs[1][0].imshow(mback3d[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
     axs[1][0].set_title("Smooth Model x-z")
     axs[1][0].axis("tight")
-    axs[1][1].imshow(mback3d[:, 400, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+    axs[1][1].imshow(mback3d[:, 200, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
     axs[1][1].set_title("Smooth Model y-z")
     axs[1][1].axis("tight")
     axs[1][2].imshow(mback3d[:, :, 220].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
@@ -112,9 +132,19 @@ if rank == 0:
     axs[2][0].imshow(d[5, :, :].T, cmap="gray", vmin=-1, vmax=1)
     axs[2][0].set_title("Data x-z")
     axs[2][0].axis("tight")
-    axs[2][1].imshow(d[:, 400, :].T, cmap='gray', vmin=-1, vmax=1)
+    axs[2][1].imshow(d[:, 200, :].T, cmap='gray', vmin=-1, vmax=1)
     axs[2][1].set_title('Data y-z')
     axs[2][1].axis('tight')
     axs[2][2].imshow(d[:, :, 220].T, cmap='gray', vmin=-1, vmax=1)
     axs[2][2].set_title('Data x-y')
     axs[2][2].axis('tight')
+
+    axs[3][0].imshow(minv3d_iter[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+    axs[3][0].set_title("Inverted Model iter x-z")
+    axs[3][0].axis("tight")
+    axs[3][1].imshow(minv3d_iter[:, 200, :].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
+    axs[3][1].set_title('Inverted Model iter y-z')
+    axs[3][1].axis('tight')
+    axs[3][2].imshow(minv3d_iter[:, :, 220].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
+    axs[3][2].set_title('Inverted Model iter x-y')
+    axs[3][2].axis('tight')
