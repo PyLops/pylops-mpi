@@ -97,7 +97,10 @@ class DistributedArray:
         return self.local_array[index]
 
     def __setitem__(self, index, value):
-        self.local_array[index] = value
+        if self.partition is Partition.BROADCAST:
+            self.local_array[index] = self.base_comm.bcast(value)
+        else:
+            self.local_array[index] = value
 
     @property
     def global_shape(self):
