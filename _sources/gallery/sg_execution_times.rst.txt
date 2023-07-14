@@ -6,10 +6,10 @@
 
 Computation times
 =================
-**00:11.721** total execution time for **gallery** files:
+**00:08.756** total execution time for **gallery** files:
 
 +-----------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_gallery_plot_post_stack_inversion.py` (``plot_post_stack_inversion.py``) | 00:09.857 | 0.0 MB |
+| :ref:`sphx_glr_gallery_plot_post_stack_inversion.py` (``plot_post_stack_inversion.py``) | 00:07.522 | 0.0 MB |
 +-----------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_gallery_plot_distributed_array.py` (``plot_distributed_array.py``)       | 00:01.864 | 0.0 MB |
+| :ref:`sphx_glr_gallery_plot_distributed_array.py` (``plot_distributed_array.py``)       | 00:01.234 | 0.0 MB |
 +-----------------------------------------------------------------------------------------+-----------+--------+
