@@ -75,7 +75,7 @@ class MPILinearOperator:
 
         return self._matvec(x)
 
-    def _matvec(self, x: DistributedArray):
+    def _matvec(self, x: DistributedArray) -> DistributedArray:
         if self.Op:
             y = DistributedArray(global_shape=self.shape[1])
             y[:] = self.Op._matvec(x.local_array)
@@ -224,10 +224,10 @@ class _AdjointLinearOperator(MPILinearOperator):
         super().__init__(shape=(A.shape[1], A.shape[0]), dtype=A.dtype,
                          base_comm=MPI.COMM_WORLD)
 
-    def _matvec(self, x: DistributedArray):
+    def _matvec(self, x: DistributedArray) -> DistributedArray:
         return self.A.rmatvec(x)
 
-    def _rmatvec(self, x: DistributedArray):
+    def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         return self.A.matvec(x)
 
 
@@ -240,13 +240,13 @@ class _TransposedLinearOperator(MPILinearOperator):
         super().__init__(shape=(A.shape[1], A.shape[0]), dtype=A.dtype,
                          base_comm=MPI.COMM_WORLD)
 
-    def _matvec(self, x: DistributedArray):
+    def _matvec(self, x: DistributedArray) -> DistributedArray:
         x[:] = np.conj(x.local_array)
         y = self.A.rmatvec(x)
         y[:] = np.conj(y.local_array)
         return y
 
-    def _rmatvec(self, x: DistributedArray):
+    def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         x[:] = np.conj(x.local_array)
         y = self.A.matvec(x)
         y[:] = np.conj(y.local_array)
@@ -265,13 +265,13 @@ class _ProductLinearOperator(MPILinearOperator):
         super().__init__(shape=(A.shape[0], B.shape[1]), dtype=_get_dtype([A, B]),
                          base_comm=MPI.COMM_WORLD)
 
-    def _matvec(self, x: DistributedArray):
+    def _matvec(self, x: DistributedArray) -> DistributedArray:
         return self.args[0].matvec(self.args[1].matvec(x))
 
-    def _rmatvec(self, x: DistributedArray):
+    def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         return self.args[1].rmatvec(self.args[0].rmatvec(x))
 
-    def _adjoint(self):
+    def _adjoint(self) -> MPILinearOperator:
         A, B = self.args
         return B.H * A.H
 
@@ -289,19 +289,19 @@ class _ScaledLinearOperator(MPILinearOperator):
         super().__init__(shape=A.shape, dtype=_get_dtype([A], [type(alpha)]),
                          base_comm=MPI.COMM_WORLD)
 
-    def _matvec(self, x: DistributedArray):
+    def _matvec(self, x: DistributedArray) -> DistributedArray:
         y = self.args[0].matvec(x)
         if y is not None:
             y[:] *= self.args[1]
         return y
 
-    def _rmatvec(self, x: DistributedArray):
+    def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         y = self.args[0].rmatvec(x)
         if y is not None:
             y[:] *= np.conj(self.args[1])
         return y
 
-    def _adjoint(self):
+    def _adjoint(self) -> MPILinearOperator:
         A, alpha = self.args
         return A.H * np.conj(alpha)
 
@@ -319,17 +319,17 @@ class _SumLinearOperator(MPILinearOperator):
         self.args = (A, B)
         super().__init__(shape=A.shape, dtype=A.dtype, base_comm=MPI.COMM_WORLD)
 
-    def _matvec(self, x: DistributedArray):
+    def _matvec(self, x: DistributedArray) -> DistributedArray:
         arr1 = self.args[0].matvec(x)
         arr2 = self.args[1].matvec(x)
         return arr1 + arr2
 
-    def _rmatvec(self, x):
+    def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         arr1 = self.args[0].rmatvec(x)
         arr2 = self.args[1].rmatvec(x)
         return arr1 + arr2
 
-    def _adjoint(self):
+    def _adjoint(self) -> MPILinearOperator:
         A, B = self.args
         return A.H + B.H
 
@@ -349,17 +349,17 @@ class _PowerLinearOperator(MPILinearOperator):
         super(_PowerLinearOperator, self).__init__(shape=A.shape, dtype=A.dtype, base_comm=A.base_comm)
         self.args = (A, p)
 
-    def _power(self, fun: Callable, x: DistributedArray):
+    def _power(self, fun: Callable, x: DistributedArray) -> DistributedArray:
         res = DistributedArray(global_shape=x.global_shape, dtype=x.dtype)
         res[:] = x.local_array
         for _ in range(self.args[1]):
             res[:] = fun(res).local_array
         return res
 
-    def _matvec(self, x: DistributedArray):
+    def _matvec(self, x: DistributedArray) -> DistributedArray:
         return self._power(self.args[0].matvec, x)
 
-    def _rmatvec(self, x: DistributedArray):
+    def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         return self._power(self.args[0].rmatvec, x)
 
 
@@ -373,21 +373,21 @@ class _ConjLinearOperator(MPILinearOperator):
         self.A = A
         super().__init__(shape=A.shape, dtype=A.dtype, base_comm=MPI.COMM_WORLD)
 
-    def _matvec(self, x: DistributedArray):
+    def _matvec(self, x: DistributedArray) -> DistributedArray:
         x[:] = x.local_array.conj()
         y = self.A.matvec(x)
         if y is not None:
             y[:] = y.local_array.conj()
         return y
 
-    def _rmatvec(self, x: DistributedArray):
+    def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         x[:] = x.local_array.conj()
         y = self.A.rmatvec(x)
         if y is not None:
             y[:] = y.local_array.conj()
         return y
 
-    def _adjoint(self):
+    def _adjoint(self) -> MPILinearOperator:
         return _ConjLinearOperator(self.A.H)
 
 
