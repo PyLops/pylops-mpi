@@ -108,7 +108,7 @@ class MPIVStack(MPILinearOperator):
         dtype = _get_dtype(self.ops) if dtype is None else np.dtype(dtype)
         super().__init__(shape=shape, dtype=dtype, base_comm=base_comm)
 
-    def _matvec(self, x: DistributedArray):
+    def _matvec(self, x: DistributedArray) -> DistributedArray:
         if x.partition is not Partition.BROADCAST:
             raise ValueError(f"x should have partition={Partition.BROADCAST}, {x.partition} != {Partition.BROADCAST}")
         if x.local_shape != (self.mops,):
@@ -121,7 +121,7 @@ class MPIVStack(MPILinearOperator):
         y[:] = np.concatenate(y1)
         return y
 
-    def _rmatvec(self, x: DistributedArray):
+    def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         if x.partition is not Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER}, {x.partition} != {Partition.SCATTER}")
         if x.local_shape != (self.nops,):
