@@ -40,6 +40,7 @@ Basic Operators
    :toctree: generated/
 
     MPIBlockDiag
+    MPIVStack
 
 Solvers
 -------
