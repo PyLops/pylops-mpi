@@ -1,0 +1,541 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+        <title>pylops_mpi.basicoperators.VStack &#8212; PyLops-MPI</title>
+    
+
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/style.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/pylops_mpi/basicoperators/VStack';</script>
+    <link rel="icon" href="../../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    
+    <script src="../../../_static/require.js"></script>
+
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  <div class="navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/pylops_b.png" class="logo__image only-light" alt="Logo image"/>
+    <script>document.write(`<img src="../../../_static/pylops.png" class="logo__image only-dark" alt="Logo image"/>`);</script>
+  
+  
+</a></div>
+    
+  </div>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../index.html">
+                        Overview
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../api/index.html">
+                        PyLops MPI API
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../gallery/index.html">
+                        Gallery
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+    </div>
+  
+
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../index.html">
+                        Overview
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../api/index.html">
+                        PyLops MPI API
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../gallery/index.html">
+                        Gallery
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumbs">
+  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">pylops_mpi.basicoperators.VStack</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <h1>Source code for pylops_mpi.basicoperators.VStack</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse.linalg._interface</span> <span class="kn">import</span> <span class="n">_get_dtype</span>
+<span class="kn">from</span> <span class="nn">mpi4py</span> <span class="kn">import</span> <span class="n">MPI</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">pylops</span> <span class="kn">import</span> <span class="n">LinearOperator</span>
+<span class="kn">from</span> <span class="nn">pylops.utils</span> <span class="kn">import</span> <span class="n">DTypeLike</span>
+
+<span class="kn">from</span> <span class="nn">pylops_mpi</span> <span class="kn">import</span> <span class="n">MPILinearOperator</span><span class="p">,</span> <span class="n">DistributedArray</span><span class="p">,</span> <span class="n">Partition</span>
+
+
+<div class="viewcode-block" id="MPIVStack"><a class="viewcode-back" href="../../../api/generated/pylops_mpi.basicoperators.MPIVStack.html#pylops_mpi.basicoperators.MPIVStack">[docs]</a><span class="k">class</span> <span class="nc">MPIVStack</span><span class="p">(</span><span class="n">MPILinearOperator</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;MPI VStack Operator</span>
+
+<span class="sd">    Create a vertical stack of a set of linear operators using MPI. Each rank must</span>
+<span class="sd">    initialize this operator by providing one or more linear operators which will</span>
+<span class="sd">    be computed within each rank. Both model and data vectors are of</span>
+<span class="sd">    :class:`pylops_mpi.DistributedArray` type.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ops : :obj:`list`</span>
+<span class="sd">        One or more :class:`pylops.LinearOperator` to be vertically stacked.</span>
+<span class="sd">    base_comm : :obj:`mpi4py.MPI.Comm`, optional</span>
+<span class="sd">        Base MPI Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.</span>
+<span class="sd">    dtype : :obj:`str`, optional</span>
+<span class="sd">        Type of elements in input array.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    shape : :obj:`tuple`</span>
+<span class="sd">        Operator shape</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If ``ops`` have different number of rows</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    An MPIVStack is composed of N linear operators stacked vertically, represented by **L**.</span>
+<span class="sd">    Each rank has one or more :class:`pylops.LinearOperator`, which we represent here compactly</span>
+<span class="sd">    as :math:`\mathbf{L}_i` for rank :math:`i`.</span>
+
+<span class="sd">    Each operator performs forward mode operations using its corresponding model vector, denoted as **m**.</span>
+<span class="sd">    This vector is effectively a :class:`pylops_mpi.DistributedArray` with :obj:`pylops_mpi.Partition.BROADCAST`</span>
+<span class="sd">    i.e. broadcasted at all ranks in such a way that the global shape is equal to the local shape of the array</span>
+<span class="sd">    and these local shapes agree with the corresponding linear operators.</span>
+
+<span class="sd">    Afterwards, the forward mode of each operator is collected from each rank in a</span>
+<span class="sd">    :class:`pylops_mpi.DistributedArray`, represented by **d**.</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">          \begin{bmatrix}</span>
+<span class="sd">            \mathbf{d}_1 \\</span>
+<span class="sd">            \mathbf{d}_2 \\</span>
+<span class="sd">            \vdots \\</span>
+<span class="sd">            \mathbf{d}_n</span>
+<span class="sd">          \end{bmatrix} =</span>
+<span class="sd">          \begin{bmatrix}</span>
+<span class="sd">            \mathbf{L}_1 \\</span>
+<span class="sd">            \mathbf{L}_2 \\</span>
+<span class="sd">            \vdots \\</span>
+<span class="sd">            \mathbf{L}_n</span>
+<span class="sd">          \end{bmatrix}</span>
+<span class="sd">          m</span>
+
+<span class="sd">    Likewise for the adjoint mode, each operator performs adjoint operations using its corresponding</span>
+<span class="sd">    model vector, denoted as **m** which is a :class:`pylops_mpi.DistributedArray` with</span>
+<span class="sd">    :obj:`pylops_mpi.Partition.SCATTER` i.e. partitioned at each rank.</span>
+
+<span class="sd">    Afterwards, a collective reduction operation is performed where adjoint values from linear operators</span>
+<span class="sd">    are summed up, and the final sum is broadcasted to all processes in the communicator, represented by **d**.</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">          d =</span>
+<span class="sd">          \begin{bmatrix}</span>
+<span class="sd">            \mathbf{L}_1 \\</span>
+<span class="sd">            \mathbf{L}_2 \\</span>
+<span class="sd">            \vdots \\</span>
+<span class="sd">            \mathbf{L}_n</span>
+<span class="sd">          \end{bmatrix}</span>
+<span class="sd">          \begin{bmatrix}</span>
+<span class="sd">            \mathbf{m}_1 \\</span>
+<span class="sd">            \mathbf{m}_2 \\</span>
+<span class="sd">            \vdots \\</span>
+<span class="sd">            \mathbf{m}_n</span>
+<span class="sd">          \end{bmatrix}</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ops</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LinearOperator</span><span class="p">],</span>
+                 <span class="n">base_comm</span><span class="p">:</span> <span class="n">MPI</span><span class="o">.</span><span class="n">Comm</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">,</span>
+                 <span class="n">dtype</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DTypeLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ops</span> <span class="o">=</span> <span class="n">ops</span>
+        <span class="n">nops</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">iop</span><span class="p">,</span> <span class="n">oper</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">):</span>
+            <span class="n">nops</span><span class="p">[</span><span class="n">iop</span><span class="p">]</span> <span class="o">=</span> <span class="n">oper</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nops</span> <span class="o">=</span> <span class="n">nops</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">mops</span> <span class="o">=</span> <span class="p">[</span><span class="n">oper</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">oper</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">mops</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Operators have different number of columns&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mops</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">mops</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nnops</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">nops</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nnops</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nnops</span> <span class="o">*</span> <span class="n">base_comm</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">base_comm</span><span class="o">.</span><span class="n">allreduce</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nops</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">mops</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">localop_shape</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nops</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mops</span><span class="p">)</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">_get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span> <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">base_comm</span><span class="o">=</span><span class="n">base_comm</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">partition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;x should have partition=</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">partition</span><span class="si">}</span><span class="s2"> != </span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">local_shape</span> <span class="o">!=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mops</span><span class="p">,):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dimension mismatch: x shape-</span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">local_shape</span><span class="si">}</span><span class="s2"> does not match operator shape &quot;</span>
+                             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">localop_shape</span><span class="si">}</span><span class="s2">; </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">local_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> != </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mops</span><span class="si">}</span><span class="s2"> (dim1) at rank=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">y1</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">iop</span><span class="p">,</span> <span class="n">oper</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">):</span>
+            <span class="n">y1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">oper</span><span class="o">.</span><span class="n">matvec</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="p">))</span>
+        <span class="n">y</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">y1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">y</span>
+
+    <span class="k">def</span> <span class="nf">_rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">partition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;x should have partition=</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">partition</span><span class="si">}</span><span class="s2"> != </span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">local_shape</span> <span class="o">!=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nops</span><span class="p">,):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dimension mismatch: x shape-</span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">local_shape</span><span class="si">}</span><span class="s2"> does not match operator shape &quot;</span>
+                             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">localop_shape</span><span class="si">}</span><span class="s2">; </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">local_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> != </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nops</span><span class="si">}</span><span class="s2"> (dim0) at rank=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">partition</span><span class="o">=</span><span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">y1</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">iop</span><span class="p">,</span> <span class="n">oper</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">):</span>
+            <span class="n">y1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">oper</span><span class="o">.</span><span class="n">rmatvec</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">nnops</span><span class="p">[</span><span class="n">iop</span><span class="p">]:</span> <span class="bp">self</span><span class="o">.</span><span class="n">nnops</span><span class="p">[</span><span class="n">iop</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]]))</span>
+        <span class="n">y1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">y1</span><span class="p">)</span>
+        <span class="n">y</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="o">.</span><span class="n">allreduce</span><span class="p">(</span><span class="n">y1</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="n">MPI</span><span class="o">.</span><span class="n">SUM</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">y</span></div>
+</pre></div>
+
+                </article>
+              
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
+    
+      © Copyright 2023, PyLops Development Team.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.0.1.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
