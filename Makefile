@@ -38,7 +38,8 @@ tests:
 
 doc:
 	cd docs  && rm -rf source/api/generated && rm -rf source/gallery &&\
-	rm -rf build && cd .. && sphinx-build -b html docs/source docs/build
+	rm -rf source/tutorials && rm -rf build &&\
+	cd .. && sphinx-build -b html docs/source docs/build
 
 docupdate:
 	cd docs && make html && cd ..
