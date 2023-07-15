@@ -14,4 +14,5 @@ pylops_mpi.egg-info/
 
 # Documentation
 docs/source/gallery
+docs/source/tutorials
 docs/source/api/generated

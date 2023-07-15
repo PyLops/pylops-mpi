@@ -52,9 +52,10 @@ sphinx_gallery_conf = {
     # path to your examples scripts
     "examples_dirs": [
         "../../examples",
+        "../../tutorials",
     ],
     # path where to save gallery generated examples
-    "gallery_dirs": ["gallery"],
+    "gallery_dirs": ["gallery", "tutorials"],
     "filename_pattern": r"\.py",
     # Remove the "Download all examples" button from the top level gallery
     "download_all_examples": False,
