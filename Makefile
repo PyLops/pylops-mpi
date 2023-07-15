@@ -31,7 +31,7 @@ dev-install_conda:
 	conda env create -f environment-dev.yml && conda activate pylops_mpi && pip install -e .
 
 lint:
-	flake8 pylops_mpi/ tests/ examples/
+	flake8 pylops_mpi/ tests/ examples/ tutorials/
 
 tests:
 	mpiexec -n $(NUM_PROCESSES) pytest tests/ --with-mpi
@@ -48,4 +48,8 @@ servedoc:
 
 # Run examples using mpi
 run_examples:
-	cd examples && sh mpi_examples.sh $(NUM_PROCESSES) && cd ..
+	sh mpi_examples.sh examples $(NUM_PROCESSES)
+
+# Run tutorials using mpi
+run_tutorials:
+	sh mpi_examples.sh tutorials $(NUM_PROCESSES)
