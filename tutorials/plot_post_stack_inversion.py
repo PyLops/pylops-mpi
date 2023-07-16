@@ -6,7 +6,7 @@ of a first part showing how to model a 3D synthetic post-stack seismic data from
 subsurface acoustic impedence in a distributed manner, following by a second part when inversion
 is carried out.
 
-This tutorial builds on the :py:class:`pylops.avo.poststack.PoststackLinearModelling`
+This tutorial builds on the :py:func:`pylops.avo.poststack.PoststackLinearModelling`
 operator to model 1d post-stack seismic traces 1d profiles of the subsurface acoustic impedence
 by means of the following equation
 
@@ -56,7 +56,8 @@ from mpi4py import MPI
 from pylops.utils.wavelets import ricker
 from pylops.basicoperators import SecondDerivative, Transpose, VStack
 from pylops.avo.poststack import PoststackLinearModelling
-from pylops_mpi import MPIBlockDiag, DistributedArray, cgls
+
+import pylops_mpi
 
 plt.close("all")
 rank = MPI.COMM_WORLD.Get_rank()
@@ -108,17 +109,17 @@ mback3d = np.concatenate(MPI.COMM_WORLD.allgather(mback3d_i))
 # operator.
 
 # Create flattened model data
-m3d_dist = DistributedArray(global_shape=ny * nx * nz)
+m3d_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz)
 m3d_dist[:] = m3d_i.flatten()
 
 # Create flattened smooth model data
-mback3d_dist = DistributedArray(global_shape=ny * nx * nz)
+mback3d_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz)
 mback3d_dist[:] = mback3d_i.flatten()
 
 # LinearOperator PostStackLinearModelling
 PPop = PoststackLinearModelling(wav, nt0=nz, spatdims=(ny_i, nx))
 Top = Transpose((ny_i, nx, nz), (2, 0, 1))
-BDiag = MPIBlockDiag(ops=[Top.H @ PPop @ Top, ])
+BDiag = pylops_mpi.basicoperators.MPIBlockDiag(ops=[Top.H @ PPop @ Top, ])
 
 # Data
 d_dist = BDiag @ m3d_dist
@@ -149,19 +150,21 @@ d_0 = d_dist.asarray().reshape((ny, nx, nz))
 # where :math:`\mathbf{D}_{2,x}` and :math:`\mathbf{D}_{2,z}` apply the second derivative over the z- and x-axes.
 
 # Inversion using CGLS solver
-minv3d_iter_dist = cgls(BDiag, d_dist, x0=mback3d_dist, niter=100, show=True)[0]
+minv3d_iter_dist = pylops_mpi.optimization.basic.cgls(BDiag, d_dist, x0=mback3d_dist, niter=100, show=True)[0]
 minv3d_iter = minv3d_iter_dist.asarray().reshape((ny, nx, nz))
+
+###############################################################################
 
 # Regularized inversion
 epsR = 1e1
 Dz = SecondDerivative((ny_i, nx, nz), axis=-1)
 Dx = SecondDerivative((ny_i, nx, nz), axis=-2)
 
-d_dist_reg = DistributedArray(global_shape=3 * ny * nx * nz)
+d_dist_reg = pylops_mpi.DistributedArray(global_shape=3 * ny * nx * nz)
 d_dist_reg[:ny_i * nz * nx] = d_dist.local_array
 d_dist_reg[ny_i * nz * nx:] = 0.
-BDiag_reg = MPIBlockDiag(ops=[VStack([Top.H @ PPop @ Top, epsR * Dx, epsR * Dz]),])
-minv3d_reg_dist = cgls(BDiag_reg, d_dist_reg, x0=mback3d_dist, niter=100, show=True)[0]
+BDiag_reg = pylops_mpi.basicoperators.MPIBlockDiag(ops=[VStack([Top.H @ PPop @ Top, epsR * Dx, epsR * Dz]), ])
+minv3d_reg_dist = pylops_mpi.optimization.basic.cgls(BDiag_reg, d_dist_reg, x0=mback3d_dist, niter=100, show=True)[0]
 minv3d_reg = minv3d_reg_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
