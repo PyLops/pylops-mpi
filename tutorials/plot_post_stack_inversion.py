@@ -1,8 +1,51 @@
-"""
+r"""
 Post Stack Inversion - 3D
 =========================
-This illustration demonstrates the implementation of a distributed 3D Post-stack inversion. It involves
-modelling a 3D synthetic post-stack seismic data from a 3D model of the subsurface acoustic impedence.
+This tutorial demonstrates the implementation of a distributed 3D Post-stack inversion. It consists
+of a first part showing how to model a 3D synthetic post-stack seismic data from a 3D model of the 
+subsurface acoustic impedence in a distributed manner, following by a second part when inversion
+is carried out. 
+
+This tutorial builds on the :py:class:`pylops.avo.poststack.PoststackLinearModelling`
+operator to model 1d post-stack seismic traces 1d profiles of the subsurface acoustic impedence
+by means of the following equation
+
+.. math::
+    d(t) = \frac{1}{2} w(t) * \frac{\mathrm{d}\ln \text{AI}(t)}{\mathrm{d}t}
+
+where :math:`\text{AI}(t)` is the acoustic impedance profile and :math:`w(t)` is
+the time domain seismic wavelet. Being this inherently a 1d operator, we can easily
+set up a problem where one of the dimensions (here the y-dimension) is distributed 
+across ranks and each of them is in charge of performing modelling for a subvolume of
+the entire domain. Using a compact matrix-vector notation, the entire problem can
+be written as
+
+.. math::
+    \begin{bmatrix}
+        \mathbf{d}_{1}  \\
+        \mathbf{d}_{2}  \\
+        \vdots     \\
+        \mathbf{d}_{N}
+    \end{bmatrix} =
+    \begin{bmatrix}
+        \mathbf{G}_1  & \mathbf{0}   &  \ldots &  \mathbf{0}  \\
+        \mathbf{0}    & \mathbf{G}_2 &  \ldots &  \mathbf{0}  \\
+        \vdots        & \vdots       &  \ddots &  \vdots         \\
+        \mathbf{0}    & \mathbf{0}   &  \ldots &  \mathbf{G}_N
+        \end{bmatrix}
+    \begin{bmatrix}
+        \mathbf{ai}_{1}  \\
+        \mathbf{ai}_{2}  \\
+        \vdots     \\
+        \mathbf{ai}_{N}
+    \end{bmatrix} 
+
+where :math:`\mathbf{G}_i` is a post-stack modelling operator, :math:`\mathbf{d}_i` 
+is the data, and :math:`\mathbf{ai}_i` is the input model for the i-th portion of the model.
+
+This problem can be easily set up using the :py:class:`pylops_mpi.basicoperators.MPIBlockDiag`
+operator.
+
 """
 
 import numpy as np
@@ -11,7 +54,7 @@ from matplotlib import pyplot as plt
 from mpi4py import MPI
 
 from pylops.utils.wavelets import ricker
-from pylops.basicoperators import Transpose
+from pylops.basicoperators import SecondDerivative, Transpose, VStack
 from pylops.avo.poststack import PoststackLinearModelling
 from pylops_mpi import MPIBlockDiag, DistributedArray, cgls
 
@@ -67,6 +110,7 @@ mback3d = np.concatenate(MPI.COMM_WORLD.allgather(mback3d_i))
 # Create flattened model data
 m3d_dist = DistributedArray(global_shape=ny * nx * nz)
 m3d_dist[:] = m3d_i.flatten()
+
 # Create flattened smooth model data
 mback3d_dist = DistributedArray(global_shape=ny * nx * nz)
 mback3d_dist[:] = mback3d_i.flatten()
@@ -84,17 +128,44 @@ d_0_dist = BDiag @ mback3d_dist
 d_0 = d_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
-# Finally, we perform 2 different kinds of inversions:
+# We perform 2 different kinds of inversions:
 #
 # * Inversion calculated iteratively using the :py:class:`pylops_mpi.optimization.cls_basic.CGLS` solver.
 #
-# * Inversion with regularization.
+# * Inversion with spatial regularization along the non-distributed dimensions (x and z).
+#   This requires extending the operator and data of each rank in the following manner
+#
+#  .. math::
+#    \begin{bmatrix}
+#        \mathbf{d}_{i}  \\
+#        \mathbf{0}
+#    \end{bmatrix} =
+#    \begin{bmatrix}
+#        \mathbf{G}_i \\
+#        \epsilon \mathbf{D}_{2,x} \\
+#        \epsilon \mathbf{D}_{2,z} \\
+#    \end{bmatrix} \mathbf{ai}_{i}
+#
+# where :math:`\mathbf{D}_{2,x}` and :math:`\mathbf{D}_{2,z}` apply the second derivative over the z- and x-axes.
 
 # Inversion using CGLS solver
-d_r_iter = d_dist - d_0_dist
-minv3d_iter_dist = cgls(BDiag, d_r_iter, niter=100)[0]
-minv3d_iter_dist = mback3d_dist + minv3d_iter_dist
+minv3d_iter_dist = cgls(BDiag, d_dist, x0=mback3d_dist, niter=100, show=True)[0]
 minv3d_iter = minv3d_iter_dist.asarray().reshape((ny, nx, nz))
+
+# Regularized inversion
+epsR = 1e1
+Dz = SecondDerivative((ny_i, nx, nz), axis=-1)
+Dx = SecondDerivative((ny_i, nx, nz), axis=-2)
+
+d_dist_reg = DistributedArray(global_shape=3 * ny * nx * nz)
+d_dist_reg[:ny_i*nz*nx] = d_dist.local_array
+d_dist_reg[ny_i*nz*nx:] = 0.
+BDiag_reg = MPIBlockDiag(ops=[VStack([Top.H @ PPop @ Top, epsR * Dx, epsR * Dz]),])
+minv3d_reg_dist = cgls(BDiag_reg, d_dist_reg, x0=mback3d_dist, niter=100, show=True)[0]
+minv3d_reg = minv3d_reg_dist.asarray().reshape((ny, nx, nz))
+
+###############################################################################
+# Finally, we display the modeling and inversion results
 
 if rank == 0:
     # Check the distributed implementation gives the same result
@@ -103,12 +174,12 @@ if rank == 0:
     d0 = (PPop0 @ m3d.transpose(2, 0, 1)).transpose(1, 2, 0)
     d0_0 = (PPop0 @ m3d.transpose(2, 0, 1)).transpose(1, 2, 0)
 
-    # Check the two distributed implementations give the same result
+    # Check the two distributed implementations give the same modelling results
     print('Distr == Local', np.allclose(d, d0))
     print('Smooth Distr == Local', np.allclose(d_0, d0_0))
 
     # Visualize
-    fig, axs = plt.subplots(nrows=4, ncols=3, figsize=(9, 12), constrained_layout=True)
+    fig, axs = plt.subplots(nrows=5, ncols=3, figsize=(9, 14), constrained_layout=True)
     axs[0][0].imshow(m3d[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
     axs[0][0].set_title("Model x-z")
     axs[0][0].axis("tight")
@@ -148,3 +219,13 @@ if rank == 0:
     axs[3][2].imshow(minv3d_iter[:, :, 220].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
     axs[3][2].set_title('Inverted Model iter x-y')
     axs[3][2].axis('tight')
+
+    axs[4][0].imshow(minv3d_reg[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+    axs[4][0].set_title("Regularized Inverted Model iter x-z")
+    axs[4][0].axis("tight")
+    axs[4][1].imshow(minv3d_reg[:, 200, :].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
+    axs[4][1].set_title('Regularized Inverted Model iter y-z')
+    axs[4][1].axis('tight')
+    axs[4][2].imshow(minv3d_reg[:, :, 220].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
+    axs[4][2].set_title('Regularized Inverted Model iter x-y')
+    axs[4][2].axis('tight')
