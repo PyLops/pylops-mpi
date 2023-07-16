@@ -48,9 +48,9 @@ y = BDiag @ x
 xinv, istop, niter, r1norm, r2norm, cost = pylops_mpi.cgls(BDiag, y, niter=15, tol=1e-10, show=True)
 xinv_array = xinv.asarray()
 
-# Visualize
 if rank == 0:
     print(f"CGLS Solution xinv={xinv_array}")
+    # Visualize
     plt.figure(figsize=(18, 5))
     plt.plot(cost, lw=2, label="CGLS")
     plt.title("Cost Function")
