@@ -2,9 +2,9 @@ r"""
 Post Stack Inversion - 3D
 =========================
 This tutorial demonstrates the implementation of a distributed 3D Post-stack inversion. It consists
-of a first part showing how to model a 3D synthetic post-stack seismic data from a 3D model of the 
+of a first part showing how to model a 3D synthetic post-stack seismic data from a 3D model of the
 subsurface acoustic impedence in a distributed manner, following by a second part when inversion
-is carried out. 
+is carried out.
 
 This tutorial builds on the :py:class:`pylops.avo.poststack.PoststackLinearModelling`
 operator to model 1d post-stack seismic traces 1d profiles of the subsurface acoustic impedence
@@ -15,7 +15,7 @@ by means of the following equation
 
 where :math:`\text{AI}(t)` is the acoustic impedance profile and :math:`w(t)` is
 the time domain seismic wavelet. Being this inherently a 1d operator, we can easily
-set up a problem where one of the dimensions (here the y-dimension) is distributed 
+set up a problem where one of the dimensions (here the y-dimension) is distributed
 across ranks and each of them is in charge of performing modelling for a subvolume of
 the entire domain. Using a compact matrix-vector notation, the entire problem can
 be written as
@@ -38,9 +38,9 @@ be written as
         \mathbf{ai}_{2}  \\
         \vdots     \\
         \mathbf{ai}_{N}
-    \end{bmatrix} 
+    \end{bmatrix}
 
-where :math:`\mathbf{G}_i` is a post-stack modelling operator, :math:`\mathbf{d}_i` 
+where :math:`\mathbf{G}_i` is a post-stack modelling operator, :math:`\mathbf{d}_i`
 is the data, and :math:`\mathbf{ai}_i` is the input model for the i-th portion of the model.
 
 This problem can be easily set up using the :py:class:`pylops_mpi.basicoperators.MPIBlockDiag`
@@ -158,8 +158,8 @@ Dz = SecondDerivative((ny_i, nx, nz), axis=-1)
 Dx = SecondDerivative((ny_i, nx, nz), axis=-2)
 
 d_dist_reg = DistributedArray(global_shape=3 * ny * nx * nz)
-d_dist_reg[:ny_i*nz*nx] = d_dist.local_array
-d_dist_reg[ny_i*nz*nx:] = 0.
+d_dist_reg[:ny_i * nz * nx] = d_dist.local_array
+d_dist_reg[ny_i * nz * nx:] = 0.
 BDiag_reg = MPIBlockDiag(ops=[VStack([Top.H @ PPop @ Top, epsR * Dx, epsR * Dz]),])
 minv3d_reg_dist = cgls(BDiag_reg, d_dist_reg, x0=mback3d_dist, niter=100, show=True)[0]
 minv3d_reg = minv3d_reg_dist.asarray().reshape((ny, nx, nz))
