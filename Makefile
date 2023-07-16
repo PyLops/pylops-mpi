@@ -2,7 +2,7 @@ PIP := $(shell command -v pip3 2> /dev/null || command which pip 2> /dev/null)
 PYTHON := $(shell command -v python3 2> /dev/null || command which python 2> /dev/null)
 NUM_PROCESSES = 3
 
-.PHONY: install dev-install lint tests
+.PHONY: install dev-install install_conda dev-install_conda tests doc docupdate run_examples run_tutorials
 
 pipcheck:
 ifndef PIP
