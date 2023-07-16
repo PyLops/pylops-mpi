@@ -1,7 +1,12 @@
 from .DistributedArray import DistributedArray, Partition
-from .LinearOperator import MPILinearOperator, asmpilinearoperator
-from .plotting.plotting import *
+from .LinearOperator import *
 from .basicoperators import *
+from . import (
+    basicoperators,
+    optimization,
+    plotting
+)
+from .plotting.plotting import *
 from .optimization.basic import *
 
 try:
