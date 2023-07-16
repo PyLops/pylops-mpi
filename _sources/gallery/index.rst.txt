@@ -25,6 +25,23 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the utilization of :pypylops_mpi.optimization.basic.cgls solver. Our ...">
+
+.. only:: html
+
+  .. image:: /gallery/images/thumb/sphx_glr_plot_cgls_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_gallery_plot_cgls.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">CGLS Solver</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Distributed Array">
 
 .. only:: html
@@ -48,6 +65,7 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
 .. toctree::
    :hidden:
 
+   /gallery/plot_cgls
    /gallery/plot_distributed_array
 
 
