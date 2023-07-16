@@ -10,7 +10,7 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
     However, we test their correctness off-line with multiple ranks and we encourage users to also
     run them with multiple ranks when learning about pylops-mpi.
 
-    Use the following command to run the gallery examples using MPI.
+    Use the following command to run the gallery examples using MPI :
 
     .. code-block:: shell-session
 
@@ -42,23 +42,6 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Post Stack Inversion - 3D">
-
-.. only:: html
-
-  .. image:: /gallery/images/thumb/sphx_glr_plot_post_stack_inversion_thumb.png
-    :alt:
-
-  :ref:`sphx_glr_gallery_plot_post_stack_inversion.py`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Post Stack Inversion - 3D</div>
-    </div>
-
-
-.. raw:: html
-
     </div>
 
 
@@ -66,7 +49,6 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
    :hidden:
 
    /gallery/plot_distributed_array
-   /gallery/plot_post_stack_inversion
 
 
 

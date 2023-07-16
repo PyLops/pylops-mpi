@@ -1,0 +1,13 @@
+
+:orphan:
+
+.. _sphx_glr_tutorials_sg_execution_times:
+
+
+Computation times
+=================
+**00:07.214** total execution time for **tutorials** files:
+
++-------------------------------------------------------------------------------------------+-----------+--------+
+| :ref:`sphx_glr_tutorials_plot_post_stack_inversion.py` (``plot_post_stack_inversion.py``) | 00:07.214 | 0.0 MB |
++-------------------------------------------------------------------------------------------+-----------+--------+
