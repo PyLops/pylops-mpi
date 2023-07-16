@@ -107,6 +107,7 @@ class CGLS(Solver):
             damped_x = DistributedArray(global_shape=x.global_shape, dtype=x.dtype)
             damped_x[:] = damp * x.local_array
             r = self.Op.rmatvec(self.s) - damped_x
+        self.rank = x.rank
         self.c = r.copy()
         self.q = self.Op.matvec(self.c)
         self.kold = np.abs(r.dot(r.conj()))
@@ -119,7 +120,7 @@ class CGLS(Solver):
         self.iiter = 0
 
         # print setup
-        if show:
+        if show and self.rank == 0:
             self._print_setup(np.iscomplexobj(x.local_array))
         return x
 
@@ -154,7 +155,7 @@ class CGLS(Solver):
         self.iiter += 1
         self.cost.append(float(self.s.norm()))
         self.cost1.append(np.sqrt(float(self.cost[self.iiter] ** 2 + self.damp * np.abs(x.dot(x.conj())))))
-        if show:
+        if show and self.rank == 0:
             self._print_step(x)
         return x
 
@@ -219,7 +220,7 @@ class CGLS(Solver):
         self.istop = 1 if self.kold < self.tol else 2
         self.r1norm = self.kold
         self.r2norm = self.cost1[self.iiter]
-        if show:
+        if show and self.rank == 0:
             self._print_finalize(nbar=65)
         self.cost = np.array(self.cost)
 
