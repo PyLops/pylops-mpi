@@ -20,6 +20,7 @@ large-scale linear algebra operations and computations.
 .. toctree::
    :maxdepth: 1
    :hidden:
-   :caption: Gallery
+   :caption: Getting Started
 
    gallery/index.rst
+   tutorials/index.rst
