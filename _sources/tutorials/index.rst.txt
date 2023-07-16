@@ -24,7 +24,7 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Post Stack Inversion - 3D">
+    <div class="sphx-glr-thumbcontainer" tooltip="This tutorial builds on the :pypylops.avo.poststack.PoststackLinearModelling operator to model ...">
 
 .. only:: html
 
