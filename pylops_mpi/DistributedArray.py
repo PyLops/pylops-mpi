@@ -387,7 +387,7 @@ class DistributedArray:
         return arr
 
     def __repr__(self):
-        return f"<DistributedArray with global shape={self.global_shape}), " \
+        return f"<DistributedArray with global shape={self.global_shape}, " \
                f"local shape={self.local_shape}" \
                f", dtype={self.dtype}, " \
                f"processes={[i for i in range(self.size)]})> "
