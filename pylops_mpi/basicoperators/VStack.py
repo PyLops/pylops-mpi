@@ -102,7 +102,6 @@ class MPIVStack(MPILinearOperator):
             raise ValueError("Operators have different number of columns")
         self.mops = int(mops[0])
         self.nnops = np.insert(np.cumsum(nops), 0, 0)
-        self.nnops = self.nnops * base_comm.size
         shape = (base_comm.allreduce(self.nops), self.mops)
         self.localop_shape = (self.nops, self.mops)
         dtype = _get_dtype(self.ops) if dtype is None else np.dtype(dtype)
@@ -131,6 +130,6 @@ class MPIVStack(MPILinearOperator):
         y1 = []
         for iop, oper in enumerate(self.ops):
             y1.append(oper.rmatvec(x.local_array[self.nnops[iop]: self.nnops[iop + 1]]))
-        y1 = np.concatenate(y1)
+        y1 = np.sum(y1, axis=0)
         y[:] = self.base_comm.allreduce(y1, op=MPI.SUM)
         return y
