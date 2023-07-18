@@ -41,6 +41,7 @@ Basic Operators
 
     MPIBlockDiag
     MPIVStack
+    MPIHStack
 
 Solvers
 -------
