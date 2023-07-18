@@ -93,9 +93,8 @@ class MPIHStack(MPILinearOperator):
         nops = [oper.shape[0] for oper in self.ops]
         if len(set(nops)) > 1:
             raise ValueError("Operators have different number of rows")
-        for iop, oper in enumerate(self.ops):
-            self.ops[iop] = oper.H
-        self.HStack = MPIVStack(ops=self.ops, base_comm=base_comm, dtype=dtype).H
+        hops = [oper.H for oper in self.ops]
+        self.HStack = MPIVStack(ops=hops, base_comm=base_comm, dtype=dtype).H
         super().__init__(shape=self.HStack.shape, dtype=self.HStack.dtype, base_comm=base_comm)
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
