@@ -400,7 +400,7 @@ be computed within each rank. Both model and data vectors are of
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>ValueError</dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">ops</span></code> have different number of rows</p>
+<dt>ValueError</dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">ops</span></code> have different number of columns</p>
 </dd>
 </dl>
 </dd>
@@ -437,10 +437,10 @@ are summed up, and the final sum is broadcasted to all processes in the communic
 <div class="math notranslate nohighlight">
 \[\begin{split}d =
 \begin{bmatrix}
-  \mathbf{L}_1 \\
-  \mathbf{L}_2 \\
-  \vdots \\
-  \mathbf{L}_n
+  \mathbf{L}_1^H &amp;
+  \mathbf{L}_2^H &amp;
+  \ldots &amp;
+  \mathbf{L}_n^H
 \end{bmatrix}
 \begin{bmatrix}
   \mathbf{m}_1 \\
