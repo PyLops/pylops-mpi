@@ -57,6 +57,14 @@ class DistributedArray:
     Multidimensional NumPy-like distributed arrays.
     It brings NumPy arrays to high-performance computing.
 
+    .. warning:: When setting the partition to :obj:`pylops_mpi.Partition.BROADCAST`
+        of the DistributedArray, it is crucial to be aware that any attempts to
+        make arrays different from rank to rank will be overwritten by the actions
+        of rank 0. This means that if you modify the DistributedArray on a specific rank,
+        and are using broadcast to synchronize the arrays across all ranks, the
+        modifications made by other ranks will be discarded and
+        overwritten with the value at rank 0.
+
     Parameters
     ----------
     global_shape : :obj:`tuple` or :obj:`int`
@@ -97,6 +105,14 @@ class DistributedArray:
         return self.local_array[index]
 
     def __setitem__(self, index, value):
+        """Setter Method
+
+        `Partition.SCATTER` - Local Arrays are assigned their
+        unique values.
+
+        `Partition.BROADCAST` - The value at rank-0 is broadcasted
+        and is assigned to all the ranks.
+        """
         if self.partition is Partition.BROADCAST:
             self.local_array[index] = self.base_comm.bcast(value)
         else:
