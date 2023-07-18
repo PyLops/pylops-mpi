@@ -214,6 +214,14 @@ class MPILinearOperator:
         """
         return _ConjLinearOperator(self)
 
+    def __repr__(self):
+        M, N = self.shape
+        if self.dtype is None:
+            dt = "unspecified dtype"
+        else:
+            dt = f"dtype={self.dtype}"
+        return f"<{M}x{N} {self.__class__.__name__} with {dt}>"
+
 
 class _AdjointLinearOperator(MPILinearOperator):
     """Adjoint of MPI Linear Operator"""
