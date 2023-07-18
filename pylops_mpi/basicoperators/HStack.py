@@ -3,8 +3,8 @@ from mpi4py import MPI
 from pylops import LinearOperator
 from pylops.utils import DTypeLike
 
-import pylops_mpi
 from pylops_mpi import DistributedArray, MPILinearOperator
+from .VStack import MPIVStack
 
 
 class MPIHStack(MPILinearOperator):
@@ -95,7 +95,7 @@ class MPIHStack(MPILinearOperator):
             raise ValueError("Operators have different number of rows")
         for iop, oper in enumerate(self.ops):
             self.ops[iop] = oper.H
-        self.HStack = pylops_mpi.MPIVStack(ops=self.ops, base_comm=base_comm, dtype=dtype).H
+        self.HStack = MPIVStack(ops=self.ops, base_comm=base_comm, dtype=dtype).H
         super().__init__(shape=self.HStack.shape, dtype=self.HStack.dtype, base_comm=base_comm)
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
