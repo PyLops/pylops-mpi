@@ -57,13 +57,13 @@ class DistributedArray:
     Multidimensional NumPy-like distributed arrays.
     It brings NumPy arrays to high-performance computing.
 
-    .. warning:: When setting the partition to :obj:`pylops_mpi.Partition.BROADCAST`
-        of the DistributedArray, it is crucial to be aware that any attempts to
-        make arrays different from rank to rank will be overwritten by the actions
-        of rank 0. This means that if you modify the DistributedArray on a specific rank,
-        and are using broadcast to synchronize the arrays across all ranks, the
-        modifications made by other ranks will be discarded and
-        overwritten with the value at rank 0.
+    .. warning:: When setting the partition of the DistributedArray to
+        :obj:`pylops_mpi.Partition.BROADCAST`, it is crucial to be aware
+        that any attempts to make arrays different from rank to rank will be
+        overwritten by the actions of rank 0. This means that if you modify
+        the DistributedArray on a specific rank, and are using broadcast to
+        synchronize the arrays across all ranks, the modifications made by other
+        ranks will be discarded and overwritten with the value at rank 0.
 
     Parameters
     ----------
@@ -112,6 +112,14 @@ class DistributedArray:
 
         `Partition.BROADCAST` - The value at rank-0 is broadcasted
         and is assigned to all the ranks.
+
+        Parameters
+        ----------
+        index : :obj:`int` or :obj:`slice`
+            Represents the index positions where a value needs to be assigned.
+        value : :obj:`int` or :obj:`numpy.ndarray`
+            Represents the value that will be assigned to the local array at
+            the specified index positions.
         """
         if self.partition is Partition.BROADCAST:
             self.local_array[index] = self.base_comm.bcast(value)
@@ -132,7 +140,7 @@ class DistributedArray:
     def base_comm(self):
         """Base MPI Communicator
 
-         Returns
+        Returns
         -------
         base_comm : :obj:`MPI.Comm`
         """
