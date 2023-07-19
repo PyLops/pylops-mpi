@@ -403,6 +403,14 @@ document.write(`
 <span class="sd">    Multidimensional NumPy-like distributed arrays.</span>
 <span class="sd">    It brings NumPy arrays to high-performance computing.</span>
 
+<span class="sd">    .. warning:: When setting the partition of the DistributedArray to</span>
+<span class="sd">        :obj:`pylops_mpi.Partition.BROADCAST`, it is crucial to be aware</span>
+<span class="sd">        that any attempts to make arrays different from rank to rank will be</span>
+<span class="sd">        overwritten by the actions of rank 0. This means that if you modify</span>
+<span class="sd">        the DistributedArray on a specific rank, and are using broadcast to</span>
+<span class="sd">        synchronize the arrays across all ranks, the modifications made by other</span>
+<span class="sd">        ranks will be discarded and overwritten with the value at rank 0.</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    global_shape : :obj:`tuple` or :obj:`int`</span>
@@ -443,7 +451,26 @@ document.write(`
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_array</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">local_array</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setter Method</span>
+
+<span class="sd">        `Partition.SCATTER` - Local Arrays are assigned their</span>
+<span class="sd">        unique values.</span>
+
+<span class="sd">        `Partition.BROADCAST` - The value at rank-0 is broadcasted</span>
+<span class="sd">        and is assigned to all the ranks.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        index : :obj:`int` or :obj:`slice`</span>
+<span class="sd">            Represents the index positions where a value needs to be assigned.</span>
+<span class="sd">        value : :obj:`int` or :obj:`numpy.ndarray`</span>
+<span class="sd">            Represents the value that will be assigned to the local array at</span>
+<span class="sd">            the specified index positions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition</span> <span class="ow">is</span> <span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">local_array</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">local_array</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">global_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -459,7 +486,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">base_comm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Base MPI Communicator</span>
 
-<span class="sd">         Returns</span>
+<span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        base_comm : :obj:`MPI.Comm`</span>
 <span class="sd">        &quot;&quot;&quot;</span>

@@ -383,6 +383,16 @@ document.write(`
 <dd><p>Distributed Numpy Arrays</p>
 <p>Multidimensional NumPy-like distributed arrays.
 It brings NumPy arrays to high-performance computing.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>When setting the partition of the DistributedArray to
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.Partition.BROADCAST</span></code>, it is crucial to be aware
+that any attempts to make arrays different from rank to rank will be
+overwritten by the actions of rank 0. This means that if you modify
+the DistributedArray on a specific rank, and are using broadcast to
+synchronize the arrays across all ranks, the modifications made by other
+ranks will be discarded and overwritten with the value at rank 0.</p>
+</div>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
