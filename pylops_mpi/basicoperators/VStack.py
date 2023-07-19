@@ -34,7 +34,7 @@ class MPIVStack(MPILinearOperator):
     Raises
     ------
     ValueError
-        If ``ops`` have different number of rows
+        If ``ops`` have different number of columns
 
     Notes
     -----
@@ -75,10 +75,10 @@ class MPIVStack(MPILinearOperator):
     .. math::
           d =
           \begin{bmatrix}
-            \mathbf{L}_1 \\
-            \mathbf{L}_2 \\
-            \vdots \\
-            \mathbf{L}_n
+            \mathbf{L}_1^H &
+            \mathbf{L}_2^H &
+            \ldots &
+            \mathbf{L}_n^H
           \end{bmatrix}
           \begin{bmatrix}
             \mathbf{m}_1 \\
