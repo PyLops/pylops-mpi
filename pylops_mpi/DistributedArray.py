@@ -315,7 +315,9 @@ class DistributedArray:
         """
         self._check_partition_shape(dist_array)
         SumArray = DistributedArray(global_shape=self.global_shape,
-                                    dtype=self.dtype, partition=self.partition,
+                                    base_comm=self.base_comm,
+                                    dtype=self.dtype,
+                                    partition=self.partition,
                                     axis=self.axis)
         SumArray[:] = self.local_array + dist_array.local_array
         return SumArray
@@ -325,6 +327,7 @@ class DistributedArray:
         """
         self._check_partition_shape(dist_array)
         ProductArray = DistributedArray(global_shape=self.global_shape,
+                                        base_comm=self.base_comm,
                                         dtype=self.dtype,
                                         partition=self.partition,
                                         axis=self.axis)
@@ -402,14 +405,22 @@ class DistributedArray:
     def conj(self):
         """Distributed conj() method
         """
-        conj = DistributedArray(global_shape=self.global_shape, dtype=self.dtype)
+        conj = DistributedArray(global_shape=self.global_shape,
+                                base_comm=self.base_comm,
+                                partition=self.partition,
+                                axis=self.axis,
+                                dtype=self.dtype)
         conj[:] = self.local_array.conj()
         return conj
 
     def copy(self):
         """Creates a copy of the DistributedArray
         """
-        arr = DistributedArray(global_shape=self.global_shape, dtype=self.dtype)
+        arr = DistributedArray(global_shape=self.global_shape,
+                               base_comm=self.base_comm,
+                               partition=self.partition,
+                               axis=self.axis,
+                               dtype=self.dtype)
         arr[:] = self.local_array
         return arr
 
