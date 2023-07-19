@@ -1,0 +1,47 @@
+﻿pylops\_mpi.basicoperators.MPIHStack
+====================================
+
+.. currentmodule:: pylops_mpi.basicoperators
+
+.. autoclass:: MPIHStack
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~MPIHStack.__init__
+        ~MPIHStack.adjoint
+        ~MPIHStack.conj
+        ~MPIHStack.dot
+        ~MPIHStack.matvec
+        ~MPIHStack.rmatvec
+        ~MPIHStack.transpose
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.basicoperators.MPIHStack.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+
