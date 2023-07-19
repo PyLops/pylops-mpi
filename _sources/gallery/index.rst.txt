@@ -59,6 +59,23 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows how to use &quot;stacking&quot; operators such as :pypylops_mpi.basicoperators.MPIVSta...">
+
+.. only:: html
+
+  .. image:: /gallery/images/thumb/sphx_glr_plot_stacking_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_gallery_plot_stacking.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Stacking Operators</div>
+    </div>
+
+
+.. raw:: html
+
     </div>
 
 
@@ -67,6 +84,7 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
 
    /gallery/plot_cgls
    /gallery/plot_distributed_array
+   /gallery/plot_stacking
 
 
 
