@@ -2,8 +2,8 @@ r"""
 Stacking Operators
 ==================
 
-This example shows how to use "stacking" operators such as :py:class:`pylops_mpi.basicoperators.MPIBlockDiag` and
-:py:class:`pylops_mpi.basicoperators.MPIVStack`.
+This example shows how to use "stacking" operators such as :py:class:`pylops_mpi.basicoperators.MPIVStack`,
+:py:class:`pylops_mpi.basicoperators.MPIHStack` and :py:class:`pylops_mpi.basicoperators.MPIBlockDiag`.
 
 The operators mentioned above enable the input of various linear operators within a single operator. PyLops-MPI
 utilizes these operators to construct complex operators that are used in various optimization problems
@@ -90,9 +90,9 @@ if rank == 0:
     fig.suptitle("Vertical Stacking", fontsize=14, fontweight="bold")
 
 ###############################################################################
-# Moreover, the MPIVStack operator can also be used to horizontally stack linear
-# operators. To achieve horizontal stacking, we can use the adjoint of the
-# :py:class:`pylops_mpi.basicoperators.MPIVStack` operator.
+# Now, let's take a look at the :py:class:`pylops_mpi.basicoperators.MPIHStack`
+# operator, which is specifically designed to horizontally stack linear operators
+# in a distributed fashion.
 #
 #    .. math::
 #       \mathbf{D_{Hstack}} =
@@ -107,11 +107,12 @@ if rank == 0:
 #          + (i+1) * \mathbf{D_{h}}\mathbf{x_{n}}    \\
 #        \end{bmatrix}
 #
-# Similar to the MPIVStack, each rank contains two operators, and the model
-# vector :math:`x` is a DistributedArray, but this time the partition is
-# set to ``pylops_mpi.Partition.SCATTER``. Each operator performs the adjoint
-# matrix-vector product with its corresponding :math:`x`. The final result
-# undergoes a sum-reduction, and is stored in the variable :math:`y`.
+# Similar to the MPIVStack, the MPIHStack also contains two operators at
+# each rank, and the model vector :math:`x` is a DistributedArray, but
+# this time the partition is set to ``pylops_mpi.Partition.SCATTER``.
+# Each operator performs the matrix-vector product with its
+# corresponding :math:`x`. The final result undergoes a sum-reduction,
+# and is stored in the variable :math:`y`.
 
 Nv, Nh = (11, 22)
 X = np.zeros(shape=(Nv * 2, Nh))
@@ -120,7 +121,7 @@ X[Nv // 2 + Nv, Nh // 2] = 1
 X1 = X.ravel()
 x = pylops_mpi.DistributedArray(global_shape=2 * size * Nv * Nh, partition=pylops_mpi.Partition.SCATTER)
 x[:] = X1
-HStack = pylops_mpi.MPIVStack(ops=[(rank + 1) * D2vop, (rank + 1) * D2hop]).H
+HStack = pylops_mpi.MPIHStack(ops=[(rank + 1) * D2vop, (rank + 1) * D2hop])
 y = HStack @ x
 y_array = y.asarray().reshape(Nv, Nh)
 
