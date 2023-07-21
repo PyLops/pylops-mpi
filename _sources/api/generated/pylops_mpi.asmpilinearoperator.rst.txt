@@ -1,0 +1,12 @@
+﻿pylops\_mpi.asmpilinearoperator
+===============================
+
+.. currentmodule:: pylops_mpi
+
+.. autofunction:: asmpilinearoperator
+
+.. include:: backreferences/pylops_mpi.asmpilinearoperator.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>

@@ -423,7 +423,11 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="p">:</span>
-            <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                 <span class="n">base_comm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span>
+                                 <span class="n">partition</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">partition</span><span class="p">,</span>
+                                 <span class="n">axis</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+                                 <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
             <span class="n">y</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">_matvec</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">y</span>
 
@@ -455,7 +459,11 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="p">:</span>
-            <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                 <span class="n">base_comm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span>
+                                 <span class="n">partition</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">partition</span><span class="p">,</span>
+                                 <span class="n">axis</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+                                 <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
             <span class="n">y</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">_rmatvec</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">y</span>
 
@@ -744,7 +752,7 @@ document.write(`
         <span class="k">return</span> <span class="n">_ConjLinearOperator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="o">.</span><span class="n">H</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">asmpilinearoperator</span><span class="p">(</span><span class="n">Op</span><span class="p">):</span>
+<div class="viewcode-block" id="asmpilinearoperator"><a class="viewcode-back" href="../../api/generated/pylops_mpi.asmpilinearoperator.html#pylops_mpi.asmpilinearoperator">[docs]</a><span class="k">def</span> <span class="nf">asmpilinearoperator</span><span class="p">(</span><span class="n">Op</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return Op as a MPI LinearOperator.</span>
 
 <span class="sd">    Converts a :class:`pylops.LinearOperator` to a :class:`pylops_mpi.MPILinearOperator`.</span>
@@ -763,7 +771,7 @@ document.write(`
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Op</span><span class="p">,</span> <span class="n">MPILinearOperator</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">Op</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">MPILinearOperator</span><span class="p">(</span><span class="n">Op</span><span class="o">=</span><span class="n">Op</span><span class="p">,</span> <span class="n">base_comm</span><span class="o">=</span><span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">MPILinearOperator</span><span class="p">(</span><span class="n">Op</span><span class="o">=</span><span class="n">Op</span><span class="p">,</span> <span class="n">base_comm</span><span class="o">=</span><span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">)</span></div>
 </pre></div>
 
                 </article>
