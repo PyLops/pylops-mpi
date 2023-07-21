@@ -77,7 +77,11 @@ class MPILinearOperator:
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         if self.Op:
-            y = DistributedArray(global_shape=self.shape[1])
+            y = DistributedArray(global_shape=self.shape[0],
+                                 base_comm=self.base_comm,
+                                 partition=x.partition,
+                                 axis=x.axis,
+                                 dtype=self.dtype)
             y[:] = self.Op._matvec(x.local_array)
             return y
 
@@ -109,7 +113,11 @@ class MPILinearOperator:
 
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         if self.Op:
-            y = DistributedArray(global_shape=self.shape[0])
+            y = DistributedArray(global_shape=self.shape[1],
+                                 base_comm=self.base_comm,
+                                 partition=x.partition,
+                                 axis=x.axis,
+                                 dtype=self.dtype)
             y[:] = self.Op._rmatvec(x.local_array)
             return y
 

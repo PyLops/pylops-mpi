@@ -1,16 +1,22 @@
 import numpy as np
 from numpy.testing import assert_allclose
-np.random.seed(42)
-import pytest
-
 from mpi4py import MPI
-
-rank = MPI.COMM_WORLD.Get_rank()
-size = MPI.COMM_WORLD.Get_size()
+import pytest
 
 import pylops
 
-from pylops_mpi import MPILinearOperator, MPIBlockDiag, DistributedArray
+from pylops_mpi import (
+    asmpilinearoperator,
+    DistributedArray,
+    MPILinearOperator,
+    MPIBlockDiag,
+    MPIVStack,
+    Partition
+)
+
+np.random.seed(42)
+rank = MPI.COMM_WORLD.Get_rank()
+size = MPI.COMM_WORLD.Get_size()
 
 par1 = {'ny': 101, 'nx': 101, 'dtype': np.float64}
 par1j = {'ny': 101, 'nx': 101, 'dtype': np.complex128}
@@ -258,3 +264,91 @@ def test_conj(par):
         Cop = BDiag.conj()
         assert_allclose(Cop_x_np, Cop @ x_global, rtol=1e-14)
         assert_allclose(Cop_y_np, Cop.H @ y_global, rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
+def test_mpilinop(par):
+    """Wrapping the Pylops Linear Operator"""
+    Fop = pylops.FirstDerivative(dims=(par['ny'], par['nx']), axis=0, dtype=par['dtype'])
+    Mop = asmpilinearoperator(Op=Fop)
+    assert isinstance(Mop, MPILinearOperator)
+
+    # Use Partition="BROADCAST" for a single operator
+    # Forward
+    x = DistributedArray(global_shape=Mop.shape[1],
+                         partition=Partition.BROADCAST, dtype=par['dtype'])
+    x[:] = np.random.normal(1, 10, x.local_shape).astype(par['dtype'])
+    x_global = x.asarray()
+    y_dist = Mop @ x
+    y = y_dist.asarray()
+
+    # Adjoint
+    x = DistributedArray(global_shape=Mop.shape[0],
+                         partition=Partition.BROADCAST, dtype=par['dtype'])
+    x[:] = np.random.normal(1, 10, x.local_shape).astype(par['dtype'])
+    x_adj_global = x.asarray()
+    y_adj_dist = Mop.H @ x
+    y_adj = y_adj_dist.asarray()
+
+    if rank == 0:
+        assert_allclose(y, Fop @ x_global, rtol=1e-14)
+        assert_allclose(y_adj, Fop.H @ x_adj_global, rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
+def test_fwd_mpilinop(par):
+    """Test MPILinearOperator with other basic operators
+        Matrix-Vector Product
+    """
+    Fop = pylops.FirstDerivative(dims=(par['ny'], par['nx']), axis=0, dtype=par['dtype'])
+    Sop = pylops.SecondDerivative(dims=(par['ny'], par['nx']), axis=0, dtype=par['dtype'])
+    Mop = asmpilinearoperator(Op=Fop)
+    VStack_MPI = MPIVStack(ops=[(rank + 1) * Sop, ])
+    # Product of MPIVStack and MPILinearOperator
+    FullOp_MPI = VStack_MPI @ Mop
+
+    # Broadcasted DistributedArray
+    x = DistributedArray(global_shape=FullOp_MPI.shape[1], partition=Partition.BROADCAST, dtype=par['dtype'])
+    x[:] = np.random.normal(1, 10, x.local_shape).astype(par['dtype'])
+    x_global = x.asarray()
+
+    # Forward
+    y_dist = FullOp_MPI @ x
+    y = y_dist.asarray()
+
+    if rank == 0:
+        VStack = pylops.VStack(ops=[(i + 1) * Sop for i in range(size)])
+        FullOp = VStack @ Fop
+        y_np = FullOp @ x_global
+        assert_allclose(y, y_np.flatten(), rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
+def test_adj_mpilinop(par):
+    """Test MPILinearOperator with other basic operators
+        Adjoint Matrix-Vector Product
+    """
+    Fop = pylops.FirstDerivative(dims=(par['ny'], par['nx']), axis=0, dtype=par['dtype'])
+    Sop = pylops.SecondDerivative(dims=(par['ny'], par['nx']), axis=0, dtype=par['dtype'])
+    Mop = asmpilinearoperator(Op=Fop)
+    VStack_MPI = MPIVStack(ops=[(rank + 1) * Sop, ])
+    # Product of MPIVStack and MPILinearOperator
+    FullOp_MPI = VStack_MPI @ Mop
+
+    # Scattered DistributedArray
+    x = DistributedArray(global_shape=FullOp_MPI.shape[0], partition=Partition.SCATTER, dtype=par['dtype'])
+    x[:] = np.random.normal(1, 10, x.local_shape).astype(par['dtype'])
+    x_global = x.asarray()
+
+    # Adjoint
+    y_dist = FullOp_MPI.H @ x
+    y = y_dist.asarray()
+
+    if rank == 0:
+        VStack = pylops.VStack(ops=[(i + 1) * Sop for i in range(size)])
+        FullOp = VStack @ Fop
+        y_np = FullOp.H @ x_global
+        assert_allclose(y, y_np.flatten(), rtol=1e-14)
