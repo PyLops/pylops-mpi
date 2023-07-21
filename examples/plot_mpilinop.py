@@ -40,7 +40,7 @@ print(Mop)
 x = pylops_mpi.DistributedArray(global_shape=Ny * Nx, partition=pylops_mpi.Partition.BROADCAST)
 x[:] = 1
 y = Mop @ x
-print(y)
+print(f'y: {y}')
 
 ###############################################################################
 # Next, we can take the MPILinearOperator and combine it with other
