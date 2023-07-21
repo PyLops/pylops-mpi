@@ -30,6 +30,7 @@ Templates
    :toctree: generated/
 
     MPILinearOperator
+    asmpilinearoperator
 
 Basic Operators
 ~~~~~~~~~~~~~~~
