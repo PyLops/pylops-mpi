@@ -108,7 +108,7 @@ def test_to_dist(par):
     assert dist_array.axis == par['axis']
 
 
-@pytest.mark.mpi(minsize=2)
+@pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par1, par2", [(par4, par5), (par4j, par5j)])
 def test_distributed_math(par1, par2):
     """Test the Element-Wise Addition, Subtraction and Multiplication"""
