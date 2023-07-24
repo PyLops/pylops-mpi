@@ -18,10 +18,10 @@ np.random.seed(42)
 rank = MPI.COMM_WORLD.Get_rank()
 size = MPI.COMM_WORLD.Get_size()
 
-par1 = {'ny': 101, 'nx': 101, 'dtype': np.float64}
-par1j = {'ny': 101, 'nx': 101, 'dtype': np.complex128}
-par2 = {'ny': 301, 'nx': 101, 'dtype': np.float64}
-par2j = {'ny': 301, 'nx': 101, 'dtype': np.complex128}
+par1 = {'ny': 101, 'nx': 101, 'dtype': np.float128}
+par1j = {'ny': 101, 'nx': 101, 'dtype': np.complex256}
+par2 = {'ny': 301, 'nx': 101, 'dtype': np.float128}
+par2j = {'ny': 301, 'nx': 101, 'dtype': np.complex256}
 
 
 @pytest.mark.mpi(min_size=2)
