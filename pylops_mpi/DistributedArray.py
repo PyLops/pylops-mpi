@@ -338,8 +338,13 @@ class DistributedArray:
         """Distributed Dot Product
         """
         self._check_partition_shape(dist_array)
+        # Convert to Partition.SCATTER if Partition.BROADCAST
+        x = DistributedArray.to_dist(x=self.local_array) \
+            if self.partition is Partition.BROADCAST else self
+        y = DistributedArray.to_dist(x=dist_array.local_array) \
+            if self.partition is Partition.BROADCAST else dist_array
         # Flatten the local arrays and calculate dot product
-        return self._allreduce(np.dot(self.local_array.flatten(), dist_array.local_array.flatten()))
+        return self._allreduce(np.dot(x.local_array.flatten(), y.local_array.flatten()))
 
     def _compute_vector_norm(self, local_array: NDArray,
                              axis: int, ord: Optional[int] = None):
@@ -394,13 +399,16 @@ class DistributedArray:
         axis : :obj:`int`, optional
             Axis along which vector norm needs to be computed. Defaults to ``-1``
         """
+        # Convert to Partition.SCATTER if Partition.BROADCAST
+        x = DistributedArray.to_dist(x=self.local_array) \
+            if self.partition is Partition.BROADCAST else self
         if axis == -1:
             # Flatten the local arrays and calculate norm
-            return self._compute_vector_norm(self.local_array.flatten(), axis=0, ord=ord)
-        if axis != self.axis:
+            return x._compute_vector_norm(x.local_array.flatten(), axis=0, ord=ord)
+        if axis != x.axis:
             raise NotImplementedError("Choose axis along the partition.")
         # Calculate vector norm along the axis
-        return self._compute_vector_norm(self.local_array, axis=self.axis, ord=ord)
+        return x._compute_vector_norm(x.local_array, axis=x.axis, ord=ord)
 
     def conj(self):
         """Distributed conj() method

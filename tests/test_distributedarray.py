@@ -47,14 +47,26 @@ par5j = {'x': np.random.normal(300, 300, (500, 501)) + 1.0j * np.random.normal(5
 par6 = {'x': np.random.normal(100, 100, (500, 500)),
         'partition': Partition.SCATTER, 'axis': 0}
 
+par6b = {'x': np.random.normal(100, 100, (500, 500)),
+         'partition': Partition.BROADCAST, 'axis': 0}
+
 par7 = {'x': np.random.normal(300, 300, (500, 500)),
         'partition': Partition.SCATTER, 'axis': 0}
+
+par7b = {'x': np.random.normal(300, 300, (500, 500)),
+         'partition': Partition.BROADCAST, 'axis': 0}
 
 par8 = {'x': np.random.normal(100, 100, (1000,)),
         'partition': Partition.SCATTER, 'axis': 0}
 
+par8b = {'x': np.random.normal(100, 100, (1000,)),
+         'partition': Partition.BROADCAST, 'axis': 0}
+
 par9 = {'x': np.random.normal(300, 300, (1000,)),
         'partition': Partition.SCATTER, 'axis': 0}
+
+par9b = {'x': np.random.normal(300, 300, (1000,)),
+         'partition': Partition.BROADCAST, 'axis': 0}
 
 
 @pytest.mark.mpi(min_size=2)
@@ -135,7 +147,8 @@ def test_distributed_math(par1, par2):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par1, par2", [(par6, par7), (par8, par9)])
+@pytest.mark.parametrize("par1, par2", [(par6, par7), (par6b, par7b),
+                                        (par8, par9), (par8b, par9b)])
 def test_distributed_dot(par1, par2):
     """Test Distributed Dot product"""
     arr1 = DistributedArray.to_dist(x=par1['x'], partition=par1['partition'], axis=par1['axis'])
@@ -145,7 +158,8 @@ def test_distributed_dot(par1, par2):
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par4), (par4j), (par5), (par5j),
-                                 (par6), (par7), (par8), (par9)])
+                                 (par6), (par6b), (par7), (par7b),
+                                 (par8), (par8b), (par9), (par9b)])
 def test_distributed_norm(par):
     """Test Distributed numpy.linalg.norm method"""
     arr = DistributedArray.to_dist(x=par['x'], axis=par['axis'])
