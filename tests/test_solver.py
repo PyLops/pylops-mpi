@@ -3,9 +3,9 @@ from numpy.testing import assert_allclose
 from mpi4py import MPI
 import pytest
 import pylops
-from pylops import MatrixMult, BlockDiag
+from pylops import MatrixMult, BlockDiag, HStack
 
-from pylops_mpi import cgls, DistributedArray, MPIBlockDiag
+from pylops_mpi import cgls, DistributedArray, MPIBlockDiag, MPIHStack, Partition
 
 np.random.seed(42)
 size = MPI.COMM_WORLD.Get_size()
@@ -107,4 +107,47 @@ def test_cgls(par):
             x0 = None
         y1 = BDiag * x_global
         xinv1 = pylops.cgls(BDiag, y1, x0=x0, niter=par["nx"], tol=1e-5, show=True)[0]
+        assert_allclose(xinv_array, xinv1, rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize(
+    "par", [(par1), (par1j), (par2), (par2j), (par3), (par3j), (par4), (par4j)]
+)
+def test_cgls_broadcast(par):
+    A = (rank + 1) * np.ones((par["ny"], par["nx"])) + (rank + 2) * par[
+        "imag"
+    ] * np.ones((par["ny"], par["nx"]))
+    Aop = MatrixMult(A, dtype=par["dtype"])
+    HStack_MPI = MPIHStack(ops=[Aop, ])
+
+    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    x[:] = np.random.normal(1, 10, par['nx']) + par["imag"] * np.random.normal(10, 10, par['nx'])
+    x_global = x.asarray()
+    if par["x0"]:
+        x0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+        x0[:] = np.random.normal(0, 10, par["nx"]) + par["imag"] * np.random.normal(
+            10, 10, par["nx"]
+        )
+        x0_global = x0.asarray()
+    else:
+        x0 = None
+
+    y = HStack_MPI @ x
+    assert y.partition is Partition.BROADCAST
+
+    xinv = cgls(HStack_MPI, y, x0=x0, niter=par["nx"], tol=1e-5, show=True)[0]
+    assert isinstance(xinv, DistributedArray)
+    xinv_array = xinv.asarray()
+    if rank == 0:
+        ops = [MatrixMult((i + 1) * np.ones((par["ny"], par["nx"])) + (i + 2) * par[
+            "imag"
+        ] * np.ones((par["ny"], par["nx"])), dtype=par['dtype']) for i in range(size)]
+        Hstack = HStack(ops=ops)
+        if par["x0"]:
+            x0 = x0_global
+        else:
+            x0 = None
+        y1 = Hstack @ x_global
+        xinv1 = pylops.cgls(Hstack, y1, x0=x0, niter=par["nx"], tol=1e-5, show=True)[0]
         assert_allclose(xinv_array, xinv1, rtol=1e-14)
