@@ -434,7 +434,8 @@ class DistributedArray:
 
     def add_ghost_cells(self, cells_front: Optional[int] = None,
                         cells_back: Optional[int] = None):
-        """Add ghost cells to the DistributedArray at each rank
+        """Add ghost cells to the DistributedArray along the axis
+        of partition at each rank.
 
         Parameters
         ----------
