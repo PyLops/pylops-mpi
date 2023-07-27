@@ -452,15 +452,21 @@ class DistributedArray:
                                                axis=self.axis)
             if self.rank != self.size - 1:
                 if cells_front > self.local_shape[self.axis]:
-                    raise ValueError(f"Local Arrays at each rank must contain atleast {cells_front} elements, "
-                                     f"to achieve this NUM_PROCESSES <= {self.global_shape[self.axis] // cells_front}")
+                    raise ValueError(f"Local Shape at rank={self.rank} along axis={self.axis} "
+                                     f"should be > {cells_front}: dim({self.axis}) "
+                                     f"{self.local_shape[self.axis]} < {cells_front}; "
+                                     f"to achieve this use NUM_PROCESSES <= "
+                                     f"{self.global_shape[self.axis] // cells_front}")
                 self.base_comm.send(np.take(self.local_array, np.arange(-cells_front, 0), axis=self.axis),
                                     dest=self.rank + 1, tag=1)
         if cells_back:
             if self.rank != 0:
                 if cells_back > self.local_shape[self.axis]:
-                    raise ValueError(f"Local Arrays at each rank must contain atleast {cells_back} elements, "
-                                     f"to achieve this NUM_PROCESSES <= {self.global_shape[self.axis] // cells_back}")
+                    raise ValueError(f"Local Shape at rank={self.rank} along axis={self.axis} "
+                                     f"should be > {cells_back}: dim({self.axis}) "
+                                     f"{self.local_shape[self.axis]} < {cells_back}; "
+                                     f"to achieve this use NUM_PROCESSES <= "
+                                     f"{self.global_shape[self.axis] // cells_back}")
                 self.base_comm.send(np.take(self.local_array, np.arange(cells_back), axis=self.axis),
                                     dest=self.rank - 1, tag=0)
             if self.rank != self.size - 1:
