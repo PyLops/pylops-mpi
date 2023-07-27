@@ -432,6 +432,55 @@ class DistributedArray:
         arr[:] = self.local_array
         return arr
 
+    def add_ghost_cells(self, cells_front: Optional[int] = None,
+                        cells_back: Optional[int] = None):
+        """Add ghost cells to the DistributedArray along the axis
+        of partition at each rank.
+
+        Parameters
+        ----------
+        cells_front : :obj:`int`, optional
+            Number of cells to be added from the previous process
+            to the start of the array at each rank. Defaults to ``None``.
+        cells_back : :obj:`int`, optional
+            Number of cells to be added from the next process
+            to the back of the array at each rank. Defaults to ``None``.
+
+        Returns
+        -------
+        ghosted_array : :obj:`numpy.ndarray`
+            Ghosted Array
+
+        """
+        ghosted_array = self.local_array.copy()
+        if cells_front:
+            if self.rank != 0:
+                ghosted_array = np.concatenate([self.base_comm.recv(source=self.rank - 1, tag=1), ghosted_array],
+                                               axis=self.axis)
+            if self.rank != self.size - 1:
+                if cells_front > self.local_shape[self.axis]:
+                    raise ValueError(f"Local Shape at rank={self.rank} along axis={self.axis} "
+                                     f"should be > {cells_front}: dim({self.axis}) "
+                                     f"{self.local_shape[self.axis]} < {cells_front}; "
+                                     f"to achieve this use NUM_PROCESSES <= "
+                                     f"{self.global_shape[self.axis] // cells_front}")
+                self.base_comm.send(np.take(self.local_array, np.arange(-cells_front, 0), axis=self.axis),
+                                    dest=self.rank + 1, tag=1)
+        if cells_back:
+            if self.rank != 0:
+                if cells_back > self.local_shape[self.axis]:
+                    raise ValueError(f"Local Shape at rank={self.rank} along axis={self.axis} "
+                                     f"should be > {cells_back}: dim({self.axis}) "
+                                     f"{self.local_shape[self.axis]} < {cells_back}; "
+                                     f"to achieve this use NUM_PROCESSES <= "
+                                     f"{self.global_shape[self.axis] // cells_back}")
+                self.base_comm.send(np.take(self.local_array, np.arange(cells_back), axis=self.axis),
+                                    dest=self.rank - 1, tag=0)
+            if self.rank != self.size - 1:
+                ghosted_array = np.append(ghosted_array, self.base_comm.recv(source=self.rank + 1, tag=0),
+                                          axis=self.axis)
+        return ghosted_array
+
     def __repr__(self):
         return f"<DistributedArray with global shape={self.global_shape}, " \
                f"local shape={self.local_shape}" \
