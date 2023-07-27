@@ -8,6 +8,7 @@ pytest-mpi
 pydata-sphinx-theme
 sphinx
 numpydoc
+numba
 nbsphinx
 sphinx_gallery
 flake8
