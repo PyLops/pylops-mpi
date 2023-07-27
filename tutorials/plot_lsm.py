@@ -196,7 +196,7 @@ if rank == 0:
     axs[2].axis("tight")
 
     fig3, axs = plt.subplots(1, 3, figsize=(10, 3))
-    axs[0].imshow(d[ns // 2, :, :300].T, cmap="gray", vmin=-d.max(), vmax=d.max())
+    axs[0].imshow(d[nstot // 2, :, :300].T, cmap="gray", vmin=-d.max(), vmax=d.max())
     axs[0].set_title(r"$d$")
     axs[0].axis("tight")
     axs[1].imshow(d_adj[nstot // 2, :, :300].T, cmap="gray", vmin=-d_adj.max(), vmax=d_adj.max())
