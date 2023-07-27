@@ -17,6 +17,7 @@ dependencies:
   - setuptools_scm
   - Sphinx
   - numpydoc
+  - numba
   - nbsphinx
   - pydata-sphinx-theme
   - flake8
