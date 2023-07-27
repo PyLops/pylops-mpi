@@ -11,6 +11,7 @@
     
         ~DistributedArray.__init__
         ~DistributedArray.add
+        ~DistributedArray.add_ghost_cells
         ~DistributedArray.asarray
         ~DistributedArray.conj
         ~DistributedArray.copy

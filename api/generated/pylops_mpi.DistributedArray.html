@@ -421,25 +421,28 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add</span></code>(dist_array)</p></td>
 <td><p>Distributed Addition of arrays</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">asarray</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_ghost_cells</span></code>([cells_front, cells_back])</p></td>
+<td><p>Add ghost cells to the DistributedArray along the axis of partition at each rank.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">asarray</span></code>()</p></td>
 <td><p>Global view of the array</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">conj</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">conj</span></code>()</p></td>
 <td><p>Distributed conj() method</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">copy</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">copy</span></code>()</p></td>
 <td><p>Creates a copy of the DistributedArray</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dot</span></code>(dist_array)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dot</span></code>(dist_array)</p></td>
 <td><p>Distributed Dot Product</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">multiply</span></code>(dist_array)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">multiply</span></code>(dist_array)</p></td>
 <td><p>Distributed Element-wise multiplication</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm</span></code>([ord, axis])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm</span></code>([ord, axis])</p></td>
 <td><p>Distributed numpy.linalg.norm method</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_dist</span></code>(x[, base_comm, partition, axis])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_dist</span></code>(x[, base_comm, partition, axis])</p></td>
 <td><p>Convert A Global Array to a Distributed Array</p></td>
 </tr>
 </tbody>
