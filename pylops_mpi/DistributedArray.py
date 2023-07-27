@@ -444,6 +444,12 @@ class DistributedArray:
         cells_back : :obj:`int`, optional
             Number of cells to be added from the next process
             to the back of the array at each rank. Defaults to ``None``.
+
+        Returns
+        -------
+        ghosted_array : :obj:`numpy.ndarray`
+            Ghosted Array
+
         """
         ghosted_array = self.local_array.copy()
         if cells_front:
