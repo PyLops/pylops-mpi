@@ -10,15 +10,18 @@ A list of operators present in pylops_mpi.basicoperators :
     MPIBlockDiag                      Block Diagonal Operator
     MPIVStack                         Vertical Stacking
     MPIHStack                         Horizontal Stacking
+    MPIFirstDerivative                First Derivative
 
 """
 
 from .BlockDiag import *
 from .VStack import *
 from .HStack import *
+from .FirstDerivative import *
 
 __all__ = [
     "MPIBlockDiag",
     "MPIVStack",
-    "MPIHStack"
+    "MPIHStack",
+    "MPIFirstDerivative"
 ]
