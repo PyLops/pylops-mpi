@@ -463,7 +463,7 @@ class DistributedArray:
                                      f"should be > {cells_front}: dim({self.axis}) "
                                      f"{self.local_shape[self.axis]} < {cells_front}; "
                                      f"to achieve this use NUM_PROCESSES <= "
-                                     f"{self.global_shape[self.axis] // cells_front}")
+                                     f"{max(1, self.global_shape[self.axis] // cells_front)}")
                 self.base_comm.send(np.take(self.local_array, np.arange(-cells_front, 0), axis=self.axis),
                                     dest=self.rank + 1, tag=1)
         if cells_back:
@@ -473,7 +473,7 @@ class DistributedArray:
                                      f"should be > {cells_back}: dim({self.axis}) "
                                      f"{self.local_shape[self.axis]} < {cells_back}; "
                                      f"to achieve this use NUM_PROCESSES <= "
-                                     f"{self.global_shape[self.axis] // cells_back}")
+                                     f"{max(1, self.global_shape[self.axis] // cells_back)}")
                 self.base_comm.send(np.take(self.local_array, np.arange(cells_back), axis=self.axis),
                                     dest=self.rank - 1, tag=0)
             if self.rank != self.size - 1:
