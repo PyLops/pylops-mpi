@@ -86,7 +86,7 @@ par4j = {
     "par", [(par1), (par1j), (par2), (par2j), (par3), (par3j), (par4), (par4j)]
 )
 def test_cgls(par):
-    """CGLS with MPILinearOperator"""
+    """CGLS with MPIBlockDiag"""
     A = np.ones((par["ny"], par["nx"])) + par[
         "imag"] * np.ones((par["ny"], par["nx"]))
     Aop = MatrixMult(np.conj(A.T) @ A + 1e-5 * np.eye(par["nx"], dtype=par['dtype']),
