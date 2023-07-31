@@ -91,6 +91,7 @@ def test_cgls(par):
         "imag"] * np.ones((par["ny"], par["nx"]))
     Aop = MatrixMult(np.conj(A.T) @ A + 1e-5 * np.eye(par["nx"], dtype=par['dtype']),
                      dtype=par['dtype'])
+    # To make MPIBlockDiag a positive definite matrix
     BDiag_MPI = MPIBlockDiag(ops=[Aop, ])
 
     x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
@@ -113,6 +114,7 @@ def test_cgls(par):
             "imag"] * np.ones(shape=(par["ny"], par["nx"])) for i in range(size)]
         ops = [MatrixMult(np.conj(mats[i].T) @ mats[i] + 1e-5 * np.eye(par["nx"], dtype=par['dtype']),
                           dtype=par['dtype']) for i in range(size)]
+        # To make BlockDiag a positive definite matrix
         BDiag = BlockDiag(ops=ops)
         if par["x0"]:
             x0 = x0_global
@@ -177,6 +179,7 @@ def test_cgls_broadcastmodel(par):
         "imag"] * np.ones((par["ny"], par["nx"]))
     Aop = MatrixMult(np.conj(A.T) @ A + 1e-5 * np.eye(par["nx"], dtype=par['dtype']),
                      dtype=par['dtype'])
+    # To make MPIVStack a positive definite matrix
     VStack_MPI = MPIVStack(ops=[Aop, ])
 
     x = DistributedArray(global_shape=par['nx'], dtype=par['dtype'], partition=Partition.BROADCAST)
@@ -202,6 +205,7 @@ def test_cgls_broadcastmodel(par):
             "imag"] * np.ones(shape=(par["ny"], par["nx"])) for i in range(size)]
         ops = [MatrixMult(np.conj(mats[i].T) @ mats[i] + 1e-5 * np.eye(par["nx"], dtype=par['dtype']),
                           dtype=par['dtype']) for i in range(size)]
+        # To make VStack a positive definite matrix
         Vstack = VStack(ops=ops)
         if par["x0"]:
             x0 = x0_global
