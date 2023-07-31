@@ -87,10 +87,10 @@ par4j = {
 )
 def test_cgls(par):
     """CGLS with MPILinearOperator"""
-    A = (rank + 1) * np.ones((par["ny"], par["nx"])) + (rank + 2) * par[
-        "imag"
-    ] * np.ones((par["ny"], par["nx"]))
-    Aop = MatrixMult(A, dtype=par["dtype"])
+    A = np.ones((par["ny"], par["nx"])) + par[
+        "imag"] * np.ones((par["ny"], par["nx"]))
+    Aop = MatrixMult(np.conj(A.T) @ A + 1e-5 * np.eye(par["nx"], dtype=par['dtype']),
+                     dtype=par['dtype'])
     BDiag_MPI = MPIBlockDiag(ops=[Aop, ])
 
     x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
@@ -109,9 +109,10 @@ def test_cgls(par):
     assert isinstance(xinv, DistributedArray)
     xinv_array = xinv.asarray()
     if rank == 0:
-        ops = [MatrixMult((i + 1) * np.ones((par["ny"], par["nx"])) + (i + 2) * par[
-            "imag"
-        ] * np.ones((par["ny"], par["nx"])), dtype=par['dtype']) for i in range(size)]
+        mats = [np.ones(shape=(par["ny"], par["nx"])) + par[
+            "imag"] * np.ones(shape=(par["ny"], par["nx"])) for i in range(size)]
+        ops = [MatrixMult(np.conj(mats[i].T) @ mats[i] + 1e-5 * np.eye(par["nx"], dtype=par['dtype']),
+                          dtype=par['dtype']) for i in range(size)]
         BDiag = BlockDiag(ops=ops)
         if par["x0"]:
             x0 = x0_global
@@ -172,10 +173,10 @@ def test_cgls_broadcastdata(par):
 )
 def test_cgls_broadcastmodel(par):
     """CGLS with broadcasted model vector"""
-    A = (rank + 1) * np.ones((par["ny"], par["nx"])) + (rank + 2) * par[
-        "imag"
-    ] * np.ones((par["ny"], par["nx"]))
-    Aop = MatrixMult(A, dtype=par["dtype"])
+    A = np.ones((par["ny"], par["nx"])) + par[
+        "imag"] * np.ones((par["ny"], par["nx"]))
+    Aop = MatrixMult(np.conj(A.T) @ A + 1e-5 * np.eye(par["nx"], dtype=par['dtype']),
+                     dtype=par['dtype'])
     VStack_MPI = MPIVStack(ops=[Aop, ])
 
     x = DistributedArray(global_shape=par['nx'], dtype=par['dtype'], partition=Partition.BROADCAST)
@@ -197,9 +198,10 @@ def test_cgls_broadcastmodel(par):
     assert isinstance(xinv, DistributedArray)
     xinv_array = xinv.asarray()
     if rank == 0:
-        ops = [MatrixMult((i + 1) * np.ones((par["ny"], par["nx"])) + (i + 2) * par[
-            "imag"
-        ] * np.ones((par["ny"], par["nx"])), dtype=par['dtype']) for i in range(size)]
+        mats = [np.ones(shape=(par["ny"], par["nx"])) + par[
+            "imag"] * np.ones(shape=(par["ny"], par["nx"])) for i in range(size)]
+        ops = [MatrixMult(np.conj(mats[i].T) @ mats[i] + 1e-5 * np.eye(par["nx"], dtype=par['dtype']),
+                          dtype=par['dtype']) for i in range(size)]
         Vstack = VStack(ops=ops)
         if par["x0"]:
             x0 = x0_global
