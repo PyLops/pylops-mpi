@@ -9,7 +9,8 @@ from pylops_mpi import DistributedArray
 def redistribute(
     func: Optional[Callable] = None,
 ) -> Callable:
-    """Decorator used to reshape the model vector and flatten the data vector in a distributed fashion
+    """Decorator used to reshape the model vector and flatten the data vector in a distributed fashion.
+    It is used in many operators.
 
     Parameters
     ----------
