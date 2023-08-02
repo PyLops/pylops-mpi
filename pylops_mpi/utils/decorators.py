@@ -24,7 +24,8 @@ def redistribute(
 
         @redistribute
         def _matvec(self, x: DistributedArray):
-            return do_things_to_redistributed(y)
+            y = do_things_to_redistributed(y)
+            return y
 
     where x will be reshaped to ``self.dims`` and y will be raveled to give a 1-D
     DistributedArray as output.
@@ -37,8 +38,10 @@ def redistribute(
             arr = DistributedArray(global_shape=getattr(self, "dims"), axis=0, dtype=x.dtype)
             arr_local_shapes = np.asarray(arr.base_comm.allgather(np.prod(arr.local_shape)))
             x_local_shapes = np.asarray(x.base_comm.allgather(np.prod(x.local_shape)))
+            # Calculate num_ghost_cells required for aeach rank
             dif = np.cumsum(arr_local_shapes - x_local_shapes)
             ghosted_array = x.add_ghost_cells(cells_back=dif[self.rank])
+            # Fill the redistributed array
             arr[:] = ghosted_array[dif[self.rank - 1]:].reshape(arr.local_shape)
             y: DistributedArray = f(self, arr)
             y = y.ravel()
