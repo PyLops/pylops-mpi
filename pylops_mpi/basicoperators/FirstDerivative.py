@@ -23,8 +23,8 @@ class MPIFirstDerivative(MPILinearOperator):
 
     Parameters
     ----------
-    dims : :obj:`int`
-        Number of samples for model and data vector.
+    dims : :obj:`int` or :obj:`tuple`
+        Number of samples for each dimension.
     sampling : :obj:`float`, optional
         Sampling step :math:`\Delta x`.
     kind : :obj:`str`, optional
@@ -137,7 +137,6 @@ class MPIFirstDerivative(MPILinearOperator):
     @redistribute
     def _matvec_forward(self, x: DistributedArray) -> DistributedArray:
         y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
-        y[:] = 0
         ghosted_x = x.add_ghost_cells(cells_back=1)
         y_forward = ghosted_x[1:] - ghosted_x[:-1]
         if self.rank == self.size - 1:
@@ -164,7 +163,6 @@ class MPIFirstDerivative(MPILinearOperator):
     @redistribute
     def _matvec_backward(self, x: DistributedArray) -> DistributedArray:
         y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
-        y[:] = 0
         ghosted_x = x.add_ghost_cells(cells_front=1)
         y_backward = ghosted_x[1:] - ghosted_x[:-1]
         if self.rank == 0:
@@ -191,7 +189,6 @@ class MPIFirstDerivative(MPILinearOperator):
     @redistribute
     def _matvec_centered3(self, x: DistributedArray) -> DistributedArray:
         y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
-        y[:] = 0.
         ghosted_x = x.add_ghost_cells(cells_front=1, cells_back=1)
         y_centered = 0.5 * (ghosted_x[2:] - ghosted_x[:-2])
         if self.rank == 0:
@@ -235,7 +232,6 @@ class MPIFirstDerivative(MPILinearOperator):
     @redistribute
     def _matvec_centered5(self, x: DistributedArray) -> DistributedArray:
         y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
-        y[:] = 0
         ghosted_x = x.add_ghost_cells(cells_front=2, cells_back=2)
         y_centered = (
             ghosted_x[:-4] / 12.0
