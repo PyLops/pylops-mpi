@@ -258,7 +258,7 @@ where :math:`\mathbf{D}_{2,x}` and :math:`\mathbf{D}_{2,z}` apply the second der
         99        6.1544e-01         6.5026e-01     6.5026e-01
        100        6.1561e-01         6.4212e-01     6.4212e-01
 
-    Iterations = 100        Total time (s) = 62.19
+    Iterations = 100        Total time (s) = 58.23
     -----------------------------------------------------------------
 
 
@@ -326,7 +326,7 @@ where :math:`\mathbf{D}_{2,x}` and :math:`\mathbf{D}_{2,z}` apply the second der
         99        6.2054e-01         1.2308e+02     1.2308e+02
        100        6.2043e-01         1.2306e+02     1.2306e+02
 
-    Iterations = 100        Total time (s) = 144.43
+    Iterations = 100        Total time (s) = 127.99
     -----------------------------------------------------------------
 
 
@@ -426,7 +426,7 @@ Finally, we display the modeling and inversion results
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 3 minutes  32.565 seconds)
+   **Total running time of the script:** ( 3 minutes  11.400 seconds)
 
 
 .. _sphx_glr_download_tutorials_plot_post_stack_inversion.py:
