@@ -432,7 +432,7 @@ class DistributedArray:
         arr[:] = self.local_array
         return arr
 
-    def ravel(self, order="C"):
+    def ravel(self, order: Optional[str] = "C"):
         """Return a flattened DistributedArray
 
         Parameters
