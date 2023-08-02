@@ -433,6 +433,21 @@ class DistributedArray:
         return arr
 
     def ravel(self, order="C"):
+        """Return a flattened DistributedArray
+
+        Parameters
+        ----------
+        order : :obj:`str`, optional
+            Order in which array needs to be flattened.
+            {'C','F', 'A', 'K'}
+
+        Returns
+        -------
+        arr : :obj:`pylops_mpi.DistributedArray`
+            Flattened 1-D DistributedArray
+
+        """
+
         arr = DistributedArray(global_shape=np.prod(self.global_shape), dtype=self.dtype)
         local_array = np.ravel(self.local_array, order=order)
         x = local_array.copy()

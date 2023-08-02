@@ -144,6 +144,7 @@ par4e = {
                                  (par2j), (par2e), (par3), (par3b), (par3j), (par3e),
                                  (par4), (par4b), (par4j), (par4e)])
 def test_first_derivative_forward(par):
+    """MPIFirstDerivative operator (forward stencil)"""
     Fop_MPI = pylops_mpi.MPIFirstDerivative(dims=par['nz'], sampling=par['dz'],
                                             kind="forward", edge=par['edge'],
                                             dtype=par['dtype'])
@@ -175,6 +176,7 @@ def test_first_derivative_forward(par):
                                  (par2j), (par2e), (par3), (par3b), (par3j), (par3e),
                                  (par4), (par4b), (par4j), (par4e)])
 def test_first_derivative_backward(par):
+    """MPIFirstDerivative operator (backward stencil)"""
     Fop_MPI = pylops_mpi.MPIFirstDerivative(dims=par['nz'], sampling=par['dz'],
                                             kind="backward", edge=par['edge'],
                                             dtype=par['dtype'])
@@ -206,6 +208,7 @@ def test_first_derivative_backward(par):
                                  (par2j), (par2e), (par3), (par3b), (par3j), (par3e),
                                  (par4), (par4b), (par4j), (par4e)])
 def test_first_derivative_centered(par):
+    """MPIFirstDerivative operator (centered stencil)"""
     for order in [3, 5]:
         Fop_MPI = pylops_mpi.MPIFirstDerivative(dims=par['nz'], sampling=par['dz'],
                                                 kind="centered", edge=par['edge'],
