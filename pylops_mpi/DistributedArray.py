@@ -432,6 +432,17 @@ class DistributedArray:
         arr[:] = self.local_array
         return arr
 
+    def ravel(self, order="C"):
+        arr = DistributedArray(global_shape=np.prod(self.global_shape), dtype=self.dtype)
+        local_array = np.ravel(self.local_array, order=order)
+        x = local_array.copy()
+        if self.rank != 0:
+            x = np.concatenate([self.base_comm.recv(source=self.rank - 1, tag=2), local_array])
+        if self.rank != self.size - 1:
+            self.base_comm.send(x[arr.local_shape[0]:], dest=self.rank + 1, tag=2)
+        arr[:] = x[: arr.local_shape[0]]
+        return arr
+
     def add_ghost_cells(self, cells_front: Optional[int] = None,
                         cells_back: Optional[int] = None):
         """Add ghost cells to the DistributedArray along the axis

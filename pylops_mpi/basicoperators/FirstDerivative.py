@@ -1,7 +1,9 @@
-from typing import Callable
+from typing import Callable, Union
 import numpy as np
 
 from pylops.utils import DTypeLike
+from pylops.utils.typing import InputDimsLike
+from pylops.utils._internal import _value_or_sized_to_tuple
 
 from pylops_mpi import (
     DistributedArray,
@@ -9,12 +11,15 @@ from pylops_mpi import (
     Partition
 )
 
+from pylops_mpi.utils.decorators import redistribute
+
 
 class MPIFirstDerivative(MPILinearOperator):
     r"""MPI First Derivative
 
     Apply a first derivative using a multiple-point stencil finite-difference
-    approximation with :class:`pylops_mpi.DistributedArray`.
+    approximation with :class:`pylops_mpi.DistributedArray`. The First-Derivative
+    is calculated along ``axis=0``.
 
     Parameters
     ----------
@@ -74,14 +79,14 @@ class MPIFirstDerivative(MPILinearOperator):
     """
 
     def __init__(self,
-                 dims: int,
+                 dims: Union[int, InputDimsLike],
                  sampling: float = 1.0,
                  kind: str = "centered",
                  edge: bool = False,
                  order: int = 3,
                  dtype: DTypeLike = np.float64):
-        self.dims = dims
-        shape = (dims, dims)
+        self.dims = _value_or_sized_to_tuple(dims)
+        shape = (int(np.prod(dims)),) * 2
         super().__init__(shape=shape, dtype=np.dtype(dtype))
         self.sampling = sampling
         self.kind = kind
@@ -120,24 +125,27 @@ class MPIFirstDerivative(MPILinearOperator):
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         # If Partition.BROADCAST, then convert to Partition.SCATTER
         if x.partition is Partition.BROADCAST:
-            x = DistributedArray.to_dist(x=x.local_array, axis=x.axis)
+            x = DistributedArray.to_dist(x=x.local_array)
         return self._hmatvec(x)
 
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         # If Partition.BROADCAST, then convert to Partition.SCATTER
         if x.partition is Partition.BROADCAST:
-            x = DistributedArray.to_dist(x=x.local_array, axis=x.axis)
+            x = DistributedArray.to_dist(x=x.local_array)
         return self._hrmatvec(x)
 
+    @redistribute
     def _matvec_forward(self, x: DistributedArray) -> DistributedArray:
         y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
         y[:] = 0
         ghosted_x = x.add_ghost_cells(cells_back=1)
         y_forward = ghosted_x[1:] - ghosted_x[:-1]
-        y_forward = np.append(y_forward, [0], axis=y.axis) if self.rank == self.size - 1 else y_forward
+        if self.rank == self.size - 1:
+            y_forward = np.append(y_forward, np.zeros((1,) + self.dims[1:]), axis=0)
         y[:] = y_forward / self.sampling
         return y
 
+    @redistribute
     def _rmatvec_forward(self, x: DistributedArray) -> DistributedArray:
         y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
         y[:] = 0
@@ -147,26 +155,31 @@ class MPIFirstDerivative(MPILinearOperator):
             y[:] -= x[:]
         ghosted_x = x.add_ghost_cells(cells_front=1)
         y_forward = ghosted_x[:-1]
-        y_forward = np.insert(y_forward, 0, 0, axis=y.axis) if self.rank == 0 else y_forward
+        if self.rank == 0:
+            y_forward = np.insert(y_forward, 0, np.zeros((1,) + self.dims[1:]), axis=0)
         y[:] += y_forward
         y[:] /= self.sampling
         return y
 
+    @redistribute
     def _matvec_backward(self, x: DistributedArray) -> DistributedArray:
         y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
         y[:] = 0
         ghosted_x = x.add_ghost_cells(cells_front=1)
         y_backward = ghosted_x[1:] - ghosted_x[:-1]
-        y_backward = np.insert(y_backward, 0, 0, axis=y.axis) if self.rank == 0 else y_backward
+        if self.rank == 0:
+            y_backward = np.insert(y_backward, 0, np.zeros((1,) + self.dims[1:]), axis=0)
         y[:] = y_backward / self.sampling
         return y
 
+    @redistribute
     def _rmatvec_backward(self, x: DistributedArray) -> DistributedArray:
         y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
         y[:] = 0
         ghosted_x = x.add_ghost_cells(cells_back=1)
         y_backward = ghosted_x[1:]
-        y_backward = np.append(y_backward, [0], axis=y.axis) if self.rank == self.size - 1 else y_backward
+        if self.rank == self.size - 1:
+            y_backward = np.append(y_backward, np.zeros((1,) + self.dims[1:]), axis=0)
         y[:] -= y_backward
         if self.rank == 0:
             y[1:] += x[1:]
@@ -175,15 +188,16 @@ class MPIFirstDerivative(MPILinearOperator):
         y[:] /= self.sampling
         return y
 
+    @redistribute
     def _matvec_centered3(self, x: DistributedArray) -> DistributedArray:
         y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
         y[:] = 0.
         ghosted_x = x.add_ghost_cells(cells_front=1, cells_back=1)
         y_centered = 0.5 * (ghosted_x[2:] - ghosted_x[:-2])
         if self.rank == 0:
-            y_centered = np.insert(y_centered, 0, 0, axis=y.axis)
+            y_centered = np.insert(y_centered, 0, np.zeros((1,) + self.dims[1:]), axis=0)
         if self.rank == self.size - 1:
-            y_centered = np.append(y_centered, [0] * min(y.global_shape[0] - 1, 1), axis=y.axis)
+            y_centered = np.append(y_centered, np.zeros((min(y.global_shape[0] - 1, 1), ) + self.dims[1:]), axis=0)
         y[:] = y_centered
         if self.edge:
             if self.rank == 0:
@@ -193,19 +207,20 @@ class MPIFirstDerivative(MPILinearOperator):
         y[:] /= self.sampling
         return y
 
+    @redistribute
     def _rmatvec_centered3(self, x: DistributedArray) -> DistributedArray:
         y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
         y[:] = 0
         ghosted_x = x.add_ghost_cells(cells_back=2)
         y_centered = 0.5 * ghosted_x[1:-1]
         if self.rank == self.size - 1:
-            y_centered = np.append(y_centered, [0] * min(y.global_shape[0], 2), axis=y.axis)
+            y_centered = np.append(y_centered, np.zeros((min(y.global_shape[0], 2),) + self.dims[1:]), axis=0)
         y[:] -= y_centered
 
         ghosted_x = x.add_ghost_cells(cells_front=2)
         y_centered = 0.5 * ghosted_x[1:-1]
         if self.rank == 0:
-            y_centered = np.insert(y_centered, 0, [0] * min(y.global_shape[0], 2), axis=y.axis)
+            y_centered = np.insert(y_centered, 0, np.zeros((min(y.global_shape[0], 2),) + self.dims[1:]), axis=0)
         y[:] += y_centered
         if self.edge:
             if self.rank == 0:
@@ -217,6 +232,7 @@ class MPIFirstDerivative(MPILinearOperator):
         y[:] /= self.sampling
         return y
 
+    @redistribute
     def _matvec_centered5(self, x: DistributedArray) -> DistributedArray:
         y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
         y[:] = 0
@@ -228,9 +244,9 @@ class MPIFirstDerivative(MPILinearOperator):
             - ghosted_x[4:] / 12.0
         )
         if self.rank == 0:
-            y_centered = np.insert(y_centered, 0, [0] * min(y.local_shape[0], 2), axis=y.axis)
+            y_centered = np.insert(y_centered, 0, np.zeros((min(y.global_shape[0], 2),) + self.dims[1:]), axis=0)
         if self.rank == self.size - 1:
-            y_centered = np.append(y_centered, [0] * min(y.local_shape[0] - 2, 2), axis=y.axis)
+            y_centered = np.append(y_centered, np.zeros((min(y.global_shape[0] - 2, 2),) + self.dims[1:]), axis=0)
         y[:] = y_centered
         if self.edge:
             if self.rank == 0:
@@ -242,35 +258,36 @@ class MPIFirstDerivative(MPILinearOperator):
         y[:] /= self.sampling
         return y
 
+    @redistribute
     def _rmatvec_centered5(self, x: DistributedArray) -> DistributedArray:
         y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
         y[:] = 0
         ghosted_x = x.add_ghost_cells(cells_back=4)
         y_centered = ghosted_x[2:-2] / 12.0
         if self.rank == self.size - 1:
-            y_centered = np.append(y_centered, [0] * min(y.global_shape[0], 4), axis=y.axis)
+            y_centered = np.append(y_centered, np.zeros((min(y.global_shape[0], 4),) + self.dims[1:]), axis=0)
         y[:] += y_centered
 
         ghosted_x = x.add_ghost_cells(cells_front=1, cells_back=3)
         y_centered = 2.0 * ghosted_x[2:-2] / 3.0
         if self.rank == 0:
-            y_centered = np.insert(y_centered, 0, 0, axis=y.axis)
+            y_centered = np.insert(y_centered, 0, np.zeros((1,) + self.dims[1:]), axis=0)
         if self.rank == self.size - 1:
-            y_centered = np.append(y_centered, [0] * min(y.global_shape[0] - 1, 3), axis=y.axis)
+            y_centered = np.append(y_centered, np.zeros((min(y.global_shape[0] - 1, 3),) + self.dims[1:]), axis=0)
         y[:] -= y_centered
 
         ghosted_x = x.add_ghost_cells(cells_front=3, cells_back=1)
         y_centered = 2.0 * ghosted_x[2:-2] / 3.0
         if self.rank == 0:
-            y_centered = np.insert(y_centered, 0, [0] * min(y.global_shape[0], 3), axis=y.axis)
+            y_centered = np.insert(y_centered, 0, np.zeros((min(y.global_shape[0], 3),) + self.dims[1:]), axis=0)
         if self.rank == self.size - 1:
-            y_centered = np.append(y_centered, [0] * min(y.global_shape[0] - 3, 1), axis=y.axis)
+            y_centered = np.append(y_centered, np.zeros((min(y.global_shape[0] - 3, 1),) + self.dims[1:]), axis=0)
         y[:] += y_centered
 
         ghosted_x = x.add_ghost_cells(cells_front=4)
         y_centered = ghosted_x[2:-2] / 12.0
         if self.rank == 0:
-            y_centered = np.insert(y_centered, 0, [0] * min(y.global_shape[0], 4), axis=y.axis)
+            y_centered = np.insert(y_centered, 0, np.zeros((min(y.global_shape[0], 4),) + self.dims[1:]), axis=0)
         y[:] -= y_centered
         if self.edge:
             if self.rank == 0:
