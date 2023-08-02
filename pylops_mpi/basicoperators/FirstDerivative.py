@@ -11,7 +11,7 @@ from pylops_mpi import (
     Partition
 )
 
-from pylops_mpi.utils.decorators import redistribute
+from pylops_mpi.utils.decorators import reshaped
 
 
 class MPIFirstDerivative(MPILinearOperator):
@@ -134,7 +134,7 @@ class MPIFirstDerivative(MPILinearOperator):
             x = DistributedArray.to_dist(x=x.local_array)
         return self._hrmatvec(x)
 
-    @redistribute
+    @reshaped
     def _matvec_forward(self, x: DistributedArray) -> DistributedArray:
         y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
         ghosted_x = x.add_ghost_cells(cells_back=1)
@@ -144,7 +144,7 @@ class MPIFirstDerivative(MPILinearOperator):
         y[:] = y_forward / self.sampling
         return y
 
-    @redistribute
+    @reshaped
     def _rmatvec_forward(self, x: DistributedArray) -> DistributedArray:
         y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
         y[:] = 0
@@ -160,7 +160,7 @@ class MPIFirstDerivative(MPILinearOperator):
         y[:] /= self.sampling
         return y
 
-    @redistribute
+    @reshaped
     def _matvec_backward(self, x: DistributedArray) -> DistributedArray:
         y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
         ghosted_x = x.add_ghost_cells(cells_front=1)
@@ -170,7 +170,7 @@ class MPIFirstDerivative(MPILinearOperator):
         y[:] = y_backward / self.sampling
         return y
 
-    @redistribute
+    @reshaped
     def _rmatvec_backward(self, x: DistributedArray) -> DistributedArray:
         y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
         y[:] = 0
@@ -186,7 +186,7 @@ class MPIFirstDerivative(MPILinearOperator):
         y[:] /= self.sampling
         return y
 
-    @redistribute
+    @reshaped
     def _matvec_centered3(self, x: DistributedArray) -> DistributedArray:
         y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
         ghosted_x = x.add_ghost_cells(cells_front=1, cells_back=1)
@@ -204,7 +204,7 @@ class MPIFirstDerivative(MPILinearOperator):
         y[:] /= self.sampling
         return y
 
-    @redistribute
+    @reshaped
     def _rmatvec_centered3(self, x: DistributedArray) -> DistributedArray:
         y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
         y[:] = 0
@@ -229,7 +229,7 @@ class MPIFirstDerivative(MPILinearOperator):
         y[:] /= self.sampling
         return y
 
-    @redistribute
+    @reshaped
     def _matvec_centered5(self, x: DistributedArray) -> DistributedArray:
         y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
         ghosted_x = x.add_ghost_cells(cells_front=2, cells_back=2)
@@ -254,7 +254,7 @@ class MPIFirstDerivative(MPILinearOperator):
         y[:] /= self.sampling
         return y
 
-    @redistribute
+    @reshaped
     def _rmatvec_centered5(self, x: DistributedArray) -> DistributedArray:
         y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
         y[:] = 0

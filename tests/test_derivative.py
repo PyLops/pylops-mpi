@@ -11,7 +11,7 @@ rank = MPI.COMM_WORLD.Get_rank()
 size = MPI.COMM_WORLD.Get_size()
 
 par1 = {
-    "nz": 100,
+    "nz": 600,
     "dz": 1.0,
     "edge": False,
     "dtype": np.float128,
@@ -19,7 +19,7 @@ par1 = {
 }
 
 par1b = {
-    "nz": 100,
+    "nz": 600,
     "dz": 1.0,
     "edge": False,
     "dtype": np.float128,
@@ -27,7 +27,7 @@ par1b = {
 }
 
 par1j = {
-    "nz": 100,
+    "nz": 600,
     "dz": 1.0,
     "edge": False,
     "dtype": np.complex256,
@@ -35,7 +35,7 @@ par1j = {
 }
 
 par1e = {
-    "nz": 100,
+    "nz": 600,
     "dz": 1.0,
     "edge": True,
     "dtype": np.float128,
@@ -43,7 +43,7 @@ par1e = {
 }
 
 par2 = {
-    "nz": (101, 100),
+    "nz": (600, 151),
     "dz": 1.0,
     "edge": False,
     "dtype": np.float128,
@@ -51,7 +51,7 @@ par2 = {
 }
 
 par2b = {
-    "nz": (101, 100),
+    "nz": (600, 151),
     "dz": 1.0,
     "edge": False,
     "dtype": np.float128,
@@ -59,7 +59,7 @@ par2b = {
 }
 
 par2j = {
-    "nz": (101, 100),
+    "nz": (600, 151),
     "dz": 1.0,
     "edge": False,
     "dtype": np.complex256,
@@ -67,7 +67,7 @@ par2j = {
 }
 
 par2e = {
-    "nz": (101, 100),
+    "nz": (600, 151),
     "dz": 1.0,
     "edge": True,
     "dtype": np.float128,
@@ -75,7 +75,7 @@ par2e = {
 }
 
 par3 = {
-    "nz": (101, 50, 100),
+    "nz": (300, 51, 100),
     "dz": 0.4,
     "edge": False,
     "dtype": np.float128,
@@ -83,7 +83,7 @@ par3 = {
 }
 
 par3b = {
-    "nz": (101, 50, 100),
+    "nz": (300, 51, 100),
     "dz": 0.4,
     "edge": False,
     "dtype": np.float128,
@@ -91,7 +91,7 @@ par3b = {
 }
 
 par3j = {
-    "nz": (101, 50, 100),
+    "nz": (300, 51, 100),
     "dz": 0.4,
     "edge": True,
     "dtype": np.complex256,
@@ -99,7 +99,7 @@ par3j = {
 }
 
 par3e = {
-    "nz": (101, 50, 100),
+    "nz": (300, 51, 100),
     "dz": 0.4,
     "edge": True,
     "dtype": np.float128,
@@ -107,7 +107,7 @@ par3e = {
 }
 
 par4 = {
-    "nz": (101, 101, 101),
+    "nz": (180, 101, 50),
     "dz": 0.4,
     "edge": False,
     "dtype": np.float128,
@@ -115,7 +115,7 @@ par4 = {
 }
 
 par4b = {
-    "nz": (101, 101, 101),
+    "nz": (180, 101, 50),
     "dz": 0.4,
     "edge": False,
     "dtype": np.float128,
@@ -123,7 +123,7 @@ par4b = {
 }
 
 par4j = {
-    "nz": (101, 101, 101),
+    "nz": (180, 101, 50),
     "dz": 0.4,
     "edge": True,
     "dtype": np.complex256,
@@ -131,7 +131,7 @@ par4j = {
 }
 
 par4e = {
-    "nz": (101, 101, 101),
+    "nz": (180, 101, 50),
     "dz": 0.4,
     "edge": True,
     "dtype": np.float128,
