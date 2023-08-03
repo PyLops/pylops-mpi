@@ -454,6 +454,9 @@ class DistributedArray:
         """
         ghosted_array = self.local_array.copy()
         if cells_front is not None:
+            total_cells_front = self.base_comm.allgather(cells_front) + [0]
+            # Read cells_front which needs to be sent to rank + 1(cells_front for rank + 1)
+            cells_front = total_cells_front[self.rank + 1]
             if self.rank != 0:
                 ghosted_array = np.concatenate([self.base_comm.recv(source=self.rank - 1, tag=1), ghosted_array],
                                                axis=self.axis)
@@ -467,6 +470,9 @@ class DistributedArray:
                 self.base_comm.send(np.take(self.local_array, np.arange(-cells_front, 0), axis=self.axis),
                                     dest=self.rank + 1, tag=1)
         if cells_back is not None:
+            total_cells_back = self.base_comm.allgather(cells_back) + [0]
+            # Read cells_back which needs to be sent to rank - 1(cells_back for rank - 1)
+            cells_back = total_cells_back[self.rank - 1]
             if self.rank != 0:
                 if cells_back > self.local_shape[self.axis]:
                     raise ValueError(f"Local Shape at rank={self.rank} along axis={self.axis} "
