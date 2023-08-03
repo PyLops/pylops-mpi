@@ -43,7 +43,7 @@ par1e = {
 }
 
 par2 = {
-    "nz": (600, 151),
+    "nz": (100, 151),
     "dz": 1.0,
     "edge": False,
     "dtype": np.float128,
@@ -51,7 +51,7 @@ par2 = {
 }
 
 par2b = {
-    "nz": (600, 151),
+    "nz": (100, 151),
     "dz": 1.0,
     "edge": False,
     "dtype": np.float128,
@@ -59,7 +59,7 @@ par2b = {
 }
 
 par2j = {
-    "nz": (600, 151),
+    "nz": (100, 151),
     "dz": 1.0,
     "edge": False,
     "dtype": np.complex256,
@@ -67,7 +67,7 @@ par2j = {
 }
 
 par2e = {
-    "nz": (600, 151),
+    "nz": (100, 151),
     "dz": 1.0,
     "edge": True,
     "dtype": np.float128,
@@ -75,7 +75,7 @@ par2e = {
 }
 
 par3 = {
-    "nz": (300, 51, 100),
+    "nz": (101, 51, 100),
     "dz": 0.4,
     "edge": False,
     "dtype": np.float128,
@@ -83,7 +83,7 @@ par3 = {
 }
 
 par3b = {
-    "nz": (300, 51, 100),
+    "nz": (101, 51, 100),
     "dz": 0.4,
     "edge": False,
     "dtype": np.float128,
@@ -91,7 +91,7 @@ par3b = {
 }
 
 par3j = {
-    "nz": (300, 51, 100),
+    "nz": (101, 51, 100),
     "dz": 0.4,
     "edge": True,
     "dtype": np.complex256,
@@ -99,7 +99,7 @@ par3j = {
 }
 
 par3e = {
-    "nz": (300, 51, 100),
+    "nz": (101, 51, 100),
     "dz": 0.4,
     "edge": True,
     "dtype": np.float128,
@@ -107,7 +107,7 @@ par3e = {
 }
 
 par4 = {
-    "nz": (180, 101, 50),
+    "nz": (79, 101, 50),
     "dz": 0.4,
     "edge": False,
     "dtype": np.float128,
@@ -115,7 +115,7 @@ par4 = {
 }
 
 par4b = {
-    "nz": (180, 101, 50),
+    "nz": (79, 101, 50),
     "dz": 0.4,
     "edge": False,
     "dtype": np.float128,
@@ -123,7 +123,7 @@ par4b = {
 }
 
 par4j = {
-    "nz": (180, 101, 50),
+    "nz": (79, 101, 50),
     "dz": 0.4,
     "edge": True,
     "dtype": np.complex256,
@@ -131,7 +131,7 @@ par4j = {
 }
 
 par4e = {
-    "nz": (180, 101, 50),
+    "nz": (79, 101, 50),
     "dz": 0.4,
     "edge": True,
     "dtype": np.float128,
