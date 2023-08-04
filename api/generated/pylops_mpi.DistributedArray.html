@@ -316,6 +316,9 @@ document.write(`
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MPIHStack.html">pylops_mpi.basicoperators.MPIHStack</a></li>
 </ul>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MPIFirstDerivative.html">pylops_mpi.basicoperators.MPIFirstDerivative</a></li>
+</ul>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.optimization.cls_basic.CGLS.html">pylops_mpi.optimization.cls_basic.CGLS</a></li>
 </ul>
 <ul class="nav bd-sidenav">
@@ -442,7 +445,10 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm</span></code>([ord, axis])</p></td>
 <td><p>Distributed numpy.linalg.norm method</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_dist</span></code>(x[, base_comm, partition, axis])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ravel</span></code>([order])</p></td>
+<td><p>Return a flattened DistributedArray Parameters ---------- order : <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional     Order in which array needs to be flattened. {'C','F', 'A', 'K'} Returns ------- arr : <a class="reference internal" href="#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>     Flattened 1-D DistributedArray.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_dist</span></code>(x[, base_comm, partition, axis])</p></td>
 <td><p>Convert A Global Array to a Distributed Array</p></td>
 </tr>
 </tbody>

@@ -18,6 +18,7 @@
         ~DistributedArray.dot
         ~DistributedArray.multiply
         ~DistributedArray.norm
+        ~DistributedArray.ravel
         ~DistributedArray.to_dist
 
 

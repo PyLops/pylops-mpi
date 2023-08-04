@@ -1,0 +1,47 @@
+﻿pylops\_mpi.basicoperators.MPIFirstDerivative
+=============================================
+
+.. currentmodule:: pylops_mpi.basicoperators
+
+.. autoclass:: MPIFirstDerivative
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~MPIFirstDerivative.__init__
+        ~MPIFirstDerivative.adjoint
+        ~MPIFirstDerivative.conj
+        ~MPIFirstDerivative.dot
+        ~MPIFirstDerivative.matvec
+        ~MPIFirstDerivative.rmatvec
+        ~MPIFirstDerivative.transpose
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.basicoperators.MPIFirstDerivative.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+

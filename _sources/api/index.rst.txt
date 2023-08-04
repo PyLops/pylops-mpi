@@ -44,6 +44,16 @@ Basic Operators
     MPIVStack
     MPIHStack
 
+Derivatives
+~~~~~~~~~~~
+
+.. currentmodule:: pylops_mpi.basicoperators
+
+.. autosummary::
+   :toctree: generated/
+
+    MPIFirstDerivative
+
 Solvers
 -------
 
