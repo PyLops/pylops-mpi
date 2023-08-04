@@ -233,3 +233,99 @@ def test_first_derivative_centered(par):
             y_adj_np = Fop.H @ x_global
             assert_allclose(y, y_np, rtol=1e-14)
             assert_allclose(y_adj, y_adj_np, rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par1), (par1b), (par1j), (par1e), (par2), (par2b),
+                                 (par2j), (par2e), (par3), (par3b), (par3j), (par3e),
+                                 (par4), (par4b), (par4j), (par4e)])
+def test_second_derivative_forward(par):
+    """MPISecondDerivative operator (forward stencil)"""
+    Sop_MPI = pylops_mpi.basicoperators.MPISecondDerivative(dims=par['nz'], sampling=par['dz'],
+                                                            kind="forward", edge=par['edge'],
+                                                            dtype=par['dtype'])
+    x = pylops_mpi.DistributedArray(global_shape=np.prod(par['nz']), dtype=par['dtype'],
+                                    partition=par['partition'])
+    x[:] = np.random.normal(rank, 10, x.local_shape)
+    x_global = x.asarray()
+    # Forward
+    y_dist = Sop_MPI @ x
+    y = y_dist.asarray()
+    # Adjoint
+    y_adj_dist = Sop_MPI.H @ x
+    y_adj = y_adj_dist.asarray()
+
+    if rank == 0:
+        Sop = pylops.SecondDerivative(dims=par['nz'], axis=0,
+                                      sampling=par['dz'],
+                                      kind="forward", edge=par['edge'],
+                                      dtype=par['dtype'])
+        assert Sop_MPI.shape == Sop.shape
+        y_np = Sop @ x_global
+        y_adj_np = Sop.H @ x_global
+        assert_allclose(y, y_np, rtol=1e-14)
+        assert_allclose(y_adj, y_adj_np, rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par1), (par1b), (par1j), (par1e), (par2), (par2b),
+                                 (par2j), (par2e), (par3), (par3b), (par3j), (par3e),
+                                 (par4), (par4b), (par4j), (par4e)])
+def test_second_derivative_backward(par):
+    """MPISecondDerivative operator (backward stencil)"""
+    Sop_MPI = pylops_mpi.basicoperators.MPISecondDerivative(dims=par['nz'], sampling=par['dz'],
+                                                            kind="backward", edge=par['edge'],
+                                                            dtype=par['dtype'])
+    x = pylops_mpi.DistributedArray(global_shape=np.prod(par['nz']), dtype=par['dtype'],
+                                    partition=par['partition'])
+    x[:] = np.random.normal(rank, 10, x.local_shape)
+    x_global = x.asarray()
+    # Forward
+    y_dist = Sop_MPI @ x
+    y = y_dist.asarray()
+    # Adjoint
+    y_adj_dist = Sop_MPI.H @ x
+    y_adj = y_adj_dist.asarray()
+
+    if rank == 0:
+        Sop = pylops.SecondDerivative(dims=par['nz'], axis=0,
+                                      sampling=par['dz'],
+                                      kind="backward", edge=par['edge'],
+                                      dtype=par['dtype'])
+        assert Sop_MPI.shape == Sop.shape
+        y_np = Sop @ x_global
+        y_adj_np = Sop.H @ x_global
+        assert_allclose(y, y_np, rtol=1e-14)
+        assert_allclose(y_adj, y_adj_np, rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par1), (par1b), (par1j), (par1e), (par2), (par2b),
+                                 (par2j), (par2e), (par3), (par3b), (par3j), (par3e),
+                                 (par4), (par4b), (par4j), (par4e)])
+def test_second_derivative_centered(par):
+    """MPISecondDerivative operator (centered stencil)"""
+    Sop_MPI = pylops_mpi.basicoperators.MPISecondDerivative(dims=par['nz'], sampling=par['dz'],
+                                                            kind="centered", edge=par['edge'],
+                                                            dtype=par['dtype'])
+    x = pylops_mpi.DistributedArray(global_shape=np.prod(par['nz']), dtype=par['dtype'],
+                                    partition=par['partition'])
+    x[:] = np.random.normal(rank, 10, x.local_shape)
+    x_global = x.asarray()
+    # Forward
+    y_dist = Sop_MPI @ x
+    y = y_dist.asarray()
+    # Adjoint
+    y_adj_dist = Sop_MPI.H @ x
+    y_adj = y_adj_dist.asarray()
+
+    if rank == 0:
+        Sop = pylops.SecondDerivative(dims=par['nz'], axis=0,
+                                      sampling=par['dz'],
+                                      kind="centered", edge=par['edge'],
+                                      dtype=par['dtype'])
+        assert Sop_MPI.shape == Sop.shape
+        y_np = Sop @ x_global
+        y_adj_np = Sop.H @ x_global
+        assert_allclose(y, y_np, rtol=1e-14)
+        assert_allclose(y_adj, y_adj_np, rtol=1e-14)
