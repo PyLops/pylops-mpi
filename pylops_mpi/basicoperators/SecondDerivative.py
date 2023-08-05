@@ -11,8 +11,8 @@ from pylops_mpi.utils.decorators import reshaped
 class MPISecondDerivative(MPILinearOperator):
     r"""MPI Second Derivative
 
-    Apply a second derivative using a multiple-point stencil finite-difference
-    approximation with :class:`pylops_mpi.DistributedArray`. The Second-Derivative
+    Apply a second derivative using a three-point stencil finite-difference
+    approximation with :class:`pylops_mpi.DistributedArray`. The Second Derivative
     is calculated along ``axis=0``.
 
     Parameters
@@ -38,19 +38,19 @@ class MPISecondDerivative(MPILinearOperator):
     Notes
     -----
     The MPISecondDerivative operator applies a second derivative to a :class:`pylops_mpi.DistributedArray`
-    using either a first-order forward, backward or a centered stencil.
+    using either a second-order forward, backward or a centered stencil.
 
-    Now, for a one-dimensional DistributedArray, the first-order forward stencil is:
+    Now, for a one-dimensional DistributedArray, the second-order forward stencil is:
 
     .. math::
         y[i] = (x[i+2] - 2 * x[i+1] + x[i]) / \mathbf{\Delta x}^2
 
-    while the first-order backward stencil is:
+    while the second-order backward stencil is:
 
     .. math::
         y[i] = (x[i] - 2 * x[i-1] + x[i-2]) / \mathbf{\Delta x}^2
 
-    and the first-order centered stencil is:
+    and the second-order centered stencil is:
 
     .. math::
         y[i] = (x[i+1] - 2 * x[i] + x[i-1]) / \mathbf{\Delta x}^2
