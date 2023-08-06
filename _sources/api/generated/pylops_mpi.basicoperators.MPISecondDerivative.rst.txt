@@ -1,0 +1,47 @@
+﻿pylops\_mpi.basicoperators.MPISecondDerivative
+==============================================
+
+.. currentmodule:: pylops_mpi.basicoperators
+
+.. autoclass:: MPISecondDerivative
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~MPISecondDerivative.__init__
+        ~MPISecondDerivative.adjoint
+        ~MPISecondDerivative.conj
+        ~MPISecondDerivative.dot
+        ~MPISecondDerivative.matvec
+        ~MPISecondDerivative.rmatvec
+        ~MPISecondDerivative.transpose
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.basicoperators.MPISecondDerivative.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+
