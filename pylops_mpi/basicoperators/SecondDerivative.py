@@ -15,13 +15,6 @@ class MPISecondDerivative(MPILinearOperator):
     approximation with :class:`pylops_mpi.DistributedArray`. The Second Derivative
     is calculated along ``axis=0``.
 
-    Similar to the concept of :py:class:`pylops_mpi.basicoperators.MPIFirstDerivative`,
-    **ghosting** is applied at each rank to include duplicated copies of border cells
-    (ghost cells) from neighboring processes. These ghost cells enable each process
-    to perform local computations independently, avoiding the necessity for direct
-    communication with other processes. As a result, it becomes possible to calculate
-    the Second Derivative of the entire distributed array efficiently.
-
     Parameters
     ----------
     dims : :obj:`int` or :obj:`tuple`
@@ -46,6 +39,13 @@ class MPISecondDerivative(MPILinearOperator):
     -----
     The MPISecondDerivative operator applies a second derivative to a :class:`pylops_mpi.DistributedArray`
     using either a second-order forward, backward or a centered stencil.
+
+    Similar to the concept of :py:class:`pylops_mpi.basicoperators.MPIFirstDerivative`,
+    **ghosting** is applied at each rank to include duplicated copies of border cells
+    (ghost cells) from neighboring processes. These ghost cells enable each process
+    to perform local computations independently, avoiding the necessity for direct
+    communication with other processes. As a result, it becomes possible to calculate
+    the Second Derivative of the entire distributed array efficiently.
 
     Now, for a one-dimensional DistributedArray, the second-order forward stencil is:
 
