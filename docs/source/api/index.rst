@@ -53,6 +53,7 @@ Derivatives
    :toctree: generated/
 
     MPIFirstDerivative
+    MPISecondDerivative
 
 Solvers
 -------
