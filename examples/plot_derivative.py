@@ -1,12 +1,19 @@
 """
 Derivatives
 ===========
-This example demonstrates how to use a set of derivative operators, namely
+This example demonstrates how to use pylops-mpi's derivative operators, namely
 :py:class:`pylops_mpi.basicoperators.MPIFirstDerivative` and
 :py:class:`pylops_mpi.basicoperators.MPISecondDerivative`.
 
-The derivative operators are really useful when dealing with
-inverted models.
+We will be focusing here on the case where the input array :math:`x` is assumed to be
+an n-dimensional :py:class:`pylops_mpi.DistributedArray` and the derivative is
+applied over the first axis (``axis=0``). Since the array is distributed
+over multiple processes, the derivative operators must take care of applying
+the derivatives across the edges using the information from the previous/next
+processes, using the so-called ghost cells.
+
+Derivative operators are commonly used when solving inverse problems within
+regularization terms aimed at enforcing smooth solutions
 
 """
 from matplotlib import pyplot as plt
@@ -22,8 +29,8 @@ rank = MPI.COMM_WORLD.Get_rank()
 size = MPI.COMM_WORLD.Get_size()
 
 ###############################################################################
-# Let’s start by applying the first derivative using a :py:class:`pylops_mpi.DistributedArray`
-# in the first direction i.e. along ``axis=0`` using the
+# Let’s start by applying the first derivative on a :py:class:`pylops_mpi.DistributedArray`
+# in the first direction(i.e. along axis=0) using the
 # :py:class:`pylops_mpi.basicoperators.MPIFirstDerivative` operator.
 nx, ny = 11, 21
 x = np.zeros((nx, ny))
