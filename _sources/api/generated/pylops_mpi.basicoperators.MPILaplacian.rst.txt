@@ -1,0 +1,47 @@
+﻿pylops\_mpi.basicoperators.MPILaplacian
+=======================================
+
+.. currentmodule:: pylops_mpi.basicoperators
+
+.. autoclass:: MPILaplacian
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~MPILaplacian.__init__
+        ~MPILaplacian.adjoint
+        ~MPILaplacian.conj
+        ~MPILaplacian.dot
+        ~MPILaplacian.matvec
+        ~MPILaplacian.rmatvec
+        ~MPILaplacian.transpose
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.basicoperators.MPILaplacian.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+
