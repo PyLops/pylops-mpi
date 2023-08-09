@@ -138,6 +138,42 @@ par4e = {
     "partition": pylops_mpi.Partition.SCATTER
 }
 
+par5 = {
+    "n": (120, 101, 60),
+    "axes": (0, 1, 2),
+    "weights": (0.7, 0.7, 0.7),
+    "sampling": (1, 1, 1),
+    "edge": False,
+    "dtype": np.float128,
+}
+
+par5e = {
+    "n": (120, 101, 60),
+    "axes": (-1, -2, -3),
+    "weights": (0.7, 0.7, 0.7),
+    "sampling": (1, 1, 1),
+    "edge": True,
+    "dtype": np.float128,
+}
+
+par6 = {
+    "n": (180, 60, 101),
+    "axes": (0, 1, 2),
+    "weights": (1, 1, 1),
+    "sampling": (0.4, 0.4, 0.4),
+    "edge": False,
+    "dtype": np.float128,
+}
+
+par6e = {
+    "n": (180, 60, 101),
+    "axes": (-1, -2, -3),
+    "weights": (1, 1, 1),
+    "sampling": (0.4, 0.4, 0.4),
+    "edge": True,
+    "dtype": np.float128,
+}
+
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par1b), (par1j), (par1e), (par2), (par2b),
@@ -329,3 +365,34 @@ def test_second_derivative_centered(par):
         y_adj_np = Sop.H @ x_global
         assert_allclose(y, y_np, rtol=1e-14)
         assert_allclose(y_adj, y_adj_np, rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par5), (par5e), (par6), (par6e)])
+def test_laplacian(par):
+    """MPILaplacian Operator"""
+    for kind in ["forward", "backward", "centered"]:
+        Lop_MPI = pylops_mpi.basicoperators.MPILaplacian(dims=par['n'], axes=par['axes'],
+                                                         weights=par['weights'], sampling=par['sampling'],
+                                                         kind=kind, edge=par['edge'],
+                                                         dtype=par['dtype'])
+        x = pylops_mpi.DistributedArray(global_shape=np.prod(par['n']), dtype=par['dtype'])
+        x[:] = np.random.normal(rank, 10, x.local_shape)
+        x_global = x.asarray()
+        # Forward
+        y_dist = Lop_MPI @ x
+        y = y_dist.asarray()
+        # Adjoint
+        y_adj_dist = Lop_MPI.H @ x
+        y_adj = y_adj_dist.asarray()
+
+        if rank == 0:
+            Lop = pylops.Laplacian(dims=par['n'], axes=par['axes'],
+                                   weights=par['weights'], sampling=par['sampling'],
+                                   kind=kind, edge=par['edge'],
+                                   dtype=par['dtype'])
+            assert Lop_MPI.shape == Lop.shape
+            y_np = Lop @ x_global
+            y_adj_np = Lop.H @ x_global
+            assert_allclose(y, y_np, rtol=1e-14)
+            assert_allclose(y_adj, y_adj_np, rtol=1e-14)

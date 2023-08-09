@@ -19,11 +19,13 @@ from .VStack import *
 from .HStack import *
 from .FirstDerivative import *
 from .SecondDerivative import *
+from .Laplacian import *
 
 __all__ = [
     "MPIBlockDiag",
     "MPIVStack",
     "MPIHStack",
     "MPIFirstDerivative",
-    "MPISecondDerivative"
+    "MPISecondDerivative",
+    "MPILaplacian"
 ]
