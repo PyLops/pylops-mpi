@@ -19,6 +19,8 @@ class MPILaplacian(MPILinearOperator):
 
     .. note:: At least 2 dimensions are required, use
       :py:class:`pylops_mpi.basicoperators.MPISecondDerivative` for one dimension.
+      Make sure that the first dimension is divisible by the size(number of processes),
+      which means if the dims=(nx, ny), then ``nx % size == 0``.
 
     Parameters
     ----------
@@ -50,7 +52,7 @@ class MPILaplacian(MPILinearOperator):
     a multi-dimensional distributed array.
 
     We utilize the :py:class:`pylops_mpi.basicoperators.MPISecondDerivative` to
-    calculate the second derivative along the first direction(i.e. axis=0).
+    calculate the second derivative along the first direction(i.e., axis=0).
     For other values of axis, the :py:class:`pylops.SecondDerivative` operator is
     pushed into the :py:class:`pylops_mpi.basicoperators.MPIBlockDiag` operator.
     Subsequently, the matrix-vector product is performed between the

@@ -2,8 +2,9 @@
 Derivatives
 ===========
 This example demonstrates how to use pylops-mpi's derivative operators, namely
-:py:class:`pylops_mpi.basicoperators.MPIFirstDerivative` and
-:py:class:`pylops_mpi.basicoperators.MPISecondDerivative`.
+:py:class:`pylops_mpi.basicoperators.MPIFirstDerivative`,
+:py:class:`pylops_mpi.basicoperators.MPISecondDerivative` and
+:py:class:`pylops_mpi.basicoperators.MPILaplacian`.
 
 We will be focusing here on the case where the input array :math:`x` is assumed to be
 an n-dimensional :py:class:`pylops_mpi.DistributedArray` and the derivative is
@@ -82,5 +83,44 @@ if rank == 0:
     axs[1].axis("tight")
     axs[1].set_title("y")
     plt.colorbar(im, ax=axs[1])
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.8)
+
+###############################################################################
+# We now use the :py:class:`pylops_mpi.basicoperators.MPILaplacian` to calculate
+# second derivative along two directions of the distributed array.
+# We use a symmetrical as well as an asymmetrical (adding more weight to the
+# derivative along one direction) version to achieve this.
+nx, ny = (12, 21)
+x = np.zeros((nx, ny))
+x[nx // 2, ny // 2] = 1.0
+
+# Symmetrical
+L2symop = pylops_mpi.MPILaplacian(dims=(nx, ny), weights=(1, 1), dtype=np.float64)
+
+# Asymmetrical
+L2asymop = pylops_mpi.MPILaplacian(dims=(nx, ny), weights=(3, 1), dtype=np.float64)
+
+x_dist = pylops_mpi.DistributedArray.to_dist(x=x.flatten())
+ysym_dist = L2symop @ x_dist
+ysym = ysym_dist.asarray().reshape((nx, ny))
+yasym_dist = L2asymop @ x_dist
+yasym = yasym_dist.asarray().reshape((nx, ny))
+
+if rank == 0:
+    fig, axs = plt.subplots(1, 3, figsize=(10, 3), sharey=True)
+    fig.suptitle("Laplacian", fontsize=12, fontweight="bold", y=0.95)
+    im = axs[0].imshow(x, interpolation="nearest", cmap="rainbow")
+    axs[0].axis("tight")
+    axs[0].set_title("x")
+    plt.colorbar(im, ax=axs[0])
+    im = axs[1].imshow(ysym, interpolation="nearest", cmap="rainbow")
+    axs[1].axis("tight")
+    axs[1].set_title("y sym")
+    plt.colorbar(im, ax=axs[1])
+    im = axs[2].imshow(yasym, interpolation="nearest", cmap="rainbow")
+    axs[2].axis("tight")
+    axs[2].set_title("y asym")
+    plt.colorbar(im, ax=axs[2])
     plt.tight_layout()
     plt.subplots_adjust(top=0.8)
