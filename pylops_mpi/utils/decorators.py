@@ -8,6 +8,8 @@ from pylops_mpi import DistributedArray
 
 def reshaped(
     func: Optional[Callable] = None,
+    forward: Optional[bool] = None,
+    stacking: Optional[bool] = None
 ) -> Callable:
     """Decorator used to reshape the model vector and flatten the data vector in a distributed fashion.
     It is used in many operators.
@@ -15,7 +17,11 @@ def reshaped(
     Parameters
     ----------
     func : :obj:`callable`, optional
-        Function to be decorated
+        Function to be decorated.
+    forward : :obj:`bool`, optional
+        Mode of matrix-vector multiplication.
+    stacking : :obj:`bool`, optional
+        Set to ``True`` if it is a stacking operator.
 
     Notes
     -----
@@ -36,16 +42,32 @@ def reshaped(
     def decorator(f):
         @wraps(f)
         def wrapper(self, x: DistributedArray):
-            arr = DistributedArray(global_shape=getattr(self, "dims"), axis=0, dtype=x.dtype)
+            if stacking and forward:
+                local_shapes = self.base_comm.allgather((getattr(self, "mops"),))
+                global_shape = x.global_shape
+            elif stacking and not forward:
+                local_shapes = self.base_comm.allgather((getattr(self, "nops"),))
+                global_shape = x.global_shape
+            else:
+                local_shapes = None
+                global_shape = getattr(self, "dims")
+            arr = DistributedArray(global_shape=global_shape,
+                                   local_shapes=local_shapes, axis=0, dtype=x.dtype)
             arr_local_shapes = np.asarray(arr.base_comm.allgather(np.prod(arr.local_shape)))
             x_local_shapes = np.asarray(x.base_comm.allgather(np.prod(x.local_shape)))
             # Calculate num_ghost_cells required for each rank
             dif = np.cumsum(arr_local_shapes - x_local_shapes)
-            ghosted_array = x.add_ghost_cells(cells_back=dif[self.rank])
+            # Calculate cells_front(0 means no ghost cells)
+            cells_front = abs(min(0, dif[self.rank - 1]))
+            # Calculate cells_back(0 means no ghost cells)
+            cells_back = max(0, dif[self.rank])
+            ghosted_array = x.add_ghost_cells(cells_front=cells_front, cells_back=cells_back)
             # Fill the redistributed array
-            arr[:] = ghosted_array[dif[self.rank - 1]:].reshape(arr.local_shape)
+            index = max(0, dif[self.rank - 1])
+            arr[:] = ghosted_array[index: arr_local_shapes[self.rank] + index].reshape(arr.local_shape)
             y: DistributedArray = f(self, arr)
-            y = y.ravel()
+            if len(y.global_shape) > 1:
+                y = y.ravel()
             return y
         return wrapper
     if func is not None:

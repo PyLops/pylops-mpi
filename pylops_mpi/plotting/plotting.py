@@ -25,6 +25,7 @@ def plot_distributed_array(arr: DistributedArray) -> None:
     dist_array = DistributedArray(global_shape=arr.global_shape,
                                   base_comm=arr.base_comm,
                                   partition=arr.partition, axis=arr.axis,
+                                  local_shapes=arr.local_shapes,
                                   dtype=arr.dtype)
     dist_array[:] = np.full(shape=dist_array.local_shape, fill_value=arr.rank)
     full_dist_arr = dist_array.asarray()
