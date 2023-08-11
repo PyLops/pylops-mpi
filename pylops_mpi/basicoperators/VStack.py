@@ -98,6 +98,7 @@ class MPIVStack(MPILinearOperator):
             nops[iop] = oper.shape[0]
         self.nops = nops.sum()
         mops = [oper.shape[1] for oper in self.ops]
+        mops = np.unique(base_comm.allgather(mops))
         if len(set(mops)) > 1:
             raise ValueError("Operators have different number of columns")
         self.mops = int(mops[0])
