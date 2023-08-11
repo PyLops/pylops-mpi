@@ -8,6 +8,9 @@ a parallel computing environment.
 
 from matplotlib import pyplot as plt
 import numpy as np
+from mpi4py import MPI
+
+from pylops_mpi.DistributedArray import local_split, Partition
 import pylops_mpi
 
 plt.close("all")
@@ -35,6 +38,20 @@ arr = pylops_mpi.DistributedArray(global_shape=global_shape,
                                   partition=pylops_mpi.Partition.SCATTER,
                                   axis=1)
 # Filling the local arrays
+arr[:] = np.arange(arr.local_shape[0] * arr.local_shape[1] * arr.rank,
+                   arr.local_shape[0] * arr.local_shape[1] * (arr.rank + 1)).reshape(arr.local_shape)
+pylops_mpi.plot_distributed_array(arr)
+
+###############################################################################
+# You also have the option of directly including the ``local_shapes`` as a parameter
+# to the :py:class:`pylops_mpi.DistributedArray`. This will enable the assignment
+# of shapes to local arrays on each rank. However, it's essential to ensure that
+# the number of processes matches the length of ``local_shapes``, and that the
+# combined local shapes should align with the ``global_shape`` along the desired ``axis``.
+local_shape = local_split(global_shape, MPI.COMM_WORLD, Partition.SCATTER, 0)
+# Assigning local_shapes(List of tuples)
+local_shapes = MPI.COMM_WORLD.allgather(local_shape)[::-1]
+arr = pylops_mpi.DistributedArray(global_shape=global_shape, local_shapes=local_shapes, axis=0)
 arr[:] = np.arange(arr.local_shape[0] * arr.local_shape[1] * arr.rank,
                    arr.local_shape[0] * arr.local_shape[1] * (arr.rank + 1)).reshape(arr.local_shape)
 pylops_mpi.plot_distributed_array(arr)
