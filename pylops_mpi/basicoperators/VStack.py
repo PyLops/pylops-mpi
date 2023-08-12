@@ -98,6 +98,7 @@ class MPIVStack(MPILinearOperator):
         for iop, oper in enumerate(self.ops):
             nops[iop] = oper.shape[0]
         self.nops = nops.sum()
+        self.local_shapes_n = base_comm.allgather((self.nops, ))
         mops = [oper.shape[1] for oper in self.ops]
         mops = np.unique(base_comm.allgather(mops))
         if len(set(mops)) > 1:
@@ -105,15 +106,13 @@ class MPIVStack(MPILinearOperator):
         self.mops = int(mops[0])
         self.nnops = np.insert(np.cumsum(nops), 0, 0)
         shape = (base_comm.allreduce(self.nops), self.mops)
-        self.localop_shape = (self.nops, self.mops)
         dtype = _get_dtype(self.ops) if dtype is None else np.dtype(dtype)
         super().__init__(shape=shape, dtype=dtype, base_comm=base_comm)
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         if x.partition is not Partition.BROADCAST:
             raise ValueError(f"x should have partition={Partition.BROADCAST}, {x.partition} != {Partition.BROADCAST}")
-        local_shapes = self.base_comm.allgather((self.nops, ))
-        y = DistributedArray(global_shape=self.shape[0], local_shapes=local_shapes, dtype=x.dtype)
+        y = DistributedArray(global_shape=self.shape[0], local_shapes=self.local_shapes_n, dtype=x.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
             y1.append(oper.matvec(x.local_array))

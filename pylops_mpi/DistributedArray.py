@@ -293,6 +293,7 @@ class DistributedArray:
         return dist_array
 
     def _check_local_shapes(self, local_shapes):
+        """Check if the local shapes align with the global shape"""
         if local_shapes:
             if len(local_shapes) != self.base_comm.size:
                 raise ValueError(f"Length of local shapes is not equal to number of processes; "
@@ -301,13 +302,13 @@ class DistributedArray:
             if self.partition is Partition.BROADCAST and local_shapes[self.rank] != self.global_shape:
                 raise ValueError(f"Local shape is not equal to global shape at rank = {self.rank};"
                                  f"{local_shapes[self.rank]} != {self.global_shape}")
-            if self.partition is Partition.SCATTER:
+            elif self.partition is Partition.SCATTER:
                 local_shape = local_shapes[self.rank]
                 # Check if local shape sum up to global shape and other dimensions align with global shape
                 if self.base_comm.allreduce(local_shape[self.axis]) != self.global_shape[self.axis] or \
                         not np.array_equal(np.delete(local_shape, self.axis), np.delete(self.global_shape, self.axis)):
-                    raise ValueError(f"Local shapes don't sum up to global shape;"
-                                     f"{local_shapes} != {self.global_shape} along axis={self.axis}")
+                    raise ValueError(f"Local shapes don't align with the global shape;"
+                                     f"{local_shapes} != {self.global_shape}")
 
     def _check_partition_shape(self, dist_array):
         """Check Partition and Local Shape of the Array
