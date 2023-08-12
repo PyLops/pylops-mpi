@@ -305,7 +305,7 @@ class DistributedArray:
             elif self.partition is Partition.SCATTER:
                 local_shape = local_shapes[self.rank]
                 # Check if local shape sum up to global shape and other dimensions align with global shape
-                if self.base_comm.allreduce(local_shape[self.axis]) != self.global_shape[self.axis] or \
+                if self._allreduce(local_shape[self.axis]) != self.global_shape[self.axis] or \
                         not np.array_equal(np.delete(local_shape, self.axis), np.delete(self.global_shape, self.axis)):
                     raise ValueError(f"Local shapes don't align with the global shape;"
                                      f"{local_shapes} != {self.global_shape}")
