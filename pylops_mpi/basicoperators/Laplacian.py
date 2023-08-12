@@ -19,8 +19,6 @@ class MPILaplacian(MPILinearOperator):
 
     .. note:: At least 2 dimensions are required, use
       :py:class:`pylops_mpi.basicoperators.MPISecondDerivative` for one dimension.
-      Make sure that the first dimension is divisible by the size(number of processes),
-      which means if the dims=(nx, ny), then ``nx % size == 0``.
 
     Parameters
     ----------

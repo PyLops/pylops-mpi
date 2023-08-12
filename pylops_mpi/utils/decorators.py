@@ -43,10 +43,10 @@ def reshaped(
         @wraps(f)
         def wrapper(self, x: DistributedArray):
             if stacking and forward:
-                local_shapes = self.base_comm.allgather((getattr(self, "mops"),))
+                local_shapes = getattr(self, "local_shapes_m")
                 global_shape = x.global_shape
             elif stacking and not forward:
-                local_shapes = self.base_comm.allgather((getattr(self, "nops"),))
+                local_shapes = getattr(self, "local_shapes_n")
                 global_shape = x.global_shape
             else:
                 local_shapes = None

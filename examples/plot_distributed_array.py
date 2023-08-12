@@ -50,7 +50,7 @@ pylops_mpi.plot_distributed_array(arr)
 # combined local shapes should align with the ``global_shape`` along the desired ``axis``.
 local_shape = local_split(global_shape, MPI.COMM_WORLD, Partition.SCATTER, 0)
 # Assigning local_shapes(List of tuples)
-local_shapes = MPI.COMM_WORLD.allgather(local_shape)[::-1]
+local_shapes = MPI.COMM_WORLD.allgather(local_shape)
 arr = pylops_mpi.DistributedArray(global_shape=global_shape, local_shapes=local_shapes, axis=0)
 arr[:] = np.arange(arr.local_shape[0] * arr.local_shape[1] * arr.rank,
                    arr.local_shape[0] * arr.local_shape[1] * (arr.rank + 1)).reshape(arr.local_shape)

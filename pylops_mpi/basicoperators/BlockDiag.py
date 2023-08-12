@@ -102,19 +102,18 @@ class MPIBlockDiag(MPILinearOperator):
             nops[iop] = oper.shape[0]
             mops[iop] = oper.shape[1]
         self.mops = mops.sum()
+        self.local_shapes_m = base_comm.allgather((self.mops, ))
         self.nops = nops.sum()
+        self.local_shapes_n = base_comm.allgather((self.nops, ))
         self.nnops = np.insert(np.cumsum(nops), 0, 0)
         self.mmops = np.insert(np.cumsum(mops), 0, 0)
         shape = (base_comm.allreduce(self.nops), base_comm.allreduce(self.mops))
-        # Shape of the operator at each rank
-        self.localop_shape = (self.nops, self.mops)
         dtype = _get_dtype(ops) if dtype is None else np.dtype(dtype)
         super().__init__(shape=shape, dtype=dtype, base_comm=base_comm)
 
     @reshaped(forward=True, stacking=True)
     def _matvec(self, x: DistributedArray) -> DistributedArray:
-        local_shapes = self.base_comm.allgather((self.nops, ))
-        y = DistributedArray(global_shape=self.shape[0], local_shapes=local_shapes, dtype=x.dtype)
+        y = DistributedArray(global_shape=self.shape[0], local_shapes=self.local_shapes_n, dtype=x.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
             y1.append(oper.matvec(x.local_array[self.mmops[iop]:
@@ -124,8 +123,7 @@ class MPIBlockDiag(MPILinearOperator):
 
     @reshaped(forward=False, stacking=True)
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
-        local_shapes = self.base_comm.allgather((self.mops, ))
-        y = DistributedArray(global_shape=self.shape[1], local_shapes=local_shapes, dtype=x.dtype)
+        y = DistributedArray(global_shape=self.shape[1], local_shapes=self.local_shapes_m, dtype=x.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
             y1.append(oper.rmatvec(x.local_array[self.nnops[iop]:

@@ -126,6 +126,7 @@ def test_to_dist(par):
                                  (par2j), (par3), (par3j)])
 def test_local_shapes(par):
     """Test the `local_shapes` parameter in DistributedArray"""
+    # Reverse the local_shapes to test the local_shapes parameter
     loc_shapes = MPI.COMM_WORLD.allgather(local_split(par['global_shape'],
                                                       MPI.COMM_WORLD, par['partition'], par['axis']))[::-1]
     distributed_array = DistributedArray(global_shape=par['global_shape'],
