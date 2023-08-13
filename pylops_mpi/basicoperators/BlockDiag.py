@@ -8,6 +8,7 @@ from pylops import LinearOperator
 
 from pylops_mpi import MPILinearOperator
 from pylops_mpi import DistributedArray
+from pylops_mpi.utils.decorators import reshaped
 
 
 class MPIBlockDiag(MPILinearOperator):
@@ -101,20 +102,18 @@ class MPIBlockDiag(MPILinearOperator):
             nops[iop] = oper.shape[0]
             mops[iop] = oper.shape[1]
         self.mops = mops.sum()
+        self.local_shapes_m = base_comm.allgather((self.mops, ))
         self.nops = nops.sum()
+        self.local_shapes_n = base_comm.allgather((self.nops, ))
         self.nnops = np.insert(np.cumsum(nops), 0, 0)
         self.mmops = np.insert(np.cumsum(mops), 0, 0)
         shape = (base_comm.allreduce(self.nops), base_comm.allreduce(self.mops))
-        # Shape of the operator at each rank
-        self.localop_shape = (self.nops, self.mops)
         dtype = _get_dtype(ops) if dtype is None else np.dtype(dtype)
         super().__init__(shape=shape, dtype=dtype, base_comm=base_comm)
 
+    @reshaped(forward=True, stacking=True)
     def _matvec(self, x: DistributedArray) -> DistributedArray:
-        if x.local_shape != (self.mops, ):
-            raise ValueError(f"Dimension mismatch: x shape-{x.local_shape} does not match operator shape "
-                             f"{self.localop_shape}; {x.local_shape[0]} != {self.mops} (dim1) at rank={self.rank}")
-        y = DistributedArray(global_shape=self.shape[0], dtype=x.dtype)
+        y = DistributedArray(global_shape=self.shape[0], local_shapes=self.local_shapes_n, dtype=x.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
             y1.append(oper.matvec(x.local_array[self.mmops[iop]:
@@ -122,11 +121,9 @@ class MPIBlockDiag(MPILinearOperator):
         y[:] = np.concatenate(y1)
         return y
 
+    @reshaped(forward=False, stacking=True)
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
-        if x.local_shape != (self.nops, ):
-            raise ValueError(f"Dimension mismatch: x shape-{x.local_shape} does not match operator shape "
-                             f"{self.localop_shape}; {x.local_shape[0]} != {self.nops} (dim0) at rank={self.rank}")
-        y = DistributedArray(global_shape=self.shape[1], dtype=x.dtype)
+        y = DistributedArray(global_shape=self.shape[1], local_shapes=self.local_shapes_m, dtype=x.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
             y1.append(oper.rmatvec(x.local_array[self.nnops[iop]:

@@ -3,6 +3,7 @@
     $ mpiexec -n 10 pytest test_distributedarray.py --with-mpi
 """
 import numpy as np
+from mpi4py import MPI
 import pytest
 from numpy.testing import assert_allclose
 
@@ -118,6 +119,29 @@ def test_to_dist(par):
     assert isinstance(dist_array, DistributedArray)
     assert dist_array.global_shape == par['x'].shape
     assert dist_array.axis == par['axis']
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2),
+                                 (par2j), (par3), (par3j)])
+def test_local_shapes(par):
+    """Test the `local_shapes` parameter in DistributedArray"""
+    # Reverse the local_shapes to test the local_shapes parameter
+    loc_shapes = MPI.COMM_WORLD.allgather(local_split(par['global_shape'],
+                                                      MPI.COMM_WORLD, par['partition'], par['axis']))[::-1]
+    distributed_array = DistributedArray(global_shape=par['global_shape'],
+                                         partition=par['partition'],
+                                         axis=par['axis'], local_shapes=loc_shapes,
+                                         dtype=par['dtype'])
+    assert isinstance(distributed_array, DistributedArray)
+    assert distributed_array.local_shape == loc_shapes[distributed_array.rank]
+
+    # Distributed ones
+    distributed_array[:] = 1
+    assert_allclose(distributed_array.local_array, np.ones(loc_shapes[distributed_array.rank],
+                                                           dtype=par['dtype']), rtol=1e-14)
+    assert_allclose(distributed_array.asarray(), np.ones(par['global_shape'],
+                                                         dtype=par['dtype']), rtol=1e-14)
 
 
 @pytest.mark.mpi(min_size=2)

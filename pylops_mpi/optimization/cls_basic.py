@@ -100,12 +100,14 @@ class CGLS(Solver):
             self.s = y.copy()
             r = self.Op.rmatvec(self.s)
             x = DistributedArray(global_shape=self.Op.shape[1], dtype=y.dtype,
+                                 local_shapes=r.local_shapes,
                                  partition=r.partition)
             x[:] = 0
         else:
             x = x0.copy()
             self.s = self.y - self.Op.matvec(x)
             damped_x = DistributedArray(global_shape=x.global_shape, dtype=x.dtype,
+                                        local_shapes=x.local_shapes,
                                         partition=x.partition)
             damped_x[:] = damp * x.local_array
             r = self.Op.rmatvec(self.s) - damped_x
@@ -147,6 +149,7 @@ class CGLS(Solver):
         x[:] = x.local_array + a * self.c.local_array
         self.s[:] = self.s.local_array - a * self.q.local_array
         damped_x = DistributedArray(global_shape=x.global_shape, dtype=x.dtype,
+                                    local_shapes=x.local_shapes,
                                     partition=x.partition)
         damped_x[:] = self.damp * x.local_array
         r = self.Op.rmatvec(self.s) - damped_x

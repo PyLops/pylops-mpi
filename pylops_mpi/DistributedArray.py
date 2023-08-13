@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Optional, Union, Tuple
+from typing import Optional, Union, Tuple, List
 from numbers import Integral
 from mpi4py import MPI
 from enum import Enum
@@ -74,15 +74,18 @@ class DistributedArray:
         Defaults to ``mpi4py.MPI.COMM_WORLD``.
     partition : :obj:`Partition`, optional
         Broadcast or Scatter the array. Defaults to ``Partition.SCATTER``.
-    dtype : :obj:`str`, optional
-        Type of elements in input array. Defaults to ``numpy.float64``.
     axis : :obj:`int`, optional
         Axis along which distribution occurs. Defaults to ``0``.
+    local_shapes : :obj:`list`, optional
+        List of tuples representing local shapes at each rank.
+    dtype : :obj:`str`, optional
+        Type of elements in input array. Defaults to ``numpy.float64``.
     """
 
     def __init__(self, global_shape: Union[Tuple, Integral],
                  base_comm: Optional[MPI.Comm] = MPI.COMM_WORLD,
                  partition: Partition = Partition.SCATTER, axis: int = 0,
+                 local_shapes: Optional[List[Tuple]] = None,
                  dtype: Optional[DTypeLike] = np.float64):
         if isinstance(global_shape, Integral):
             global_shape = (global_shape,)
@@ -94,11 +97,12 @@ class DistributedArray:
                              f"or {Partition.SCATTER}")
         self.dtype = dtype
         self._global_shape = global_shape
-        self._local_shape = local_split(global_shape, base_comm,
-                                        partition, axis)
         self._base_comm = base_comm
         self._partition = partition
         self._axis = axis
+        self._check_local_shapes(local_shapes)
+        self._local_shape = local_shapes[base_comm.rank] if local_shapes else local_split(global_shape, base_comm,
+                                                                                          partition, axis)
         self._local_array = np.empty(shape=self.local_shape, dtype=self.dtype)
 
     def __getitem__(self, index):
@@ -217,6 +221,16 @@ class DistributedArray:
         """
         return self._partition
 
+    @property
+    def local_shapes(self):
+        """Gather Local shapes from all ranks
+
+        Returns
+        -------
+        local_shapes : :obj:`list`
+        """
+        return self.base_comm.allgather(self.local_shape)
+
     def asarray(self):
         """Global view of the array
 
@@ -239,7 +253,8 @@ class DistributedArray:
     def to_dist(cls, x: NDArray,
                 base_comm: MPI.Comm = MPI.COMM_WORLD,
                 partition: Partition = Partition.SCATTER,
-                axis: int = 0):
+                axis: int = 0,
+                local_shapes: Optional[List[Tuple]] = None):
         """Convert A Global Array to a Distributed Array
 
         Parameters
@@ -252,6 +267,8 @@ class DistributedArray:
             Distributes the array, Defaults to ``Partition.Scatter``.
         axis : :obj:`int`, optional
             Axis of Distribution
+        local_shapes : :obj:`list`, optional
+            Local Shapes at each rank.
         Returns
         ----------
         dist_array : :obj:`DistributedArray`
@@ -261,6 +278,7 @@ class DistributedArray:
                                       base_comm=base_comm,
                                       partition=partition,
                                       axis=axis,
+                                      local_shapes=local_shapes,
                                       dtype=x.dtype)
         if partition == Partition.BROADCAST:
             dist_array[:] = x
@@ -273,6 +291,24 @@ class DistributedArray:
                                  sum_shapes[dist_array.rank + 1], None)
             dist_array[:] = x[tuple(slices)]
         return dist_array
+
+    def _check_local_shapes(self, local_shapes):
+        """Check if the local shapes align with the global shape"""
+        if local_shapes:
+            if len(local_shapes) != self.base_comm.size:
+                raise ValueError(f"Length of local shapes is not equal to number of processes; "
+                                 f"{len(local_shapes)} != {self.size}")
+            # Check if local shape == global shape
+            if self.partition is Partition.BROADCAST and local_shapes[self.rank] != self.global_shape:
+                raise ValueError(f"Local shape is not equal to global shape at rank = {self.rank};"
+                                 f"{local_shapes[self.rank]} != {self.global_shape}")
+            elif self.partition is Partition.SCATTER:
+                local_shape = local_shapes[self.rank]
+                # Check if local shape sum up to global shape and other dimensions align with global shape
+                if self._allreduce(local_shape[self.axis]) != self.global_shape[self.axis] or \
+                        not np.array_equal(np.delete(local_shape, self.axis), np.delete(self.global_shape, self.axis)):
+                    raise ValueError(f"Local shapes don't align with the global shape;"
+                                     f"{local_shapes} != {self.global_shape}")
 
     def _check_partition_shape(self, dist_array):
         """Check Partition and Local Shape of the Array
@@ -297,6 +333,7 @@ class DistributedArray:
                                base_comm=self.base_comm,
                                partition=self.partition,
                                axis=self.axis,
+                               local_shapes=self.local_shapes,
                                dtype=self.dtype)
         arr[:] = -self.local_array
         return arr
@@ -318,6 +355,7 @@ class DistributedArray:
                                     base_comm=self.base_comm,
                                     dtype=self.dtype,
                                     partition=self.partition,
+                                    local_shapes=self.local_shapes,
                                     axis=self.axis)
         SumArray[:] = self.local_array + dist_array.local_array
         return SumArray
@@ -330,6 +368,7 @@ class DistributedArray:
                                         base_comm=self.base_comm,
                                         dtype=self.dtype,
                                         partition=self.partition,
+                                        local_shapes=self.local_shapes,
                                         axis=self.axis)
         ProductArray[:] = self.local_array * dist_array.local_array
         return ProductArray
@@ -417,6 +456,7 @@ class DistributedArray:
                                 base_comm=self.base_comm,
                                 partition=self.partition,
                                 axis=self.axis,
+                                local_shapes=self.local_shapes,
                                 dtype=self.dtype)
         conj[:] = self.local_array.conj()
         return conj
@@ -428,34 +468,33 @@ class DistributedArray:
                                base_comm=self.base_comm,
                                partition=self.partition,
                                axis=self.axis,
+                               local_shapes=self.local_shapes,
                                dtype=self.dtype)
         arr[:] = self.local_array
         return arr
 
     def ravel(self, order: Optional[str] = "C"):
         """Return a flattened DistributedArray
+
         Parameters
         ----------
         order : :obj:`str`, optional
             Order in which array needs to be flattened.
             {'C','F', 'A', 'K'}
+
         Returns
         -------
         arr : :obj:`pylops_mpi.DistributedArray`
             Flattened 1-D DistributedArray
         """
-
-        arr = DistributedArray(global_shape=np.prod(self.global_shape), dtype=self.dtype)
+        local_shapes = [(np.prod(local_shape, axis=-1), ) for local_shape in self.local_shapes]
+        arr = DistributedArray(global_shape=np.prod(self.global_shape),
+                               local_shapes=local_shapes,
+                               partition=self.partition,
+                               dtype=self.dtype)
         local_array = np.ravel(self.local_array, order=order)
         x = local_array.copy()
-        if np.prod(self.local_shape) == np.prod(arr.local_shape):
-            arr[:] = x
-            return arr
-        if self.rank != 0:
-            x = np.concatenate([self.base_comm.recv(source=self.rank - 1, tag=2), local_array])
-        if self.rank != self.size - 1:
-            self.base_comm.send(x[arr.local_shape[0]:], dest=self.rank + 1, tag=2)
-        arr[:] = x[: arr.local_shape[0]]
+        arr[:] = x
         return arr
 
     def add_ghost_cells(self, cells_front: Optional[int] = None,
