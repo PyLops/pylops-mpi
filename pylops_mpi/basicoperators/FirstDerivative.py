@@ -136,7 +136,7 @@ class MPIFirstDerivative(MPILinearOperator):
 
     @reshaped
     def _matvec_forward(self, x: DistributedArray) -> DistributedArray:
-        y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
+        y = DistributedArray(global_shape=x.global_shape, local_shapes=x.local_shapes, axis=x.axis, dtype=self.dtype)
         ghosted_x = x.add_ghost_cells(cells_back=1)
         y_forward = ghosted_x[1:] - ghosted_x[:-1]
         if self.rank == self.size - 1:
@@ -146,7 +146,7 @@ class MPIFirstDerivative(MPILinearOperator):
 
     @reshaped
     def _rmatvec_forward(self, x: DistributedArray) -> DistributedArray:
-        y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
+        y = DistributedArray(global_shape=x.global_shape, local_shapes=x.local_shapes, axis=x.axis, dtype=self.dtype)
         y[:] = 0
         if self.rank == self.size - 1:
             y[:-1] -= x[:-1]
@@ -162,7 +162,7 @@ class MPIFirstDerivative(MPILinearOperator):
 
     @reshaped
     def _matvec_backward(self, x: DistributedArray) -> DistributedArray:
-        y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
+        y = DistributedArray(global_shape=x.global_shape, local_shapes=x.local_shapes, axis=x.axis, dtype=self.dtype)
         ghosted_x = x.add_ghost_cells(cells_front=1)
         y_backward = ghosted_x[1:] - ghosted_x[:-1]
         if self.rank == 0:
@@ -172,7 +172,7 @@ class MPIFirstDerivative(MPILinearOperator):
 
     @reshaped
     def _rmatvec_backward(self, x: DistributedArray) -> DistributedArray:
-        y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
+        y = DistributedArray(global_shape=x.global_shape, local_shapes=x.local_shapes, axis=x.axis, dtype=self.dtype)
         y[:] = 0
         ghosted_x = x.add_ghost_cells(cells_back=1)
         y_backward = ghosted_x[1:]
@@ -188,7 +188,7 @@ class MPIFirstDerivative(MPILinearOperator):
 
     @reshaped
     def _matvec_centered3(self, x: DistributedArray) -> DistributedArray:
-        y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
+        y = DistributedArray(global_shape=x.global_shape, local_shapes=x.local_shapes, axis=x.axis, dtype=self.dtype)
         ghosted_x = x.add_ghost_cells(cells_front=1, cells_back=1)
         y_centered = 0.5 * (ghosted_x[2:] - ghosted_x[:-2])
         if self.rank == 0:
@@ -206,7 +206,7 @@ class MPIFirstDerivative(MPILinearOperator):
 
     @reshaped
     def _rmatvec_centered3(self, x: DistributedArray) -> DistributedArray:
-        y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
+        y = DistributedArray(global_shape=x.global_shape, local_shapes=x.local_shapes, axis=x.axis, dtype=self.dtype)
         y[:] = 0
         ghosted_x = x.add_ghost_cells(cells_back=2)
         y_centered = 0.5 * ghosted_x[1:-1]
@@ -231,7 +231,7 @@ class MPIFirstDerivative(MPILinearOperator):
 
     @reshaped
     def _matvec_centered5(self, x: DistributedArray) -> DistributedArray:
-        y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
+        y = DistributedArray(global_shape=x.global_shape, local_shapes=x.local_shapes, axis=x.axis, dtype=self.dtype)
         ghosted_x = x.add_ghost_cells(cells_front=2, cells_back=2)
         y_centered = (
             ghosted_x[:-4] / 12.0
@@ -256,7 +256,7 @@ class MPIFirstDerivative(MPILinearOperator):
 
     @reshaped
     def _rmatvec_centered5(self, x: DistributedArray) -> DistributedArray:
-        y = DistributedArray(global_shape=x.global_shape, dtype=self.dtype, axis=x.axis)
+        y = DistributedArray(global_shape=x.global_shape, local_shapes=x.local_shapes, axis=x.axis, dtype=self.dtype)
         y[:] = 0
         ghosted_x = x.add_ghost_cells(cells_back=4)
         y_centered = ghosted_x[2:-2] / 12.0

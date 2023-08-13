@@ -7,6 +7,7 @@ from pylops import LinearOperator
 from pylops.utils import DTypeLike
 
 from pylops_mpi import MPILinearOperator, DistributedArray, Partition
+from pylops_mpi.utils.decorators import reshaped
 
 
 class MPIVStack(MPILinearOperator):
@@ -97,6 +98,7 @@ class MPIVStack(MPILinearOperator):
         for iop, oper in enumerate(self.ops):
             nops[iop] = oper.shape[0]
         self.nops = nops.sum()
+        self.local_shapes_n = base_comm.allgather((self.nops, ))
         mops = [oper.shape[1] for oper in self.ops]
         mops = np.unique(base_comm.allgather(mops))
         if len(set(mops)) > 1:
@@ -104,29 +106,23 @@ class MPIVStack(MPILinearOperator):
         self.mops = int(mops[0])
         self.nnops = np.insert(np.cumsum(nops), 0, 0)
         shape = (base_comm.allreduce(self.nops), self.mops)
-        self.localop_shape = (self.nops, self.mops)
         dtype = _get_dtype(self.ops) if dtype is None else np.dtype(dtype)
         super().__init__(shape=shape, dtype=dtype, base_comm=base_comm)
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         if x.partition is not Partition.BROADCAST:
             raise ValueError(f"x should have partition={Partition.BROADCAST}, {x.partition} != {Partition.BROADCAST}")
-        if x.local_shape != (self.mops,):
-            raise ValueError(f"Dimension mismatch: x shape-{x.local_shape} does not match operator shape "
-                             f"{self.localop_shape}; {x.local_shape[0]} != {self.mops} (dim1) at rank={self.rank}")
-        y = DistributedArray(global_shape=self.shape[0], dtype=x.dtype)
+        y = DistributedArray(global_shape=self.shape[0], local_shapes=self.local_shapes_n, dtype=x.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
             y1.append(oper.matvec(x.local_array))
         y[:] = np.concatenate(y1)
         return y
 
+    @reshaped(forward=False, stacking=True)
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         if x.partition is not Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER}, {x.partition} != {Partition.SCATTER}")
-        if x.local_shape != (self.nops,):
-            raise ValueError(f"Dimension mismatch: x shape-{x.local_shape} does not match operator shape "
-                             f"{self.localop_shape}; {x.local_shape[0]} != {self.nops} (dim0) at rank={self.rank}")
         y = DistributedArray(global_shape=self.shape[1], partition=Partition.BROADCAST, dtype=x.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
