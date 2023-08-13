@@ -24,13 +24,16 @@ This example shows how to use the :py:class:`pylops_mpi.DistributedArray`.
 This class provides a way to distribute arrays across multiple processes in
 a parallel computing environment.
 
-.. GENERATED FROM PYTHON SOURCE LINES 8-19
+.. GENERATED FROM PYTHON SOURCE LINES 8-22
 
 .. code-block:: default
 
 
     from matplotlib import pyplot as plt
     import numpy as np
+    from mpi4py import MPI
+
+    from pylops_mpi.DistributedArray import local_split, Partition
     import pylops_mpi
 
     plt.close("all")
@@ -46,13 +49,13 @@ a parallel computing environment.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 20-23
+.. GENERATED FROM PYTHON SOURCE LINES 23-26
 
 Let's start by defining the
 class with the input parameters ``global_shape``,
 ``partition``, and ``axis``. Here's an example implementation of the class with ``axis=0``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 23-31
+.. GENERATED FROM PYTHON SOURCE LINES 26-34
 
 .. code-block:: default
 
@@ -76,12 +79,12 @@ class with the input parameters ``global_shape``,
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 32-34
+.. GENERATED FROM PYTHON SOURCE LINES 35-37
 
 Below is an implementation to show how the global array is distributed along
 the second axis.
 
-.. GENERATED FROM PYTHON SOURCE LINES 34-42
+.. GENERATED FROM PYTHON SOURCE LINES 37-45
 
 .. code-block:: default
 
@@ -105,14 +108,46 @@ the second axis.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 43-47
+.. GENERATED FROM PYTHON SOURCE LINES 46-51
+
+You also have the option of directly including the ``local_shapes`` as a parameter
+to the :py:class:`pylops_mpi.DistributedArray`. This will enable the assignment
+of shapes to local arrays on each rank. However, it's essential to ensure that
+the number of processes matches the length of ``local_shapes``, and that the
+combined local shapes should align with the ``global_shape`` along the desired ``axis``.
+
+.. GENERATED FROM PYTHON SOURCE LINES 51-59
+
+.. code-block:: default
+
+    local_shape = local_split(global_shape, MPI.COMM_WORLD, Partition.SCATTER, 0)
+    # Assigning local_shapes(List of tuples)
+    local_shapes = MPI.COMM_WORLD.allgather(local_shape)
+    arr = pylops_mpi.DistributedArray(global_shape=global_shape, local_shapes=local_shapes, axis=0)
+    arr[:] = np.arange(arr.local_shape[0] * arr.local_shape[1] * arr.rank,
+                       arr.local_shape[0] * arr.local_shape[1] * (arr.rank + 1)).reshape(arr.local_shape)
+    pylops_mpi.plot_distributed_array(arr)
+
+
+
+
+.. image-sg:: /gallery/images/sphx_glr_plot_distributed_array_003.png
+   :alt: Original Array, Distributed over axis 0
+   :srcset: /gallery/images/sphx_glr_plot_distributed_array_003.png
+   :class: sphx-glr-single-img
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 60-64
 
 To convert a random NumPy array into a ``pylops_mpi.DistributedArray``,
 you can use the ``to_dist`` classmethod. This method allows you to distribute
 the array across multiple processes for parallel computation.
 Below is an example implementation depicting the same.
 
-.. GENERATED FROM PYTHON SOURCE LINES 47-57
+.. GENERATED FROM PYTHON SOURCE LINES 64-74
 
 .. code-block:: default
 
@@ -134,28 +169,28 @@ Below is an example implementation depicting the same.
 
     *
 
-      .. image-sg:: /gallery/images/sphx_glr_plot_distributed_array_003.png
+      .. image-sg:: /gallery/images/sphx_glr_plot_distributed_array_004.png
          :alt: Distributed Array - 1, Rank-0
-         :srcset: /gallery/images/sphx_glr_plot_distributed_array_003.png
+         :srcset: /gallery/images/sphx_glr_plot_distributed_array_004.png
          :class: sphx-glr-multi-img
 
     *
 
-      .. image-sg:: /gallery/images/sphx_glr_plot_distributed_array_004.png
+      .. image-sg:: /gallery/images/sphx_glr_plot_distributed_array_005.png
          :alt: Distributed Array - 2, Rank-0
-         :srcset: /gallery/images/sphx_glr_plot_distributed_array_004.png
+         :srcset: /gallery/images/sphx_glr_plot_distributed_array_005.png
          :class: sphx-glr-multi-img
 
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 58-60
+.. GENERATED FROM PYTHON SOURCE LINES 75-77
 
 **Element-wise Addition** - Each process operates on its local portion of
 the array and adds the corresponding elements together.
 
-.. GENERATED FROM PYTHON SOURCE LINES 60-63
+.. GENERATED FROM PYTHON SOURCE LINES 77-80
 
 .. code-block:: default
 
@@ -165,21 +200,21 @@ the array and adds the corresponding elements together.
 
 
 
-.. image-sg:: /gallery/images/sphx_glr_plot_distributed_array_005.png
+.. image-sg:: /gallery/images/sphx_glr_plot_distributed_array_006.png
    :alt: Addition, Rank-0
-   :srcset: /gallery/images/sphx_glr_plot_distributed_array_005.png
+   :srcset: /gallery/images/sphx_glr_plot_distributed_array_006.png
    :class: sphx-glr-single-img
 
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 64-66
+.. GENERATED FROM PYTHON SOURCE LINES 81-83
 
 **Element-wise Subtraction** - Each process operates on its local portion
 of the array and subtracts the corresponding elements together.
 
-.. GENERATED FROM PYTHON SOURCE LINES 66-69
+.. GENERATED FROM PYTHON SOURCE LINES 83-86
 
 .. code-block:: default
 
@@ -189,21 +224,21 @@ of the array and subtracts the corresponding elements together.
 
 
 
-.. image-sg:: /gallery/images/sphx_glr_plot_distributed_array_006.png
+.. image-sg:: /gallery/images/sphx_glr_plot_distributed_array_007.png
    :alt: Subtraction, Rank-0
-   :srcset: /gallery/images/sphx_glr_plot_distributed_array_006.png
+   :srcset: /gallery/images/sphx_glr_plot_distributed_array_007.png
    :class: sphx-glr-single-img
 
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 70-72
+.. GENERATED FROM PYTHON SOURCE LINES 87-89
 
 **Element-wise Multiplication** - Each process operates on its local portion
 of the array and multiplies the corresponding elements together.
 
-.. GENERATED FROM PYTHON SOURCE LINES 72-74
+.. GENERATED FROM PYTHON SOURCE LINES 89-91
 
 .. code-block:: default
 
@@ -212,9 +247,9 @@ of the array and multiplies the corresponding elements together.
 
 
 
-.. image-sg:: /gallery/images/sphx_glr_plot_distributed_array_007.png
+.. image-sg:: /gallery/images/sphx_glr_plot_distributed_array_008.png
    :alt: Multiplication, Rank-0
-   :srcset: /gallery/images/sphx_glr_plot_distributed_array_007.png
+   :srcset: /gallery/images/sphx_glr_plot_distributed_array_008.png
    :class: sphx-glr-single-img
 
 
@@ -224,7 +259,7 @@ of the array and multiplies the corresponding elements together.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.239 seconds)
+   **Total running time of the script:** ( 0 minutes  1.804 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_distributed_array.py:
