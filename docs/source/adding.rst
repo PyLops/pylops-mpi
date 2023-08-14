@@ -17,7 +17,7 @@ and for the filename. It's recommended to prefix the class name with ``MPI`` to 
 Once we have created the file, we will start by importing the modules that will be needed by the operator.
 While this varies from operator to operator, you will always need to import the :py:class:`pylops_mpi.DistributedArray` class
 which we use in this library as an alternative to the NumPy arrays. This class allows you to work with distributed arrays that
-are partitioned/broadcasted across different ranks or processes in a parallel computing environment.Additionally, you will
+are partitioned/broadcasted across different ranks or processes in a parallel computing environment. Additionally, you will
 need to import the :py:class:`pylops_mpi.MPILinearOperator` class, which serves as the **parent** class for any of our operators:
 
 .. code-block:: python
@@ -40,11 +40,13 @@ Initialization (``__init__``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We then need to create the ``__init__`` where the input parameters are passed and saved as members of our class.
-While the input parameters change from operator to operator, it is always required to create two members, the first
+While the input parameters change from operator to operator, it is always required to create three members, the first
 called ``shape`` with a tuple containing the dimensions of the operator in the data and model space, the second
-called ``dtype`` with the data type object (:obj:`np.dtype`) of the model and data. In the context of MPIBlockDiag,
-we calculate the ``shape`` by performing a sum-reduction on the shapes of each operator. If the ``dtype`` is not provided,
-it is determined from the operators.
+called ``dtype`` with the data type object (:obj:`np.dtype`) of the model and data, and the third called ``base_comm``
+with an MPI base communicator (:obj:`mpi4py.MPI.Comm`, default set to :obj:`mpi4py.MPI.COMM_WORLD`) responsible for
+communicating between different processes. In the context of MPIBlockDiag, we calculate the ``shape`` by performing
+a sum-reduction on the shapes of each operator. If the ``dtype`` is not provided, it is determined from the operators,
+while the ``base_comm`` is set to ``MPI.COMM_WORLD`` if not provided.
 
 .. code-block:: python
 
