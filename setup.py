@@ -11,7 +11,7 @@ descr = 'Python library implementing linear operators with MPI'
 
 # Setup
 setup(
-    name='pylops_mpi',
+    name='pylops-mpi',
     description=descr,
     long_description=open(src('README.md')).read(),
     long_description_content_type='text/markdown',
@@ -36,5 +36,5 @@ setup(
                          write_to=src('pylops_mpi/version.py')),
     setup_requires=['pytest-runner', 'setuptools_scm'],
     test_suite='tests',
-    tests_require=['pytest'],
+    tests_require=['pytest', 'pytest-mpi'],
     zip_safe=True)
