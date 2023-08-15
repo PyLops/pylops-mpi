@@ -3,7 +3,7 @@ from typing import Callable, Optional
 
 import numpy as np
 
-from pylops_mpi import DistributedArray
+from pylops_mpi import DistributedArray, Partition
 
 
 def reshaped(
@@ -42,6 +42,8 @@ def reshaped(
     def decorator(f):
         @wraps(f)
         def wrapper(self, x: DistributedArray):
+            if x.partition is not Partition.SCATTER:
+                raise ValueError(f"x should have partition={Partition.SCATTER}, {x.partition} != {Partition.SCATTER}")
             if stacking and forward:
                 local_shapes = getattr(self, "local_shapes_m")
                 global_shape = x.global_shape
