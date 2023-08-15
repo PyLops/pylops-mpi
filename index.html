@@ -49,11 +49,13 @@
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'index';</script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="PyLops MPI API" href="api/index.html" />
+    <link rel="next" title="Installation" href="installation.html" />
     
     <script src="_static/require.js"></script>
 
@@ -150,6 +152,13 @@
                 
 
                     <li class="nav-item">
+                      <a class="nav-link nav-internal" href="installation.html">
+                        Installation
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
                       <a class="nav-link nav-internal" href="api/index.html">
                         PyLops MPI API
                       </a>
@@ -169,6 +178,35 @@
                       </a>
                     </li>
                 
+            <div class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    More
+                </button>
+                <div class="dropdown-menu">
+                    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="adding.html">
+                        Implementing new operators
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="contributing.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="credits.html">
+                        Credits
+                      </a>
+                    </li>
+                
+                </div>
+            </div>
+            
   </ul>
 </nav></div>
       
@@ -217,6 +255,10 @@ document.write(`
   
 
   
+    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
 </div>
 
     </nav>
@@ -250,6 +292,13 @@ document.write(`
                 
 
                     <li class="nav-item">
+                      <a class="nav-link nav-internal" href="installation.html">
+                        Installation
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
                       <a class="nav-link nav-internal" href="api/index.html">
                         PyLops MPI API
                       </a>
@@ -269,6 +318,35 @@ document.write(`
                       </a>
                     </li>
                 
+            <div class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    More
+                </button>
+                <div class="dropdown-menu">
+                    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="adding.html">
+                        Implementing new operators
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="contributing.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="credits.html">
+                        Credits
+                      </a>
+                    </li>
+                
+                </div>
+            </div>
+            
   </ul>
 </nav></div>
         
@@ -318,14 +396,66 @@ document.write(`
                   
   <section id="overview">
 <h1>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">#</a></h1>
-<p>pylops-mpi is a Python library built on top of <a class="reference external" href="https://pylops.readthedocs.io/en/stable/">PyLops</a>, designed to enable distributed and parallel processing of
-large-scale linear algebra operations and computations.</p>
+<p>PyLops-MPI is a Python library built on top of <a class="reference external" href="https://pylops.readthedocs.io/en/stable/">PyLops</a>, designed to enable distributed and
+parallel processing of large-scale linear algebra operations and computations.</p>
+<p>Linear operators and large-scale inverse problems are at the core of many of the most commonly used algorithms in signal
+processing, image processing, and remote sensing.
+Pylops-MPI represents a linear operator by functions which describe matrix-vector products in
+both forward and adjoint modes. These operators conduct computations within a distributed MPI environment,
+using the power of the <a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/">mpi4py</a> library to optimize performance and scalability.
+PyLops-MPI also provides iterative solvers (e.g. cgls) for many different types of problems, in particular to perform inversions.</p>
+<p>By integrating MPI (Message Passing Interface), PyLops-MPI optimizes the collaborative processing power of multiple
+computing nodes, enabling large and intricate tasks to be divided, solved, and aggregated in an efficient and
+parallelized manner.</p>
+<p>Get started by <a class="reference internal" href="installation.html#installation"><span class="std std-ref">installing PyLops-MPI</span></a> and following our quick tour.</p>
+<section id="terminology">
+<h2>Terminology<a class="headerlink" href="#terminology" title="Permalink to this heading">#</a></h2>
+<p>A central <em>class</em>, <a class="reference internal" href="api/generated/pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>, is utilized throughout the entire library. This class offers the capability
+to partition a large Numpy Array into smaller local arrays, distributing them across various ranks. It also facilitates broadcasting
+the Numpy Array to different processes. Serving as our foundational array class, this class provides an efficient alternative to
+using only the Numpy Arrays directly, resulting in increased efficiency.</p>
+<p>A common <em>terminology</em> is used within the entire documentation of PyLops-MPI. Every MPI Linear Operator and its application to
+a model will be referred to as <strong>forward model (or operation)</strong></p>
+<div class="math notranslate nohighlight">
+\[\mathbf{y} =  \mathbf{A} \mathbf{x}\]</div>
+<p>while its application to a data is referred to as <strong>adjoint model (or operation)</strong></p>
+<div class="math notranslate nohighlight">
+\[\mathbf{x} = \mathbf{A}^H \mathbf{y}\]</div>
+<p>Here, <span class="math notranslate nohighlight">\(\mathbf{x}\)</span> is referred to as the model, and <span class="math notranslate nohighlight">\(\mathbf{y}\)</span> is referred to as the data.
+Both <span class="math notranslate nohighlight">\(\mathbf{x}\)</span> and <span class="math notranslate nohighlight">\(\mathbf{y}\)</span> are instances of the <a class="reference internal" href="api/generated/pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a> class.
+The <em>operator</em> <span class="math notranslate nohighlight">\(\mathbf{A}:\mathbb{F}^m \to \mathbb{F}^n\)</span> effectively maps a
+vector of size <span class="math notranslate nohighlight">\(m\)</span> in the <em>model space</em> to a vector of size <span class="math notranslate nohighlight">\(n\)</span>
+in the <em>data space</em>, conversely the <em>adjoint operator</em>
+<span class="math notranslate nohighlight">\(\mathbf{A}^H:\mathbb{F}^n \to \mathbb{F}^m\)</span> maps a
+vector of size <span class="math notranslate nohighlight">\(n\)</span> in the <em>data space</em> to a vector of size <span class="math notranslate nohighlight">\(m\)</span>
+in the <em>model space</em>. As linear operators mimics the effect a matrix on a vector
+we can also loosely refer to <span class="math notranslate nohighlight">\(m\)</span> as the number of <em>columns</em> and <span class="math notranslate nohighlight">\(n\)</span> as the
+number of <em>rows</em> of the operator.</p>
+<p>Ultimately, solving inverse problems accounts to removing the effect of
+<span class="math notranslate nohighlight">\(\mathbf{A}\)</span> from the data <span class="math notranslate nohighlight">\(\mathbf{y}\)</span> to retrieve the model <span class="math notranslate nohighlight">\(\mathbf{x}\)</span>.</p>
+</section>
+<section id="implementation">
+<h2>Implementation<a class="headerlink" href="#implementation" title="Permalink to this heading">#</a></h2>
+<p>Pylops-MPI provides a <a class="reference internal" href="api/generated/pylops_mpi.MPILinearOperator.html#pylops_mpi.MPILinearOperator" title="pylops_mpi.MPILinearOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.MPILinearOperator</span></code></a> which allows the creation of new objects/operators
+for matrix-vector products that can ultimately be used to solve any inverse problem of the form
+<span class="math notranslate nohighlight">\(\mathbf{y}=\mathbf{A}\mathbf{x}\)</span>.</p>
+<p>To construct a <a class="reference internal" href="api/generated/pylops_mpi.MPILinearOperator.html#pylops_mpi.MPILinearOperator" title="pylops_mpi.MPILinearOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.MPILinearOperator</span></code></a>, a user is required to pass appropriate arguments
+to the constructor of this class, or subclass it. More specifically, the method <code class="docutils literal notranslate"><span class="pre">_matvec</span></code> must be implemented for
+the <em>forward operator</em> and the method <code class="docutils literal notranslate"><span class="pre">_rmatvec</span></code> may be implemented to apply the <em>Hermitian adjoint</em>.
+The attributes/properties <code class="docutils literal notranslate"><span class="pre">dtype</span></code> (may be None) and <code class="docutils literal notranslate"><span class="pre">shape</span></code> (pair of integers) must be provided during
+<code class="docutils literal notranslate"><span class="pre">__init__</span></code> of this class.</p>
+<p>Any MPI linear operator developed within the PyLops-MPI library follows this philosophy. As explained more in detail in
+<a class="reference internal" href="adding.html#addingoperator"><span class="std std-ref">Implementing new operators</span></a> section, an MPI Linear Operator is created by subclassing the <a class="reference internal" href="api/generated/pylops_mpi.MPILinearOperator.html#pylops_mpi.MPILinearOperator" title="pylops_mpi.MPILinearOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.MPILinearOperator</span></code></a>
+class and implementing the <code class="docutils literal notranslate"><span class="pre">_matvec</span></code> and <code class="docutils literal notranslate"><span class="pre">_rmatvec</span></code>.</p>
 <div class="toctree-wrapper compound">
 </div>
 <div class="toctree-wrapper compound">
 </div>
 <div class="toctree-wrapper compound">
 </div>
+<div class="toctree-wrapper compound">
+</div>
+</section>
 </section>
 
 
@@ -340,11 +470,11 @@ large-scale linear algebra operations and computations.</p>
     <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="right-next"
-       href="api/index.html"
+       href="installation.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">PyLops MPI API</p>
+        <p class="prev-next-title">Installation</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -357,6 +487,23 @@ large-scale linear algebra operations and computations.</p>
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#terminology">Terminology</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#implementation">Implementation</a><ul class="nav section-nav flex-column">
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>
