@@ -121,8 +121,6 @@ class MPIVStack(MPILinearOperator):
 
     @reshaped(forward=False, stacking=True)
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
-        if x.partition is not Partition.SCATTER:
-            raise ValueError(f"x should have partition={Partition.SCATTER}, {x.partition} != {Partition.SCATTER}")
         y = DistributedArray(global_shape=self.shape[1], partition=Partition.BROADCAST, dtype=x.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
