@@ -54,7 +54,7 @@ from matplotlib import pyplot as plt
 from mpi4py import MPI
 
 from pylops.utils.wavelets import ricker
-from pylops.basicoperators import SecondDerivative, Transpose, VStack
+from pylops.basicoperators import Transpose
 from pylops.avo.poststack import PoststackLinearModelling
 
 import pylops_mpi
@@ -133,21 +133,20 @@ d_0 = d_dist.asarray().reshape((ny, nx, nz))
 #
 # * Inversion calculated iteratively using the :py:class:`pylops_mpi.optimization.cls_basic.CGLS` solver.
 #
-# * Inversion with spatial regularization along the non-distributed dimensions (x and z).
-#   This requires extending the operator and data of each rank in the following manner
+# * Inversion with spatial regularization along all three dimensions (x, y and z).
+#   This requires extending the operator in the following manner:
 #
 #  .. math::
+#    \mathbf{RegOp} =
 #    \begin{bmatrix}
-#        \mathbf{d}_{i}  \\
-#        \mathbf{0}
-#    \end{bmatrix} =
-#    \begin{bmatrix}
-#        \mathbf{G}_i \\
-#        \epsilon \mathbf{D}_{2,x} \\
-#        \epsilon \mathbf{D}_{2,z} \\
-#    \end{bmatrix} \mathbf{ai}_{i}
+#         \mathbf{G}_1  & \mathbf{0}   &  \ldots &  \mathbf{0}  \\
+#         \mathbf{0}    & \mathbf{G}_2 &  \ldots &  \mathbf{0}  \\
+#         \vdots        & \vdots       &  \ddots &  \vdots         \\
+#         \mathbf{0}    & \mathbf{0}   &  \ldots &  \mathbf{G}_N
+#    \end{bmatrix} + \epsilon \mathbf{LapOp}
 #
-# where :math:`\mathbf{D}_{2,x}` and :math:`\mathbf{D}_{2,z}` apply the second derivative over the z- and x-axes.
+# where :math:`\mathbf{LapOp}` is the :py:class:`pylops_mpi.basicoperators.MPILaplacian` operator
+# which is used to apply second derivative along all three axes.
 
 # Inversion using CGLS solver
 minv3d_iter_dist = pylops_mpi.optimization.basic.cgls(BDiag, d_dist, x0=mback3d_dist, niter=100, show=True)[0]
@@ -157,14 +156,9 @@ minv3d_iter = minv3d_iter_dist.asarray().reshape((ny, nx, nz))
 
 # Regularized inversion
 epsR = 1e1
-Dz = SecondDerivative((ny_i, nx, nz), axis=-1)
-Dx = SecondDerivative((ny_i, nx, nz), axis=-2)
-
-d_dist_reg = pylops_mpi.DistributedArray(global_shape=3 * ny * nx * nz)
-d_dist_reg[:ny_i * nz * nx] = d_dist.local_array
-d_dist_reg[ny_i * nz * nx:] = 0.
-BDiag_reg = pylops_mpi.basicoperators.MPIBlockDiag(ops=[VStack([Top.H @ PPop @ Top, epsR * Dx, epsR * Dz]), ])
-minv3d_reg_dist = pylops_mpi.optimization.basic.cgls(BDiag_reg, d_dist_reg, x0=mback3d_dist, niter=100, show=True)[0]
+RegOp = BDiag + epsR * pylops_mpi.MPILaplacian(dims=(ny, nx, nz), axes=(0, 1, 2),
+                                               weights=(1, 1, 1), sampling=(1, 1, 1))
+minv3d_reg_dist = pylops_mpi.optimization.basic.cgls(RegOp, d_dist, x0=mback3d_dist, niter=100, show=True)[0]
 minv3d_reg = minv3d_reg_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
