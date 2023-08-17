@@ -460,7 +460,7 @@ document.write(`
 <h1>pylops_mpi.basicoperators.MPISecondDerivative<a class="headerlink" href="#pylops-mpi-basicoperators-mpisecondderivative" title="Permalink to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="pylops_mpi.basicoperators.MPISecondDerivative">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylops_mpi.basicoperators.</span></span><span class="sig-name descname"><span class="pre">MPISecondDerivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind='centered'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'numpy.float64'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/basicoperators/SecondDerivative.html#MPISecondDerivative"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.basicoperators.MPISecondDerivative" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylops_mpi.basicoperators.</span></span><span class="sig-name descname"><span class="pre">MPISecondDerivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind='centered'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm=&lt;mpi4py.MPI.Intracomm</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'numpy.float64'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/basicoperators/SecondDerivative.html#MPISecondDerivative"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.basicoperators.MPISecondDerivative" title="Permalink to this definition">#</a></dt>
 <dd><p>MPI Second Derivative</p>
 <p>Apply a second derivative using a three-point stencil finite-difference
 approximation with <a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>. The Second Derivative
@@ -477,6 +477,8 @@ is calculated along <code class="docutils literal notranslate"><span class="pre"
 <dt><strong>edge</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Use reduced order derivative at edges (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or
 ignore them (<code class="docutils literal notranslate"><span class="pre">False</span></code>). This is currently only available
 for centered derivative.</p>
+</dd>
+<dt><strong>base_comm</strong><span class="classifier"><a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/reference/mpi4py.MPI.Comm.html#mpi4py.MPI.Comm" title="(in MPI for Python v3.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpi4py.MPI.Comm</span></code></a>, optional</span></dt><dd><p>MPI Base Communicator. Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.MPI.COMM_WORLD</span></code>.</p>
 </dd>
 <dt><strong>dtype</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Type of elements in the input array.</p>
 </dd>
@@ -514,7 +516,7 @@ by adding border cells of neighboring processes to the local array at each rank.
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code>(dims[, sampling, kind, edge, dtype])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code>(dims[, sampling, kind, edge, ...])</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">adjoint</span></code>()</p></td>

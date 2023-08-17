@@ -424,8 +424,8 @@ document.write(`
 <span class="kn">from</span> <span class="nn">pylops.utils.typing</span> <span class="kn">import</span> <span class="n">DTypeLike</span><span class="p">,</span> <span class="n">InputDimsLike</span>
 <span class="kn">from</span> <span class="nn">pylops.basicoperators</span> <span class="kn">import</span> <span class="n">SecondDerivative</span>
 
-<span class="kn">from</span> <span class="nn">pylops_mpi</span> <span class="kn">import</span> <span class="n">DistributedArray</span><span class="p">,</span> <span class="n">MPILinearOperator</span>
-<span class="kn">from</span> <span class="nn">pylops_mpi.DistributedArray</span> <span class="kn">import</span> <span class="n">local_split</span><span class="p">,</span> <span class="n">Partition</span>
+<span class="kn">from</span> <span class="nn">pylops_mpi</span> <span class="kn">import</span> <span class="n">DistributedArray</span><span class="p">,</span> <span class="n">MPILinearOperator</span><span class="p">,</span> <span class="n">Partition</span>
+<span class="kn">from</span> <span class="nn">pylops_mpi.DistributedArray</span> <span class="kn">import</span> <span class="n">local_split</span>
 <span class="kn">from</span> <span class="nn">pylops_mpi.basicoperators</span> <span class="kn">import</span> <span class="n">MPIBlockDiag</span><span class="p">,</span> <span class="n">MPISecondDerivative</span>
 
 
@@ -454,6 +454,8 @@ document.write(`
 <span class="sd">        ignore them (``False``) for centered derivative</span>
 <span class="sd">    kind : :obj:`str`, optional</span>
 <span class="sd">        Derivative kind (``forward``, ``centered``, or ``backward``)</span>
+<span class="sd">    base_comm : :obj:`mpi4py.MPI.Comm`, optional</span>
+<span class="sd">        MPI Base Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.</span>
 <span class="sd">    dtype : :obj:`str`, optional</span>
 <span class="sd">        Type of elements in input array.</span>
 
@@ -488,6 +490,7 @@ document.write(`
                  <span class="n">sampling</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
                  <span class="n">edge</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                  <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;centered&quot;</span><span class="p">,</span>
+                 <span class="n">base_comm</span><span class="p">:</span> <span class="n">MPI</span><span class="o">.</span><span class="n">Comm</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">,</span>
                  <span class="n">dtype</span><span class="p">:</span> <span class="n">DTypeLike</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dims</span> <span class="o">=</span> <span class="n">dims</span>
         <span class="n">axes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">normalize_axis_index</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">dims</span><span class="p">))</span> <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">)</span>
@@ -498,9 +501,10 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">sampling</span> <span class="o">=</span> <span class="n">sampling</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">edge</span> <span class="o">=</span> <span class="n">edge</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kind</span> <span class="o">=</span> <span class="n">kind</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span> <span class="o">=</span> <span class="n">base_comm</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">Op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_l2op</span><span class="p">()</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">base_comm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Op</span> <span class="o">@</span> <span class="n">x</span>
@@ -509,7 +513,7 @@ document.write(`
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="n">x</span>
 
     <span class="k">def</span> <span class="nf">_calc_l2op</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">local_dims</span> <span class="o">=</span> <span class="n">local_split</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dims</span><span class="p">),</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">,</span> <span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">local_dims</span> <span class="o">=</span> <span class="n">local_split</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dims</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span> <span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">l2op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">MPISecondDerivative</span><span class="p">(</span><span class="n">dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span>
                                                          <span class="n">sampling</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sampling</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
