@@ -6,8 +6,8 @@ from mpi4py import MPI
 from pylops.utils.typing import DTypeLike, InputDimsLike
 from pylops.basicoperators import SecondDerivative
 
-from pylops_mpi import DistributedArray, MPILinearOperator
-from pylops_mpi.DistributedArray import local_split, Partition
+from pylops_mpi import DistributedArray, MPILinearOperator, Partition
+from pylops_mpi.DistributedArray import local_split
 from pylops_mpi.basicoperators import MPIBlockDiag, MPISecondDerivative
 
 
@@ -36,6 +36,8 @@ class MPILaplacian(MPILinearOperator):
         ignore them (``False``) for centered derivative
     kind : :obj:`str`, optional
         Derivative kind (``forward``, ``centered``, or ``backward``)
+    base_comm : :obj:`mpi4py.MPI.Comm`, optional
+        MPI Base Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.
     dtype : :obj:`str`, optional
         Type of elements in input array.
 
@@ -70,6 +72,7 @@ class MPILaplacian(MPILinearOperator):
                  sampling: Tuple[float, ...] = (1, 1),
                  edge: bool = False,
                  kind: str = "centered",
+                 base_comm: MPI.Comm = MPI.COMM_WORLD,
                  dtype: DTypeLike = np.float64):
         self.dims = dims
         axes = tuple(normalize_axis_index(ax, len(dims)) for ax in axes)
@@ -80,9 +83,10 @@ class MPILaplacian(MPILinearOperator):
         self.sampling = sampling
         self.edge = edge
         self.kind = kind
-        self.dtype = dtype
+        self.dtype = np.dtype(dtype)
+        self.base_comm = base_comm
         self.Op = self._calc_l2op()
-        super().__init__(shape=self.Op.shape, dtype=dtype)
+        super().__init__(shape=self.Op.shape, dtype=self.dtype, base_comm=self.base_comm)
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         return self.Op @ x
@@ -91,7 +95,7 @@ class MPILaplacian(MPILinearOperator):
         return self.Op.H @ x
 
     def _calc_l2op(self):
-        local_dims = local_split(tuple(self.dims), MPI.COMM_WORLD, Partition.SCATTER, axis=0)
+        local_dims = local_split(tuple(self.dims), self.base_comm, Partition.SCATTER, axis=0)
         if self.axes[0] == 0:
             l2op = self.weights[0] * MPISecondDerivative(dims=self.dims,
                                                          sampling=self.sampling[0],

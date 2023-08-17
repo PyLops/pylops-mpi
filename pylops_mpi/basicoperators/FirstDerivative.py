@@ -1,5 +1,6 @@
 from typing import Callable, Union
 import numpy as np
+from mpi4py import MPI
 
 from pylops.utils import DTypeLike
 from pylops.utils.typing import InputDimsLike
@@ -36,6 +37,8 @@ class MPIFirstDerivative(MPILinearOperator):
     order : :obj:`int`, optional
         Derivative order (``3`` or ``5``). This is currently only available
         for centered derivative.
+    base_comm : :obj:`mpi4py.MPI.Comm`, optional
+        MPI Base Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.
     dtype : :obj:`str`, optional
         Type of elements in the input array.
 
@@ -84,10 +87,11 @@ class MPIFirstDerivative(MPILinearOperator):
                  kind: str = "centered",
                  edge: bool = False,
                  order: int = 3,
+                 base_comm: MPI.Comm = MPI.COMM_WORLD,
                  dtype: DTypeLike = np.float64):
         self.dims = _value_or_sized_to_tuple(dims)
         shape = (int(np.prod(dims)),) * 2
-        super().__init__(shape=shape, dtype=np.dtype(dtype))
+        super().__init__(shape=shape, dtype=np.dtype(dtype), base_comm=base_comm)
         self.sampling = sampling
         self.kind = kind
         self.edge = edge
