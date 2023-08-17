@@ -6,7 +6,7 @@ matplotlib
 pytest
 pytest-mpi
 pydata-sphinx-theme
-sphinx
+sphinx<7.2.0
 numpydoc
 numba
 nbsphinx
