@@ -1,6 +1,7 @@
-import numpy as np
-
 from typing import Callable, Union
+import numpy as np
+from mpi4py import MPI
+
 from pylops.utils.typing import DTypeLike, InputDimsLike
 from pylops.utils._internal import _value_or_sized_to_tuple
 
@@ -27,6 +28,8 @@ class MPISecondDerivative(MPILinearOperator):
         Use reduced order derivative at edges (``True``) or
         ignore them (``False``). This is currently only available
         for centered derivative.
+    base_comm : :obj:`mpi4py.MPI.Comm`, optional
+        MPI Base Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.
     dtype : :obj:`str`, optional
         Type of elements in the input array.
 
@@ -73,11 +76,12 @@ class MPISecondDerivative(MPILinearOperator):
             sampling: float = 1.0,
             kind: str = "centered",
             edge: bool = False,
+            base_comm: MPI.Comm = MPI.COMM_WORLD,
             dtype: DTypeLike = np.float64,
     ) -> None:
         self.dims = _value_or_sized_to_tuple(dims)
         shape = (int(np.prod(dims)),) * 2
-        super().__init__(shape=shape, dtype=np.dtype(dtype))
+        super().__init__(shape=shape, dtype=np.dtype(dtype), base_comm=base_comm)
         self.sampling = sampling
         self.kind = kind
         self.edge = edge
