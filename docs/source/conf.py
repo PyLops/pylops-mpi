@@ -103,7 +103,7 @@ html_static_path = ["_static"]
 html_last_updated_fmt = "%b %d, %Y"
 html_title = "PyLops-MPI"
 html_short_title = "PyLops-MPI"
-html_logo = "_static/pylops.png"
+html_logo = "_static/pylopsmpi.png"
 html_favicon = "_static/favicon.ico"
 html_extra_path = []
 pygments_style = "default"
@@ -116,8 +116,8 @@ html_show_copyright = True
 html_theme = "pydata_sphinx_theme"
 html_theme_options = {
     "logo": {
-        "image_light": "pylops_b.png",
-        "image_dark": "pylops.png",
+        "image_light": "pylopsmpi_b.png",
+        "image_dark": "pylopsmpi.png",
     }
 }
 html_css_files = [
