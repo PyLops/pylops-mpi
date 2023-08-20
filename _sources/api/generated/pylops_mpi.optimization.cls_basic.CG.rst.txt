@@ -1,0 +1,47 @@
+﻿pylops\_mpi.optimization.cls\_basic.CG
+======================================
+
+.. currentmodule:: pylops_mpi.optimization.cls_basic
+
+.. autoclass:: CG
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~CG.__init__
+        ~CG.callback
+        ~CG.finalize
+        ~CG.run
+        ~CG.setup
+        ~CG.solve
+        ~CG.step
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.optimization.cls_basic.CG.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+

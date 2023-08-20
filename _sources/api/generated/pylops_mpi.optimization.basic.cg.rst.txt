@@ -1,0 +1,12 @@
+﻿pylops\_mpi.optimization.basic.cg
+=================================
+
+.. currentmodule:: pylops_mpi.optimization.basic
+
+.. autofunction:: cg
+
+.. include:: backreferences/pylops_mpi.optimization.basic.cg.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>

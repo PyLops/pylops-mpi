@@ -416,7 +416,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <h1>Source code for pylops_mpi.optimization.cls_basic</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">time</span>
 
@@ -424,6 +424,244 @@ document.write(`
 <span class="kn">from</span> <span class="nn">pylops.utils</span> <span class="kn">import</span> <span class="n">NDArray</span>
 
 <span class="kn">from</span> <span class="nn">pylops_mpi</span> <span class="kn">import</span> <span class="n">DistributedArray</span>
+
+
+<div class="viewcode-block" id="CG"><a class="viewcode-back" href="../../../api/generated/pylops_mpi.optimization.cls_basic.CG.html#pylops_mpi.optimization.cls_basic.CG">[docs]</a><span class="k">class</span> <span class="nc">CG</span><span class="p">(</span><span class="n">Solver</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Conjugate gradient</span>
+
+<span class="sd">    Solve a square system of equations given an MPILinearOperator ``Op`` and</span>
+<span class="sd">    distributed data ``y`` using conjugate gradient iterations.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Op : :obj:`pylops_mpi.MPILinearOperator`</span>
+<span class="sd">        Operator to invert of size :math:`[N \times N]`</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Solve the :math:`\mathbf{y} = \mathbf{Op}\,\mathbf{x}` problem using conjugate gradient</span>
+<span class="sd">    iterations.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_print_setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xcomplex</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_print_solver</span><span class="p">(</span><span class="n">nbar</span><span class="o">=</span><span class="mi">55</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">niter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">strpar</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;tol = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="si">:</span><span class="s2">10e</span><span class="si">}</span><span class="se">\t</span><span class="s2">niter = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">niter</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">strpar</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;tol = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="si">:</span><span class="s2">10e</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">strpar</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">55</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">xcomplex</span><span class="p">:</span>
+            <span class="n">head1</span> <span class="o">=</span> <span class="s2">&quot;    Itn           x[0]              r2norm&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">head1</span> <span class="o">=</span> <span class="s2">&quot;    Itn              x[0]                  r2norm&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">head1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_print_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">strx</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">1.2e</span><span class="si">}</span><span class="s2">        &quot;</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">11.4e</span><span class="si">}</span><span class="s2">        &quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">iiter</span><span class="si">:</span><span class="s2">6g</span><span class="si">}</span><span class="s2">        &quot;</span> <span class="o">+</span> <span class="n">strx</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cost</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">iiter</span><span class="p">]</span><span class="si">:</span><span class="s2">11.4e</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">y</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">,</span>
+            <span class="n">x0</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">niter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-4</span><span class="p">,</span>
+            <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Setup solver</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        y : :obj:`pylops_mpi.DistributedArray`</span>
+<span class="sd">            Data of size (N,)</span>
+<span class="sd">        x0 : :obj:`pylops_mpi.DistributedArray`, optional</span>
+<span class="sd">            Initial guess of size (N,). If ``None``, initialize</span>
+<span class="sd">            internally as zero vector</span>
+<span class="sd">        niter : :obj:`int`, optional</span>
+<span class="sd">            Number of iterations (default to ``None`` in case a user wants to</span>
+<span class="sd">            manually step over the solver)</span>
+<span class="sd">        tol : :obj:`float`, optional</span>
+<span class="sd">            Tolerance on residual norm</span>
+<span class="sd">        show : :obj:`bool`, optional</span>
+<span class="sd">            Display setup log</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        x : :obj:`pylops_mpi.DistributedArray`</span>
+<span class="sd">            Initial guess of size (N,).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">niter</span> <span class="o">=</span> <span class="n">niter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
+
+        <span class="k">if</span> <span class="n">x0</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                 <span class="n">partition</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="o">.</span><span class="n">partition</span><span class="p">,</span>
+                                 <span class="n">local_shapes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="o">.</span><span class="n">local_shapes</span><span class="p">,</span>
+                                 <span class="n">dtype</span><span class="o">=</span><span class="n">y</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="n">x</span><span class="p">[:]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x0</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">matvec</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">rank</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kold</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="o">.</span><span class="n">conj</span><span class="p">()))</span>
+
+        <span class="c1"># create variables to track the residual norm and iterations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cost</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cost</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kold</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iiter</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">show</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_print_setup</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">,</span> <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Run one step of solver</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : :obj:`pylops_mpi.DistributedArray`</span>
+<span class="sd">            Current model vector to be updated by a step of CG</span>
+<span class="sd">        show : :obj:`bool`, optional</span>
+<span class="sd">            Display iteration log</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        x : :obj:`pylops_mpi.DistributedArray`</span>
+<span class="sd">            Updated model vector</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Opc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">matvec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">)</span>
+        <span class="n">cOpc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Opc</span><span class="o">.</span><span class="n">conj</span><span class="p">()))</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kold</span> <span class="o">/</span> <span class="n">cOpc</span>
+        <span class="n">x</span><span class="p">[:]</span> <span class="o">+=</span> <span class="n">a</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">local_array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">[:]</span> <span class="o">-=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">Opc</span><span class="o">.</span><span class="n">local_array</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="o">.</span><span class="n">conj</span><span class="p">()))</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">k</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">kold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="o">.</span><span class="n">local_array</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">local_array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kold</span> <span class="o">=</span> <span class="n">k</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iiter</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cost</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kold</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">show</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_print_step</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">,</span>
+            <span class="n">niter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">itershow</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Run solver</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : :obj:`pylops_mpi.DistributedArray`</span>
+<span class="sd">            Current model vector to be updated by multiple steps of CG</span>
+<span class="sd">        niter : :obj:`int`, optional</span>
+<span class="sd">            Number of iterations. Can be set to ``None`` if already</span>
+<span class="sd">            provided in the setup call</span>
+<span class="sd">        show : :obj:`bool`, optional</span>
+<span class="sd">            Display logs</span>
+<span class="sd">        itershow : :obj:`tuple`, optional</span>
+<span class="sd">            Display set log for the first N1 steps, last N2 steps,</span>
+<span class="sd">            and every N3 steps in between where N1, N2, N3 are the</span>
+<span class="sd">            three element of the list.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        x : :obj:`pylops_mpi.DistributedArray`</span>
+<span class="sd">            Estimated model of size (M,)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">niter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">niter</span> <span class="k">if</span> <span class="n">niter</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">niter</span>
+        <span class="k">if</span> <span class="n">niter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;niter must not be None&quot;</span><span class="p">)</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">iiter</span> <span class="o">&lt;</span> <span class="n">niter</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">kold</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">:</span>
+            <span class="n">showstep</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="kc">True</span>
+                <span class="k">if</span> <span class="n">show</span>
+                <span class="ow">and</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">iiter</span> <span class="o">&lt;</span> <span class="n">itershow</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="ow">or</span> <span class="n">niter</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">iiter</span> <span class="o">&lt;</span> <span class="n">itershow</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">iiter</span> <span class="o">%</span> <span class="n">itershow</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span>
+                <span class="p">)</span>
+                <span class="k">else</span> <span class="kc">False</span>
+            <span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">showstep</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+    <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Finalize solver</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        show : :obj:`bool`, optional</span>
+<span class="sd">            Display finalize log</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tend</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telapsed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tend</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstart</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cost</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">show</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_print_finalize</span><span class="p">(</span><span class="n">nbar</span><span class="o">=</span><span class="mi">55</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">y</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">,</span>
+            <span class="n">x0</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">niter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+            <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-4</span><span class="p">,</span>
+            <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">itershow</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Run entire solver</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        y : :obj:`pylops_mpi.DistributedArray`</span>
+<span class="sd">            Data of size (N,)</span>
+<span class="sd">        x0 : :obj:`pylops_mpi.DistributedArray`, optional</span>
+<span class="sd">            Initial guess of size (N,). If ``None``, initialize</span>
+<span class="sd">            internally as zero vector</span>
+<span class="sd">        niter : :obj:`int`, optional</span>
+<span class="sd">            Number of iterations</span>
+<span class="sd">        tol : :obj:`float`, optional</span>
+<span class="sd">            Tolerance on residual norm</span>
+<span class="sd">        show : :obj:`bool`, optional</span>
+<span class="sd">            Display logs</span>
+<span class="sd">        itershow : :obj:`tuple`, optional</span>
+<span class="sd">            Display set log for the first N1 steps, last N2 steps,</span>
+<span class="sd">            and every N3 steps in between where N1, N2, N3 are the</span>
+<span class="sd">            three element of the list.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        x : :obj:`pylops_mpi.DistributedArray`</span>
+<span class="sd">            Estimated model of size (N,)</span>
+<span class="sd">        iit : :obj:`int`</span>
+<span class="sd">            Number of executed iterations</span>
+<span class="sd">        cost : :obj:`numpy.ndarray`</span>
+<span class="sd">            History of the L2 norm of the residual</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="n">niter</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="n">show</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">niter</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="n">show</span><span class="p">,</span> <span class="n">itershow</span><span class="o">=</span><span class="n">itershow</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finalize</span><span class="p">(</span><span class="n">show</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iiter</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cost</span></div>
 
 
 <div class="viewcode-block" id="CGLS"><a class="viewcode-back" href="../../../api/generated/pylops_mpi.optimization.cls_basic.CGLS.html#pylops_mpi.optimization.cls_basic.CGLS">[docs]</a><span class="k">class</span> <span class="nc">CGLS</span><span class="p">(</span><span class="n">Solver</span><span class="p">):</span>

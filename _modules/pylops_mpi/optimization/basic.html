@@ -420,7 +420,67 @@ document.write(`
 
 <span class="kn">from</span> <span class="nn">pylops.utils</span> <span class="kn">import</span> <span class="n">NDArray</span>
 <span class="kn">from</span> <span class="nn">pylops_mpi</span> <span class="kn">import</span> <span class="n">MPILinearOperator</span><span class="p">,</span> <span class="n">DistributedArray</span>
-<span class="kn">from</span> <span class="nn">pylops_mpi.optimization.cls_basic</span> <span class="kn">import</span> <span class="n">CGLS</span>
+<span class="kn">from</span> <span class="nn">pylops_mpi.optimization.cls_basic</span> <span class="kn">import</span> <span class="n">CG</span><span class="p">,</span> <span class="n">CGLS</span>
+
+
+<div class="viewcode-block" id="cg"><a class="viewcode-back" href="../../../api/generated/pylops_mpi.optimization.basic.cg.html#pylops_mpi.optimization.basic.cg">[docs]</a><span class="k">def</span> <span class="nf">cg</span><span class="p">(</span>
+        <span class="n">Op</span><span class="p">:</span> <span class="n">MPILinearOperator</span><span class="p">,</span>
+        <span class="n">y</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">,</span>
+        <span class="n">x0</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">niter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-4</span><span class="p">,</span>
+        <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">itershow</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+        <span class="n">callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Conjugate gradient</span>
+
+<span class="sd">    Solve a square system of equations given an MPILinearOperator ``Op`` and</span>
+<span class="sd">    distributed data ``y`` using conjugate gradient iterations.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Op : :obj:`pylops_mpi.MPILinearOperator`</span>
+<span class="sd">        Operator to invert of size :math:`[N \times N]`</span>
+<span class="sd">    y : :obj:`pylops_mpi.DistributedArray`</span>
+<span class="sd">        DistributedArray of size (N,)</span>
+<span class="sd">    x0 : :obj:`pylops_mpi.DistributedArray`, optional</span>
+<span class="sd">        Initial guess</span>
+<span class="sd">    niter : :obj:`int`, optional</span>
+<span class="sd">        Number of iterations</span>
+<span class="sd">    tol : :obj:`float`, optional</span>
+<span class="sd">        Tolerance on residual norm</span>
+<span class="sd">    show : :obj:`bool`, optional</span>
+<span class="sd">        Display iterations log</span>
+<span class="sd">    itershow : :obj:`tuple`, optional</span>
+<span class="sd">            Display set log for the first N1 steps, last N2 steps,</span>
+<span class="sd">            and every N3 steps in between where N1, N2, N3 are the</span>
+<span class="sd">            three element of the list.</span>
+<span class="sd">    callback : :obj:`callable`, optional</span>
+<span class="sd">        Function with signature (``callback(x)``) to call after each iteration</span>
+<span class="sd">        where ``x`` is the current model vector</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    x : :obj:`pylops_mpi.DistributedArray`</span>
+<span class="sd">        Estimated model of size (N,)</span>
+<span class="sd">    iit : :obj:`int`</span>
+<span class="sd">        Number of executed iterations</span>
+<span class="sd">    cost : :obj:`numpy.ndarray`, optional</span>
+<span class="sd">        History of the L2 norm of the residual</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    See :class:`pylops_mpi.optimization.cls_basic.CG`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cgsolve</span> <span class="o">=</span> <span class="n">CG</span><span class="p">(</span><span class="n">Op</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cgsolve</span><span class="o">.</span><span class="n">callback</span> <span class="o">=</span> <span class="n">callback</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">iiter</span><span class="p">,</span> <span class="n">cost</span> <span class="o">=</span> <span class="n">cgsolve</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="n">niter</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="n">show</span><span class="p">,</span> <span class="n">itershow</span><span class="o">=</span><span class="n">itershow</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">iiter</span><span class="p">,</span> <span class="n">cost</span></div>
 
 
 <div class="viewcode-block" id="cgls"><a class="viewcode-back" href="../../../api/generated/pylops_mpi.optimization.basic.cgls.html#pylops_mpi.optimization.basic.cgls">[docs]</a><span class="k">def</span> <span class="nf">cgls</span><span class="p">(</span>
