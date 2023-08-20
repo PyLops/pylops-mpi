@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 import numpy as np
 import time
 
@@ -6,6 +6,244 @@ from pylops.optimization.basesolver import Solver
 from pylops.utils import NDArray
 
 from pylops_mpi import DistributedArray
+
+
+class CG(Solver):
+    r"""Conjugate gradient
+
+    Solve a square system of equations given an MPILinearOperator ``Op`` and
+    distributed data ``y`` using conjugate gradient iterations.
+
+    Parameters
+    ----------
+    Op : :obj:`pylops_mpi.MPILinearOperator`
+        Operator to invert of size :math:`[N \times N]`
+
+    Notes
+    -----
+    Solve the :math:`\mathbf{y} = \mathbf{Op}\,\mathbf{x}` problem using conjugate gradient
+    iterations.
+
+    """
+
+    def _print_setup(self, xcomplex: bool = False) -> None:
+        self._print_solver(nbar=55)
+
+        if self.niter is not None:
+            strpar = f"tol = {self.tol:10e}\tniter = {self.niter}"
+        else:
+            strpar = f"tol = {self.tol:10e}"
+        print(strpar)
+        print("-" * 55 + "\n")
+        if not xcomplex:
+            head1 = "    Itn           x[0]              r2norm"
+        else:
+            head1 = "    Itn              x[0]                  r2norm"
+        print(head1)
+
+    def _print_step(self, x: DistributedArray) -> None:
+        strx = f"{x[0]:1.2e}        " if np.iscomplexobj(x.local_array) else f"{x[0]:11.4e}        "
+        msg = f"{self.iiter:6g}        " + strx + f"{self.cost[self.iiter]:11.4e}"
+        print(msg)
+
+    def setup(
+            self,
+            y: DistributedArray,
+            x0: Optional[DistributedArray] = None,
+            niter: Optional[int] = None,
+            tol: float = 1e-4,
+            show: bool = False,
+    ) -> DistributedArray:
+        r"""Setup solver
+
+        Parameters
+        ----------
+        y : :obj:`pylops_mpi.DistributedArray`
+            Data of size (N,)
+        x0 : :obj:`pylops_mpi.DistributedArray`, optional
+            Initial guess of size (N,). If ``None``, initialize
+            internally as zero vector
+        niter : :obj:`int`, optional
+            Number of iterations (default to ``None`` in case a user wants to
+            manually step over the solver)
+        tol : :obj:`float`, optional
+            Tolerance on residual norm
+        show : :obj:`bool`, optional
+            Display setup log
+
+        Returns
+        -------
+        x : :obj:`pylops_mpi.DistributedArray`
+            Initial guess of size (N,).
+
+        """
+
+        self.y = y
+        self.niter = niter
+        self.tol = tol
+
+        if x0 is None:
+            self.r = self.y.copy()
+            x = DistributedArray(global_shape=self.Op.shape[1],
+                                 partition=self.r.partition,
+                                 local_shapes=self.r.local_shapes,
+                                 dtype=y.dtype)
+            x[:] = 0
+        else:
+            x = x0.copy()
+            self.r = self.y - self.Op.matvec(x)
+        self.rank = x.rank
+        self.c = self.r.copy()
+        self.kold = np.abs(self.r.dot(self.r.conj()))
+
+        # create variables to track the residual norm and iterations
+        self.cost: List = []
+        self.cost.append(float(np.sqrt(self.kold)))
+        self.iiter = 0
+
+        if show and self.rank == 0:
+            self._print_setup(np.iscomplexobj(x.local_array))
+        return x
+
+    def step(self, x: DistributedArray, show: bool = False) -> DistributedArray:
+        r"""Run one step of solver
+
+        Parameters
+        ----------
+        x : :obj:`pylops_mpi.DistributedArray`
+            Current model vector to be updated by a step of CG
+        show : :obj:`bool`, optional
+            Display iteration log
+
+        Returns
+        -------
+        x : :obj:`pylops_mpi.DistributedArray`
+            Updated model vector
+
+        """
+        Opc = self.Op.matvec(self.c)
+        cOpc = np.abs(self.c.dot(Opc.conj()))
+        a = self.kold / cOpc
+        x[:] += a * self.c.local_array
+        self.r[:] -= a * Opc.local_array
+        k = np.abs(self.r.dot(self.r.conj()))
+        b = k / self.kold
+        self.c[:] = self.r.local_array + b * self.c.local_array
+        self.kold = k
+        self.iiter += 1
+        self.cost.append(float(np.sqrt(self.kold)))
+        if show and self.rank == 0:
+            self._print_step(x)
+        return x
+
+    def run(
+            self,
+            x: DistributedArray,
+            niter: Optional[int] = None,
+            show: bool = False,
+            itershow: Tuple[int, int, int] = (10, 10, 10),
+    ) -> DistributedArray:
+        r"""Run solver
+
+        Parameters
+        ----------
+        x : :obj:`pylops_mpi.DistributedArray`
+            Current model vector to be updated by multiple steps of CG
+        niter : :obj:`int`, optional
+            Number of iterations. Can be set to ``None`` if already
+            provided in the setup call
+        show : :obj:`bool`, optional
+            Display logs
+        itershow : :obj:`tuple`, optional
+            Display set log for the first N1 steps, last N2 steps,
+            and every N3 steps in between where N1, N2, N3 are the
+            three element of the list.
+
+        Returns
+        -------
+        x : :obj:`pylops_mpi.DistributedArray`
+            Estimated model of size (M,)
+
+        """
+
+        niter = self.niter if niter is None else niter
+        if niter is None:
+            raise ValueError("niter must not be None")
+        while self.iiter < niter and self.kold > self.tol:
+            showstep = (
+                True
+                if show
+                and (
+                    self.iiter < itershow[0]
+                    or niter - self.iiter < itershow[1]
+                    or self.iiter % itershow[2] == 0
+                )
+                else False
+            )
+            x = self.step(x, showstep)
+            self.callback(x)
+        return x
+
+    def finalize(self, show: bool = False) -> None:
+        r"""Finalize solver
+
+        Parameters
+        ----------
+        show : :obj:`bool`, optional
+            Display finalize log
+
+        """
+
+        self.tend = time.time()
+        self.telapsed = self.tend - self.tstart
+        self.cost = np.array(self.cost)
+        if show and self.rank == 0:
+            self._print_finalize(nbar=55)
+
+    def solve(
+            self,
+            y: DistributedArray,
+            x0: Optional[DistributedArray] = None,
+            niter: int = 10,
+            tol: float = 1e-4,
+            show: bool = False,
+            itershow: Tuple[int, int, int] = (10, 10, 10),
+    ) -> Tuple[DistributedArray, int, NDArray]:
+        r"""Run entire solver
+
+        Parameters
+        ----------
+        y : :obj:`pylops_mpi.DistributedArray`
+            Data of size (N,)
+        x0 : :obj:`pylops_mpi.DistributedArray`, optional
+            Initial guess of size (N,). If ``None``, initialize
+            internally as zero vector
+        niter : :obj:`int`, optional
+            Number of iterations
+        tol : :obj:`float`, optional
+            Tolerance on residual norm
+        show : :obj:`bool`, optional
+            Display logs
+        itershow : :obj:`tuple`, optional
+            Display set log for the first N1 steps, last N2 steps,
+            and every N3 steps in between where N1, N2, N3 are the
+            three element of the list.
+
+        Returns
+        -------
+        x : :obj:`pylops_mpi.DistributedArray`
+            Estimated model of size (N,)
+        iit : :obj:`int`
+            Number of executed iterations
+        cost : :obj:`numpy.ndarray`
+            History of the L2 norm of the residual
+
+        """
+
+        x = self.setup(y=y, x0=x0, niter=niter, tol=tol, show=show)
+        x = self.run(x, niter, show=show, itershow=itershow)
+        self.finalize(show)
+        return x, self.iiter, self.cost
 
 
 class CGLS(Solver):
