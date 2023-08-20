@@ -2,7 +2,67 @@ from typing import Optional, Tuple, Callable
 
 from pylops.utils import NDArray
 from pylops_mpi import MPILinearOperator, DistributedArray
-from pylops_mpi.optimization.cls_basic import CGLS
+from pylops_mpi.optimization.cls_basic import CG, CGLS
+
+
+def cg(
+        Op: MPILinearOperator,
+        y: DistributedArray,
+        x0: Optional[DistributedArray] = None,
+        niter: int = 10,
+        tol: float = 1e-4,
+        show: bool = False,
+        itershow: Tuple[int, int, int] = (10, 10, 10),
+        callback: Optional[Callable] = None,
+) -> Tuple[DistributedArray, int, NDArray]:
+    r"""Conjugate gradient
+
+    Solve a square system of equations given an MPILinearOperator ``Op`` and
+    distributed data ``y`` using conjugate gradient iterations.
+
+    Parameters
+    ----------
+    Op : :obj:`pylops_mpi.MPILinearOperator`
+        Operator to invert of size :math:`[N \times N]`
+    y : :obj:`pylops_mpi.DistributedArray`
+        DistributedArray of size (N,)
+    x0 : :obj:`pylops_mpi.DistributedArray`, optional
+        Initial guess
+    niter : :obj:`int`, optional
+        Number of iterations
+    tol : :obj:`float`, optional
+        Tolerance on residual norm
+    show : :obj:`bool`, optional
+        Display iterations log
+    itershow : :obj:`tuple`, optional
+            Display set log for the first N1 steps, last N2 steps,
+            and every N3 steps in between where N1, N2, N3 are the
+            three element of the list.
+    callback : :obj:`callable`, optional
+        Function with signature (``callback(x)``) to call after each iteration
+        where ``x`` is the current model vector
+
+    Returns
+    -------
+    x : :obj:`pylops_mpi.DistributedArray`
+        Estimated model of size (N,)
+    iit : :obj:`int`
+        Number of executed iterations
+    cost : :obj:`numpy.ndarray`, optional
+        History of the L2 norm of the residual
+
+    Notes
+    -----
+    See :class:`pylops_mpi.optimization.cls_basic.CG`
+
+    """
+    cgsolve = CG(Op)
+    if callback is not None:
+        cgsolve.callback = callback
+    x, iiter, cost = cgsolve.solve(
+        y=y, x0=x0, tol=tol, niter=niter, show=show, itershow=itershow
+    )
+    return x, iiter, cost
 
 
 def cgls(

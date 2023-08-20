@@ -67,6 +67,7 @@ Basic
 .. autosummary::
    :toctree: generated/
 
+    CG
     CGLS
 
 .. currentmodule:: pylops_mpi.optimization.basic
@@ -74,4 +75,5 @@ Basic
 .. autosummary::
    :toctree: generated/
 
+    cg
     cgls

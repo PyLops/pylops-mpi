@@ -11,6 +11,7 @@ from pylops import (
 )
 
 from pylops_mpi import (
+    cg,
     cgls,
     DistributedArray,
     MPIBlockDiag,
@@ -79,6 +80,48 @@ par4j = {
     "x0": True,
     "dtype": "complex256",
 }  # overdetermined complex, non-zero initial guess
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize(
+    "par", [(par1), (par1j), (par2), (par2j), (par3), (par3j), (par4), (par4j)]
+)
+def test_cg(par):
+    """CG with MPIBlockDiag"""
+    A = np.ones((par["ny"], par["nx"])) + par[
+        "imag"] * np.ones((par["ny"], par["nx"]))
+    Aop = MatrixMult(np.conj(A.T) @ A, dtype=par['dtype'])
+    # To make MPIBlockDiag a positive definite matrix
+    BDiag_MPI = MPIBlockDiag(ops=[Aop, ])
+
+    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    x[:] = np.random.normal(1, 10, par["nx"]) + par["imag"] * np.random.normal(10, 10, par["nx"])
+    x_global = x.asarray()
+    if par["x0"]:
+        x0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+        x0[:] = np.random.normal(0, 10, par["nx"]) + par["imag"] * np.random.normal(
+            10, 10, par["nx"]
+        )
+        x0_global = x0.asarray()
+    else:
+        x0 = None
+    y = BDiag_MPI * x
+    xinv = cg(BDiag_MPI, y, x0=x0, niter=par["nx"], tol=1e-5, show=True)[0]
+    assert isinstance(xinv, DistributedArray)
+    xinv_array = xinv.asarray()
+    if rank == 0:
+        mats = [np.ones(shape=(par["ny"], par["nx"])) + par[
+            "imag"] * np.ones(shape=(par["ny"], par["nx"])) for i in range(size)]
+        ops = [MatrixMult(np.conj(mats[i].T) @ mats[i], dtype=par['dtype']) for i in range(size)]
+        # To make BlockDiag a positive definite matrix
+        BDiag = BlockDiag(ops=ops)
+        if par["x0"]:
+            x0 = x0_global
+        else:
+            x0 = None
+        y1 = BDiag * x_global
+        xinv1 = pylops.cg(BDiag, y1, x0=x0, niter=par["nx"], tol=1e-5, show=True)[0]
+        assert_allclose(xinv_array, xinv1, rtol=1e-14)
 
 
 @pytest.mark.mpi(min_size=2)
