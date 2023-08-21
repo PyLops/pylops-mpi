@@ -113,7 +113,7 @@ class MPIBlockDiag(MPILinearOperator):
 
     @reshaped(forward=True, stacking=True)
     def _matvec(self, x: DistributedArray) -> DistributedArray:
-        y = DistributedArray(global_shape=self.shape[0], local_shapes=self.local_shapes_n, dtype=x.dtype)
+        y = DistributedArray(global_shape=self.shape[0], local_shapes=self.local_shapes_n, dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
             y1.append(oper.matvec(x.local_array[self.mmops[iop]:
@@ -123,7 +123,7 @@ class MPIBlockDiag(MPILinearOperator):
 
     @reshaped(forward=False, stacking=True)
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
-        y = DistributedArray(global_shape=self.shape[1], local_shapes=self.local_shapes_m, dtype=x.dtype)
+        y = DistributedArray(global_shape=self.shape[1], local_shapes=self.local_shapes_m, dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
             y1.append(oper.rmatvec(x.local_array[self.nnops[iop]:
