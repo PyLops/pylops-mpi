@@ -15,7 +15,7 @@ dependencies:
   - pytest-mpi
   - pytest-runner
   - setuptools_scm
-  - Sphinx<7.2.0
+  - Sphinx
   - numpydoc
   - numba
   - nbsphinx
