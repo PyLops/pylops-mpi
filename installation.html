@@ -45,9 +45,9 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="_static/documentation_options.js?v=8a448e45"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
-    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'installation';</script>
     <link rel="icon" href="_static/favicon.ico"/>
@@ -420,9 +420,9 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="installation">
-<span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">#</a></h1>
+<span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
 <section id="dependencies">
-<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this heading">#</a></h2>
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading">#</a></h2>
 <p>The PyLops-MPI project strives to create a library that is easy to install in
 any environment and has limited number of dependencies.
 Required dependencies are as follows:</p>
@@ -436,7 +436,7 @@ Required dependencies are as follows:</p>
 <li><p><a class="reference external" href="https://pylops.readthedocs.io/en/stable/">PyLops</a></p></li>
 </ul>
 <section id="download-and-install-mpi">
-<h3>Download and Install MPI<a class="headerlink" href="#download-and-install-mpi" title="Permalink to this heading">#</a></h3>
+<h3>Download and Install MPI<a class="headerlink" href="#download-and-install-mpi" title="Link to this heading">#</a></h3>
 <p>Visit the official MPI website to download an appropriate MPI implementation for your system.
 Follow the installation instructions provided by the MPI vendor.</p>
 <ul class="simple">
@@ -446,14 +446,14 @@ Follow the installation instructions provided by the MPI vendor.</p>
 </ul>
 </section>
 <section id="verify-mpi-installation">
-<h3>Verify MPI Installation<a class="headerlink" href="#verify-mpi-installation" title="Permalink to this heading">#</a></h3>
+<h3>Verify MPI Installation<a class="headerlink" href="#verify-mpi-installation" title="Link to this heading">#</a></h3>
 <p>After installing MPI, verify its installation by opening a terminal and running the following command:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>mpiexec<span class="w"> </span>--version
 </pre></div>
 </div>
 </section>
 <section id="fork-pylops-mpi">
-<h3>Fork PyLops-MPI<a class="headerlink" href="#fork-pylops-mpi" title="Permalink to this heading">#</a></h3>
+<h3>Fork PyLops-MPI<a class="headerlink" href="#fork-pylops-mpi" title="Link to this heading">#</a></h3>
 <p>Fork the <a class="reference external" href="https://github.com/PyLops/pylops-mpi">PyLops-MPI repository</a> and clone it by executing the following in your terminal:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/YOUR-USERNAME/pylops-mpi.git
 </pre></div>
@@ -463,9 +463,9 @@ For that end, we provide a <cite>Makefile</cite> with useful commands for settin
 </section>
 </section>
 <section id="step-by-step-installation-for-users">
-<h2>Step-by-step installation for users<a class="headerlink" href="#step-by-step-installation-for-users" title="Permalink to this heading">#</a></h2>
+<h2>Step-by-step installation for users<a class="headerlink" href="#step-by-step-installation-for-users" title="Link to this heading">#</a></h2>
 <section id="conda">
-<h3>Conda<a class="headerlink" href="#conda" title="Permalink to this heading">#</a></h3>
+<h3>Conda<a class="headerlink" href="#conda" title="Link to this heading">#</a></h3>
 <p>For a <code class="docutils literal notranslate"><span class="pre">conda</span></code> environment, run</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>make<span class="w"> </span>install_conda
 </pre></div>
@@ -473,7 +473,7 @@ For that end, we provide a <cite>Makefile</cite> with useful commands for settin
 <p>This will create and activate an environment called <code class="docutils literal notranslate"><span class="pre">pylops_mpi</span></code>, with all required dependencies.</p>
 </section>
 <section id="pip">
-<h3>Pip<a class="headerlink" href="#pip" title="Permalink to this heading">#</a></h3>
+<h3>Pip<a class="headerlink" href="#pip" title="Link to this heading">#</a></h3>
 <p>If you prefer a <code class="docutils literal notranslate"><span class="pre">pip</span></code> installation, we provide the following command</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>make<span class="w"> </span>install
 </pre></div>
@@ -484,11 +484,11 @@ Make sure you create and activate your environment previously.</p>
 </section>
 </section>
 <section id="step-by-step-installation-for-developers">
-<span id="devinstall"></span><h2>Step-by-step installation for developers<a class="headerlink" href="#step-by-step-installation-for-developers" title="Permalink to this heading">#</a></h2>
+<span id="devinstall"></span><h2>Step-by-step installation for developers<a class="headerlink" href="#step-by-step-installation-for-developers" title="Link to this heading">#</a></h2>
 <section id="install-dependencies">
-<h3>Install dependencies<a class="headerlink" href="#install-dependencies" title="Permalink to this heading">#</a></h3>
+<h3>Install dependencies<a class="headerlink" href="#install-dependencies" title="Link to this heading">#</a></h3>
 <section id="id2">
-<h4>Conda<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h4>
+<h4>Conda<a class="headerlink" href="#id2" title="Link to this heading">#</a></h4>
 <p>For a <code class="docutils literal notranslate"><span class="pre">conda</span></code> environment, run</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>make<span class="w"> </span>dev-install_conda
 </pre></div>
@@ -496,7 +496,7 @@ Make sure you create and activate your environment previously.</p>
 <p>This will create and activate an environment called <code class="docutils literal notranslate"><span class="pre">pylops_mpi</span></code>, with all required and optional dependencies.</p>
 </section>
 <section id="id3">
-<h4>Pip<a class="headerlink" href="#id3" title="Permalink to this heading">#</a></h4>
+<h4>Pip<a class="headerlink" href="#id3" title="Link to this heading">#</a></h4>
 <p>If you prefer a <code class="docutils literal notranslate"><span class="pre">pip</span></code> installation, we provide the following command</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>make<span class="w"> </span>dev-install
 </pre></div>
@@ -506,7 +506,7 @@ Make sure you create and activate your environment previously.</p>
 </section>
 </section>
 <section id="run-tests">
-<h3>Run tests<a class="headerlink" href="#run-tests" title="Permalink to this heading">#</a></h3>
+<h3>Run tests<a class="headerlink" href="#run-tests" title="Link to this heading">#</a></h3>
 <p>To ensure that everything has been setup correctly, run tests:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>make<span class="w"> </span>tests
 </pre></div>
@@ -514,7 +514,7 @@ Make sure you create and activate your environment previously.</p>
 <p>Make sure no tests fail, this guarantees that the installation has been successful.</p>
 </section>
 <section id="run-examples-and-tutorials">
-<h3>Run examples and tutorials<a class="headerlink" href="#run-examples-and-tutorials" title="Permalink to this heading">#</a></h3>
+<h3>Run examples and tutorials<a class="headerlink" href="#run-examples-and-tutorials" title="Link to this heading">#</a></h3>
 <p>Since the sphinx-gallery creates examples/tutorials using only a single process, it is highly recommended to test the
 examples/tutorials using n processes.</p>
 <p>run examples:</p>
@@ -528,7 +528,7 @@ examples/tutorials using n processes.</p>
 <p>Make sure all the examples and tutorials python scripts are executed without any errors.</p>
 </section>
 <section id="add-remote-optional">
-<h3>Add remote (optional)<a class="headerlink" href="#add-remote-optional" title="Permalink to this heading">#</a></h3>
+<h3>Add remote (optional)<a class="headerlink" href="#add-remote-optional" title="Link to this heading">#</a></h3>
 <p>To keep up-to-date on the latest changes while you are developing, you may optionally add
 the PyLops-MPI repository as a <em>remote</em>.
 Run the following command to add the PyLops-MPI repo as a remote named <em>upstream</em>:</p>
@@ -541,7 +541,7 @@ Run the following command to add the PyLops-MPI repo as a remote named <em>upstr
 </div>
 </section>
 <section id="final-steps">
-<h3>Final steps<a class="headerlink" href="#final-steps" title="Permalink to this heading">#</a></h3>
+<h3>Final steps<a class="headerlink" href="#final-steps" title="Link to this heading">#</a></h3>
 <p>PyLops-MPI does not enforce the use of a linter as a pre-commit hook, but we do highly encourage using one before submitting a Pull Request.
 A properly configured linter (<code class="docutils literal notranslate"><span class="pre">flake8</span></code>) can be run with:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>make<span class="w"> </span>lint
@@ -666,7 +666,7 @@ Apart from ensuring that docstrings are properly formatted, they can aid in catc
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     <br/>
   </p>
 </div>

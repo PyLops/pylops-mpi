@@ -45,9 +45,9 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="_static/documentation_options.js?v=8a448e45"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
-    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -422,13 +422,13 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="implementing-new-operators">
-<span id="addingoperator"></span><h1>Implementing new operators<a class="headerlink" href="#implementing-new-operators" title="Permalink to this heading">#</a></h1>
+<span id="addingoperator"></span><h1>Implementing new operators<a class="headerlink" href="#implementing-new-operators" title="Link to this heading">#</a></h1>
 <p>Users are welcome to create new operators and add them to the PyLops-MPI library.</p>
 <p>In this tutorial, we will go through the key steps in the definition of an operator, using the
 <a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPIBlockDiag.html#pylops_mpi.basicoperators.MPIBlockDiag" title="pylops_mpi.basicoperators.MPIBlockDiag"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIBlockDiag</span></code></a> as an example. This operator creates a block-diagonal matrix of
 N pylops linear operators.</p>
 <section id="creating-the-operator">
-<h2>Creating the operator<a class="headerlink" href="#creating-the-operator" title="Permalink to this heading">#</a></h2>
+<h2>Creating the operator<a class="headerlink" href="#creating-the-operator" title="Link to this heading">#</a></h2>
 <p>The first thing we need to do is to create a new file with the name of the operator we would like to implement.
 Note that as the operator will be a class, we need to follow the UpperCaseCamelCase convention both for the class itself
 and for the filename. It’s recommended to prefix the class name with <code class="docutils literal notranslate"><span class="pre">MPI</span></code> to distinguish it as an MPI Operator.</p>
@@ -450,7 +450,7 @@ contain at least a short description of the operator, a <code class="docutils li
 input parameters and a <code class="docutils literal notranslate"><span class="pre">Notes</span></code> section providing a mathematical explanation of the operator. Take a look at
 some of the core operators of PyLops-MPI to get a feeling of the level of details of the mathematical explanation.</p>
 <section id="initialization-init">
-<h3>Initialization (<code class="docutils literal notranslate"><span class="pre">__init__</span></code>)<a class="headerlink" href="#initialization-init" title="Permalink to this heading">#</a></h3>
+<h3>Initialization (<code class="docutils literal notranslate"><span class="pre">__init__</span></code>)<a class="headerlink" href="#initialization-init" title="Link to this heading">#</a></h3>
 <p>We then need to create the <code class="docutils literal notranslate"><span class="pre">__init__</span></code> where the input parameters are passed and saved as members of our class.
 While the input parameters change from operator to operator, it is always required to create three members, the first
 called <code class="docutils literal notranslate"><span class="pre">shape</span></code> with a tuple containing the dimensions of the operator in the data and model space, the second
@@ -477,7 +477,7 @@ while the <code class="docutils literal notranslate"><span class="pre">base_comm
 </div>
 </section>
 <section id="forward-mode-matvec">
-<h3>Forward mode (<code class="docutils literal notranslate"><span class="pre">_matvec</span></code>)<a class="headerlink" href="#forward-mode-matvec" title="Permalink to this heading">#</a></h3>
+<h3>Forward mode (<code class="docutils literal notranslate"><span class="pre">_matvec</span></code>)<a class="headerlink" href="#forward-mode-matvec" title="Link to this heading">#</a></h3>
 <p>We can then move onto writing the <em>forward mode</em> in the method <code class="docutils literal notranslate"><span class="pre">_matvec</span></code>. In other words, we will need to write
 the piece of code that will implement the following operation <span class="math notranslate nohighlight">\(\mathbf{y} = \mathbf{A}\mathbf{x}\)</span>.
 Such method is always composed of two inputs (the object itself <code class="docutils literal notranslate"><span class="pre">self</span></code> and the input model  <code class="docutils literal notranslate"><span class="pre">x</span></code>).
@@ -496,7 +496,7 @@ and the final result is collected in a DistributedArray.</p>
 </div>
 </section>
 <section id="adjoint-mode-rmatvec">
-<h3>Adjoint mode (<code class="docutils literal notranslate"><span class="pre">_rmatvec</span></code>)<a class="headerlink" href="#adjoint-mode-rmatvec" title="Permalink to this heading">#</a></h3>
+<h3>Adjoint mode (<code class="docutils literal notranslate"><span class="pre">_rmatvec</span></code>)<a class="headerlink" href="#adjoint-mode-rmatvec" title="Link to this heading">#</a></h3>
 <p>Finally we need to implement the <em>adjoint mode</em> in the method <code class="docutils literal notranslate"><span class="pre">_rmatvec</span></code>. In other words, we will need to write
 the piece of code that will implement the following operation <span class="math notranslate nohighlight">\(\mathbf{x} = \mathbf{A}^H\mathbf{y}\)</span>.
 Such method is also composed of two inputs (the object itself <code class="docutils literal notranslate"><span class="pre">self</span></code> and the input data <code class="docutils literal notranslate"><span class="pre">y</span></code>).
@@ -517,7 +517,7 @@ and the final result is collected in a DistributedArray.</p>
 </section>
 </section>
 <section id="testing-the-operator">
-<h2>Testing the operator<a class="headerlink" href="#testing-the-operator" title="Permalink to this heading">#</a></h2>
+<h2>Testing the operator<a class="headerlink" href="#testing-the-operator" title="Link to this heading">#</a></h2>
 <p>Being able to write an operator is not yet a guarantee of the fact that the operator is correct, or in other words
 that the adjoint code is actually the <em>adjoint</em> of the forward code.
 We add tests for the operator by creating a new test within an existing/new <code class="docutils literal notranslate"><span class="pre">test_*.py</span></code> file in the <code class="docutils literal notranslate"><span class="pre">tests</span></code> folder.</p>
@@ -536,7 +536,7 @@ function with an <code class="docutils literal notranslate"><span class="pre">rt
 in the <code class="docutils literal notranslate"><span class="pre">tests</span></code> folder.</p>
 </section>
 <section id="documenting-the-operator">
-<h2>Documenting the operator<a class="headerlink" href="#documenting-the-operator" title="Permalink to this heading">#</a></h2>
+<h2>Documenting the operator<a class="headerlink" href="#documenting-the-operator" title="Link to this heading">#</a></h2>
 <p>Once the operator has been created, we can add it to the documentation of PyLops-MPI. To do so, simply add the name of
 the operator within the <code class="docutils literal notranslate"><span class="pre">index.rst</span></code> file in <code class="docutils literal notranslate"><span class="pre">docs/source/api</span></code> directory.</p>
 <p>Moreover, in order to facilitate the user of your operator by other users, a simple example should be provided as part of the
@@ -544,7 +544,7 @@ Sphinx-gallery of the documentation of the PyLops-MPI library. The directory <co
 can be used as template.</p>
 </section>
 <section id="final-checklist">
-<h2>Final checklist<a class="headerlink" href="#final-checklist" title="Permalink to this heading">#</a></h2>
+<h2>Final checklist<a class="headerlink" href="#final-checklist" title="Link to this heading">#</a></h2>
 <p>Before submitting your new operator for review, use the following <strong>checklist</strong> to ensure that your code
 adheres to the guidelines of PyLops-MPI:</p>
 <ul class="simple">
@@ -652,7 +652,7 @@ create a small toy example where the operator is applied in forward mode.</p></l
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     <br/>
   </p>
 </div>

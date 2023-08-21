@@ -45,9 +45,9 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../../_static/documentation_options.js?v=8a448e45"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -459,10 +459,10 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="pylops-mpi-optimization-basic-cgls">
-<h1>pylops_mpi.optimization.basic.cgls<a class="headerlink" href="#pylops-mpi-optimization-basic-cgls" title="Permalink to this heading">#</a></h1>
+<h1>pylops_mpi.optimization.basic.cgls<a class="headerlink" href="#pylops-mpi-optimization-basic-cgls" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="pylops_mpi.optimization.basic.cgls">
-<span class="sig-prename descclassname"><span class="pre">pylops_mpi.optimization.basic.</span></span><span class="sig-name descname"><span class="pre">cgls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">niter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itershow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(10,</span> <span class="pre">10,</span> <span class="pre">10)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/optimization/basic.html#cgls"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.optimization.basic.cgls" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pylops_mpi.optimization.basic.</span></span><span class="sig-name descname"><span class="pre">cgls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">niter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itershow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(10,</span> <span class="pre">10,</span> <span class="pre">10)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/optimization/basic.html#cgls"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.optimization.basic.cgls" title="Link to this definition">#</a></dt>
 <dd><p>Conjugate gradient least squares</p>
 <p>Solve an overdetermined system of equations given a MPILinearOperator <code class="docutils literal notranslate"><span class="pre">Op</span></code> and
 distributed data <code class="docutils literal notranslate"><span class="pre">y</span></code> using conjugate gradient iterations.</p>
@@ -521,7 +521,7 @@ Equal to <code class="docutils literal notranslate"><span class="pre">r1norm</sp
 </dd></dl>
 
 <section id="examples-using-pylops-mpi-optimization-basic-cgls">
-<h2>Examples using <code class="docutils literal notranslate"><span class="pre">pylops_mpi.optimization.basic.cgls</span></code><a class="headerlink" href="#examples-using-pylops-mpi-optimization-basic-cgls" title="Permalink to this heading">#</a></h2>
+<h2>Examples using <code class="docutils literal notranslate"><span class="pre">pylops_mpi.optimization.basic.cgls</span></code><a class="headerlink" href="#examples-using-pylops-mpi-optimization-basic-cgls" title="Link to this heading">#</a></h2>
 <div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the utilization of :pypylops_mpi.optimization.basic.cgls solver. Our ..."><img alt="" src="../../_images/sphx_glr_plot_cgls_thumb.png" />
 <p><a class="reference internal" href="../../gallery/plot_cgls.html#sphx-glr-gallery-plot-cgls-py"><span class="std std-ref">CGLS Solver</span></a></p>
   <div class="sphx-glr-thumbnail-title">CGLS Solver</div>
@@ -618,7 +618,7 @@ Equal to <code class="docutils literal notranslate"><span class="pre">r1norm</sp
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     <br/>
   </p>
 </div>

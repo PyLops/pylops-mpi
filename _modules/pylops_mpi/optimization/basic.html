@@ -44,9 +44,9 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../../../_static/documentation_options.js?v=8a448e45"></script>
     <script src="../../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/pylops_mpi/optimization/basic';</script>
     <link rel="icon" href="../../../_static/favicon.ico"/>
@@ -423,7 +423,9 @@ document.write(`
 <span class="kn">from</span> <span class="nn">pylops_mpi.optimization.cls_basic</span> <span class="kn">import</span> <span class="n">CG</span><span class="p">,</span> <span class="n">CGLS</span>
 
 
-<div class="viewcode-block" id="cg"><a class="viewcode-back" href="../../../api/generated/pylops_mpi.optimization.basic.cg.html#pylops_mpi.optimization.basic.cg">[docs]</a><span class="k">def</span> <span class="nf">cg</span><span class="p">(</span>
+<div class="viewcode-block" id="cg">
+<a class="viewcode-back" href="../../../api/generated/pylops_mpi.optimization.basic.cg.html#pylops_mpi.optimization.basic.cg">[docs]</a>
+<span class="k">def</span> <span class="nf">cg</span><span class="p">(</span>
         <span class="n">Op</span><span class="p">:</span> <span class="n">MPILinearOperator</span><span class="p">,</span>
         <span class="n">y</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">,</span>
         <span class="n">x0</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -483,7 +485,10 @@ document.write(`
     <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">iiter</span><span class="p">,</span> <span class="n">cost</span></div>
 
 
-<div class="viewcode-block" id="cgls"><a class="viewcode-back" href="../../../api/generated/pylops_mpi.optimization.basic.cgls.html#pylops_mpi.optimization.basic.cgls">[docs]</a><span class="k">def</span> <span class="nf">cgls</span><span class="p">(</span>
+
+<div class="viewcode-block" id="cgls">
+<a class="viewcode-back" href="../../../api/generated/pylops_mpi.optimization.basic.cgls.html#pylops_mpi.optimization.basic.cgls">[docs]</a>
+<span class="k">def</span> <span class="nf">cgls</span><span class="p">(</span>
         <span class="n">Op</span><span class="p">:</span> <span class="n">MPILinearOperator</span><span class="p">,</span>
         <span class="n">y</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">,</span>
         <span class="n">x0</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -559,6 +564,7 @@ document.write(`
         <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="n">niter</span><span class="p">,</span> <span class="n">damp</span><span class="o">=</span><span class="n">damp</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="n">show</span><span class="p">,</span> <span class="n">itershow</span><span class="o">=</span><span class="n">itershow</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">istop</span><span class="p">,</span> <span class="n">iiter</span><span class="p">,</span> <span class="n">r1norm</span><span class="p">,</span> <span class="n">r2norm</span><span class="p">,</span> <span class="n">cost</span></div>
+
 </pre></div>
 
                 </article>
@@ -611,7 +617,7 @@ document.write(`
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
     <br/>
   </p>
 </div>
