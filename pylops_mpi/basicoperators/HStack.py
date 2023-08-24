@@ -92,7 +92,7 @@ class MPIHStack(MPILinearOperator):
                  dtype: Optional[DTypeLike] = None):
         self.ops = ops
         nops = [oper.shape[0] for oper in self.ops]
-        nops = np.unique(base_comm.allgather(nops))
+        nops = np.concatenate(base_comm.allgather(nops), axis=0)
         if len(set(nops)) > 1:
             raise ValueError("Operators have different number of rows")
         hops = [oper.H for oper in self.ops]
