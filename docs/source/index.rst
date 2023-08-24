@@ -94,4 +94,5 @@ class and implementing the ``_matvec`` and ``_rmatvec``.
 
    Implementing new operators  <adding.rst>
    Contributing <contributing.rst>
+   Changelog <changelog.rst>
    Credits <credits.rst>
