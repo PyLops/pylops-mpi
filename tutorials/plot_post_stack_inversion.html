@@ -483,7 +483,7 @@ operator.</p>
 <span class="kn">from</span> <span class="nn">mpi4py</span> <span class="kn">import</span> <span class="n">MPI</span>
 
 <span class="kn">from</span> <span class="nn">pylops.utils.wavelets</span> <span class="kn">import</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.utils.wavelets.ricker.html#pylops.utils.wavelets.ricker" title="pylops.utils.wavelets.ricker" class="sphx-glr-backref-module-pylops-utils-wavelets sphx-glr-backref-type-py-function"><span class="n">ricker</span></a>
-<span class="kn">from</span> <span class="nn">pylops.basicoperators</span> <span class="kn">import</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.SecondDerivative.html#pylops.SecondDerivative" title="pylops.SecondDerivative" class="sphx-glr-backref-module-pylops sphx-glr-backref-type-py-class"><span class="n">SecondDerivative</span></a><span class="p">,</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.Transpose.html#pylops.Transpose" title="pylops.Transpose" class="sphx-glr-backref-module-pylops sphx-glr-backref-type-py-class"><span class="n">Transpose</span></a><span class="p">,</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.VStack.html#pylops.VStack" title="pylops.VStack" class="sphx-glr-backref-module-pylops sphx-glr-backref-type-py-class"><span class="n">VStack</span></a>
+<span class="kn">from</span> <span class="nn">pylops.basicoperators</span> <span class="kn">import</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.Transpose.html#pylops.Transpose" title="pylops.Transpose" class="sphx-glr-backref-module-pylops sphx-glr-backref-type-py-class"><span class="n">Transpose</span></a>
 <span class="kn">from</span> <span class="nn">pylops.avo.poststack</span> <span class="kn">import</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.avo.poststack.PoststackLinearModelling.html#pylops.avo.poststack.PoststackLinearModelling" title="pylops.avo.poststack.PoststackLinearModelling" class="sphx-glr-backref-module-pylops-avo-poststack sphx-glr-backref-type-py-function"><span class="n">PoststackLinearModelling</span></a>
 
 <span class="kn">import</span> <span class="nn">pylops_mpi</span>
@@ -559,22 +559,47 @@ operator.</p>
 <p>We perform 2 different kinds of inversions:</p>
 <ul class="simple">
 <li><p>Inversion calculated iteratively using the <a class="reference internal" href="../api/generated/pylops_mpi.optimization.cls_basic.CGLS.html#pylops_mpi.optimization.cls_basic.CGLS" title="pylops_mpi.optimization.cls_basic.CGLS"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.optimization.cls_basic.CGLS</span></code></a> solver.</p></li>
-<li><p>Inversion with spatial regularization along the non-distributed dimensions (x and z).
-This requires extending the operator and data of each rank in the following manner</p></li>
+<li><p>Inversion with spatial regularization using normal equations along all three dimensions (x, y and z).
+This requires extending the operator and data in the following manner:</p></li>
 </ul>
 <blockquote>
 <div><div class="math notranslate nohighlight">
-\[\begin{split}\begin{bmatrix}
-    \mathbf{d}_{i}  \\
-    \mathbf{0}
-\end{bmatrix} =
+\[\begin{split}\mathbf{NormEqOp} =
 \begin{bmatrix}
-    \mathbf{G}_i \\
-    \epsilon \mathbf{D}_{2,x} \\
-    \epsilon \mathbf{D}_{2,z} \\
-\end{bmatrix} \mathbf{ai}_{i}\end{split}\]</div>
+     \mathbf{G}_1  &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{0}  \\
+     \mathbf{0}    &amp; \mathbf{G}_2 &amp;  \ldots &amp;  \mathbf{0}  \\
+     \vdots        &amp; \vdots       &amp;  \ddots &amp;  \vdots         \\
+     \mathbf{0}    &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{G}_N
+\end{bmatrix}
+\begin{bmatrix}
+     \mathbf{G}_1^H  &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{0}  \\
+     \mathbf{0}    &amp; \mathbf{G}_2^H &amp;  \ldots &amp;  \mathbf{0}  \\
+     \vdots        &amp; \vdots       &amp;  \ddots &amp;  \vdots         \\
+     \mathbf{0}    &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{G}_N^H
+\end{bmatrix} + \epsilon \mathbf{LapOp} \\\end{split}\]</div>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{bmatrix}
+      \mathbf{d}_{1}^{Norm}  \\
+      \mathbf{d}_{2}^{Norm}  \\
+      \vdots     \\
+      \mathbf{d}_{N}^{Norm}
+ \end{bmatrix} =
+ \begin{bmatrix}
+      \mathbf{G}_1^H  &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{0}  \\
+      \mathbf{0}    &amp; \mathbf{G}_2^H &amp;  \ldots &amp;  \mathbf{0}  \\
+      \vdots        &amp; \vdots       &amp;  \ddots &amp;  \vdots         \\
+      \mathbf{0}    &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{G}_N^H
+ \end{bmatrix}
+ \begin{bmatrix}
+      \mathbf{d}_{1}  \\
+      \mathbf{d}_{2}  \\
+      \vdots     \\
+      \mathbf{d}_{N}
+ \end{bmatrix}\end{split}\]</div>
 </div></blockquote>
-<p>where <span class="math notranslate nohighlight">\(\mathbf{D}_{2,x}\)</span> and <span class="math notranslate nohighlight">\(\mathbf{D}_{2,z}\)</span> apply the second derivative over the z- and x-axes.</p>
+<p>where <span class="math notranslate nohighlight">\(\mathbf{LapOp}\)</span> is the <a class="reference internal" href="../api/generated/pylops_mpi.basicoperators.MPILaplacian.html#pylops_mpi.basicoperators.MPILaplacian" title="pylops_mpi.basicoperators.MPILaplacian"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPILaplacian</span></code></a> operator
+which is used to apply second derivative along all three axes, <span class="math notranslate nohighlight">\(\mathbf{NormEqOp}\)</span> is the regularized operator
+which operates using normal equations and <span class="math notranslate nohighlight">\(\mathbf{d}^{Norm}\)</span> is the data of the operator used for inversion.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Inversion using CGLS solver</span>
 <span class="n">minv3d_iter_dist</span> <span class="o">=</span> <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">optimization</span><span class="o">.</span><span class="n">basic</span><span class="o">.</span><span class="n">cgls</span><span class="p">(</span><span class="n">BDiag</span><span class="p">,</span> <span class="n">d_dist</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">mback3d_dist</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">minv3d_iter</span></a> <span class="o">=</span> <span class="n">minv3d_iter_dist</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ny</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nx</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nz</span></a><span class="p">))</span>
@@ -616,61 +641,58 @@ damp = 0.000000e+00     tol = 1.000000e-04      niter = 100
     99        6.1544e-01         6.5026e-01     6.5026e-01
    100        6.1561e-01         6.4212e-01     6.4212e-01
 
-Iterations = 100        Total time (s) = 56.86
+Iterations = 100        Total time (s) = 66.08
 -----------------------------------------------------------------
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Regularized inversion</span>
-<a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">epsR</span></a> <span class="o">=</span> <span class="mf">1e1</span>
-<a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.SecondDerivative.html#pylops.SecondDerivative" title="pylops.SecondDerivative" class="sphx-glr-backref-module-pylops sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Dz</span></a> <span class="o">=</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.SecondDerivative.html#pylops.SecondDerivative" title="pylops.SecondDerivative" class="sphx-glr-backref-module-pylops sphx-glr-backref-type-py-class"><span class="n">SecondDerivative</span></a><span class="p">((</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ny_i</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nx</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nz</span></a><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-<a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.SecondDerivative.html#pylops.SecondDerivative" title="pylops.SecondDerivative" class="sphx-glr-backref-module-pylops sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Dx</span></a> <span class="o">=</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.SecondDerivative.html#pylops.SecondDerivative" title="pylops.SecondDerivative" class="sphx-glr-backref-module-pylops sphx-glr-backref-type-py-class"><span class="n">SecondDerivative</span></a><span class="p">((</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ny_i</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nx</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nz</span></a><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">2</span><span class="p">)</span>
-
-<span class="n">d_dist_reg</span> <span class="o">=</span> <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="mi">3</span> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ny</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nx</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nz</span></a><span class="p">)</span>
-<span class="n">d_dist_reg</span><span class="p">[:</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ny_i</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nz</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nx</span></a><span class="p">]</span> <span class="o">=</span> <span class="n">d_dist</span><span class="o">.</span><span class="n">local_array</span>
-<span class="n">d_dist_reg</span><span class="p">[</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ny_i</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nz</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nx</span></a><span class="p">:]</span> <span class="o">=</span> <span class="mf">0.</span>
-<span class="n">BDiag_reg</span> <span class="o">=</span> <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">basicoperators</span><span class="o">.</span><span class="n">MPIBlockDiag</span><span class="p">(</span><span class="n">ops</span><span class="o">=</span><span class="p">[</span><a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.VStack.html#pylops.VStack" title="pylops.VStack" class="sphx-glr-backref-module-pylops sphx-glr-backref-type-py-class"><span class="n">VStack</span></a><span class="p">([</span><a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.Transpose.html#pylops.Transpose" title="pylops.Transpose" class="sphx-glr-backref-module-pylops sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Top</span></a><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="n">PPop</span> <span class="o">@</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.Transpose.html#pylops.Transpose" title="pylops.Transpose" class="sphx-glr-backref-module-pylops sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Top</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">epsR</span></a> <span class="o">*</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.SecondDerivative.html#pylops.SecondDerivative" title="pylops.SecondDerivative" class="sphx-glr-backref-module-pylops sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Dx</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">epsR</span></a> <span class="o">*</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.SecondDerivative.html#pylops.SecondDerivative" title="pylops.SecondDerivative" class="sphx-glr-backref-module-pylops sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">Dz</span></a><span class="p">]),</span> <span class="p">])</span>
-<span class="n">minv3d_reg_dist</span> <span class="o">=</span> <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">optimization</span><span class="o">.</span><span class="n">basic</span><span class="o">.</span><span class="n">cgls</span><span class="p">(</span><span class="n">BDiag_reg</span><span class="p">,</span> <span class="n">d_dist_reg</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">mback3d_dist</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Regularized inversion with normal equations</span>
+<a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">epsR</span></a> <span class="o">=</span> <span class="mf">1e2</span>
+<span class="n">LapOp</span> <span class="o">=</span> <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">MPILaplacian</span><span class="p">(</span><span class="n">dims</span><span class="o">=</span><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ny</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nx</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nz</span></a><span class="p">),</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                                <span class="n">sampling</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">BDiag</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+<span class="n">NormEqOp</span> <span class="o">=</span> <span class="n">BDiag</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="n">BDiag</span> <span class="o">+</span> <a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">epsR</span></a> <span class="o">*</span> <span class="n">LapOp</span>
+<span class="n">dnorm_dist</span> <span class="o">=</span> <span class="n">BDiag</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="n">d_dist</span>
+<span class="n">minv3d_reg_dist</span> <span class="o">=</span> <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">optimization</span><span class="o">.</span><span class="n">basic</span><span class="o">.</span><span class="n">cg</span><span class="p">(</span><span class="n">NormEqOp</span><span class="p">,</span> <span class="n">dnorm_dist</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">mback3d_dist</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">minv3d_reg</span></a> <span class="o">=</span> <span class="n">minv3d_reg_dist</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ny</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nx</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nz</span></a><span class="p">))</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>CGLS
------------------------------------------------------------------
-The Operator Op has 8811000 rows and 2937000 cols
-damp = 0.000000e+00     tol = 1.000000e-04      niter = 100
------------------------------------------------------------------
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>CG
+-------------------------------------------------------
+The Operator Op has 2937000 rows and 2937000 cols
+tol = 1.000000e-04      niter = 100
+-------------------------------------------------------
 
-    Itn          x[0]              r1norm         r2norm
-     1        6.1626e-01         1.7387e+02     1.7387e+02
-     2        6.1732e-01         1.5698e+02     1.5698e+02
-     3        6.1774e-01         1.5201e+02     1.5201e+02
-     4        6.1810e-01         1.4959e+02     1.4959e+02
-     5        6.1840e-01         1.4769e+02     1.4769e+02
-     6        6.1885e-01         1.4536e+02     1.4536e+02
-     7        6.1928e-01         1.4376e+02     1.4376e+02
-     8        6.1984e-01         1.4191e+02     1.4191e+02
-     9        6.2025e-01         1.4066e+02     1.4066e+02
-    10        6.2072e-01         1.3944e+02     1.3944e+02
-    11        6.2115e-01         1.3849e+02     1.3849e+02
-    21        6.2618e-01         1.3016e+02     1.3016e+02
-    31        6.2865e-01         1.2692e+02     1.2692e+02
-    41        6.2964e-01         1.2534e+02     1.2534e+02
-    51        6.2965e-01         1.2442e+02     1.2442e+02
-    61        6.2867e-01         1.2394e+02     1.2394e+02
-    71        6.2654e-01         1.2361e+02     1.2361e+02
-    81        6.2387e-01         1.2337e+02     1.2337e+02
-    91        6.2163e-01         1.2319e+02     1.2319e+02
-    92        6.2145e-01         1.2318e+02     1.2318e+02
-    93        6.2129e-01         1.2316e+02     1.2316e+02
-    94        6.2116e-01         1.2315e+02     1.2315e+02
-    95        6.2103e-01         1.2313e+02     1.2313e+02
-    96        6.2091e-01         1.2312e+02     1.2312e+02
-    97        6.2078e-01         1.2310e+02     1.2310e+02
-    98        6.2066e-01         1.2309e+02     1.2309e+02
-    99        6.2054e-01         1.2308e+02     1.2308e+02
-   100        6.2043e-01         1.2306e+02     1.2306e+02
+    Itn           x[0]              r2norm
+     1         6.1659e-01         1.2517e+03
+     2         6.1704e-01         1.9396e+03
+     3         6.1728e-01         2.5093e+03
+     4         6.1744e-01         2.9996e+03
+     5         6.1757e-01         3.4349e+03
+     6         6.1766e-01         3.8297e+03
+     7         6.1774e-01         4.1932e+03
+     8         6.1781e-01         4.5317e+03
+     9         6.1787e-01         4.8497e+03
+    10         6.1792e-01         5.1504e+03
+    11         6.1797e-01         5.4363e+03
+    21         6.1828e-01         7.7780e+03
+    31         6.1846e-01         9.5963e+03
+    41         6.1859e-01         1.1136e+04
+    51         6.1869e-01         1.2496e+04
+    61         6.1877e-01         1.3727e+04
+    71         6.1884e-01         1.4861e+04
+    81         6.1889e-01         1.5917e+04
+    91         6.1895e-01         1.6909e+04
+    92         6.1895e-01         1.7005e+04
+    93         6.1896e-01         1.7101e+04
+    94         6.1896e-01         1.7196e+04
+    95         6.1897e-01         1.7290e+04
+    96         6.1897e-01         1.7385e+04
+    97         6.1898e-01         1.7478e+04
+    98         6.1898e-01         1.7571e+04
+    99         6.1898e-01         1.7664e+04
+   100         6.1899e-01         1.7756e+04
 
-Iterations = 100        Total time (s) = 139.00
------------------------------------------------------------------
+Iterations = 100        Total time (s) = 83.95
+-------------------------------------------------------
 </pre></div>
 </div>
 <p>Finally, we display the modeling and inversion results</p>
@@ -742,7 +764,7 @@ Iterations = 100        Total time (s) = 139.00
 Smooth Distr == Local True
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (3 minutes 21.158 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (2 minutes 36.537 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-plot-post-stack-inversion-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/349e24ddf4c2a9f9f1903b6c1d4ed115/plot_post_stack_inversion.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_post_stack_inversion.py</span></code></a></p>
