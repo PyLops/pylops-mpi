@@ -6,10 +6,10 @@
 
 Computation times
 =================
-**02:41.465** total execution time for **tutorials** files:
+**02:47.415** total execution time for **tutorials** files:
 
 +-------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_tutorials_plot_post_stack_inversion.py` (``plot_post_stack_inversion.py``) | 02:36.537 | 0.0 MB |
+| :ref:`sphx_glr_tutorials_plot_post_stack_inversion.py` (``plot_post_stack_inversion.py``) | 02:42.077 | 0.0 MB |
 +-------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_tutorials_plot_lsm.py` (``plot_lsm.py``)                                   | 00:04.928 | 0.0 MB |
+| :ref:`sphx_glr_tutorials_plot_lsm.py` (``plot_lsm.py``)                                   | 00:05.337 | 0.0 MB |
 +-------------------------------------------------------------------------------------------+-----------+--------+
