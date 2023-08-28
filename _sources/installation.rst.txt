@@ -60,11 +60,12 @@ This will create and activate an environment called ``pylops_mpi``, with all req
 
 Pip
 ===
-If you prefer a ``pip`` installation, we provide the following command
+If you prefer a ``pip`` installation, simply type the following command in your terminal to install the
+PyPI distribution:
 
 .. code-block:: bash
 
-   >> make install
+   >> pip install pylops-mpi
 
 When installing via pip, only required dependencies are installed.
 Note that, differently from the  ``conda`` command, the above **will not** create a virtual environment.
