@@ -1,6 +1,5 @@
 .idea/
 __pycache__/
-build/
 
 # setuptools_scm generated
 pylops_mpi/version.py
@@ -9,8 +8,10 @@ pylops_mpi/version.py
 venv/
 
 # Build
+build/
 pylops_mpi.egg-info/
 .eggs/
+dist/
 
 # Documentation
 docs/source/gallery
