@@ -23,9 +23,9 @@ and running the following command:
    ```
  3. **Install pylops-mpi**: Once MPI is installed and verified, you can proceed to install `pylops-mpi`. 
    
-      You can install with `make` and `pip`:
+      You can install with `pip`:
       ```
-      make install
+      pip install pylops-mpi
       ```
    
       You can install with `make` and `conda`:
