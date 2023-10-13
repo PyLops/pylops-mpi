@@ -41,4 +41,4 @@ dynamic = ["version"]
 exclude = ["pytests"]
 
 [tool.setuptools_scm]
-version_file = "pylops-mpi/version.py"
+version_file = "pylops_mpi/version.py"
