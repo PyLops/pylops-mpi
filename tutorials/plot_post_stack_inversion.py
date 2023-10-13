@@ -3,7 +3,7 @@ Post Stack Inversion - 3D
 =========================
 This tutorial demonstrates the implementation of a distributed 3D Post-stack inversion. It consists
 of a first part showing how to model a 3D synthetic post-stack seismic data from a 3D model of the
-subsurface acoustic impedence in a distributed manner, following by a second part when inversion
+subsurface acoustic impedance in a distributed manner, following by a second part when inversion
 is carried out.
 
 This tutorial builds on the :py:func:`pylops.avo.poststack.PoststackLinearModelling`
