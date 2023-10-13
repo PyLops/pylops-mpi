@@ -591,40 +591,41 @@ operator.</p>
 This requires extending the operator and data in the following manner:</p></li>
 </ul>
 <div class="math notranslate nohighlight">
-\[ \begin{align}\begin{aligned}\begin{split}\mathbf{NormEqOp} =
- \begin{bmatrix}
-       \mathbf{G}_1^H  &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{0}  \\
-       \mathbf{0}    &amp; \mathbf{G}_2^H &amp;  \ldots &amp;  \mathbf{0}  \\
-       \vdots        &amp; \vdots       &amp;  \ddots &amp;  \vdots         \\
-       \mathbf{0}    &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{G}_N^H
- \end{bmatrix}
- \begin{bmatrix}
-       \mathbf{G}_1  &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{0}  \\
-       \mathbf{0}    &amp; \mathbf{G}_2 &amp;  \ldots &amp;  \mathbf{0}  \\
-       \vdots        &amp; \vdots       &amp;  \ddots &amp;  \vdots         \\
-       \mathbf{0}    &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{G}_N
- \end{bmatrix} + \epsilon \mathbf{LapOp} \\\end{split}\\\begin{split}.. math::
+\[\begin{split}\mathbf{N} =
 \begin{bmatrix}
-       \mathbf{d}_{1}^{Norm}  \\
-       \mathbf{d}_{2}^{Norm}  \\
-       \vdots     \\
-       \mathbf{d}_{N}^{Norm}
- \end{bmatrix} =
- \begin{bmatrix}
-       \mathbf{G}_1^H  &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{0}  \\
-       \mathbf{0}    &amp; \mathbf{G}_2^H &amp;  \ldots &amp;  \mathbf{0}  \\
-       \vdots        &amp; \vdots       &amp;  \ddots &amp;  \vdots         \\
-       \mathbf{0}    &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{G}_N^H
- \end{bmatrix}
- \begin{bmatrix}
-       \mathbf{d}_{1}  \\
-       \mathbf{d}_{2}  \\
-       \vdots     \\
-       \mathbf{d}_{N}
- \end{bmatrix}\end{split}\end{aligned}\end{align} \]</div>
-<p>where <span class="math notranslate nohighlight">\(\mathbf{LapOp}\)</span> is the <a class="reference internal" href="../api/generated/pylops_mpi.basicoperators.MPILaplacian.html#pylops_mpi.basicoperators.MPILaplacian" title="pylops_mpi.basicoperators.MPILaplacian"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPILaplacian</span></code></a> operator
-which is used to apply second derivative along all three axes, <span class="math notranslate nohighlight">\(\mathbf{NormEqOp}\)</span> is the regularized operator
-which operates using normal equations and <span class="math notranslate nohighlight">\(\mathbf{d}^{Norm}\)</span> is the data of the operator used for inversion.</p>
+      \mathbf{G}_1^H  &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{0}  \\
+      \mathbf{0}    &amp; \mathbf{G}_2^H &amp;  \ldots &amp;  \mathbf{0}  \\
+      \vdots        &amp; \vdots       &amp;  \ddots &amp;  \vdots         \\
+      \mathbf{0}    &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{G}_N^H
+\end{bmatrix}
+\begin{bmatrix}
+      \mathbf{G}_1  &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{0}  \\
+      \mathbf{0}    &amp; \mathbf{G}_2 &amp;  \ldots &amp;  \mathbf{0}  \\
+      \vdots        &amp; \vdots       &amp;  \ddots &amp;  \vdots         \\
+      \mathbf{0}    &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{G}_N
+\end{bmatrix} + \epsilon \mathbf{L}^H \mathbf{L} \\\end{split}\]</div>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{bmatrix}
+      \mathbf{d}_{1}^{Norm}  \\
+      \mathbf{d}_{2}^{Norm}  \\
+      \vdots     \\
+      \mathbf{d}_{N}^{Norm}
+\end{bmatrix} =
+\begin{bmatrix}
+      \mathbf{G}_1^H  &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{0}  \\
+      \mathbf{0}    &amp; \mathbf{G}_2^H &amp;  \ldots &amp;  \mathbf{0}  \\
+      \vdots        &amp; \vdots       &amp;  \ddots &amp;  \vdots         \\
+      \mathbf{0}    &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{G}_N^H
+\end{bmatrix}
+\begin{bmatrix}
+      \mathbf{d}_{1}  \\
+      \mathbf{d}_{2}  \\
+      \vdots     \\
+      \mathbf{d}_{N}
+\end{bmatrix}\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mathbf{L}\)</span> is the <a class="reference internal" href="../api/generated/pylops_mpi.basicoperators.MPILaplacian.html#pylops_mpi.basicoperators.MPILaplacian" title="pylops_mpi.basicoperators.MPILaplacian"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPILaplacian</span></code></a> operator
+which is used to apply second derivative along all three axes, <span class="math notranslate nohighlight">\(\mathbf{N}\)</span> is an operator computing the
+normal equations, and <span class="math notranslate nohighlight">\(\mathbf{d}^{Norm}\)</span> is the data of the normal equation operator used for inversion.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Inversion using CGLS solver</span>
 <span class="n">minv3d_iter_dist</span> <span class="o">=</span> <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">optimization</span><span class="o">.</span><span class="n">basic</span><span class="o">.</span><span class="n">cgls</span><span class="p">(</span><span class="n">BDiag</span><span class="p">,</span> <span class="n">d_dist</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">mback3d_dist</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">minv3d_iter</span></a> <span class="o">=</span> <span class="n">minv3d_iter_dist</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ny</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nx</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nz</span></a><span class="p">))</span>
@@ -666,7 +667,7 @@ damp = 0.000000e+00     tol = 1.000000e-04      niter = 100
     99        6.1544e-01         6.5026e-01     6.5026e-01
    100        6.1561e-01         6.4212e-01     6.4212e-01
 
-Iterations = 100        Total time (s) = 57.97
+Iterations = 100        Total time (s) = 40.44
 -----------------------------------------------------------------
 </pre></div>
 </div>
@@ -716,7 +717,7 @@ tol = 1.000000e-04      niter = 100
     99         6.1898e-01         1.7664e+04
    100         6.1899e-01         1.7756e+04
 
-Iterations = 100        Total time (s) = 69.11
+Iterations = 100        Total time (s) = 49.18
 -------------------------------------------------------
 </pre></div>
 </div>
@@ -789,7 +790,7 @@ Iterations = 100        Total time (s) = 69.11
 Smooth Distr == Local True
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (2 minutes 11.968 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (1 minutes 33.553 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-plot-post-stack-inversion-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/349e24ddf4c2a9f9f1903b6c1d4ed115/plot_post_stack_inversion.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_post_stack_inversion.py</span></code></a></p>
