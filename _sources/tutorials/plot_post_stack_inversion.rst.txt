@@ -284,7 +284,7 @@ which operates using normal equations and :math:`\mathbf{d}^{Norm}` is the data 
         99        6.1544e-01         6.5026e-01     6.5026e-01
        100        6.1561e-01         6.4212e-01     6.4212e-01
 
-    Iterations = 100        Total time (s) = 58.57
+    Iterations = 100        Total time (s) = 51.58
     -----------------------------------------------------------------
 
 
@@ -349,7 +349,7 @@ which operates using normal equations and :math:`\mathbf{d}^{Norm}` is the data 
         99         6.1898e-01         1.7664e+04
        100         6.1899e-01         1.7756e+04
 
-    Iterations = 100        Total time (s) = 71.06
+    Iterations = 100        Total time (s) = 62.27
     -------------------------------------------------------
 
 
@@ -449,7 +449,7 @@ Finally, we display the modeling and inversion results
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (2 minutes 14.296 seconds)
+   **Total running time of the script:** (1 minutes 57.939 seconds)
 
 
 .. _sphx_glr_download_tutorials_plot_post_stack_inversion.py:
