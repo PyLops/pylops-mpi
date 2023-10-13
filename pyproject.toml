@@ -1,0 +1,44 @@
+[build-system]
+requires = [
+    "setuptools >= 65",
+    "setuptools_scm[toml]",
+    "wheel",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pylops-mpi"
+description = "Python library implementing linear operators with MPI"
+readme = "README.md"
+authors = [
+    {name = "Rohan Babbar", email = "Rohan Babbar"},
+    {name = "Matteo Ravasi", email = "matteoravasi@gmail.com"},
+]
+license = {file = "LICENSE"}
+keywords = ["algebra", "inverse problems", "large-scale optimization", "distributed computing",]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Scientific/Engineering : Mathematics",
+]
+dependencies = [
+    "numpy >= 1.15.0",
+    "scipy >= 1.4.0",
+    "pylops >= 2.0",
+    "mpi4py",
+    "matplotlib",
+]
+dynamic = ["version"]
+
+[tool.setuptools.packages.find]
+exclude = ["pytests"]
+
+[tool.setuptools_scm]
+version_file = "pylops-mpi/version.py"
