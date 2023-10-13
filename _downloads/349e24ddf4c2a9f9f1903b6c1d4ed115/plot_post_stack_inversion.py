@@ -3,7 +3,7 @@ Post Stack Inversion - 3D
 =========================
 This tutorial demonstrates the implementation of a distributed 3D Post-stack inversion. It consists
 of a first part showing how to model a 3D synthetic post-stack seismic data from a 3D model of the
-subsurface acoustic impedence in a distributed manner, following by a second part when inversion
+subsurface acoustic impedance in a distributed manner, following by a second part when inversion
 is carried out.
 
 This tutorial builds on the :py:func:`pylops.avo.poststack.PoststackLinearModelling`
@@ -136,40 +136,40 @@ d_0 = d_dist.asarray().reshape((ny, nx, nz))
 # * Inversion with spatial regularization using normal equations along all three dimensions (x, y and z).
 #   This requires extending the operator and data in the following manner:
 #
-#  .. math::
-#    \mathbf{NormEqOp} =
-#    \begin{bmatrix}
+# .. math::
+#   \mathbf{NormEqOp} =
+#   \begin{bmatrix}
+#         \mathbf{G}_1^H  & \mathbf{0}   &  \ldots &  \mathbf{0}  \\
+#         \mathbf{0}    & \mathbf{G}_2^H &  \ldots &  \mathbf{0}  \\
+#         \vdots        & \vdots       &  \ddots &  \vdots         \\
+#         \mathbf{0}    & \mathbf{0}   &  \ldots &  \mathbf{G}_N^H
+#   \end{bmatrix}
+#   \begin{bmatrix}
 #         \mathbf{G}_1  & \mathbf{0}   &  \ldots &  \mathbf{0}  \\
 #         \mathbf{0}    & \mathbf{G}_2 &  \ldots &  \mathbf{0}  \\
 #         \vdots        & \vdots       &  \ddots &  \vdots         \\
 #         \mathbf{0}    & \mathbf{0}   &  \ldots &  \mathbf{G}_N
-#    \end{bmatrix}
-#    \begin{bmatrix}
-#         \mathbf{G}_1^H  & \mathbf{0}   &  \ldots &  \mathbf{0}  \\
-#         \mathbf{0}    & \mathbf{G}_2^H &  \ldots &  \mathbf{0}  \\
-#         \vdots        & \vdots       &  \ddots &  \vdots         \\
-#         \mathbf{0}    & \mathbf{0}   &  \ldots &  \mathbf{G}_N^H
-#    \end{bmatrix} + \epsilon \mathbf{LapOp} \\
+#   \end{bmatrix} + \epsilon \mathbf{LapOp} \\
 #
 #  .. math::
-#   \begin{bmatrix}
+#  \begin{bmatrix}
 #         \mathbf{d}_{1}^{Norm}  \\
 #         \mathbf{d}_{2}^{Norm}  \\
 #         \vdots     \\
 #         \mathbf{d}_{N}^{Norm}
-#    \end{bmatrix} =
-#    \begin{bmatrix}
+#   \end{bmatrix} =
+#   \begin{bmatrix}
 #         \mathbf{G}_1^H  & \mathbf{0}   &  \ldots &  \mathbf{0}  \\
 #         \mathbf{0}    & \mathbf{G}_2^H &  \ldots &  \mathbf{0}  \\
 #         \vdots        & \vdots       &  \ddots &  \vdots         \\
 #         \mathbf{0}    & \mathbf{0}   &  \ldots &  \mathbf{G}_N^H
-#    \end{bmatrix}
-#    \begin{bmatrix}
+#   \end{bmatrix}
+#   \begin{bmatrix}
 #         \mathbf{d}_{1}  \\
 #         \mathbf{d}_{2}  \\
 #         \vdots     \\
 #         \mathbf{d}_{N}
-#    \end{bmatrix}
+#   \end{bmatrix}
 #
 # where :math:`\mathbf{LapOp}` is the :py:class:`pylops_mpi.basicoperators.MPILaplacian` operator
 # which is used to apply second derivative along all three axes, :math:`\mathbf{NormEqOp}` is the regularized operator

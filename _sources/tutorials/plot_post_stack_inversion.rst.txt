@@ -22,7 +22,7 @@ Post Stack Inversion - 3D
 =========================
 This tutorial demonstrates the implementation of a distributed 3D Post-stack inversion. It consists
 of a first part showing how to model a 3D synthetic post-stack seismic data from a 3D model of the
-subsurface acoustic impedence in a distributed manner, following by a second part when inversion
+subsurface acoustic impedance in a distributed manner, following by a second part when inversion
 is carried out.
 
 This tutorial builds on the :py:func:`pylops.avo.poststack.PoststackLinearModelling`
@@ -192,40 +192,40 @@ We perform 2 different kinds of inversions:
 * Inversion with spatial regularization using normal equations along all three dimensions (x, y and z).
   This requires extending the operator and data in the following manner:
 
- .. math::
-   \mathbf{NormEqOp} =
-   \begin{bmatrix}
+.. math::
+  \mathbf{NormEqOp} =
+  \begin{bmatrix}
+        \mathbf{G}_1^H  & \mathbf{0}   &  \ldots &  \mathbf{0}  \\
+        \mathbf{0}    & \mathbf{G}_2^H &  \ldots &  \mathbf{0}  \\
+        \vdots        & \vdots       &  \ddots &  \vdots         \\
+        \mathbf{0}    & \mathbf{0}   &  \ldots &  \mathbf{G}_N^H
+  \end{bmatrix}
+  \begin{bmatrix}
         \mathbf{G}_1  & \mathbf{0}   &  \ldots &  \mathbf{0}  \\
         \mathbf{0}    & \mathbf{G}_2 &  \ldots &  \mathbf{0}  \\
         \vdots        & \vdots       &  \ddots &  \vdots         \\
         \mathbf{0}    & \mathbf{0}   &  \ldots &  \mathbf{G}_N
-   \end{bmatrix}
-   \begin{bmatrix}
-        \mathbf{G}_1^H  & \mathbf{0}   &  \ldots &  \mathbf{0}  \\
-        \mathbf{0}    & \mathbf{G}_2^H &  \ldots &  \mathbf{0}  \\
-        \vdots        & \vdots       &  \ddots &  \vdots         \\
-        \mathbf{0}    & \mathbf{0}   &  \ldots &  \mathbf{G}_N^H
-   \end{bmatrix} + \epsilon \mathbf{LapOp} \\
+  \end{bmatrix} + \epsilon \mathbf{LapOp} \\
 
  .. math::
-  \begin{bmatrix}
+ \begin{bmatrix}
         \mathbf{d}_{1}^{Norm}  \\
         \mathbf{d}_{2}^{Norm}  \\
         \vdots     \\
         \mathbf{d}_{N}^{Norm}
-   \end{bmatrix} =
-   \begin{bmatrix}
+  \end{bmatrix} =
+  \begin{bmatrix}
         \mathbf{G}_1^H  & \mathbf{0}   &  \ldots &  \mathbf{0}  \\
         \mathbf{0}    & \mathbf{G}_2^H &  \ldots &  \mathbf{0}  \\
         \vdots        & \vdots       &  \ddots &  \vdots         \\
         \mathbf{0}    & \mathbf{0}   &  \ldots &  \mathbf{G}_N^H
-   \end{bmatrix}
-   \begin{bmatrix}
+  \end{bmatrix}
+  \begin{bmatrix}
         \mathbf{d}_{1}  \\
         \mathbf{d}_{2}  \\
         \vdots     \\
         \mathbf{d}_{N}
-   \end{bmatrix}
+  \end{bmatrix}
 
 where :math:`\mathbf{LapOp}` is the :py:class:`pylops_mpi.basicoperators.MPILaplacian` operator
 which is used to apply second derivative along all three axes, :math:`\mathbf{NormEqOp}` is the regularized operator
@@ -284,7 +284,7 @@ which operates using normal equations and :math:`\mathbf{d}^{Norm}` is the data 
         99        6.1544e-01         6.5026e-01     6.5026e-01
        100        6.1561e-01         6.4212e-01     6.4212e-01
 
-    Iterations = 100        Total time (s) = 51.58
+    Iterations = 100        Total time (s) = 57.97
     -----------------------------------------------------------------
 
 
@@ -349,7 +349,7 @@ which operates using normal equations and :math:`\mathbf{d}^{Norm}` is the data 
         99         6.1898e-01         1.7664e+04
        100         6.1899e-01         1.7756e+04
 
-    Iterations = 100        Total time (s) = 62.27
+    Iterations = 100        Total time (s) = 69.11
     -------------------------------------------------------
 
 
@@ -449,7 +449,7 @@ Finally, we display the modeling and inversion results
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (1 minutes 57.939 seconds)
+   **Total running time of the script:** (2 minutes 11.968 seconds)
 
 
 .. _sphx_glr_download_tutorials_plot_post_stack_inversion.py:

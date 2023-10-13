@@ -6,16 +6,16 @@
 
 Computation times
 =================
-**00:03.160** total execution time for **gallery** files:
+**00:03.921** total execution time for **gallery** files:
 
 +-----------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_gallery_plot_distributed_array.py` (``plot_distributed_array.py``) | 00:01.360 | 0.0 MB |
+| :ref:`sphx_glr_gallery_plot_distributed_array.py` (``plot_distributed_array.py``) | 00:01.705 | 0.0 MB |
 +-----------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_gallery_plot_derivative.py` (``plot_derivative.py``)               | 00:00.813 | 0.0 MB |
+| :ref:`sphx_glr_gallery_plot_derivative.py` (``plot_derivative.py``)               | 00:01.008 | 0.0 MB |
 +-----------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_gallery_plot_stacking.py` (``plot_stacking.py``)                   | 00:00.452 | 0.0 MB |
+| :ref:`sphx_glr_gallery_plot_stacking.py` (``plot_stacking.py``)                   | 00:00.545 | 0.0 MB |
 +-----------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_gallery_plot_mpilinop.py` (``plot_mpilinop.py``)                   | 00:00.357 | 0.0 MB |
+| :ref:`sphx_glr_gallery_plot_mpilinop.py` (``plot_mpilinop.py``)                   | 00:00.444 | 0.0 MB |
 +-----------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_gallery_plot_cgls.py` (``plot_cgls.py``)                           | 00:00.178 | 0.0 MB |
+| :ref:`sphx_glr_gallery_plot_cgls.py` (``plot_cgls.py``)                           | 00:00.219 | 0.0 MB |
 +-----------------------------------------------------------------------------------+-----------+--------+

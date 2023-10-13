@@ -469,7 +469,7 @@ to download the full example code</p>
 <span id="sphx-glr-tutorials-plot-post-stack-inversion-py"></span><h1>Post Stack Inversion - 3D<a class="headerlink" href="#post-stack-inversion-3d" title="Link to this heading">#</a></h1>
 <p>This tutorial demonstrates the implementation of a distributed 3D Post-stack inversion. It consists
 of a first part showing how to model a 3D synthetic post-stack seismic data from a 3D model of the
-subsurface acoustic impedence in a distributed manner, following by a second part when inversion
+subsurface acoustic impedance in a distributed manner, following by a second part when inversion
 is carried out.</p>
 <p>This tutorial builds on the <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.avo.poststack.PoststackLinearModelling.html#pylops.avo.poststack.PoststackLinearModelling" title="(in PyLops v2.1.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops.avo.poststack.PoststackLinearModelling</span></code></a>
 operator to model 1d post-stack seismic traces 1d profiles of the subsurface acoustic impedence
@@ -590,41 +590,38 @@ operator.</p>
 <li><p>Inversion with spatial regularization using normal equations along all three dimensions (x, y and z).
 This requires extending the operator and data in the following manner:</p></li>
 </ul>
-<blockquote>
-<div><div class="math notranslate nohighlight">
-\[\begin{split}\mathbf{NormEqOp} =
-\begin{bmatrix}
-     \mathbf{G}_1  &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{0}  \\
-     \mathbf{0}    &amp; \mathbf{G}_2 &amp;  \ldots &amp;  \mathbf{0}  \\
-     \vdots        &amp; \vdots       &amp;  \ddots &amp;  \vdots         \\
-     \mathbf{0}    &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{G}_N
-\end{bmatrix}
-\begin{bmatrix}
-     \mathbf{G}_1^H  &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{0}  \\
-     \mathbf{0}    &amp; \mathbf{G}_2^H &amp;  \ldots &amp;  \mathbf{0}  \\
-     \vdots        &amp; \vdots       &amp;  \ddots &amp;  \vdots         \\
-     \mathbf{0}    &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{G}_N^H
-\end{bmatrix} + \epsilon \mathbf{LapOp} \\\end{split}\]</div>
 <div class="math notranslate nohighlight">
-\[\begin{split}\begin{bmatrix}
-      \mathbf{d}_{1}^{Norm}  \\
-      \mathbf{d}_{2}^{Norm}  \\
-      \vdots     \\
-      \mathbf{d}_{N}^{Norm}
- \end{bmatrix} =
+\[ \begin{align}\begin{aligned}\begin{split}\mathbf{NormEqOp} =
  \begin{bmatrix}
-      \mathbf{G}_1^H  &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{0}  \\
-      \mathbf{0}    &amp; \mathbf{G}_2^H &amp;  \ldots &amp;  \mathbf{0}  \\
-      \vdots        &amp; \vdots       &amp;  \ddots &amp;  \vdots         \\
-      \mathbf{0}    &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{G}_N^H
+       \mathbf{G}_1^H  &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{0}  \\
+       \mathbf{0}    &amp; \mathbf{G}_2^H &amp;  \ldots &amp;  \mathbf{0}  \\
+       \vdots        &amp; \vdots       &amp;  \ddots &amp;  \vdots         \\
+       \mathbf{0}    &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{G}_N^H
  \end{bmatrix}
  \begin{bmatrix}
-      \mathbf{d}_{1}  \\
-      \mathbf{d}_{2}  \\
-      \vdots     \\
-      \mathbf{d}_{N}
- \end{bmatrix}\end{split}\]</div>
-</div></blockquote>
+       \mathbf{G}_1  &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{0}  \\
+       \mathbf{0}    &amp; \mathbf{G}_2 &amp;  \ldots &amp;  \mathbf{0}  \\
+       \vdots        &amp; \vdots       &amp;  \ddots &amp;  \vdots         \\
+       \mathbf{0}    &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{G}_N
+ \end{bmatrix} + \epsilon \mathbf{LapOp} \\\end{split}\\\begin{split}.. math::
+\begin{bmatrix}
+       \mathbf{d}_{1}^{Norm}  \\
+       \mathbf{d}_{2}^{Norm}  \\
+       \vdots     \\
+       \mathbf{d}_{N}^{Norm}
+ \end{bmatrix} =
+ \begin{bmatrix}
+       \mathbf{G}_1^H  &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{0}  \\
+       \mathbf{0}    &amp; \mathbf{G}_2^H &amp;  \ldots &amp;  \mathbf{0}  \\
+       \vdots        &amp; \vdots       &amp;  \ddots &amp;  \vdots         \\
+       \mathbf{0}    &amp; \mathbf{0}   &amp;  \ldots &amp;  \mathbf{G}_N^H
+ \end{bmatrix}
+ \begin{bmatrix}
+       \mathbf{d}_{1}  \\
+       \mathbf{d}_{2}  \\
+       \vdots     \\
+       \mathbf{d}_{N}
+ \end{bmatrix}\end{split}\end{aligned}\end{align} \]</div>
 <p>where <span class="math notranslate nohighlight">\(\mathbf{LapOp}\)</span> is the <a class="reference internal" href="../api/generated/pylops_mpi.basicoperators.MPILaplacian.html#pylops_mpi.basicoperators.MPILaplacian" title="pylops_mpi.basicoperators.MPILaplacian"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPILaplacian</span></code></a> operator
 which is used to apply second derivative along all three axes, <span class="math notranslate nohighlight">\(\mathbf{NormEqOp}\)</span> is the regularized operator
 which operates using normal equations and <span class="math notranslate nohighlight">\(\mathbf{d}^{Norm}\)</span> is the data of the operator used for inversion.</p>
@@ -669,7 +666,7 @@ damp = 0.000000e+00     tol = 1.000000e-04      niter = 100
     99        6.1544e-01         6.5026e-01     6.5026e-01
    100        6.1561e-01         6.4212e-01     6.4212e-01
 
-Iterations = 100        Total time (s) = 51.58
+Iterations = 100        Total time (s) = 57.97
 -----------------------------------------------------------------
 </pre></div>
 </div>
@@ -719,7 +716,7 @@ tol = 1.000000e-04      niter = 100
     99         6.1898e-01         1.7664e+04
    100         6.1899e-01         1.7756e+04
 
-Iterations = 100        Total time (s) = 62.27
+Iterations = 100        Total time (s) = 69.11
 -------------------------------------------------------
 </pre></div>
 </div>
@@ -792,7 +789,7 @@ Iterations = 100        Total time (s) = 62.27
 Smooth Distr == Local True
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (1 minutes 57.939 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (2 minutes 11.968 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-plot-post-stack-inversion-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/349e24ddf4c2a9f9f1903b6c1d4ed115/plot_post_stack_inversion.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_post_stack_inversion.py</span></code></a></p>
