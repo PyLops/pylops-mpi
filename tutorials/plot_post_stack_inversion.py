@@ -185,7 +185,7 @@ minv3d_iter = minv3d_iter_dist.asarray().reshape((ny, nx, nz))
 epsR = 1e2
 LapOp = pylops_mpi.MPILaplacian(dims=(ny, nx, nz), axes=(0, 1, 2), weights=(1, 1, 1),
                                 sampling=(1, 1, 1), dtype=BDiag.dtype)
-NormEqOp = BDiag.H @ BDiag + epsR * LapOp
+NormEqOp = BDiag.H @ BDiag + epsR * LapOp.H @ LapOp
 dnorm_dist = BDiag.H @ d_dist
 minv3d_reg_dist = pylops_mpi.optimization.basic.cg(NormEqOp, dnorm_dist, x0=mback3d_dist, niter=100, show=True)[0]
 minv3d_reg = minv3d_reg_dist.asarray().reshape((ny, nx, nz))
