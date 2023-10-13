@@ -301,7 +301,7 @@ solver.
         99       -1.2516e-02         2.8506e+00     2.8506e+00
        100       -1.2383e-02         2.8320e+00     2.8320e+00
 
-    Iterations = 100        Total time (s) = 1.05
+    Iterations = 100        Total time (s) = 1.06
     -----------------------------------------------------------------
 
 
@@ -382,7 +382,7 @@ solver.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 3.065 seconds)
+   **Total running time of the script:** (0 minutes 3.061 seconds)
 
 
 .. _sphx_glr_download_tutorials_plot_lsm.py:

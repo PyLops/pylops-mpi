@@ -284,7 +284,7 @@ normal equations, and :math:`\mathbf{d}^{Norm}` is the data of the normal equati
         99        6.1544e-01         6.5026e-01     6.5026e-01
        100        6.1561e-01         6.4212e-01     6.4212e-01
 
-    Iterations = 100        Total time (s) = 40.44
+    Iterations = 100        Total time (s) = 40.15
     -----------------------------------------------------------------
 
 
@@ -300,7 +300,7 @@ normal equations, and :math:`\mathbf{d}^{Norm}` is the data of the normal equati
     epsR = 1e2
     LapOp = pylops_mpi.MPILaplacian(dims=(ny, nx, nz), axes=(0, 1, 2), weights=(1, 1, 1),
                                     sampling=(1, 1, 1), dtype=BDiag.dtype)
-    NormEqOp = BDiag.H @ BDiag + epsR * LapOp
+    NormEqOp = BDiag.H @ BDiag + epsR * LapOp.H @ LapOp
     dnorm_dist = BDiag.H @ d_dist
     minv3d_reg_dist = pylops_mpi.optimization.basic.cg(NormEqOp, dnorm_dist, x0=mback3d_dist, niter=100, show=True)[0]
     minv3d_reg = minv3d_reg_dist.asarray().reshape((ny, nx, nz))
@@ -320,36 +320,36 @@ normal equations, and :math:`\mathbf{d}^{Norm}` is the data of the normal equati
     -------------------------------------------------------
 
         Itn           x[0]              r2norm
-         1         6.1659e-01         1.2517e+03
-         2         6.1704e-01         1.9396e+03
-         3         6.1728e-01         2.5093e+03
-         4         6.1744e-01         2.9996e+03
-         5         6.1757e-01         3.4349e+03
-         6         6.1766e-01         3.8297e+03
-         7         6.1774e-01         4.1932e+03
-         8         6.1781e-01         4.5317e+03
-         9         6.1787e-01         4.8497e+03
-        10         6.1792e-01         5.1504e+03
-        11         6.1797e-01         5.4363e+03
-        21         6.1828e-01         7.7780e+03
-        31         6.1846e-01         9.5963e+03
-        41         6.1859e-01         1.1136e+04
-        51         6.1869e-01         1.2496e+04
-        61         6.1877e-01         1.3727e+04
-        71         6.1884e-01         1.4861e+04
-        81         6.1889e-01         1.5917e+04
-        91         6.1895e-01         1.6909e+04
-        92         6.1895e-01         1.7005e+04
-        93         6.1896e-01         1.7101e+04
-        94         6.1896e-01         1.7196e+04
-        95         6.1897e-01         1.7290e+04
-        96         6.1897e-01         1.7385e+04
-        97         6.1898e-01         1.7478e+04
-        98         6.1898e-01         1.7571e+04
-        99         6.1898e-01         1.7664e+04
-       100         6.1899e-01         1.7756e+04
+         1         6.1587e-01         1.6825e+03
+         2         6.1667e-01         1.6533e+03
+         3         6.1695e-01         1.4528e+03
+         4         6.1725e-01         1.6359e+03
+         5         6.1746e-01         1.3555e+03
+         6         6.1767e-01         1.2633e+03
+         7         6.1787e-01         1.3221e+03
+         8         6.1811e-01         1.2846e+03
+         9         6.1831e-01         1.1952e+03
+        10         6.1851e-01         1.1626e+03
+        11         6.1869e-01         1.1780e+03
+        21         6.2050e-01         7.4711e+02
+        31         6.2265e-01         6.6863e+02
+        41         6.2516e-01         5.1781e+02
+        51         6.2692e-01         4.3140e+02
+        61         6.2847e-01         3.7187e+02
+        71         6.2977e-01         2.9441e+02
+        81         6.3072e-01         2.6242e+02
+        91         6.3077e-01         2.3101e+02
+        92         6.3075e-01         2.3022e+02
+        93         6.3072e-01         2.2334e+02
+        94         6.3068e-01         2.2033e+02
+        95         6.3063e-01         2.1755e+02
+        96         6.3056e-01         2.1555e+02
+        97         6.3049e-01         2.1291e+02
+        98         6.3041e-01         2.0469e+02
+        99         6.3033e-01         1.9903e+02
+       100         6.3026e-01         1.9777e+02
 
-    Iterations = 100        Total time (s) = 49.18
+    Iterations = 100        Total time (s) = 72.06
     -------------------------------------------------------
 
 
@@ -449,7 +449,7 @@ Finally, we display the modeling and inversion results
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (1 minutes 33.553 seconds)
+   **Total running time of the script:** (1 minutes 56.094 seconds)
 
 
 .. _sphx_glr_download_tutorials_plot_post_stack_inversion.py:

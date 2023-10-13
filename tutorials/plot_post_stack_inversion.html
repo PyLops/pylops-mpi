@@ -667,7 +667,7 @@ damp = 0.000000e+00     tol = 1.000000e-04      niter = 100
     99        6.1544e-01         6.5026e-01     6.5026e-01
    100        6.1561e-01         6.4212e-01     6.4212e-01
 
-Iterations = 100        Total time (s) = 40.44
+Iterations = 100        Total time (s) = 40.15
 -----------------------------------------------------------------
 </pre></div>
 </div>
@@ -675,7 +675,7 @@ Iterations = 100        Total time (s) = 40.44
 <a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">epsR</span></a> <span class="o">=</span> <span class="mf">1e2</span>
 <span class="n">LapOp</span> <span class="o">=</span> <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">MPILaplacian</span><span class="p">(</span><span class="n">dims</span><span class="o">=</span><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ny</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nx</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nz</span></a><span class="p">),</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
                                 <span class="n">sampling</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">BDiag</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-<span class="n">NormEqOp</span> <span class="o">=</span> <span class="n">BDiag</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="n">BDiag</span> <span class="o">+</span> <a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">epsR</span></a> <span class="o">*</span> <span class="n">LapOp</span>
+<span class="n">NormEqOp</span> <span class="o">=</span> <span class="n">BDiag</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="n">BDiag</span> <span class="o">+</span> <a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">epsR</span></a> <span class="o">*</span> <span class="n">LapOp</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="n">LapOp</span>
 <span class="n">dnorm_dist</span> <span class="o">=</span> <span class="n">BDiag</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="n">d_dist</span>
 <span class="n">minv3d_reg_dist</span> <span class="o">=</span> <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">optimization</span><span class="o">.</span><span class="n">basic</span><span class="o">.</span><span class="n">cg</span><span class="p">(</span><span class="n">NormEqOp</span><span class="p">,</span> <span class="n">dnorm_dist</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">mback3d_dist</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">minv3d_reg</span></a> <span class="o">=</span> <span class="n">minv3d_reg_dist</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ny</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nx</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nz</span></a><span class="p">))</span>
@@ -688,36 +688,36 @@ tol = 1.000000e-04      niter = 100
 -------------------------------------------------------
 
     Itn           x[0]              r2norm
-     1         6.1659e-01         1.2517e+03
-     2         6.1704e-01         1.9396e+03
-     3         6.1728e-01         2.5093e+03
-     4         6.1744e-01         2.9996e+03
-     5         6.1757e-01         3.4349e+03
-     6         6.1766e-01         3.8297e+03
-     7         6.1774e-01         4.1932e+03
-     8         6.1781e-01         4.5317e+03
-     9         6.1787e-01         4.8497e+03
-    10         6.1792e-01         5.1504e+03
-    11         6.1797e-01         5.4363e+03
-    21         6.1828e-01         7.7780e+03
-    31         6.1846e-01         9.5963e+03
-    41         6.1859e-01         1.1136e+04
-    51         6.1869e-01         1.2496e+04
-    61         6.1877e-01         1.3727e+04
-    71         6.1884e-01         1.4861e+04
-    81         6.1889e-01         1.5917e+04
-    91         6.1895e-01         1.6909e+04
-    92         6.1895e-01         1.7005e+04
-    93         6.1896e-01         1.7101e+04
-    94         6.1896e-01         1.7196e+04
-    95         6.1897e-01         1.7290e+04
-    96         6.1897e-01         1.7385e+04
-    97         6.1898e-01         1.7478e+04
-    98         6.1898e-01         1.7571e+04
-    99         6.1898e-01         1.7664e+04
-   100         6.1899e-01         1.7756e+04
+     1         6.1587e-01         1.6825e+03
+     2         6.1667e-01         1.6533e+03
+     3         6.1695e-01         1.4528e+03
+     4         6.1725e-01         1.6359e+03
+     5         6.1746e-01         1.3555e+03
+     6         6.1767e-01         1.2633e+03
+     7         6.1787e-01         1.3221e+03
+     8         6.1811e-01         1.2846e+03
+     9         6.1831e-01         1.1952e+03
+    10         6.1851e-01         1.1626e+03
+    11         6.1869e-01         1.1780e+03
+    21         6.2050e-01         7.4711e+02
+    31         6.2265e-01         6.6863e+02
+    41         6.2516e-01         5.1781e+02
+    51         6.2692e-01         4.3140e+02
+    61         6.2847e-01         3.7187e+02
+    71         6.2977e-01         2.9441e+02
+    81         6.3072e-01         2.6242e+02
+    91         6.3077e-01         2.3101e+02
+    92         6.3075e-01         2.3022e+02
+    93         6.3072e-01         2.2334e+02
+    94         6.3068e-01         2.2033e+02
+    95         6.3063e-01         2.1755e+02
+    96         6.3056e-01         2.1555e+02
+    97         6.3049e-01         2.1291e+02
+    98         6.3041e-01         2.0469e+02
+    99         6.3033e-01         1.9903e+02
+   100         6.3026e-01         1.9777e+02
 
-Iterations = 100        Total time (s) = 49.18
+Iterations = 100        Total time (s) = 72.06
 -------------------------------------------------------
 </pre></div>
 </div>
@@ -790,7 +790,7 @@ Iterations = 100        Total time (s) = 49.18
 Smooth Distr == Local True
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (1 minutes 33.553 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (1 minutes 56.094 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-plot-post-stack-inversion-py">
 <div class="sphx-glr-download sphx-glr-download-python docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/349e24ddf4c2a9f9f1903b6c1d4ed115/plot_post_stack_inversion.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_post_stack_inversion.py</span></code></a></p>
