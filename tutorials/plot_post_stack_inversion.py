@@ -137,7 +137,7 @@ d_0 = d_dist.asarray().reshape((ny, nx, nz))
 #   This requires extending the operator and data in the following manner:
 #
 # .. math::
-#   \mathbf{NormEqOp} =
+#   \mathbf{N} =
 #   \begin{bmatrix}
 #         \mathbf{G}_1^H  & \mathbf{0}   &  \ldots &  \mathbf{0}  \\
 #         \mathbf{0}    & \mathbf{G}_2^H &  \ldots &  \mathbf{0}  \\
@@ -149,10 +149,10 @@ d_0 = d_dist.asarray().reshape((ny, nx, nz))
 #         \mathbf{0}    & \mathbf{G}_2 &  \ldots &  \mathbf{0}  \\
 #         \vdots        & \vdots       &  \ddots &  \vdots         \\
 #         \mathbf{0}    & \mathbf{0}   &  \ldots &  \mathbf{G}_N
-#   \end{bmatrix} + \epsilon \mathbf{LapOp} \\
+#   \end{bmatrix} + \epsilon \mathbf{L}^H \mathbf{L} \\
 #
-#  .. math::
-#  \begin{bmatrix}
+# .. math::
+#   \begin{bmatrix}
 #         \mathbf{d}_{1}^{Norm}  \\
 #         \mathbf{d}_{2}^{Norm}  \\
 #         \vdots     \\
@@ -171,9 +171,9 @@ d_0 = d_dist.asarray().reshape((ny, nx, nz))
 #         \mathbf{d}_{N}
 #   \end{bmatrix}
 #
-# where :math:`\mathbf{LapOp}` is the :py:class:`pylops_mpi.basicoperators.MPILaplacian` operator
-# which is used to apply second derivative along all three axes, :math:`\mathbf{NormEqOp}` is the regularized operator
-# which operates using normal equations and :math:`\mathbf{d}^{Norm}` is the data of the operator used for inversion.
+# where :math:`\mathbf{L}` is the :py:class:`pylops_mpi.basicoperators.MPILaplacian` operator
+# which is used to apply second derivative along all three axes, :math:`\mathbf{N}` is an operator computing the
+# normal equations, and :math:`\mathbf{d}^{Norm}` is the data of the normal equation operator used for inversion.
 
 # Inversion using CGLS solver
 minv3d_iter_dist = pylops_mpi.optimization.basic.cgls(BDiag, d_dist, x0=mback3d_dist, niter=100, show=True)[0]
