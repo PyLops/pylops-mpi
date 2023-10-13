@@ -11,7 +11,7 @@ name = "pylops-mpi"
 description = "Python library implementing linear operators with MPI"
 readme = "README.md"
 authors = [
-    {name = "Rohan Babbar", email = "Rohan Babbar"},
+    {name = "Rohan Babbar", email = "rohanbabbar0408@gmail.com"},
     {name = "Matteo Ravasi", email = "matteoravasi@gmail.com"},
 ]
 license = {file = "LICENSE"}
