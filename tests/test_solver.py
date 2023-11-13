@@ -114,7 +114,7 @@ def test_cg(par):
             "imag"] * np.ones(shape=(par["ny"], par["nx"])) for i in range(size)]
         ops = [MatrixMult(np.conj(mats[i].T) @ mats[i], dtype=par['dtype']) for i in range(size)]
         # To make BlockDiag a positive definite matrix
-        BDiag = BlockDiag(ops=ops)
+        BDiag = BlockDiag(ops=ops, forceflat=True)
         if par["x0"]:
             x0 = x0_global
         else:
@@ -158,7 +158,7 @@ def test_cgls(par):
         ops = [MatrixMult(np.conj(mats[i].T) @ mats[i] + 1e-5 * np.eye(par["nx"], dtype=par['dtype']),
                           dtype=par['dtype']) for i in range(size)]
         # To make BlockDiag a positive definite matrix
-        BDiag = BlockDiag(ops=ops)
+        BDiag = BlockDiag(ops=ops, forceflat=True)
         if par["x0"]:
             x0 = x0_global
         else:
@@ -202,7 +202,7 @@ def test_cgls_broadcastdata(par):
         ops = [MatrixMult((i + 1) * np.ones((par["ny"], par["nx"])) + (i + 2) * par[
             "imag"
         ] * np.ones((par["ny"], par["nx"])), dtype=par['dtype']) for i in range(size)]
-        Hstack = HStack(ops=ops)
+        Hstack = HStack(ops=ops, forceflat=True)
         if par["x0"]:
             x0 = x0_global
         else:
@@ -249,7 +249,7 @@ def test_cgls_broadcastmodel(par):
         ops = [MatrixMult(np.conj(mats[i].T) @ mats[i] + 1e-5 * np.eye(par["nx"], dtype=par['dtype']),
                           dtype=par['dtype']) for i in range(size)]
         # To make VStack a positive definite matrix
-        Vstack = VStack(ops=ops)
+        Vstack = VStack(ops=ops, forceflat=True)
         if par["x0"]:
             x0 = x0_global
         else:
