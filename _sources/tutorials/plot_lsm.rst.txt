@@ -65,7 +65,7 @@ vertical stacking of LSMs and solve our problem.
 
 .. GENERATED FROM PYTHON SOURCE LINES 48-66
 
-.. code-block:: default
+.. code-block:: Python
 
 
     import warnings
@@ -99,7 +99,7 @@ across different ranks.
 
 .. GENERATED FROM PYTHON SOURCE LINES 69-124
 
-.. code-block:: default
+.. code-block:: Python
 
 
     # Velocity Model
@@ -188,7 +188,7 @@ product with the broadcasted reflectivity at every location on the subsurface.
 
 .. GENERATED FROM PYTHON SOURCE LINES 128-154
 
-.. code-block:: default
+.. code-block:: Python
 
 
     # Wavelet
@@ -225,7 +225,7 @@ product with the broadcasted reflectivity at every location on the subsurface.
 
 .. GENERATED FROM PYTHON SOURCE LINES 155-162
 
-.. code-block:: default
+.. code-block:: Python
 
 
     # Adjoint
@@ -248,7 +248,7 @@ solver.
 
 .. GENERATED FROM PYTHON SOURCE LINES 165-172
 
-.. code-block:: default
+.. code-block:: Python
 
 
     # Inverse
@@ -283,25 +283,25 @@ solver.
          9        2.9706e-03         4.2731e+01     4.2731e+01
         10       -4.7021e-03         3.8118e+01     3.8118e+01
         11       -5.2286e-03         3.4431e+01     3.4431e+01
-        21       -3.1300e-03         1.5333e+01     1.5333e+01
+        21       -3.1305e-03         1.5333e+01     1.5333e+01
         31       -4.8777e-03         9.8278e+00     9.8278e+00
-        41       -6.6612e-03         6.7320e+00     6.7320e+00
-        51       -7.8548e-03         5.3517e+00     5.3517e+00
-        61       -1.0081e-02         4.6404e+00     4.6404e+00
-        71       -9.5414e-03         3.9842e+00     3.9842e+00
-        81       -1.2687e-02         3.4826e+00     3.4826e+00
-        91       -1.4071e-02         3.0774e+00     3.0774e+00
-        92       -1.3810e-02         3.0353e+00     3.0353e+00
-        93       -1.3721e-02         3.0219e+00     3.0219e+00
-        94       -1.3464e-02         2.9871e+00     2.9871e+00
-        95       -1.3219e-02         2.9637e+00     2.9637e+00
-        96       -1.3092e-02         2.9377e+00     2.9377e+00
-        97       -1.2849e-02         2.9047e+00     2.9047e+00
-        98       -1.2694e-02         2.8754e+00     2.8754e+00
-        99       -1.2516e-02         2.8506e+00     2.8506e+00
-       100       -1.2383e-02         2.8320e+00     2.8320e+00
+        41       -6.3845e-03         6.8582e+00     6.8582e+00
+        51       -7.8539e-03         5.3510e+00     5.3510e+00
+        61       -1.0072e-02         4.6404e+00     4.6404e+00
+        71       -9.5400e-03         3.9842e+00     3.9842e+00
+        81       -1.2782e-02         3.4685e+00     3.4685e+00
+        91       -1.4205e-02         3.1071e+00     3.1071e+00
+        92       -1.4036e-02         3.0712e+00     3.0712e+00
+        93       -1.3773e-02         3.0286e+00     3.0286e+00
+        94       -1.3422e-02         2.9861e+00     2.9861e+00
+        95       -1.3252e-02         2.9563e+00     2.9563e+00
+        96       -1.3040e-02         2.9362e+00     2.9362e+00
+        97       -1.2860e-02         2.9046e+00     2.9046e+00
+        98       -1.2687e-02         2.8757e+00     2.8757e+00
+        99       -1.2546e-02         2.8528e+00     2.8528e+00
+       100       -1.2389e-02         2.8342e+00     2.8342e+00
 
-    Iterations = 100        Total time (s) = 1.06
+    Iterations = 100        Total time (s) = 1.09
     -----------------------------------------------------------------
 
 
@@ -310,7 +310,7 @@ solver.
 
 .. GENERATED FROM PYTHON SOURCE LINES 173-209
 
-.. code-block:: default
+.. code-block:: Python
 
     if rank == 0:
         # Visualize
@@ -382,7 +382,7 @@ solver.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 3.061 seconds)
+   **Total running time of the script:** (0 minutes 3.117 seconds)
 
 
 .. _sphx_glr_download_tutorials_plot_lsm.py:
@@ -391,16 +391,13 @@ solver.
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
 
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
 
-
+      :download:`Download Jupyter notebook: plot_lsm.ipynb <plot_lsm.ipynb>`
 
     .. container:: sphx-glr-download sphx-glr-download-python
 
       :download:`Download Python source code: plot_lsm.py <plot_lsm.py>`
-
-    .. container:: sphx-glr-download sphx-glr-download-jupyter
-
-      :download:`Download Jupyter notebook: plot_lsm.ipynb <plot_lsm.ipynb>`
 
 
 .. only:: html

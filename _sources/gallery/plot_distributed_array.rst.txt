@@ -26,7 +26,7 @@ a parallel computing environment.
 
 .. GENERATED FROM PYTHON SOURCE LINES 8-22
 
-.. code-block:: default
+.. code-block:: Python
 
 
     from matplotlib import pyplot as plt
@@ -57,7 +57,7 @@ class with the input parameters ``global_shape``,
 
 .. GENERATED FROM PYTHON SOURCE LINES 26-34
 
-.. code-block:: default
+.. code-block:: Python
 
     arr = pylops_mpi.DistributedArray(global_shape=global_shape,
                                       partition=pylops_mpi.Partition.SCATTER,
@@ -86,7 +86,7 @@ the second axis.
 
 .. GENERATED FROM PYTHON SOURCE LINES 37-45
 
-.. code-block:: default
+.. code-block:: Python
 
     arr = pylops_mpi.DistributedArray(global_shape=global_shape,
                                       partition=pylops_mpi.Partition.SCATTER,
@@ -118,7 +118,7 @@ combined local shapes should align with the ``global_shape`` along the desired `
 
 .. GENERATED FROM PYTHON SOURCE LINES 51-59
 
-.. code-block:: default
+.. code-block:: Python
 
     local_shape = local_split(global_shape, MPI.COMM_WORLD, Partition.SCATTER, 0)
     # Assigning local_shapes(List of tuples)
@@ -149,7 +149,7 @@ Below is an example implementation depicting the same.
 
 .. GENERATED FROM PYTHON SOURCE LINES 64-74
 
-.. code-block:: default
+.. code-block:: Python
 
     n = global_shape[0] * global_shape[1]
     # Array to be distributed
@@ -192,7 +192,7 @@ the array and adds the corresponding elements together.
 
 .. GENERATED FROM PYTHON SOURCE LINES 77-80
 
-.. code-block:: default
+.. code-block:: Python
 
     sum_arr = arr1 + arr2
     pylops_mpi.plot_local_arrays(sum_arr, "Addition", vmin=0, vmax=1)
@@ -216,7 +216,7 @@ of the array and subtracts the corresponding elements together.
 
 .. GENERATED FROM PYTHON SOURCE LINES 83-86
 
-.. code-block:: default
+.. code-block:: Python
 
     diff_arr = arr1 - arr2
     pylops_mpi.plot_local_arrays(diff_arr, "Subtraction", vmin=0, vmax=1)
@@ -240,7 +240,7 @@ of the array and multiplies the corresponding elements together.
 
 .. GENERATED FROM PYTHON SOURCE LINES 89-91
 
-.. code-block:: default
+.. code-block:: Python
 
     mult_arr = arr1 * arr2
     pylops_mpi.plot_local_arrays(mult_arr, "Multiplication", vmin=0, vmax=1)
@@ -259,7 +259,7 @@ of the array and multiplies the corresponding elements together.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 1.317 seconds)
+   **Total running time of the script:** (0 minutes 1.544 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_distributed_array.py:
@@ -268,16 +268,13 @@ of the array and multiplies the corresponding elements together.
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
 
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
 
-
+      :download:`Download Jupyter notebook: plot_distributed_array.ipynb <plot_distributed_array.ipynb>`
 
     .. container:: sphx-glr-download sphx-glr-download-python
 
       :download:`Download Python source code: plot_distributed_array.py <plot_distributed_array.py>`
-
-    .. container:: sphx-glr-download sphx-glr-download-jupyter
-
-      :download:`Download Jupyter notebook: plot_distributed_array.ipynb <plot_distributed_array.ipynb>`
 
 
 .. only:: html

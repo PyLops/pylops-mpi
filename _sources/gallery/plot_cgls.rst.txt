@@ -30,7 +30,7 @@ in a distributed fashion :
 
 .. GENERATED FROM PYTHON SOURCE LINES 13-26
 
-.. code-block:: default
+.. code-block:: Python
 
     import numpy as np
     from mpi4py import MPI
@@ -60,7 +60,7 @@ random numbers. Then, we will input this matrix in a
 
 .. GENERATED FROM PYTHON SOURCE LINES 30-34
 
-.. code-block:: default
+.. code-block:: Python
 
     N, M = 20, 15
     Mop = pylops.MatrixMult(A=np.random.normal(0, 1, (N, M)))
@@ -80,7 +80,7 @@ we perform distributed matrix-vector multiplication.
 
 .. GENERATED FROM PYTHON SOURCE LINES 37-41
 
-.. code-block:: default
+.. code-block:: Python
 
     x = pylops_mpi.DistributedArray(size * M, dtype=np.float128)
     x[:] = np.ones(M)
@@ -104,7 +104,7 @@ function of the DistributedArray as shown below.
 
 .. GENERATED FROM PYTHON SOURCE LINES 48-59
 
-.. code-block:: default
+.. code-block:: Python
 
     xinv, istop, niter, r1norm, r2norm, cost = pylops_mpi.cgls(BDiag, y, niter=15, tol=1e-10, show=True)
     xinv_array = xinv.asarray()
@@ -164,7 +164,7 @@ function of the DistributedArray as shown below.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 0.171 seconds)
+   **Total running time of the script:** (0 minutes 0.206 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_cgls.py:
@@ -173,16 +173,13 @@ function of the DistributedArray as shown below.
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
 
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
 
-
+      :download:`Download Jupyter notebook: plot_cgls.ipynb <plot_cgls.ipynb>`
 
     .. container:: sphx-glr-download sphx-glr-download-python
 
       :download:`Download Python source code: plot_cgls.py <plot_cgls.py>`
-
-    .. container:: sphx-glr-download sphx-glr-download-jupyter
-
-      :download:`Download Jupyter notebook: plot_cgls.ipynb <plot_cgls.ipynb>`
 
 
 .. only:: html

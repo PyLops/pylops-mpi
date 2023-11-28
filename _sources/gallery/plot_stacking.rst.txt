@@ -36,7 +36,7 @@ can use the ``asarray()`` method.
 
 .. GENERATED FROM PYTHON SOURCE LINES 19-33
 
-.. code-block:: default
+.. code-block:: Python
 
 
     import numpy as np
@@ -66,7 +66,7 @@ which will be used in this example.
 
 .. GENERATED FROM PYTHON SOURCE LINES 36-40
 
-.. code-block:: default
+.. code-block:: Python
 
 
     D2hop = pylops.SecondDerivative(dims=(11, 22), axis=1, dtype=np.float64)
@@ -111,7 +111,7 @@ in the variable :math:`y`.
 
 .. GENERATED FROM PYTHON SOURCE LINES 68-92
 
-.. code-block:: default
+.. code-block:: Python
 
 
     Nv, Nh = (11, 22)
@@ -177,7 +177,7 @@ and is stored in the variable :math:`y`.
 
 .. GENERATED FROM PYTHON SOURCE LINES 116-141
 
-.. code-block:: default
+.. code-block:: Python
 
 
     Nv, Nh = (11, 22)
@@ -244,7 +244,7 @@ corresponding vector :math:`x`.
 
 .. GENERATED FROM PYTHON SOURCE LINES 165-183
 
-.. code-block:: default
+.. code-block:: Python
 
 
     Nv, Nh = (11, 22)
@@ -279,7 +279,7 @@ corresponding vector :math:`x`.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 0.435 seconds)
+   **Total running time of the script:** (0 minutes 0.499 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_stacking.py:
@@ -288,16 +288,13 @@ corresponding vector :math:`x`.
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
 
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
 
-
+      :download:`Download Jupyter notebook: plot_stacking.ipynb <plot_stacking.ipynb>`
 
     .. container:: sphx-glr-download sphx-glr-download-python
 
       :download:`Download Python source code: plot_stacking.py <plot_stacking.py>`
-
-    .. container:: sphx-glr-download sphx-glr-download-jupyter
-
-      :download:`Download Jupyter notebook: plot_stacking.ipynb <plot_stacking.ipynb>`
 
 
 .. only:: html

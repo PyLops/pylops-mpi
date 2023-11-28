@@ -37,7 +37,7 @@ regularization terms aimed at enforcing smooth solutions
 
 .. GENERATED FROM PYTHON SOURCE LINES 20-32
 
-.. code-block:: default
+.. code-block:: Python
 
     from matplotlib import pyplot as plt
     import numpy as np
@@ -66,7 +66,7 @@ in the first direction(i.e. along axis=0) using the
 
 .. GENERATED FROM PYTHON SOURCE LINES 36-61
 
-.. code-block:: default
+.. code-block:: Python
 
     nx, ny = 11, 21
     x = np.zeros((nx, ny))
@@ -112,7 +112,7 @@ We can now do the same for the second derivative using the
 
 .. GENERATED FROM PYTHON SOURCE LINES 64-89
 
-.. code-block:: default
+.. code-block:: Python
 
     nx, ny = 11, 21
     x = np.zeros((nx, ny))
@@ -160,7 +160,7 @@ derivative along one direction) version to achieve this.
 
 .. GENERATED FROM PYTHON SOURCE LINES 94-127
 
-.. code-block:: default
+.. code-block:: Python
 
     nx, ny = (12, 21)
     x = np.zeros((nx, ny))
@@ -210,7 +210,7 @@ derivative along one direction) version to achieve this.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 0.790 seconds)
+   **Total running time of the script:** (0 minutes 0.900 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_derivative.py:
@@ -219,16 +219,13 @@ derivative along one direction) version to achieve this.
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
 
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
 
-
+      :download:`Download Jupyter notebook: plot_derivative.ipynb <plot_derivative.ipynb>`
 
     .. container:: sphx-glr-download sphx-glr-download-python
 
       :download:`Download Python source code: plot_derivative.py <plot_derivative.py>`
-
-    .. container:: sphx-glr-download sphx-glr-download-jupyter
-
-      :download:`Download Jupyter notebook: plot_derivative.ipynb <plot_derivative.ipynb>`
 
 
 .. only:: html
