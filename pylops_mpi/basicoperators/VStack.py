@@ -139,7 +139,7 @@ class StackedVStack():
     ----------
     ops : :obj:`list`
         One or more :class:`pylops_mpi.MPILinearOperator` to be vertically stacked.
-    
+
     Attributes
     ----------
     shape : :obj:`tuple`
@@ -152,8 +152,8 @@ class StackedVStack():
 
     Notes
     -----
-    An StackedVStack is composed of N  :class:`pylops_mpi.MPILinearOperator` stacked 
-    vertically. These MPI operators will be applied sequentially, however distributed 
+    An StackedVStack is composed of N  :class:`pylops_mpi.MPILinearOperator` stacked
+    vertically. These MPI operators will be applied sequentially, however distributed
     computations will be performed within each operator.
 
     """

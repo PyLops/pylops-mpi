@@ -22,10 +22,10 @@ size = MPI.COMM_WORLD.Get_size()
 
 ###############################################################################
 # Let's start by defining two distributed array
-subarr1 = pylops_mpi.DistributedArray(global_shape=size*10,
+subarr1 = pylops_mpi.DistributedArray(global_shape=size * 10,
                                       partition=pylops_mpi.Partition.SCATTER,
                                       axis=0)
-subarr2 = pylops_mpi.DistributedArray(global_shape=size*4,
+subarr2 = pylops_mpi.DistributedArray(global_shape=size * 4,
                                       partition=pylops_mpi.Partition.SCATTER,
                                       axis=0)
 # Filling the local arrays
@@ -53,10 +53,10 @@ if rank == 0:
 ###############################################################################
 # Let's now create a second :py:class:`pylops_mpi.StackedDistributedArray` object
 # and perform different mathematical operations on those two objects.
-subarr1_ = pylops_mpi.DistributedArray(global_shape=size*10,
+subarr1_ = pylops_mpi.DistributedArray(global_shape=size * 10,
                                        partition=pylops_mpi.Partition.SCATTER,
                                        axis=0)
-subarr2_ = pylops_mpi.DistributedArray(global_shape=size*4,
+subarr2_ = pylops_mpi.DistributedArray(global_shape=size * 4,
                                        partition=pylops_mpi.Partition.SCATTER,
                                        axis=0)
 # Filling the local arrays
@@ -107,7 +107,7 @@ if rank == 0:
 
 ###############################################################################
 # **VStack of operators**
-x = pylops_mpi.DistributedArray(global_shape=size*10,
+x = pylops_mpi.DistributedArray(global_shape=size * 10,
                                 partition=pylops_mpi.Partition.SCATTER,
                                 axis=0)
 # Filling the local arrays
@@ -130,7 +130,7 @@ if rank == 0:
                                 pylops.BlockDiag([pylops.MatrixMult(2 * Mop1),] * size)])
     print('mop.shape', mop.shape, mop_single.shape)
 
-    x_single = np.ones(size*10)
+    x_single = np.ones(size * 10)
     y_single = mop_single @ x_single
     xadj_single = mop_single.H @ y_single
 

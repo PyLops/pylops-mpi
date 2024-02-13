@@ -346,13 +346,13 @@ class DistributedArray:
 
     def __sub__(self, x):
         return self.__add__(-x)
-    
+
     def __isub__(self, x):
         return self.__iadd__(-x)
 
     def __mul__(self, x):
         return self.multiply(x)
-    
+
     def __rmul__(self, x):
         return self.multiply(x)
 
@@ -376,13 +376,12 @@ class DistributedArray:
         self[:] = self.local_array + dist_array.local_array
         return self
 
-
     def multiply(self, dist_array):
         """Distributed Element-wise multiplication
         """
         if isinstance(dist_array, DistributedArray):
             self._check_partition_shape(dist_array)
-        
+
         ProductArray = DistributedArray(global_shape=self.global_shape,
                                         base_comm=self.base_comm,
                                         dtype=self.dtype,
@@ -616,12 +615,13 @@ class StackedDistributedArray:
         -------
         final_array : :obj:`numpy.ndarray`
             Global Array gathered at all ranks
-        
+
         """
         return np.hstack([distarr.asarray().ravel() for distarr in self.distarrays])
 
     def _check_stacked_size(self, stacked_array):
         """Check that arrays have consistent size
+
         """
         if self.narrays != stacked_array.narrays:
             raise ValueError("Stacked arrays must be composed the same number of of distributed arrays")
@@ -632,17 +632,17 @@ class StackedDistributedArray:
                                  f"{stacked_array[iarr].global_shape}")
 
     def __neg__(self):
-        arr = self.copy() #StackedDistributedArray([distarray.copy() for distarray in self.distarrays])
+        arr = self.copy()
         for iarr in range(self.narrays):
             arr[iarr][:] = -arr[iarr][:]
         return arr
 
     def __add__(self, x):
         return self.add(x)
-    
+
     def __iadd__(self, x):
         return self.iadd(x)
-    
+
     def __sub__(self, x):
         return self.__add__(-x)
 
@@ -651,15 +651,16 @@ class StackedDistributedArray:
 
     def __mul__(self, x):
         return self.multiply(x)
-    
+
     def __rmul__(self, x):
         return self.multiply(x)
 
     def add(self, stacked_array):
         """Stacked Distributed Addition of arrays
+
         """
         self._check_stacked_size(stacked_array)
-        SumArray = self.copy() #StackedDistributedArray([distarray.copy() for distarray in self.distarrays])
+        SumArray = self.copy()
         for iarr in range(self.narrays):
             SumArray[iarr][:] = (self[iarr] + stacked_array[iarr])[:]
         return SumArray
@@ -671,11 +672,11 @@ class StackedDistributedArray:
         for iarr in range(self.narrays):
             self[iarr][:] = (self[iarr] + stacked_array[iarr])[:]
         return self
-    
+
     def multiply(self, stacked_array):
         if isinstance(stacked_array, StackedDistributedArray):
             self._check_stacked_size(stacked_array)
-        ProductArray = self.copy() #StackedDistributedArray([distarray.copy() for distarray in self.distarrays])
+        ProductArray = self.copy()
 
         if isinstance(stacked_array, StackedDistributedArray):
             # multiply two DistributedArray
@@ -686,7 +687,7 @@ class StackedDistributedArray:
             for iarr in range(self.narrays):
                 ProductArray[iarr][:] = (self[iarr] * stacked_array)[:]
         return ProductArray
-    
+
     def dot(self, stacked_array):
         self._check_stacked_size(stacked_array)
         dotprod = 0.

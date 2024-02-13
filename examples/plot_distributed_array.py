@@ -84,7 +84,7 @@ sum_arr = arr1 + arr2
 pylops_mpi.plot_local_arrays(sum_arr, "Addition", vmin=0, vmax=1)
 
 ###############################################################################
-# **Element-wise In-place Addition** - Similar to the previous one but the 
+# **Element-wise In-place Addition** - Similar to the previous one but the
 # addition is performed directly on one of the addends without creating a new
 # distributed array.
 sum_arr += arr2
