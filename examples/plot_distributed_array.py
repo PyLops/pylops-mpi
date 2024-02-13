@@ -72,9 +72,22 @@ pylops_mpi.plot_local_arrays(arr1, "Distributed Array - 1", vmin=0, vmax=1)
 pylops_mpi.plot_local_arrays(arr2, "Distributed Array - 2", vmin=0, vmax=1)
 
 ###############################################################################
+# **Scaling** - Each process operates on its local portion of
+# the array and scales the corresponding elements by a given scalar.
+scale_arr = .5 * arr1
+pylops_mpi.plot_local_arrays(scale_arr, "Scaling", vmin=0, vmax=1)
+
+###############################################################################
 # **Element-wise Addition** - Each process operates on its local portion of
 # the array and adds the corresponding elements together.
 sum_arr = arr1 + arr2
+pylops_mpi.plot_local_arrays(sum_arr, "Addition", vmin=0, vmax=1)
+
+###############################################################################
+# **Element-wise In-place Addition** - Similar to the previous one but the 
+# addition is performed directly on one of the addends without creating a new
+# distributed array.
+sum_arr += arr2
 pylops_mpi.plot_local_arrays(sum_arr, "Addition", vmin=0, vmax=1)
 
 ###############################################################################

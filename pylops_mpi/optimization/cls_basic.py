@@ -124,11 +124,11 @@ class CG(Solver):
         Opc = self.Op.matvec(self.c)
         cOpc = np.abs(self.c.dot(Opc.conj()))
         a = self.kold / cOpc
-        x[:] += a * self.c.local_array
-        self.r[:] -= a * Opc.local_array
+        x += a * self.c
+        self.r -= a * Opc
         k = np.abs(self.r.dot(self.r.conj()))
         b = k / self.kold
-        self.c[:] = self.r.local_array + b * self.c.local_array
+        self.c = self.r + b * self.c
         self.kold = k
         self.iiter += 1
         self.cost.append(float(np.sqrt(self.kold)))
@@ -344,10 +344,7 @@ class CGLS(Solver):
         else:
             x = x0.copy()
             self.s = self.y - self.Op.matvec(x)
-            damped_x = DistributedArray(global_shape=x.global_shape, dtype=x.dtype,
-                                        local_shapes=x.local_shapes,
-                                        partition=x.partition)
-            damped_x[:] = damp * x.local_array
+            damped_x = damp * x.local_array
             r = self.Op.rmatvec(self.s) - damped_x
         self.rank = x.rank
         self.c = r.copy()
@@ -384,16 +381,13 @@ class CGLS(Solver):
         """
 
         a = self.kold / (self.q.dot(self.q.conj()) + self.damp * self.c.dot(self.c.conj()))
-        x[:] = x.local_array + a * self.c.local_array
-        self.s[:] = self.s.local_array - a * self.q.local_array
-        damped_x = DistributedArray(global_shape=x.global_shape, dtype=x.dtype,
-                                    local_shapes=x.local_shapes,
-                                    partition=x.partition)
-        damped_x[:] = self.damp * x.local_array
+        x += a * self.c
+        self.s -= a * self.q
+        damped_x = self.damp * x
         r = self.Op.rmatvec(self.s) - damped_x
         k = np.abs(r.dot(r.conj()))
         b = k / self.kold
-        self.c[:] = r.local_array + b * self.c.local_array
+        self.c = r + b * self.c
         self.q = self.Op.matvec(self.c)
         self.kold = k
         self.iiter += 1

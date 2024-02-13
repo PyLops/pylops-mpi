@@ -1,4 +1,4 @@
-from .DistributedArray import DistributedArray, Partition
+from .DistributedArray import DistributedArray, Partition, StackedDistributedArray
 from .LinearOperator import *
 from .basicoperators import *
 from . import (
