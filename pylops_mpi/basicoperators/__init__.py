@@ -7,10 +7,13 @@ operations provided by numpy providing forward and adjoint functionalities
 using MPI.
 
 A list of operators present in pylops_mpi.basicoperators :
-    MPIBlockDiag                      Block Diagonal Operator
-    MPIVStack                         Vertical Stacking
-    MPIHStack                         Horizontal Stacking
+    MPIBlockDiag                      Block Diagonal arrangment of PyLops operators
+    MPIVStack                         Vertical Stacking of PyLops operators
+    StackedVStack                     Vertical Stacking of PyLops-MPI operators
+    MPIHStack                         Horizontal Stacking of PyLops operators
     MPIFirstDerivative                First Derivative
+    MPISecondDerivative               Second Derivative
+    MPILaplacian                      Laplacian
 
 """
 
@@ -24,6 +27,7 @@ from .Laplacian import *
 __all__ = [
     "MPIBlockDiag",
     "MPIVStack",
+    "StackedVStack",
     "MPIHStack",
     "MPIFirstDerivative",
     "MPISecondDerivative",

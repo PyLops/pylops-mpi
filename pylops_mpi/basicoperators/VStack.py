@@ -6,7 +6,7 @@ from typing import Sequence, Optional
 from pylops import LinearOperator
 from pylops.utils import DTypeLike
 
-from pylops_mpi import MPILinearOperator, DistributedArray, Partition
+from pylops_mpi import MPILinearOperator, DistributedArray, Partition, StackedDistributedArray
 from pylops_mpi.utils.decorators import reshaped
 
 
@@ -127,4 +127,54 @@ class MPIVStack(MPILinearOperator):
             y1.append(oper.rmatvec(x.local_array[self.nnops[iop]: self.nnops[iop + 1]]))
         y1 = np.sum(y1, axis=0)
         y[:] = self.base_comm.allreduce(y1, op=MPI.SUM)
+        return y
+
+
+class StackedVStack():
+    r"""Stacked VStack Operator
+
+    Create a vertical stack of :class:`pylops_mpi.MPILinearOperator` operators.
+
+    Parameters
+    ----------
+    ops : :obj:`list`
+        One or more :class:`pylops_mpi.MPILinearOperator` to be vertically stacked.
+    
+    Attributes
+    ----------
+    shape : :obj:`tuple`
+        Operator shape
+
+    Raises
+    ------
+    ValueError
+        If ``ops`` have different number of columns
+
+    Notes
+    -----
+    An StackedVStack is composed of N  :class:`pylops_mpi.MPILinearOperator` stacked 
+    vertically. These MPI operators will be applied sequentially, however distributed 
+    computations will be performed within each operator.
+
+    """
+
+    def __init__(self, ops: Sequence[MPILinearOperator]):
+        self.ops = ops
+        if len(set(op.shape[1] for op in ops)) > 1:
+            raise ValueError("Operators have different number of columns")
+        self.shape = (np.sum(op.shape[0] for op in ops), 
+                      ops[0].shape[1])
+        self.dtype = _get_dtype(self.ops)
+        
+    def matvec(self, x: DistributedArray) -> StackedDistributedArray:
+        y1 = []
+        for oper in self.ops:
+            y1.append(oper.matvec(x))
+        y = StackedDistributedArray(y1)
+        return y
+
+    def rmatvec(self, x: StackedDistributedArray) -> DistributedArray:
+        y = self.ops[0].rmatvec(x[0])
+        for xx, oper in zip(x[1:], self.ops[1:]):
+            y = y + oper.rmatvec(xx)
         return y

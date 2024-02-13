@@ -187,7 +187,19 @@ LapOp = pylops_mpi.MPILaplacian(dims=(ny, nx, nz), axes=(0, 1, 2), weights=(1, 1
                                 sampling=(1, 1, 1), dtype=BDiag.dtype)
 NormEqOp = BDiag.H @ BDiag + epsR * LapOp.H @ LapOp
 dnorm_dist = BDiag.H @ d_dist
-minv3d_reg_dist = pylops_mpi.optimization.basic.cg(NormEqOp, dnorm_dist, x0=mback3d_dist, niter=100, show=True)[0]
+minv3d_ne_dist = pylops_mpi.optimization.basic.cg(NormEqOp, dnorm_dist, x0=mback3d_dist, niter=100, show=True)[0]
+minv3d_ne = minv3d_ne_dist.asarray().reshape((ny, nx, nz))
+
+###############################################################################
+
+# Regularized inversion with regularized equations
+StackOp = pylops_mpi.StackedVStack([BDiag, np.sqrt(epsR) * LapOp])
+d0_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz)
+d0_dist[:] = 0.
+dstack_dist = pylops_mpi.StackedDistributedArray([d_dist, d0_dist])
+
+dnorm_dist = BDiag.H @ d_dist
+minv3d_reg_dist = pylops_mpi.optimization.basic.cgls(StackOp, dstack_dist, x0=mback3d_dist, niter=100, show=False)[0]
 minv3d_reg = minv3d_reg_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
@@ -205,7 +217,7 @@ if rank == 0:
     print('Smooth Distr == Local', np.allclose(d_0, d0_0))
 
     # Visualize
-    fig, axs = plt.subplots(nrows=5, ncols=3, figsize=(9, 14), constrained_layout=True)
+    fig, axs = plt.subplots(nrows=6, ncols=3, figsize=(9, 14), constrained_layout=True)
     axs[0][0].imshow(m3d[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
     axs[0][0].set_title("Model x-z")
     axs[0][0].axis("tight")
@@ -246,12 +258,22 @@ if rank == 0:
     axs[3][2].set_title('Inverted Model iter x-y')
     axs[3][2].axis('tight')
 
-    axs[4][0].imshow(minv3d_reg[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
-    axs[4][0].set_title("Regularized Inverted Model iter x-z")
+    axs[4][0].imshow(minv3d_ne[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+    axs[4][0].set_title("Normal Equations Inverted Model iter x-z")
     axs[4][0].axis("tight")
-    axs[4][1].imshow(minv3d_reg[:, 200, :].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
-    axs[4][1].set_title('Regularized Inverted Model iter y-z')
+    axs[4][1].imshow(minv3d_ne[:, 200, :].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
+    axs[4][1].set_title('Normal Equations Inverted Model iter y-z')
     axs[4][1].axis('tight')
-    axs[4][2].imshow(minv3d_reg[:, :, 220].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
-    axs[4][2].set_title('Regularized Inverted Model iter x-y')
+    axs[4][2].imshow(minv3d_ne[:, :, 220].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
+    axs[4][2].set_title('Normal Equations Inverted Model iter x-y')
     axs[4][2].axis('tight')
+
+    axs[5][0].imshow(minv3d_reg[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+    axs[5][0].set_title("Regularized Inverted Model iter x-z")
+    axs[5][0].axis("tight")
+    axs[5][1].imshow(minv3d_reg[:, 200, :].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
+    axs[5][1].set_title('Regularized Inverted Model iter y-z')
+    axs[5][1].axis('tight')
+    axs[5][2].imshow(minv3d_reg[:, :, 220].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
+    axs[5][2].set_title('Regularized Inverted Model iter x-y')
+    axs[5][2].axis('tight')
