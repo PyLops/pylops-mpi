@@ -106,13 +106,31 @@ if rank == 0:
 
 
 ###############################################################################
-# **VStack of operators**
+# **Norms**
+l0norm = arr1.norm(0)
+l1norm = arr1.norm(1)
+l2norm = arr1.norm(2)
+linfnorm = arr1.norm(np.inf)
+
+if rank == 0:
+    print('L0 norm', l0norm, np.linalg.norm(full_arr1, 0))
+    print('L1 norm', l1norm, np.linalg.norm(full_arr1, 1))
+    print('L2 norm', l2norm, np.linalg.norm(full_arr1, 2))
+    print('Linf norm', linfnorm, np.linalg.norm(full_arr1, np.inf))
+
+###############################################################################
+# Now that we have a way to stack multiple :py:class:`pylops_mpi.StackedDistributedArray` objects,
+# let's see how we can apply operators on them. More specifically this can be
+# done using the :py:class:`pylops_mpi.StackedVStack` operator that takes multiple
+# :py:class:`pylops_mpi.MPILinearOperator` objects, each acting on one specific
+# distributed array
 x = pylops_mpi.DistributedArray(global_shape=size * 10,
                                 partition=pylops_mpi.Partition.SCATTER,
                                 axis=0)
 # Filling the local arrays
 x[:] = 1.
 
+# Make stacked operator
 mop1 = pylops_mpi.MPIBlockDiag([pylops.MatrixMult(np.ones((5, 10))), ])
 mop2 = pylops_mpi.MPIBlockDiag([pylops.MatrixMult(2 * np.ones((8, 10))), ])
 mop = pylops_mpi.StackedVStack([mop1, mop2])
@@ -123,39 +141,12 @@ xadj = mop.rmatvec(y)
 xadj_arr = xadj.asarray()
 
 if rank == 0:
-    # make single process benchmark
-    Mop = np.ones((5, 10))
-    Mop1 = np.ones((8, 10))
-    mop_single = pylops.VStack([pylops.BlockDiag([pylops.MatrixMult(Mop),] * size),
-                                pylops.BlockDiag([pylops.MatrixMult(2 * Mop1),] * size)])
-    print('mop.shape', mop.shape, mop_single.shape)
-
-    x_single = np.ones(size * 10)
-    y_single = mop_single @ x_single
-    xadj_single = mop_single.H @ y_single
-
     print('StackedVStack y', y, y_arr, y_arr.shape)
-    print('StackedVStack y (np)', y_single)
-
     print('StackedVStack xadj', xadj, xadj_arr, xadj_arr.shape)
-    print('StackedVStack xadj (np)', xadj_single)
-
 
 ###############################################################################
-# **Norms**
-l0norm = y.norm(0)
-l1norm = y.norm(1)
-l2norm = y.norm(2)
-linfnorm = y.norm(np.inf)
-
-if rank == 0:
-    print('L0 norm', l0norm, np.linalg.norm(y_arr, 0))
-    print('L1 norm', l1norm, np.linalg.norm(y_arr, 1))
-    print('L2 norm', l2norm, np.linalg.norm(y_arr, 2))
-    print('Linf norm', linfnorm, np.linalg.norm(y_arr, np.inf))
-
-###############################################################################
-# **Solve inverse problem**
+# Finally, let's solve now an inverse problem using stacked arrays instead
+# of distributed arrays
 x0 = x.copy()
 x0[:] = 0.
 xinv = pylops_mpi.cgls(mop, y, x0=x0, niter=15, tol=1e-10, show=False)[0]

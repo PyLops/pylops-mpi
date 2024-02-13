@@ -344,7 +344,7 @@ class CGLS(Solver):
         else:
             x = x0.copy()
             self.s = self.y - self.Op.matvec(x)
-            damped_x = damp * x.local_array
+            damped_x = damp * x
             r = self.Op.rmatvec(self.s) - damped_x
         self.rank = x.rank
         self.c = r.copy()
