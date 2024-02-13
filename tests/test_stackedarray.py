@@ -3,12 +3,10 @@
     $ mpiexec -n 10 pytest test_stackedarray.py --with-mpi
 """
 import numpy as np
-from mpi4py import MPI
 import pytest
 from numpy.testing import assert_allclose
 
 from pylops_mpi import DistributedArray, Partition, StackedDistributedArray
-from pylops_mpi.DistributedArray import local_split
 
 np.random.seed(42)
 
@@ -57,13 +55,13 @@ def test_creation(par):
     assert_allclose(stacked_arrays[1].local_array, 
                     np.ones(shape=distributed_array1.local_shape,
                             dtype=par['dtype']), rtol=1e-14)
-                                                           
+                                                       
     # Modify array in place
     distributed_array0[:] = 2
     assert_allclose(stacked_arrays[0].local_array, 
                     2 * np.ones(shape=distributed_array0.local_shape,
                                 dtype=par['dtype']), rtol=1e-14)
-    
+
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par1j), (par2),
@@ -81,7 +79,7 @@ def test_stacked_math(par):
 
     stacked_array1 = StackedDistributedArray([distributed_array0, distributed_array1])
     stacked_array2 = StackedDistributedArray([distributed_array1, distributed_array0])
-    
+
     # Addition
     sum_array = stacked_array1 + stacked_array2
     assert isinstance(sum_array, StackedDistributedArray)
@@ -115,7 +113,6 @@ def test_stacked_math(par):
     assert_allclose(l1norm, np.linalg.norm(stacked_array1.asarray().flatten(), 1),
                     rtol=1e-14)
     assert_allclose(l2norm, np.linalg.norm(stacked_array1.asarray(), 2),
-                    rtol=1e-10) # needed to raise it due to how partial norms are combined (with power applied)
+                    rtol=1e-10)  # needed to raise it due to how partial norms are combined (with power applied)
     assert_allclose(linfnorm, np.linalg.norm(stacked_array1.asarray().flatten(), np.inf),
                     rtol=1e-14)
-
