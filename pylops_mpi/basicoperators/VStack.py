@@ -162,10 +162,10 @@ class StackedVStack():
         self.ops = ops
         if len(set(op.shape[1] for op in ops)) > 1:
             raise ValueError("Operators have different number of columns")
-        self.shape = (np.sum(op.shape[0] for op in ops), 
+        self.shape = (np.sum(op.shape[0] for op in ops),
                       ops[0].shape[1])
         self.dtype = _get_dtype(self.ops)
-        
+
     def matvec(self, x: DistributedArray) -> StackedDistributedArray:
         y1 = []
         for oper in self.ops:
