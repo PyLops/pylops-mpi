@@ -49,16 +49,16 @@ def test_creation(par):
 
     stacked_arrays = StackedDistributedArray([distributed_array0, distributed_array1])
     assert isinstance(stacked_arrays, StackedDistributedArray)
-    assert_allclose(stacked_arrays[0].local_array, 
+    assert_allclose(stacked_arrays[0].local_array,
                     np.zeros(shape=distributed_array0.local_shape,
                              dtype=par['dtype']), rtol=1e-14)
-    assert_allclose(stacked_arrays[1].local_array, 
+    assert_allclose(stacked_arrays[1].local_array,
                     np.ones(shape=distributed_array1.local_shape,
                             dtype=par['dtype']), rtol=1e-14)
-                                                       
+
     # Modify array in place
     distributed_array0[:] = 2
-    assert_allclose(stacked_arrays[0].local_array, 
+    assert_allclose(stacked_arrays[0].local_array,
                     2 * np.ones(shape=distributed_array0.local_shape,
                                 dtype=par['dtype']), rtol=1e-14)
 
@@ -83,25 +83,25 @@ def test_stacked_math(par):
     # Addition
     sum_array = stacked_array1 + stacked_array2
     assert isinstance(sum_array, StackedDistributedArray)
-    assert_allclose(sum_array.asarray(), np.add(stacked_array1.asarray(), 
+    assert_allclose(sum_array.asarray(), np.add(stacked_array1.asarray(),
                                                 stacked_array2.asarray()),
                     rtol=1e-14)
     # Subtraction
     sub_array = stacked_array1 - stacked_array2
     assert isinstance(sub_array, StackedDistributedArray)
-    assert_allclose(sub_array.asarray(), np.subtract(stacked_array1.asarray(), 
+    assert_allclose(sub_array.asarray(), np.subtract(stacked_array1.asarray(),
                                                      stacked_array2.asarray()),
                     rtol=1e-14)
     # Multiplication
     mult_array = stacked_array1 * stacked_array2
     assert isinstance(mult_array, StackedDistributedArray)
-    assert_allclose(mult_array.asarray(), np.multiply(stacked_array1.asarray(), 
+    assert_allclose(mult_array.asarray(), np.multiply(stacked_array1.asarray(),
                                                       stacked_array2.asarray()),
                     rtol=1e-14)
     # Dot-product
     dot_prod = stacked_array1.dot(stacked_array2)
-    assert_allclose(dot_prod, np.dot(stacked_array1.asarray().flatten(), 
-                                     stacked_array2.asarray().flatten()), 
+    assert_allclose(dot_prod, np.dot(stacked_array1.asarray().flatten(),
+                                     stacked_array2.asarray().flatten()),
                     rtol=1e-14)
     # Norm
     l0norm = stacked_array1.norm(0)
