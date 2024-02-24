@@ -7,7 +7,8 @@ operations provided by numpy providing forward and adjoint functionalities
 using MPI.
 
 A list of operators present in pylops_mpi.basicoperators :
-    MPIBlockDiag                      Block Diagonal arrangment of PyLops operators
+    MPIBlockDiag                      Block Diagonal arrangement of PyLops operators
+    StackedBlockDiag                  Block Diagonal arrangement of PyLops-MPI operators
     MPIVStack                         Vertical Stacking of PyLops operators
     StackedVStack                     Vertical Stacking of PyLops-MPI operators
     MPIHStack                         Horizontal Stacking of PyLops operators
@@ -26,6 +27,7 @@ from .Laplacian import *
 
 __all__ = [
     "MPIBlockDiag",
+    "StackedBlockDiag",
     "MPIVStack",
     "StackedVStack",
     "MPIHStack",

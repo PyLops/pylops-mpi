@@ -7,7 +7,7 @@ from pylops.utils import DTypeLike
 from pylops import LinearOperator
 
 from pylops_mpi import MPILinearOperator
-from pylops_mpi import DistributedArray
+from pylops_mpi import DistributedArray, StackedDistributedArray
 from pylops_mpi.utils.decorators import reshaped
 
 
@@ -130,3 +130,45 @@ class MPIBlockDiag(MPILinearOperator):
                                                  self.nnops[iop + 1]]))
         y[:] = np.concatenate(y1)
         return y
+
+
+class StackedBlockDiag():
+    r"""Stacked BlockDiag Operator
+
+        Create a stack of :class:`pylops_mpi.MPILinearOperator` operators stacked diagonally.
+
+        Parameters
+        ----------
+        ops : :obj:`list`
+            One or more :class:`pylops_mpi.MPILinearOperator` to be stacked.
+
+        Attributes
+        ----------
+        shape : :obj:`tuple`
+            Operator shape
+
+        Notes
+        -----
+        A StackedBlockDiag is composed of N :class:pylops_mpi.MPILinearOperator instances stacked along the diagonal.
+        These MPI operators will be applied sequentially, with distributed computations
+        performed within each operator.
+
+    """
+
+    def __init__(self, ops: Sequence[MPILinearOperator]):
+        self.ops = ops
+        self.dtype = _get_dtype(self.ops)
+        self.shape = (np.sum(op.shape[0] for op in ops),
+                      np.sum(op.shape[1] for op in ops))
+
+    def matvec(self, x: StackedDistributedArray) -> StackedDistributedArray:
+        y1 = []
+        for xx, oper in zip(x, self.ops):
+            y1.append(oper.matvec(xx))
+        return StackedDistributedArray(y1)
+
+    def rmatvec(self, x: StackedDistributedArray) -> StackedDistributedArray:
+        y1 = []
+        for xx, oper in zip(x, self.ops):
+            y1.append(oper.rmatvec(xx))
+        return StackedDistributedArray(y1)
