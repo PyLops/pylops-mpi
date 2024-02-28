@@ -8,9 +8,9 @@ using MPI.
 
 A list of operators present in pylops_mpi.basicoperators :
     MPIBlockDiag                      Block Diagonal arrangement of PyLops operators
-    StackedBlockDiag                  Block Diagonal arrangement of PyLops-MPI operators
+    MPIStackedBlockDiag               Block Diagonal arrangement of PyLops-MPI operators
     MPIVStack                         Vertical Stacking of PyLops operators
-    StackedVStack                     Vertical Stacking of PyLops-MPI operators
+    MPIStackedVStack                  Vertical Stacking of PyLops-MPI operators
     MPIHStack                         Horizontal Stacking of PyLops operators
     MPIFirstDerivative                First Derivative
     MPISecondDerivative               Second Derivative
@@ -27,9 +27,9 @@ from .Laplacian import *
 
 __all__ = [
     "MPIBlockDiag",
-    "StackedBlockDiag",
+    "MPIStackedBlockDiag",
     "MPIVStack",
-    "StackedVStack",
+    "MPIStackedVStack",
     "MPIHStack",
     "MPIFirstDerivative",
     "MPISecondDerivative",

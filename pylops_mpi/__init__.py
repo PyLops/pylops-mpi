@@ -1,5 +1,6 @@
 from .DistributedArray import DistributedArray, Partition, StackedDistributedArray
 from .LinearOperator import *
+from .StackedLinearOperator import *
 from .basicoperators import *
 from . import (
     basicoperators,

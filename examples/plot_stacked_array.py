@@ -133,7 +133,7 @@ x[:] = 1.
 # Make stacked operator
 mop1 = pylops_mpi.MPIBlockDiag([pylops.MatrixMult(np.ones((5, 10))), ])
 mop2 = pylops_mpi.MPIBlockDiag([pylops.MatrixMult(2 * np.ones((8, 10))), ])
-mop = pylops_mpi.StackedVStack([mop1, mop2])
+mop = pylops_mpi.MPIStackedVStack([mop1, mop2])
 
 y = mop.matvec(x)
 y_arr = y.asarray()
