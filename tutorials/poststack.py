@@ -193,7 +193,7 @@ minv3d_ne = minv3d_ne_dist.asarray().reshape((ny, nx, nz))
 ###############################################################################
 
 # Regularized inversion with regularized equations
-StackOp = pylops_mpi.StackedVStack([BDiag, np.sqrt(epsR) * LapOp])
+StackOp = pylops_mpi.MPIStackedVStack([BDiag, np.sqrt(epsR) * LapOp])
 d0_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz)
 d0_dist[:] = 0.
 dstack_dist = pylops_mpi.StackedDistributedArray([d_dist, d0_dist])

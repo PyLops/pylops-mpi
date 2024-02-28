@@ -6,7 +6,13 @@ from typing import Sequence, Optional
 from pylops import LinearOperator
 from pylops.utils import DTypeLike
 
-from pylops_mpi import MPILinearOperator, DistributedArray, Partition, StackedDistributedArray
+from pylops_mpi import (
+    MPILinearOperator,
+    MPIStackedLinearOperator,
+    DistributedArray,
+    Partition,
+    StackedDistributedArray
+)
 from pylops_mpi.utils.decorators import reshaped
 
 
@@ -130,8 +136,8 @@ class MPIVStack(MPILinearOperator):
         return y
 
 
-class StackedVStack():
-    r"""Stacked VStack Operator
+class MPIStackedVStack(MPIStackedLinearOperator):
+    r"""MPI Stacked VStack Operator
 
     Create a vertical stack of :class:`pylops_mpi.MPILinearOperator` operators.
 
@@ -152,28 +158,30 @@ class StackedVStack():
 
     Notes
     -----
-    An StackedVStack is composed of N  :class:`pylops_mpi.MPILinearOperator` stacked
+    An MPIStackedVStack is composed of N  :class:`pylops_mpi.MPILinearOperator` stacked
     vertically. These MPI operators will be applied sequentially, however distributed
     computations will be performed within each operator.
 
     """
 
-    def __init__(self, ops: Sequence[MPILinearOperator]):
+    def __init__(self, ops: Sequence[MPILinearOperator],
+                 base_comm: MPI.Comm = MPI.COMM_WORLD,
+                 dtype: Optional[DTypeLike] = None):
         self.ops = ops
         if len(set(op.shape[1] for op in ops)) > 1:
             raise ValueError("Operators have different number of columns")
-        self.shape = (np.sum(op.shape[0] for op in ops),
-                      ops[0].shape[1])
-        self.dtype = _get_dtype(self.ops)
+        shape = (int(np.sum(op.shape[0] for op in ops)), ops[0].shape[1])
+        dtype = _get_dtype(self.ops) if dtype is None else np.dtype(dtype)
+        super().__init__(shape=shape, dtype=dtype, base_comm=base_comm)
 
-    def matvec(self, x: DistributedArray) -> StackedDistributedArray:
+    def _matvec(self, x: DistributedArray) -> StackedDistributedArray:
         y1 = []
         for oper in self.ops:
             y1.append(oper.matvec(x))
         y = StackedDistributedArray(y1)
         return y
 
-    def rmatvec(self, x: StackedDistributedArray) -> DistributedArray:
+    def _rmatvec(self, x: StackedDistributedArray) -> DistributedArray:
         y = self.ops[0].rmatvec(x[0])
         for xx, oper in zip(x[1:], self.ops[1:]):
             y = y + oper.rmatvec(xx)
