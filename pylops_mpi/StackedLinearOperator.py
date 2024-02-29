@@ -235,10 +235,10 @@ class _ProductStackedLinearOperator(MPIStackedLinearOperator):
         super().__init__(shape=(A.shape[0], B.shape[1]), dtype=_get_dtype([A, B]),
                          base_comm=MPI.COMM_WORLD)
 
-    def _matvec(self, x: Union[DistributedArray, StackedDistributedArray]) -> Union[DistributedArray, StackedDistributedArray]:
+    def _matvec(self, x: Union[StackedDistributedArray]) -> Union[StackedDistributedArray]:
         return self.args[0].matvec(self.args[1].matvec(x))
 
-    def _rmatvec(self, x: Union[DistributedArray, StackedDistributedArray]) -> Union[DistributedArray, StackedDistributedArray]:
+    def _rmatvec(self, x: Union[StackedDistributedArray]) -> Union[StackedDistributedArray]:
         return self.args[1].rmatvec(self.args[0].rmatvec(x))
 
     def _adjoint(self) -> MPIStackedLinearOperator:
@@ -262,13 +262,13 @@ class _ScaledStackedLinearOperator(MPIStackedLinearOperator):
     def _matvec(self, x: Union[DistributedArray, StackedDistributedArray]) -> Union[DistributedArray, StackedDistributedArray]:
         y = self.args[0].matvec(x)
         if y is not None:
-            y[:] *= self.args[1]
+            y *= self.args[1]
         return y
 
     def _rmatvec(self, x: Union[DistributedArray, StackedDistributedArray]) -> Union[DistributedArray, StackedDistributedArray]:
         y = self.args[0].rmatvec(x)
         if y is not None:
-            y[:] *= np.conj(self.args[1])
+            y *= np.conj(self.args[1])
         return y
 
     def _adjoint(self) -> MPIStackedLinearOperator:
