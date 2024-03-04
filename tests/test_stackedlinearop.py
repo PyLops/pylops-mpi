@@ -43,7 +43,7 @@ def test_transpose(par):
     """Test the StackedTransposeLinearOperator"""
     Op = pylops.MatrixMult(A=((rank + 1) * np.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
     BDiag_MPI = pylops_mpi.MPIBlockDiag(ops=[Op, ])
-    FirstDeriv_MPI = pylops_mpi.MPIFirstDerivative(dims=(par['ny'], par['nx']), dtype=par['dtype'],)
+    FirstDeriv_MPI = pylops_mpi.MPIFirstDerivative(dims=(par['ny'], par['nx']), dtype=par['dtype'], )
     StackedBlockDiag_MPI = pylops_mpi.MPIStackedBlockDiag(ops=[BDiag_MPI, FirstDeriv_MPI])
     # Tranposed Op
     Top_MPI = StackedBlockDiag_MPI.T
@@ -86,7 +86,7 @@ def test_scaled(par):
     """Test the StackedScaledLinearOperator"""
     Op = pylops.MatrixMult(A=((rank + 1) * np.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
     BDiag_MPI = pylops_mpi.MPIBlockDiag(ops=[Op, ])
-    FirstDeriv_MPI = pylops_mpi.MPIFirstDerivative(dims=(par['ny'], par['nx']), dtype=par['dtype'],)
+    FirstDeriv_MPI = pylops_mpi.MPIFirstDerivative(dims=(par['ny'], par['nx']), dtype=par['dtype'], )
     StackedBlockDiag_MPI = pylops_mpi.MPIStackedBlockDiag(ops=[BDiag_MPI, FirstDeriv_MPI])
     # Scaled Op
     Sop_MPI = StackedBlockDiag_MPI * -4
@@ -129,7 +129,7 @@ def test_conj(par):
     """Test the StackedConjLinearOperator"""
     Op = pylops.MatrixMult(A=((rank + 1) * np.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
     BDiag_MPI = pylops_mpi.MPIBlockDiag(ops=[Op, ])
-    FirstDeriv_MPI = pylops_mpi.MPIFirstDerivative(dims=(par['ny'], par['nx']), dtype=par['dtype'],)
+    FirstDeriv_MPI = pylops_mpi.MPIFirstDerivative(dims=(par['ny'], par['nx']), dtype=par['dtype'], )
     StackedBlockDiag_MPI = pylops_mpi.MPIStackedBlockDiag(ops=[BDiag_MPI, FirstDeriv_MPI])
     # Conj Op
     Cop_MPI = StackedBlockDiag_MPI.conj()
@@ -164,3 +164,46 @@ def test_conj(par):
         Sop = StackedBlockDiag.conj()
         assert_allclose(Cop_x_np, Sop @ x_global, rtol=1e-14)
         assert_allclose(Cop_y_np, Sop.H @ y_global, rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
+def test_power(par):
+    """Test the StackedPowerLinearOperator"""
+    Op = pylops.MatrixMult(A=((rank + 1) * np.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
+    BDiag_MPI = pylops_mpi.MPIBlockDiag(ops=[Op, ])
+    FirstDeriv_MPI = pylops_mpi.MPIFirstDerivative(dims=(par['ny'], par['nx']), dtype=par['dtype'], )
+    StackedBlockDiag_MPI = pylops_mpi.MPIStackedBlockDiag(ops=[BDiag_MPI, FirstDeriv_MPI])
+    # Power Op
+    Pop_MPI = StackedBlockDiag_MPI.conj()
+
+    # For forward mode
+    dist_1 = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    dist_1[:] = np.ones(par['nx'])
+    dist_2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'])
+    dist_2[:] = np.ones(dist_2.local_shape)
+    x = pylops_mpi.StackedDistributedArray(distarrays=[dist_1, dist_2])
+    x_global = x.asarray()
+    Pop_x = Pop_MPI @ x
+    assert isinstance(Pop_x, pylops_mpi.StackedDistributedArray)
+    Pop_x_np = Pop_x.asarray()
+
+    # For adjoint mode
+    dist_1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    dist_1[:] = np.ones(par['ny'])
+    dist_2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'])
+    dist_2[:] = np.ones(dist_2.local_shape)
+    y = pylops_mpi.StackedDistributedArray(distarrays=[dist_1, dist_2])
+    y_global = y.asarray()
+    Pop_y = Pop_MPI.H @ y
+    assert isinstance(Pop_y, pylops_mpi.StackedDistributedArray)
+    Pop_y_np = Pop_y.asarray()
+    if rank == 0:
+        ops = [pylops.MatrixMult((i + 1) * np.ones(shape=(par['ny'], par['nx'])).astype(par['dtype'])) for i in
+               range(size)]
+        BDiag = pylops.BlockDiag(ops=ops)
+        FirstDeriv = pylops.FirstDerivative(dims=(par['ny'], par['nx']), dtype=par['dtype'], axis=0)
+        StackedBlockDiag = pylops.BlockDiag([BDiag, FirstDeriv])
+        Sop = StackedBlockDiag.conj()
+        assert_allclose(Pop_x_np, Sop @ x_global, rtol=1e-14)
+        assert_allclose(Pop_y_np, Sop.H @ y_global, rtol=1e-14)
