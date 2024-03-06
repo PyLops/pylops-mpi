@@ -227,18 +227,24 @@ class _TransposedStackedLinearOperator(MPIStackedLinearOperator):
 class _ProductStackedLinearOperator(MPIStackedLinearOperator):
     """Product of MPI Stacked Linear Operators"""
     def __init__(self, A: MPIStackedLinearOperator, B: MPIStackedLinearOperator):
+        from pylops_mpi.basicoperators.VStack import MPIStackedVStack
+        from pylops_mpi.basicoperators.BlockDiag import MPIStackedBlockDiag
         if not isinstance(A, MPIStackedLinearOperator) or not isinstance(B, MPIStackedLinearOperator):
-            raise ValueError('both operands have to be a LinearOperator')
+            raise ValueError('both operands have to be a MPIStackedLinearOperator')
+        if isinstance(A, MPIStackedVStack) and isinstance(B, MPIStackedVStack):
+            raise ValueError('both operands cannot be MPIStackedVStack')
+        if isinstance(A, MPIStackedBlockDiag) and isinstance(B, MPIStackedBlockDiag) and len(A.ops) != len(B.ops):
+            raise ValueError(f'both MPIStackedBlockDiag cannot have different number of ops, {A.ops} != {B.ops}')
         if A.shape[1] != B.shape[0]:
             raise ValueError('cannot multiply %r and %r: shape mismatch' % (A, B))
         self.args = (A, B)
         super().__init__(shape=(A.shape[0], B.shape[1]), dtype=_get_dtype([A, B]),
                          base_comm=MPI.COMM_WORLD)
 
-    def _matvec(self, x: Union[StackedDistributedArray]) -> Union[StackedDistributedArray]:
+    def _matvec(self, x: Union[StackedDistributedArray, DistributedArray]) -> Union[StackedDistributedArray, DistributedArray]:
         return self.args[0].matvec(self.args[1].matvec(x))
 
-    def _rmatvec(self, x: Union[StackedDistributedArray]) -> Union[StackedDistributedArray]:
+    def _rmatvec(self, x: Union[StackedDistributedArray, DistributedArray]) -> Union[StackedDistributedArray, DistributedArray]:
         return self.args[1].rmatvec(self.args[0].rmatvec(x))
 
     def _adjoint(self) -> MPIStackedLinearOperator:
@@ -283,7 +289,8 @@ class _SumStackedLinearOperator(MPIStackedLinearOperator):
     def __init__(self, A: MPIStackedLinearOperator, B: MPIStackedLinearOperator):
         if not isinstance(A, MPIStackedLinearOperator) or not isinstance(B, MPIStackedLinearOperator):
             raise ValueError('both operands have to be a MPIStackedLinearOperator')
-        # Make sure it works with different kinds
+        if type(A) != type(B):  # noqa: E721
+            raise ValueError(f'both operands have to be of same type, {A} != {B}')
         if A.shape != B.shape:
             raise ValueError("cannot add %r and %r: shape mismatch" % (A, B))
         self.args = (A, B)
