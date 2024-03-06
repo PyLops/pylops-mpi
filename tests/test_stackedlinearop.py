@@ -207,3 +207,103 @@ def test_power(par):
         Sop = StackedBlockDiag.conj()
         assert_allclose(Pop_x_np, Sop @ x_global, rtol=1e-14)
         assert_allclose(Pop_y_np, Sop.H @ y_global, rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
+def test_sum(par):
+    """Test the StackedSumLinearOperator"""
+    Op1 = pylops.MatrixMult(A=((rank + 1) * np.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
+    BDiag_MPI_1 = pylops_mpi.MPIBlockDiag(ops=[Op1, ])
+    FirstDeriv_MPI_1 = pylops_mpi.MPIFirstDerivative(dims=(par['ny'], par['nx']), dtype=par['dtype'])
+    StackedBDiag_MPI_1 = pylops_mpi.MPIStackedBlockDiag(ops=[BDiag_MPI_1, FirstDeriv_MPI_1])
+
+    Op2 = pylops.MatrixMult(A=((rank + 2) * np.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
+    BDiag_MPI_2 = pylops_mpi.MPIBlockDiag(ops=[Op2, ])
+    SecondDeriv_MPI_2 = pylops_mpi.MPISecondDerivative(dims=(par['ny'], par['nx']), dtype=par['dtype'])
+    StackedBDiag_MPI_2 = pylops_mpi.MPIStackedBlockDiag(ops=[BDiag_MPI_2, SecondDeriv_MPI_2])
+    # Sum Op
+    Sop_MPI = StackedBDiag_MPI_1 + StackedBDiag_MPI_2
+
+    # Forward Mode
+    dist1 = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    dist1[:] = np.ones(dist1.local_shape)
+    dist2 = pylops_mpi.DistributedArray(global_shape=par['ny'] * par['nx'], dtype=par['dtype'])
+    dist2[:] = np.ones(dist2.local_shape)
+    x = pylops_mpi.StackedDistributedArray(distarrays=[dist1, dist2])
+    x_global = x.asarray()
+    Sop_x = Sop_MPI @ x
+    Sop_x_np = Sop_x.asarray()
+
+    # Adjoint Mode
+    dist1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    dist1[:] = np.ones(dist1.local_shape)
+    dist2 = pylops_mpi.DistributedArray(global_shape=par['ny'] * par['nx'], dtype=par['dtype'])
+    dist2[:] = np.ones(dist2.local_shape)
+    y = pylops_mpi.StackedDistributedArray(distarrays=[dist1, dist2])
+    y_global = y.asarray()
+    Sop_y = Sop_MPI.H @ y
+    Sop_y_np = Sop_y.asarray()
+
+    if rank == 0:
+        ops1 = [pylops.MatrixMult((i + 1) * np.ones(shape=(par['ny'], par['nx'])).astype(par['dtype'])) for i in
+                range(size)]
+        BDiag = pylops.BlockDiag(ops=ops1)
+        FirstDeriv = pylops.FirstDerivative(dims=(par['ny'], par['nx']), axis=0, dtype=par['dtype'])
+        StackedBDiag_1 = pylops.BlockDiag(ops=[BDiag, FirstDeriv])
+        ops2 = [pylops.MatrixMult((i + 2) * np.ones(shape=(par['ny'], par['nx'])).astype(par['dtype'])) for i in
+                range(size)]
+        BDiag2 = pylops.BlockDiag(ops=ops2)
+        SecondDeriv = pylops.SecondDerivative(dims=(par['ny'], par['nx']), axis=0, dtype=par['dtype'])
+        StackedBDiag_2 = pylops.BlockDiag(ops=[BDiag2, SecondDeriv])
+        Sop = StackedBDiag_1 + StackedBDiag_2
+        assert_allclose(Sop_x_np, Sop @ x_global, rtol=1e-14)
+        assert_allclose(Sop_y_np, Sop.H @ y_global, rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
+def test_product(par):
+    """Test the StackedProductLinearOperator"""
+    Op1 = pylops.MatrixMult(A=((rank + 1) * np.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
+    BDiag_MPI_1 = pylops_mpi.MPIBlockDiag(ops=[Op1, ])
+    Op2 = pylops.MatrixMult(A=((rank + 2) * np.ones(shape=(par['nx'], par['ny']))).astype(par['dtype']))
+    BDiag_MPI_2 = pylops_mpi.MPIBlockDiag(ops=[Op2, ])
+
+    StackedBDiag_MPI_1 = pylops_mpi.MPIStackedBlockDiag(ops=[BDiag_MPI_1, BDiag_MPI_2])
+    StackedBDiag_MPI_2 = pylops_mpi.MPIStackedBlockDiag(ops=[BDiag_MPI_2, BDiag_MPI_1])
+    # Product MPI
+    Pop_MPI = StackedBDiag_MPI_1 * StackedBDiag_MPI_2
+
+    # Forward Mode
+    dist1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    dist1[:] = np.ones(dist1.local_shape)
+    dist2 = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    dist2[:] = np.ones(dist2.local_shape)
+    x = pylops_mpi.StackedDistributedArray(distarrays=[dist1, dist2])
+    x_global = x.asarray()
+    Pop_x = Pop_MPI @ x
+    Pop_x_np = Pop_x.asarray()
+
+    # Adjoint Mode
+    dist1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    dist1[:] = np.ones(dist1.local_shape)
+    dist2 = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    dist2[:] = np.ones(dist2.local_shape)
+    y = pylops_mpi.StackedDistributedArray(distarrays=[dist1, dist2])
+    y_global = y.asarray()
+    Pop_y = Pop_MPI.H @ y
+    Pop_y_np = Pop_y.asarray()
+
+    if rank == 0:
+        ops1 = [pylops.MatrixMult((i + 1) * np.ones(shape=(par['ny'], par['nx'])).astype(par['dtype'])) for i in
+                range(size)]
+        BDiag1 = pylops.BlockDiag(ops=ops1)
+        ops2 = [pylops.MatrixMult((i + 2) * np.ones(shape=(par['nx'], par['ny'])).astype(par['dtype'])) for i in
+                range(size)]
+        BDiag2 = pylops.BlockDiag(ops=ops2)
+        StackedBDiag_1 = pylops.BlockDiag(ops=[BDiag1, BDiag2])
+        StackedBDiag_2 = pylops.BlockDiag(ops=[BDiag2, BDiag1])
+        Pop = StackedBDiag_1 * StackedBDiag_2
+        assert_allclose(Pop_x_np, Pop @ x_global, rtol=1e-14)
+        assert_allclose(Pop_y_np, Pop.H @ y_global, rtol=1e-14)
