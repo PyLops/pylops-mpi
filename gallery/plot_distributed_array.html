@@ -22,15 +22,15 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=5b4479735964841361fd" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
 
   
-  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=5b4479735964841361fd" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+  <link href="../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
@@ -42,9 +42,9 @@
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e45f66c9" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=5b4479735964841361fd" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd" />
-  <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=5b4479735964841361fd"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
@@ -66,10 +66,9 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
   
   <div id="pst-scroll-pixel-helper"></div>
-
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
     <i class="fa-solid fa-arrow-up"></i>
@@ -110,7 +109,7 @@
 </form></div>
   </div>
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
 <div class="bd-header__inner bd-page-width">
   <label class="sidebar-toggle primary-toggle" for="__primary">
     <span class="fa-solid fa-bars"></span>
@@ -148,12 +147,6 @@
       
         <div class="navbar-item">
 <nav class="navbar-nav">
-  <p class="sidebar-header-items__title"
-     role="heading"
-     aria-level="1"
-     aria-label="Site Navigation">
-    Site Navigation
-  </p>
   <ul class="bd-navbar-elements navbar-nav">
     
                     <li class="nav-item">
@@ -283,10 +276,13 @@ document.write(`
   
 </div>
 
-    </nav>
+    </header>
   
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
+      
+      
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -299,12 +295,6 @@ document.write(`
         
           <div class="navbar-item">
 <nav class="navbar-nav">
-  <p class="sidebar-header-items__title"
-     role="heading"
-     aria-level="1"
-     aria-label="Site Navigation">
-    Site Navigation
-  </p>
   <ul class="bd-navbar-elements navbar-nav">
     
                     <li class="nav-item">
@@ -412,6 +402,7 @@ document.write(`
 <li class="toctree-l1"><a class="reference internal" href="plot_derivative.html">Derivatives</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Distributed Array</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plot_mpilinop.html">MPILinearOperator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plot_stacked_array.html">Stacked Array</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plot_stacking.html">Stacking Operators</a></li>
 </ul>
 </div>
@@ -468,7 +459,7 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
   <div class="sphx-glr-download-link-note admonition note">
 <p class="admonition-title">Note</p>
@@ -550,25 +541,38 @@ Below is an example implementation depicting the same.</p>
 <li><img src="../_images/sphx_glr_plot_distributed_array_004.png" srcset="../_images/sphx_glr_plot_distributed_array_004.png" alt="Distributed Array - 1, Rank-0" class = "sphx-glr-multi-img"/></li>
 <li><img src="../_images/sphx_glr_plot_distributed_array_005.png" srcset="../_images/sphx_glr_plot_distributed_array_005.png" alt="Distributed Array - 2, Rank-0" class = "sphx-glr-multi-img"/></li>
 </ul>
-<p><strong>Element-wise Addition</strong> - Each process operates on its local portion of
+<p><strong>Scaling</strong> - Each process operates on its local portion of
+the array and scales the corresponding elements by a given scalar.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">scale_arr</span> <span class="o">=</span> <span class="mf">.5</span> <span class="o">*</span> <span class="n">arr1</span>
+<span class="n">pylops_mpi</span><span class="o">.</span><span class="n">plot_local_arrays</span><span class="p">(</span><span class="n">scale_arr</span><span class="p">,</span> <span class="s2">&quot;Scaling&quot;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../_images/sphx_glr_plot_distributed_array_006.png" srcset="../_images/sphx_glr_plot_distributed_array_006.png" alt="Scaling, Rank-0" class = "sphx-glr-single-img"/><p><strong>Element-wise Addition</strong> - Each process operates on its local portion of
 the array and adds the corresponding elements together.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">sum_arr</span> <span class="o">=</span> <span class="n">arr1</span> <span class="o">+</span> <span class="n">arr2</span>
 <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">plot_local_arrays</span><span class="p">(</span><span class="n">sum_arr</span><span class="p">,</span> <span class="s2">&quot;Addition&quot;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
-<img src="../_images/sphx_glr_plot_distributed_array_006.png" srcset="../_images/sphx_glr_plot_distributed_array_006.png" alt="Addition, Rank-0" class = "sphx-glr-single-img"/><p><strong>Element-wise Subtraction</strong> - Each process operates on its local portion
+<img src="../_images/sphx_glr_plot_distributed_array_007.png" srcset="../_images/sphx_glr_plot_distributed_array_007.png" alt="Addition, Rank-0" class = "sphx-glr-single-img"/><p><strong>Element-wise In-place Addition</strong> - Similar to the previous one but the
+addition is performed directly on one of the addends without creating a new
+distributed array.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">sum_arr</span> <span class="o">+=</span> <span class="n">arr2</span>
+<span class="n">pylops_mpi</span><span class="o">.</span><span class="n">plot_local_arrays</span><span class="p">(</span><span class="n">sum_arr</span><span class="p">,</span> <span class="s2">&quot;Addition&quot;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<img src="../_images/sphx_glr_plot_distributed_array_008.png" srcset="../_images/sphx_glr_plot_distributed_array_008.png" alt="Addition, Rank-0" class = "sphx-glr-single-img"/><p><strong>Element-wise Subtraction</strong> - Each process operates on its local portion
 of the array and subtracts the corresponding elements together.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">diff_arr</span> <span class="o">=</span> <span class="n">arr1</span> <span class="o">-</span> <span class="n">arr2</span>
 <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">plot_local_arrays</span><span class="p">(</span><span class="n">diff_arr</span><span class="p">,</span> <span class="s2">&quot;Subtraction&quot;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
-<img src="../_images/sphx_glr_plot_distributed_array_007.png" srcset="../_images/sphx_glr_plot_distributed_array_007.png" alt="Subtraction, Rank-0" class = "sphx-glr-single-img"/><p><strong>Element-wise Multiplication</strong> - Each process operates on its local portion
+<img src="../_images/sphx_glr_plot_distributed_array_009.png" srcset="../_images/sphx_glr_plot_distributed_array_009.png" alt="Subtraction, Rank-0" class = "sphx-glr-single-img"/><p><strong>Element-wise Multiplication</strong> - Each process operates on its local portion
 of the array and multiplies the corresponding elements together.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">mult_arr</span> <span class="o">=</span> <span class="n">arr1</span> <span class="o">*</span> <span class="n">arr2</span>
 <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">plot_local_arrays</span><span class="p">(</span><span class="n">mult_arr</span><span class="p">,</span> <span class="s2">&quot;Multiplication&quot;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
-<img src="../_images/sphx_glr_plot_distributed_array_008.png" srcset="../_images/sphx_glr_plot_distributed_array_008.png" alt="Multiplication, Rank-0" class = "sphx-glr-single-img"/><p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 1.544 seconds)</p>
+<img src="../_images/sphx_glr_plot_distributed_array_010.png" srcset="../_images/sphx_glr_plot_distributed_array_010.png" alt="Multiplication, Rank-0" class = "sphx-glr-single-img"/><p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 1.844 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-gallery-plot-distributed-array-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/82a21537237fa28c9fd15bc39c8c4644/plot_distributed_array.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_distributed_array.ipynb</span></code></a></p>
@@ -615,6 +619,8 @@ of the array and multiplies the corresponding elements together.</p>
             
             
               
+                <div class="bd-sidebar-secondary bd-toc"></div>
+              
             
           </div>
           <footer class="bd-footer-content">
@@ -626,8 +632,8 @@ of the array and multiplies the corresponding elements together.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=5b4479735964841361fd"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd"></script>
+  <script src="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -638,7 +644,7 @@ of the array and multiplies the corresponding elements together.</p>
 
   <p class="copyright">
     
-      © Copyright 2023, PyLops Development Team.
+      © Copyright 2024, PyLops Development Team.
       <br/>
     
   </p>
@@ -660,7 +666,7 @@ of the array and multiplies the corresponding elements together.</p>
       
         <div class="footer-item">
 <p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.14.4.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.2.
 </p></div>
       
     </div>

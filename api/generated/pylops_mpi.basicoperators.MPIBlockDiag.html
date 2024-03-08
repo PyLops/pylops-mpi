@@ -22,15 +22,15 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
-<link href="../../_static/styles/bootstrap.css?digest=5b4479735964841361fd" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
 
   
-  <link href="../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=5b4479735964841361fd" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+  <link href="../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
@@ -42,9 +42,9 @@
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e45f66c9" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=5b4479735964841361fd" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd" />
-  <script src="../../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=5b4479735964841361fd"></script>
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
@@ -56,8 +56,8 @@
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="pylops_mpi.basicoperators.MPIVStack" href="pylops_mpi.basicoperators.MPIVStack.html" />
-    <link rel="prev" title="pylops_mpi.asmpilinearoperator" href="pylops_mpi.asmpilinearoperator.html" />
+    <link rel="next" title="pylops_mpi.basicoperators.MPIStackedBlockDiag" href="pylops_mpi.basicoperators.MPIStackedBlockDiag.html" />
+    <link rel="prev" title="pylops_mpi.MPIStackedLinearOperator" href="pylops_mpi.MPIStackedLinearOperator.html" />
     
     <script src="../../_static/require.js"></script>
 
@@ -68,10 +68,9 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
   
   <div id="pst-scroll-pixel-helper"></div>
-
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
     <i class="fa-solid fa-arrow-up"></i>
@@ -112,7 +111,7 @@
 </form></div>
   </div>
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
 <div class="bd-header__inner bd-page-width">
   <label class="sidebar-toggle primary-toggle" for="__primary">
     <span class="fa-solid fa-bars"></span>
@@ -150,12 +149,6 @@
       
         <div class="navbar-item">
 <nav class="navbar-nav">
-  <p class="sidebar-header-items__title"
-     role="heading"
-     aria-level="1"
-     aria-label="Site Navigation">
-    Site Navigation
-  </p>
   <ul class="bd-navbar-elements navbar-nav">
     
                     <li class="nav-item">
@@ -289,10 +282,13 @@ document.write(`
   
 </div>
 
-    </nav>
+    </header>
   
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
+      
+      
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -305,12 +301,6 @@ document.write(`
         
           <div class="navbar-item">
 <nav class="navbar-nav">
-  <p class="sidebar-header-items__title"
-     role="heading"
-     aria-level="1"
-     aria-label="Site Navigation">
-    Site Navigation
-  </p>
   <ul class="bd-navbar-elements navbar-nav">
     
                     <li class="nav-item">
@@ -416,14 +406,18 @@ document.write(`
   <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.Partition.html">pylops_mpi.Partition</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.DistributedArray.html">pylops_mpi.DistributedArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.StackedDistributedArray.html">pylops_mpi.StackedDistributedArray</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.MPILinearOperator.html">pylops_mpi.MPILinearOperator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.asmpilinearoperator.html">pylops_mpi.asmpilinearoperator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.MPIStackedLinearOperator.html">pylops_mpi.MPIStackedLinearOperator</a></li>
 </ul>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">pylops_mpi.basicoperators.MPIBlockDiag</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MPIStackedBlockDiag.html">pylops_mpi.basicoperators.MPIStackedBlockDiag</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MPIVStack.html">pylops_mpi.basicoperators.MPIVStack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MPIStackedVStack.html">pylops_mpi.basicoperators.MPIStackedVStack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MPIHStack.html">pylops_mpi.basicoperators.MPIHStack</a></li>
 </ul>
 <ul class="nav bd-sidenav">
@@ -493,7 +487,7 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
   <section id="pylops-mpi-basicoperators-mpiblockdiag">
 <h1>pylops_mpi.basicoperators.MPIBlockDiag<a class="headerlink" href="#pylops-mpi-basicoperators-mpiblockdiag" title="Link to this heading">#</a></h1>
@@ -528,44 +522,44 @@ its local shapes agree with those of the corresponding linear operators.
 The forward mode of each operator is then collected from all ranks as a DistributedArray, referred to as <strong>d</strong>.</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{bmatrix}
-  \mathbf{d}_1 \\
-  \mathbf{d}_2 \\
-  \vdots \\
-  \mathbf{d}_n
+\mathbf{d}_1 \\
+\mathbf{d}_2 \\
+\vdots \\
+\mathbf{d}_n
 \end{bmatrix} =
 \begin{bmatrix}
-  \mathbf{L}_1 &amp; \mathbf{0} &amp; \ldots &amp; \mathbf{0} \\
-  \mathbf{0} &amp; \mathbf{L}_2 &amp; \ldots &amp; \mathbf{0} \\
-  \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
-  \mathbf{0} &amp; \mathbf{0} &amp; \ldots &amp; \mathbf{L}_n
+\mathbf{L}_1 &amp; \mathbf{0} &amp; \ldots &amp; \mathbf{0} \\
+\mathbf{0} &amp; \mathbf{L}_2 &amp; \ldots &amp; \mathbf{0} \\
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+\mathbf{0} &amp; \mathbf{0} &amp; \ldots &amp; \mathbf{L}_n
 \end{bmatrix}
 \begin{bmatrix}
-  \mathbf{m}_1 \\
-  \mathbf{m}_2 \\
-  \vdots \\
-  \mathbf{m}_n
+\mathbf{m}_1 \\
+\mathbf{m}_2 \\
+\vdots \\
+\mathbf{m}_n
 \end{bmatrix}\end{split}\]</div>
 <p>Likewise, for the adjoint mode, each operator executes operations in the adjoint mode,
 the adjoint mode of each operator is then collected from all ranks as a DistributedArray
 referred as <strong>d</strong>.</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{bmatrix}
-  \mathbf{d}_1 \\
-  \mathbf{d}_2 \\
-  \vdots \\
-  \mathbf{d}_n
+\mathbf{d}_1 \\
+\mathbf{d}_2 \\
+\vdots \\
+\mathbf{d}_n
 \end{bmatrix} =
 \begin{bmatrix}
-  \mathbf{L}_1^H &amp; \mathbf{0} &amp; \ldots &amp; \mathbf{0} \\
-  \mathbf{0} &amp; \mathbf{L}_2^H &amp; \ldots &amp; \mathbf{0} \\
-  \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
-  \mathbf{0} &amp; \mathbf{0} &amp; \ldots &amp; \mathbf{L}_n^H
+\mathbf{L}_1^H &amp; \mathbf{0} &amp; \ldots &amp; \mathbf{0} \\
+\mathbf{0} &amp; \mathbf{L}_2^H &amp; \ldots &amp; \mathbf{0} \\
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+\mathbf{0} &amp; \mathbf{0} &amp; \ldots &amp; \mathbf{L}_n^H
 \end{bmatrix}
 \begin{bmatrix}
-  \mathbf{m}_1 \\
-  \mathbf{m}_2 \\
-  \vdots \\
-  \mathbf{m}_n
+\mathbf{m}_1 \\
+\mathbf{m}_2 \\
+\vdots \\
+\mathbf{m}_n
 \end{bmatrix}\end{split}\]</div>
 <dl class="field-list">
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
@@ -616,20 +610,20 @@ referred as <strong>d</strong>.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="pylops_mpi.asmpilinearoperator.html"
+       href="pylops_mpi.MPIStackedLinearOperator.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">pylops_mpi.asmpilinearoperator</p>
+        <p class="prev-next-title">pylops_mpi.MPIStackedLinearOperator</p>
       </div>
     </a>
     <a class="right-next"
-       href="pylops_mpi.basicoperators.MPIVStack.html"
+       href="pylops_mpi.basicoperators.MPIStackedBlockDiag.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">pylops_mpi.basicoperators.MPIVStack</p>
+        <p class="prev-next-title">pylops_mpi.basicoperators.MPIStackedBlockDiag</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -642,12 +636,14 @@ referred as <strong>d</strong>.</p>
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
-  <div class="sidebar-secondary-item">
 
-  <div class="page-toc tocsection onthispage">
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
     <i class="fa-solid fa-list"></i> On this page
   </div>
-  <nav class="bd-toc-nav page-toc">
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pylops_mpi.basicoperators.MPIBlockDiag"><code class="docutils literal notranslate"><span class="pre">MPIBlockDiag</span></code></a></li>
 </ul>
@@ -666,8 +662,8 @@ referred as <strong>d</strong>.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../../_static/scripts/bootstrap.js?digest=5b4479735964841361fd"></script>
-<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd"></script>
+  <script src="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -678,7 +674,7 @@ referred as <strong>d</strong>.</p>
 
   <p class="copyright">
     
-      © Copyright 2023, PyLops Development Team.
+      © Copyright 2024, PyLops Development Team.
       <br/>
     
   </p>
@@ -700,7 +696,7 @@ referred as <strong>d</strong>.</p>
       
         <div class="footer-item">
 <p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.14.4.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.2.
 </p></div>
       
     </div>

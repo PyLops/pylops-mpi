@@ -28,10 +28,10 @@ Tutorials
 
 .. only:: html
 
-  .. image:: /tutorials/images/thumb/sphx_glr_plot_lsm_thumb.png
+  .. image:: /tutorials/images/thumb/sphx_glr_lsm_thumb.png
     :alt:
 
-  :ref:`sphx_glr_tutorials_plot_lsm.py`
+  :ref:`sphx_glr_tutorials_lsm.py`
 
 .. raw:: html
 
@@ -45,10 +45,10 @@ Tutorials
 
 .. only:: html
 
-  .. image:: /tutorials/images/thumb/sphx_glr_plot_post_stack_inversion_thumb.png
+  .. image:: /tutorials/images/thumb/sphx_glr_poststack_thumb.png
     :alt:
 
-  :ref:`sphx_glr_tutorials_plot_post_stack_inversion.py`
+  :ref:`sphx_glr_tutorials_poststack.py`
 
 .. raw:: html
 
@@ -64,8 +64,8 @@ Tutorials
 .. toctree::
    :hidden:
 
-   /tutorials/plot_lsm
-   /tutorials/plot_post_stack_inversion
+   /tutorials/lsm
+   /tutorials/poststack
 
 
 

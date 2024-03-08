@@ -1,0 +1,49 @@
+﻿pylops\_mpi.StackedDistributedArray
+===================================
+
+.. currentmodule:: pylops_mpi
+
+.. autoclass:: StackedDistributedArray
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~StackedDistributedArray.__init__
+        ~StackedDistributedArray.add
+        ~StackedDistributedArray.asarray
+        ~StackedDistributedArray.conj
+        ~StackedDistributedArray.copy
+        ~StackedDistributedArray.dot
+        ~StackedDistributedArray.iadd
+        ~StackedDistributedArray.multiply
+        ~StackedDistributedArray.norm
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.StackedDistributedArray.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+

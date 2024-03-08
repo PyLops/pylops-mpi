@@ -1,0 +1,47 @@
+﻿pylops\_mpi.MPIStackedLinearOperator
+====================================
+
+.. currentmodule:: pylops_mpi
+
+.. autoclass:: MPIStackedLinearOperator
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~MPIStackedLinearOperator.__init__
+        ~MPIStackedLinearOperator.adjoint
+        ~MPIStackedLinearOperator.conj
+        ~MPIStackedLinearOperator.dot
+        ~MPIStackedLinearOperator.matvec
+        ~MPIStackedLinearOperator.rmatvec
+        ~MPIStackedLinearOperator.transpose
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.MPIStackedLinearOperator.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+

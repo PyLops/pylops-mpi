@@ -16,6 +16,7 @@
         ~DistributedArray.conj
         ~DistributedArray.copy
         ~DistributedArray.dot
+        ~DistributedArray.iadd
         ~DistributedArray.multiply
         ~DistributedArray.norm
         ~DistributedArray.ravel

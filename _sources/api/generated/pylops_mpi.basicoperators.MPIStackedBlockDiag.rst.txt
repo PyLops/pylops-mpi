@@ -1,0 +1,47 @@
+﻿pylops\_mpi.basicoperators.MPIStackedBlockDiag
+==============================================
+
+.. currentmodule:: pylops_mpi.basicoperators
+
+.. autoclass:: MPIStackedBlockDiag
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~MPIStackedBlockDiag.__init__
+        ~MPIStackedBlockDiag.adjoint
+        ~MPIStackedBlockDiag.conj
+        ~MPIStackedBlockDiag.dot
+        ~MPIStackedBlockDiag.matvec
+        ~MPIStackedBlockDiag.rmatvec
+        ~MPIStackedBlockDiag.transpose
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.basicoperators.MPIStackedBlockDiag.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+

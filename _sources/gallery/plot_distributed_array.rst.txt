@@ -187,21 +187,21 @@ Below is an example implementation depicting the same.
 
 .. GENERATED FROM PYTHON SOURCE LINES 75-77
 
-**Element-wise Addition** - Each process operates on its local portion of
-the array and adds the corresponding elements together.
+**Scaling** - Each process operates on its local portion of
+the array and scales the corresponding elements by a given scalar.
 
 .. GENERATED FROM PYTHON SOURCE LINES 77-80
 
 .. code-block:: Python
 
-    sum_arr = arr1 + arr2
-    pylops_mpi.plot_local_arrays(sum_arr, "Addition", vmin=0, vmax=1)
+    scale_arr = .5 * arr1
+    pylops_mpi.plot_local_arrays(scale_arr, "Scaling", vmin=0, vmax=1)
 
 
 
 
 .. image-sg:: /gallery/images/sphx_glr_plot_distributed_array_006.png
-   :alt: Addition, Rank-0
+   :alt: Scaling, Rank-0
    :srcset: /gallery/images/sphx_glr_plot_distributed_array_006.png
    :class: sphx-glr-single-img
 
@@ -211,10 +211,59 @@ the array and adds the corresponding elements together.
 
 .. GENERATED FROM PYTHON SOURCE LINES 81-83
 
+**Element-wise Addition** - Each process operates on its local portion of
+the array and adds the corresponding elements together.
+
+.. GENERATED FROM PYTHON SOURCE LINES 83-86
+
+.. code-block:: Python
+
+    sum_arr = arr1 + arr2
+    pylops_mpi.plot_local_arrays(sum_arr, "Addition", vmin=0, vmax=1)
+
+
+
+
+.. image-sg:: /gallery/images/sphx_glr_plot_distributed_array_007.png
+   :alt: Addition, Rank-0
+   :srcset: /gallery/images/sphx_glr_plot_distributed_array_007.png
+   :class: sphx-glr-single-img
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 87-90
+
+**Element-wise In-place Addition** - Similar to the previous one but the
+addition is performed directly on one of the addends without creating a new
+distributed array.
+
+.. GENERATED FROM PYTHON SOURCE LINES 90-93
+
+.. code-block:: Python
+
+    sum_arr += arr2
+    pylops_mpi.plot_local_arrays(sum_arr, "Addition", vmin=0, vmax=1)
+
+
+
+
+.. image-sg:: /gallery/images/sphx_glr_plot_distributed_array_008.png
+   :alt: Addition, Rank-0
+   :srcset: /gallery/images/sphx_glr_plot_distributed_array_008.png
+   :class: sphx-glr-single-img
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 94-96
+
 **Element-wise Subtraction** - Each process operates on its local portion
 of the array and subtracts the corresponding elements together.
 
-.. GENERATED FROM PYTHON SOURCE LINES 83-86
+.. GENERATED FROM PYTHON SOURCE LINES 96-99
 
 .. code-block:: Python
 
@@ -224,21 +273,21 @@ of the array and subtracts the corresponding elements together.
 
 
 
-.. image-sg:: /gallery/images/sphx_glr_plot_distributed_array_007.png
+.. image-sg:: /gallery/images/sphx_glr_plot_distributed_array_009.png
    :alt: Subtraction, Rank-0
-   :srcset: /gallery/images/sphx_glr_plot_distributed_array_007.png
+   :srcset: /gallery/images/sphx_glr_plot_distributed_array_009.png
    :class: sphx-glr-single-img
 
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 87-89
+.. GENERATED FROM PYTHON SOURCE LINES 100-102
 
 **Element-wise Multiplication** - Each process operates on its local portion
 of the array and multiplies the corresponding elements together.
 
-.. GENERATED FROM PYTHON SOURCE LINES 89-91
+.. GENERATED FROM PYTHON SOURCE LINES 102-104
 
 .. code-block:: Python
 
@@ -247,9 +296,9 @@ of the array and multiplies the corresponding elements together.
 
 
 
-.. image-sg:: /gallery/images/sphx_glr_plot_distributed_array_008.png
+.. image-sg:: /gallery/images/sphx_glr_plot_distributed_array_010.png
    :alt: Multiplication, Rank-0
-   :srcset: /gallery/images/sphx_glr_plot_distributed_array_008.png
+   :srcset: /gallery/images/sphx_glr_plot_distributed_array_010.png
    :class: sphx-glr-single-img
 
 
@@ -259,7 +308,7 @@ of the array and multiplies the corresponding elements together.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 1.544 seconds)
+   **Total running time of the script:** (0 minutes 1.844 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_distributed_array.py:

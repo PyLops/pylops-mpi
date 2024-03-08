@@ -1,0 +1,47 @@
+﻿pylops\_mpi.basicoperators.MPIStackedVStack
+===========================================
+
+.. currentmodule:: pylops_mpi.basicoperators
+
+.. autoclass:: MPIStackedVStack
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~MPIStackedVStack.__init__
+        ~MPIStackedVStack.adjoint
+        ~MPIStackedVStack.conj
+        ~MPIStackedVStack.dot
+        ~MPIStackedVStack.matvec
+        ~MPIStackedVStack.rmatvec
+        ~MPIStackedVStack.transpose
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.basicoperators.MPIStackedVStack.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+
