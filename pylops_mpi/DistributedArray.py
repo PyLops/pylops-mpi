@@ -341,10 +341,19 @@ class DistributedArray:
     def __add__(self, x):
         return self.add(x)
 
+    def __iadd__(self, x):
+        return self.iadd(x)
+
     def __sub__(self, x):
         return self.__add__(-x)
 
+    def __isub__(self, x):
+        return self.__iadd__(-x)
+
     def __mul__(self, x):
+        return self.multiply(x)
+
+    def __rmul__(self, x):
         return self.multiply(x)
 
     def add(self, dist_array):
@@ -360,17 +369,31 @@ class DistributedArray:
         SumArray[:] = self.local_array + dist_array.local_array
         return SumArray
 
+    def iadd(self, dist_array):
+        """Distributed In-place Addition of arrays
+        """
+        self._check_partition_shape(dist_array)
+        self[:] = self.local_array + dist_array.local_array
+        return self
+
     def multiply(self, dist_array):
         """Distributed Element-wise multiplication
         """
-        self._check_partition_shape(dist_array)
+        if isinstance(dist_array, DistributedArray):
+            self._check_partition_shape(dist_array)
+
         ProductArray = DistributedArray(global_shape=self.global_shape,
                                         base_comm=self.base_comm,
                                         dtype=self.dtype,
                                         partition=self.partition,
                                         local_shapes=self.local_shapes,
                                         axis=self.axis)
-        ProductArray[:] = self.local_array * dist_array.local_array
+        if isinstance(dist_array, DistributedArray):
+            # multiply two DistributedArray
+            ProductArray[:] = self.local_array * dist_array.local_array
+        else:
+            # multiply with scalar
+            ProductArray[:] = self.local_array * dist_array
         return ProductArray
 
     def dot(self, dist_array):
@@ -557,3 +580,158 @@ class DistributedArray:
                f"local shape={self.local_shape}" \
                f", dtype={self.dtype}, " \
                f"processes={[i for i in range(self.size)]})> "
+
+
+class StackedDistributedArray:
+    r"""Stacked DistributedArrays
+
+    Stack DistributedArray objects and power them with basic mathematical operations.
+    This class allows one to work with a series of distributed arrays to avoid having to create
+    a single distributed array with some special internal sorting.
+
+    Parameters
+    ----------
+    distarrays : :obj:`list`
+        List of :class:`pylops_mpi.DistributedArray` objects.
+
+    """
+
+    def __init__(self, distarrays: List):
+        self.distarrays = distarrays
+        self.narrays = len(distarrays)
+
+    def __getitem__(self, index):
+        return self.distarrays[index]
+
+    def __setitem__(self, index, value):
+        self.distarrays[index][:] = value
+
+    def asarray(self):
+        """Global view of the array
+
+        Gather all the distributed arrays
+
+        Returns
+        -------
+        final_array : :obj:`numpy.ndarray`
+            Global Array gathered at all ranks
+
+        """
+        return np.hstack([distarr.asarray().ravel() for distarr in self.distarrays])
+
+    def _check_stacked_size(self, stacked_array):
+        """Check that arrays have consistent size
+
+        """
+        if self.narrays != stacked_array.narrays:
+            raise ValueError("Stacked arrays must be composed the same number of of distributed arrays")
+        for iarr in range(self.narrays):
+            if self.distarrays[iarr].global_shape != stacked_array[iarr].global_shape:
+                raise ValueError(f"Stacked arrays {iarr} have different global shape:"
+                                 f"{self.distarrays[iarr].global_shape} / "
+                                 f"{stacked_array[iarr].global_shape}")
+
+    def __neg__(self):
+        arr = self.copy()
+        for iarr in range(self.narrays):
+            arr[iarr][:] = -arr[iarr][:]
+        return arr
+
+    def __add__(self, x):
+        return self.add(x)
+
+    def __iadd__(self, x):
+        return self.iadd(x)
+
+    def __sub__(self, x):
+        return self.__add__(-x)
+
+    def __isub__(self, x):
+        return self.__iadd__(-x)
+
+    def __mul__(self, x):
+        return self.multiply(x)
+
+    def __rmul__(self, x):
+        return self.multiply(x)
+
+    def add(self, stacked_array):
+        """Stacked Distributed Addition of arrays
+
+        """
+        self._check_stacked_size(stacked_array)
+        SumArray = self.copy()
+        for iarr in range(self.narrays):
+            SumArray[iarr][:] = (self[iarr] + stacked_array[iarr])[:]
+        return SumArray
+
+    def iadd(self, stacked_array):
+        """Stacked Distributed In-Place Addition of arrays
+        """
+        self._check_stacked_size(stacked_array)
+        for iarr in range(self.narrays):
+            self[iarr][:] = (self[iarr] + stacked_array[iarr])[:]
+        return self
+
+    def multiply(self, stacked_array):
+        if isinstance(stacked_array, StackedDistributedArray):
+            self._check_stacked_size(stacked_array)
+        ProductArray = self.copy()
+
+        if isinstance(stacked_array, StackedDistributedArray):
+            # multiply two DistributedArray
+            for iarr in range(self.narrays):
+                ProductArray[iarr][:] = (self[iarr] * stacked_array[iarr])[:]
+        else:
+            # multiply with scalar
+            for iarr in range(self.narrays):
+                ProductArray[iarr][:] = (self[iarr] * stacked_array)[:]
+        return ProductArray
+
+    def dot(self, stacked_array):
+        self._check_stacked_size(stacked_array)
+        dotprod = 0.
+        for iarr in range(self.narrays):
+            dotprod += self[iarr].dot(stacked_array[iarr])
+        return dotprod
+
+    def norm(self, ord: Optional[int] = None):
+        """numpy.linalg.norm method on stacked Distributed arrays
+
+        Parameters
+        ----------
+        ord : :obj:`int`, optional
+            Order of the norm.
+        """
+        norms = np.array([distarray.norm(ord) for distarray in self.distarrays])
+        ord = 2 if ord is None else ord
+        if ord in ['fro', 'nuc']:
+            raise ValueError(f"norm-{ord} not possible for vectors")
+        elif ord == 0:
+            # Count non-zero then sum reduction
+            norm = np.sum(norms)
+        elif ord == np.inf:
+            # Calculate max followed by max reduction
+            norm = np.max(norms)
+        elif ord == -np.inf:
+            # Calculate min followed by max reduction
+            norm = np.min(norms)
+        else:
+            norm = np.power(np.sum(np.power(norms, ord)), 1. / ord)
+        return norm
+
+    def conj(self):
+        """Distributed conj() method
+        """
+        ConjArray = StackedDistributedArray([distarray.conj() for distarray in self.distarrays])
+        return ConjArray
+
+    def copy(self):
+        """Creates a copy of the DistributedArray
+        """
+        arr = StackedDistributedArray([distarray.copy() for distarray in self.distarrays])
+        return arr
+
+    def __repr__(self):
+        repr_dist = "\n".join([distarray.__repr__() for distarray in self.distarrays])
+        return f"<StackedDistributedArray with {self.narrays} distributed arrays: \n" + repr_dist

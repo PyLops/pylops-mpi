@@ -1,11 +1,11 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 import numpy as np
 import time
 
 from pylops.optimization.basesolver import Solver
 from pylops.utils import NDArray
 
-from pylops_mpi import DistributedArray
+from pylops_mpi import DistributedArray, StackedDistributedArray
 
 
 class CG(Solver):
@@ -41,31 +41,30 @@ class CG(Solver):
             head1 = "    Itn              x[0]                  r2norm"
         print(head1)
 
-    def _print_step(self, x: DistributedArray) -> None:
+    def _print_step(self, x: Union[DistributedArray, StackedDistributedArray]) -> None:
         strx = f"{x[0]:1.2e}        " if np.iscomplexobj(x.local_array) else f"{x[0]:11.4e}        "
         msg = f"{self.iiter:6g}        " + strx + f"{self.cost[self.iiter]:11.4e}"
         print(msg)
 
     def setup(
             self,
-            y: DistributedArray,
-            x0: Optional[DistributedArray] = None,
+            y: Union[DistributedArray, StackedDistributedArray],
+            x0: Optional[Union[DistributedArray, StackedDistributedArray]] = None,
             niter: Optional[int] = None,
             tol: float = 1e-4,
             show: bool = False,
-    ) -> DistributedArray:
+    ) -> Union[DistributedArray, StackedDistributedArray]:
         r"""Setup solver
 
         Parameters
         ----------
-        y : :obj:`pylops_mpi.DistributedArray`
+        y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
             Data of size (N,)
-        x0 : :obj:`pylops_mpi.DistributedArray`, optional
+        x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`, optional
             Initial guess of size (N,). If ``None``, initialize
-            internally as zero vector
+            internally as zero vector (will always default to :obj:`pylops_mpi.DistributedArray`)
         niter : :obj:`int`, optional
-            Number of iterations (default to ``None`` in case a user wants to
-            manually step over the solver)
+            Number of iterations (default to ``None`` in case a user wants to manually step over the solver)
         tol : :obj:`float`, optional
             Tolerance on residual norm
         show : :obj:`bool`, optional
@@ -73,7 +72,7 @@ class CG(Solver):
 
         Returns
         -------
-        x : :obj:`pylops_mpi.DistributedArray`
+        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
             Initial guess of size (N,).
 
         """
@@ -105,30 +104,32 @@ class CG(Solver):
             self._print_setup(np.iscomplexobj(x.local_array))
         return x
 
-    def step(self, x: DistributedArray, show: bool = False) -> DistributedArray:
+    def step(self, x: Union[DistributedArray, StackedDistributedArray],
+             show: bool = False
+             ) -> Union[DistributedArray, StackedDistributedArray]:
         r"""Run one step of solver
 
         Parameters
         ----------
-        x : :obj:`pylops_mpi.DistributedArray`
+        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
             Current model vector to be updated by a step of CG
         show : :obj:`bool`, optional
             Display iteration log
 
         Returns
         -------
-        x : :obj:`pylops_mpi.DistributedArray`
+        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
             Updated model vector
 
         """
         Opc = self.Op.matvec(self.c)
         cOpc = np.abs(self.c.dot(Opc.conj()))
         a = self.kold / cOpc
-        x[:] += a * self.c.local_array
-        self.r[:] -= a * Opc.local_array
+        x += a * self.c
+        self.r -= a * Opc
         k = np.abs(self.r.dot(self.r.conj()))
         b = k / self.kold
-        self.c[:] = self.r.local_array + b * self.c.local_array
+        self.c = self.r + b * self.c
         self.kold = k
         self.iiter += 1
         self.cost.append(float(np.sqrt(self.kold)))
@@ -138,16 +139,16 @@ class CG(Solver):
 
     def run(
             self,
-            x: DistributedArray,
+            x: Union[DistributedArray, StackedDistributedArray],
             niter: Optional[int] = None,
             show: bool = False,
             itershow: Tuple[int, int, int] = (10, 10, 10),
-    ) -> DistributedArray:
+    ) -> Union[DistributedArray, StackedDistributedArray]:
         r"""Run solver
 
         Parameters
         ----------
-        x : :obj:`pylops_mpi.DistributedArray`
+        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
             Current model vector to be updated by multiple steps of CG
         niter : :obj:`int`, optional
             Number of iterations. Can be set to ``None`` if already
@@ -161,7 +162,7 @@ class CG(Solver):
 
         Returns
         -------
-        x : :obj:`pylops_mpi.DistributedArray`
+        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
             Estimated model of size (M,)
 
         """
@@ -202,8 +203,8 @@ class CG(Solver):
 
     def solve(
             self,
-            y: DistributedArray,
-            x0: Optional[DistributedArray] = None,
+            y: Union[DistributedArray, StackedDistributedArray],
+            x0: Optional[Union[DistributedArray, StackedDistributedArray]] = None,
             niter: int = 10,
             tol: float = 1e-4,
             show: bool = False,
@@ -213,11 +214,11 @@ class CG(Solver):
 
         Parameters
         ----------
-        y : :obj:`pylops_mpi.DistributedArray`
+        y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
             Data of size (N,)
-        x0 : :obj:`pylops_mpi.DistributedArray`, optional
+        x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`, optional
             Initial guess of size (N,). If ``None``, initialize
-            internally as zero vector
+            internally as zero vector (will always default to :obj:`pylops_mpi.DistributedArray`)
         niter : :obj:`int`, optional
             Number of iterations
         tol : :obj:`float`, optional
@@ -231,7 +232,7 @@ class CG(Solver):
 
         Returns
         -------
-        x : :obj:`pylops_mpi.DistributedArray`
+        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
             Estimated model of size (N,)
         iit : :obj:`int`
             Number of executed iterations
@@ -286,7 +287,7 @@ class CGLS(Solver):
             head1 = "    Itn             x[0]             r1norm         r2norm"
         print(head1)
 
-    def _print_step(self, x: DistributedArray) -> None:
+    def _print_step(self, x: Union[DistributedArray, StackedDistributedArray]) -> None:
         strx = f"{x[0]:1.2e}   " if np.iscomplexobj(x.local_array) else f"{x[0]:11.4e}        "
         msg = (
             f"{self.iiter:6g}       "
@@ -296,7 +297,7 @@ class CGLS(Solver):
         print(msg)
 
     def setup(self,
-              y: DistributedArray,
+              y: Union[DistributedArray, StackedDistributedArray],
               x0: Optional[DistributedArray] = None,
               niter: Optional[int] = None,
               damp: float = 0.0,
@@ -307,11 +308,11 @@ class CGLS(Solver):
 
         Parameters
         ----------
-        y : :obj:`pylops_mpi.DistributedArray`
+        y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
             Data of size :math:`[N \times 1]`
-        x0 : :obj:`pylops_mpi.DistributedArray`, optional
-            Initial guess  of size (M,). If ``None``, Defaults to a
-            zero vector
+        x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`, optional
+            Initial guess  of size (M,). If ``None``, Defaults to a zero vector
+            (will always default to :obj:`pylops_mpi.DistributedArray`)
         niter : :obj:`int`, optional
             Number of iterations (default to ``None`` in case a user wants to
             manually step over the solver)
@@ -324,7 +325,7 @@ class CGLS(Solver):
 
         Returns
         -------
-        x : :obj:`pylops_mpi.DistributedArray`
+        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
             Initial guess of size (N,).
 
         """
@@ -344,10 +345,7 @@ class CGLS(Solver):
         else:
             x = x0.copy()
             self.s = self.y - self.Op.matvec(x)
-            damped_x = DistributedArray(global_shape=x.global_shape, dtype=x.dtype,
-                                        local_shapes=x.local_shapes,
-                                        partition=x.partition)
-            damped_x[:] = damp * x.local_array
+            damped_x = damp * x
             r = self.Op.rmatvec(self.s) - damped_x
         self.rank = x.rank
         self.c = r.copy()
@@ -366,34 +364,33 @@ class CGLS(Solver):
             self._print_setup(np.iscomplexobj(x.local_array))
         return x
 
-    def step(self, x: DistributedArray, show: bool = False) -> DistributedArray:
+    def step(self, x: Union[DistributedArray, StackedDistributedArray],
+             show: bool = False
+             ) -> Union[DistributedArray, StackedDistributedArray]:
         r"""Run one step of solver
 
         Parameters
         ----------
-        x : :obj:`pylops_mpi.DistributedArray`
+        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
             Current model vector to be updated by a step of CG
         show : :obj:`bool`, optional
             Display iteration log
 
         Returns
         -------
-        x : :obj:`pylops_mpi.DistributedArray`
+        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
             Updated model vector
 
         """
 
         a = self.kold / (self.q.dot(self.q.conj()) + self.damp * self.c.dot(self.c.conj()))
-        x[:] = x.local_array + a * self.c.local_array
-        self.s[:] = self.s.local_array - a * self.q.local_array
-        damped_x = DistributedArray(global_shape=x.global_shape, dtype=x.dtype,
-                                    local_shapes=x.local_shapes,
-                                    partition=x.partition)
-        damped_x[:] = self.damp * x.local_array
+        x += a * self.c
+        self.s -= a * self.q
+        damped_x = self.damp * x
         r = self.Op.rmatvec(self.s) - damped_x
         k = np.abs(r.dot(r.conj()))
         b = k / self.kold
-        self.c[:] = r.local_array + b * self.c.local_array
+        self.c = r + b * self.c
         self.q = self.Op.matvec(self.c)
         self.kold = k
         self.iiter += 1
@@ -404,15 +401,15 @@ class CGLS(Solver):
         return x
 
     def run(self,
-            x: DistributedArray,
+            x: Union[DistributedArray, StackedDistributedArray],
             niter: Optional[int] = None,
             show: bool = False,
-            itershow: Tuple[int, int, int] = (10, 10, 10), ) -> DistributedArray:
+            itershow: Tuple[int, int, int] = (10, 10, 10), ) -> Union[DistributedArray, StackedDistributedArray]:
         r"""Run solver
 
         Parameters
         ----------
-        x : :obj:`pylops_mpi.DistributedArray`
+        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
             Current model vector to be updated by multiple steps of CGLS
         niter : :obj:`int`, optional
             Number of iterations. Can be set to ``None`` if already
@@ -469,8 +466,8 @@ class CGLS(Solver):
         self.cost = np.array(self.cost)
 
     def solve(self,
-              y: DistributedArray,
-              x0: Optional[DistributedArray] = None,
+              y: Union[DistributedArray, StackedDistributedArray],
+              x0: Optional[Union[DistributedArray, StackedDistributedArray]] = None,
               niter: int = 10,
               damp: float = 0.0,
               tol: float = 1e-4,
@@ -481,11 +478,11 @@ class CGLS(Solver):
 
         Parameters
         ----------
-        y : :obj:`pylops_mpi.DistributedArray`
+        y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
             Data of size (N, )
-        x0 : :obj:`pylops_mpi.DistributedArray`
-            Initial guess  of size (M, ). If ``None``, initialize
-            internally as zero vector
+        x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
+            Initial guess  of size (M, ). If ``None``, initialize internally as zero vector
+            (will always default to :obj:`pylops_mpi.DistributedArray`)
         niter : :obj:`int`, optional
             Number of iterations (default to ``None`` in case a user wants to
             manually step over the solver)
@@ -502,7 +499,7 @@ class CGLS(Solver):
 
         Returns
         -------
-        x : :obj:`pylops_mpi.DistributedArray`
+        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
             Estimated model of size (M, ).
         istop : :obj:`int`
             Gives the reason for termination
