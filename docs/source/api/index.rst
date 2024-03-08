@@ -17,6 +17,7 @@ DistributedArray
 
     Partition
     DistributedArray
+    StackedDistributedArray
 
 Linear operators
 ----------------
@@ -31,6 +32,7 @@ Templates
 
     MPILinearOperator
     asmpilinearoperator
+    MPIStackedLinearOperator
 
 Basic Operators
 ~~~~~~~~~~~~~~~
@@ -41,7 +43,9 @@ Basic Operators
    :toctree: generated/
 
     MPIBlockDiag
+    MPIStackedBlockDiag
     MPIVStack
+    MPIStackedVStack
     MPIHStack
 
 Derivatives
