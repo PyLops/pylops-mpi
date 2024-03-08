@@ -1,20 +1,20 @@
 from typing import Optional, Tuple, Callable
 
 from pylops.utils import NDArray
-from pylops_mpi import MPILinearOperator, DistributedArray
+from pylops_mpi import MPILinearOperator, DistributedArray, StackedDistributedArray
 from pylops_mpi.optimization.cls_basic import CG, CGLS
 
 
 def cg(
         Op: MPILinearOperator,
-        y: DistributedArray,
+        y: Union[DistributedArray, StackedDistributedArray] ,
         x0: Optional[DistributedArray] = None,
         niter: int = 10,
         tol: float = 1e-4,
         show: bool = False,
         itershow: Tuple[int, int, int] = (10, 10, 10),
         callback: Optional[Callable] = None,
-) -> Tuple[DistributedArray, int, NDArray]:
+) -> Tuple[Union[DistributedArray, StackedDistributedArray], int, NDArray]:
     r"""Conjugate gradient
 
     Solve a square system of equations given an MPILinearOperator ``Op`` and
@@ -24,9 +24,9 @@ def cg(
     ----------
     Op : :obj:`pylops_mpi.MPILinearOperator`
         Operator to invert of size :math:`[N \times N]`
-    y : :obj:`pylops_mpi.DistributedArray`
+    y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
         DistributedArray of size (N,)
-    x0 : :obj:`pylops_mpi.DistributedArray`, optional
+    x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`, optional
         Initial guess
     niter : :obj:`int`, optional
         Number of iterations
@@ -44,7 +44,7 @@ def cg(
 
     Returns
     -------
-    x : :obj:`pylops_mpi.DistributedArray`
+    x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
         Estimated model of size (N,)
     iit : :obj:`int`
         Number of executed iterations
@@ -67,8 +67,8 @@ def cg(
 
 def cgls(
         Op: MPILinearOperator,
-        y: DistributedArray,
-        x0: Optional[DistributedArray] = None,
+        y: Union[DistributedArray, StackedDistributedArray],
+        x0: Optional[Union[DistributedArray, StackedDistributedArray]] = None,
         niter: int = 10,
         damp: float = 0.0,
         tol: float = 1e-4,
@@ -85,9 +85,9 @@ def cgls(
     ----------
     Op : :obj:`pylops_mpi.MPILinearOperator`
         MPI Linear Operator to invert of size :math:`[N \times M]`
-    y : :obj:`pylops_mpi.DistributedArray`
+    y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
         DistributedArray of size (N,)
-    x0 : :obj:`pylops_mpi.DistributedArray`, optional
+    x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`, optional
         Initial guess
     niter : :obj:`int`, optional
         Number of iterations
@@ -107,7 +107,7 @@ def cgls(
 
     Returns
     -------
-    x : :obj:`pylops_mpi.DistributedArray`
+    x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
         Estimated model of size (M, )
     istop : :obj:`int`
         Gives the reason for termination
