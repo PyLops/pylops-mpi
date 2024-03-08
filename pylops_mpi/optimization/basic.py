@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Callable
+from typing import Callable, Optional, Tuple, Union
 
 from pylops.utils import NDArray
 from pylops_mpi import MPILinearOperator, DistributedArray, StackedDistributedArray
