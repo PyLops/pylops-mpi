@@ -33,7 +33,7 @@ class MPIStackedLinearOperator(ABC):
     """
 
     def __init__(self, shape: Optional[ShapeLike] = None,
-                 dtype: Optional[DTypeLike] = None, 
+                 dtype: Optional[DTypeLike] = None,
                  base_comm: MPI.Comm = MPI.COMM_WORLD):
         if shape:
             self.shape = shape
