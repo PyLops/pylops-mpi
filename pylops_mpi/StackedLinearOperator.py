@@ -15,7 +15,7 @@ class MPIStackedLinearOperator(ABC):
     for StackedLinearOperators.
 
     This class provides methods to perform matrix-vector product and adjoint matrix-vector
-    products using MPI.
+    products on a stack of MPILinearOperator objects.
 
     .. note:: End users of pylops-mpi should not use this class directly but simply
     use operators that are already implemented. This class is meant for
@@ -33,7 +33,8 @@ class MPIStackedLinearOperator(ABC):
     """
 
     def __init__(self, shape: Optional[ShapeLike] = None,
-                 dtype: Optional[DTypeLike] = None, base_comm: MPI.Comm = MPI.COMM_WORLD):
+                 dtype: Optional[DTypeLike] = None, 
+                 base_comm: MPI.Comm = MPI.COMM_WORLD):
         if shape:
             self.shape = shape
         if dtype:
@@ -110,7 +111,6 @@ class MPIStackedLinearOperator(ABC):
             Adjoint of Operator
 
         """
-
         return self._adjoint()
 
     H = property(adjoint)
@@ -124,7 +124,6 @@ class MPIStackedLinearOperator(ABC):
             Transpose MPIStackedLinearOperator
 
         """
-
         return self._transpose()
 
     T = property(transpose)

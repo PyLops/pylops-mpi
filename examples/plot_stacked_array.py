@@ -104,7 +104,6 @@ if rank == 0:
     print('Dot-product:', dot_arr)
     print('Dot-product (np):', np.dot(full_arr1, full_arr2))
 
-
 ###############################################################################
 # **Norms**
 l0norm = arr1.norm(0)
@@ -120,8 +119,8 @@ if rank == 0:
 
 ###############################################################################
 # Now that we have a way to stack multiple :py:class:`pylops_mpi.StackedDistributedArray` objects,
-# let's see how we can apply operators on them. More specifically this can be
-# done using the :py:class:`pylops_mpi.StackedVStack` operator that takes multiple
+# let's see how we can apply operators to them. More specifically this can be
+# done using the :py:class:`pylops_mpi.MPIStackedVStack` operator that takes multiple
 # :py:class:`pylops_mpi.MPILinearOperator` objects, each acting on one specific
 # distributed array
 x = pylops_mpi.DistributedArray(global_shape=size * 10,
