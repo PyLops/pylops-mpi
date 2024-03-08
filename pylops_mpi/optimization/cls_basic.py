@@ -104,7 +104,7 @@ class CG(Solver):
             self._print_setup(np.iscomplexobj(x.local_array))
         return x
 
-    def step(self, x: Union[DistributedArray, StackedDistributedArray], 
+    def step(self, x: Union[DistributedArray, StackedDistributedArray],
              show: bool = False
              ) -> Union[DistributedArray, StackedDistributedArray]:
         r"""Run one step of solver
@@ -311,7 +311,7 @@ class CGLS(Solver):
         y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
             Data of size :math:`[N \times 1]`
         x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`, optional
-            Initial guess  of size (M,). If ``None``, Defaults to a zero vector 
+            Initial guess  of size (M,). If ``None``, Defaults to a zero vector
             (will always default to :obj:`pylops_mpi.DistributedArray`)
         niter : :obj:`int`, optional
             Number of iterations (default to ``None`` in case a user wants to
@@ -364,7 +364,7 @@ class CGLS(Solver):
             self._print_setup(np.iscomplexobj(x.local_array))
         return x
 
-    def step(self, x: Union[DistributedArray, StackedDistributedArray], 
+    def step(self, x: Union[DistributedArray, StackedDistributedArray],
              show: bool = False
              ) -> Union[DistributedArray, StackedDistributedArray]:
         r"""Run one step of solver
@@ -481,7 +481,7 @@ class CGLS(Solver):
         y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
             Data of size (N, )
         x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
-            Initial guess  of size (M, ). If ``None``, initialize internally as zero vector 
+            Initial guess  of size (M, ). If ``None``, initialize internally as zero vector
             (will always default to :obj:`pylops_mpi.DistributedArray`)
         niter : :obj:`int`, optional
             Number of iterations (default to ``None`` in case a user wants to
