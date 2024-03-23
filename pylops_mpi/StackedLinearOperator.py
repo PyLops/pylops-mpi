@@ -18,9 +18,9 @@ class MPIStackedLinearOperator(ABC):
     products on a stack of MPILinearOperator objects.
 
     .. note:: End users of pylops-mpi should not use this class directly but simply
-    use operators that are already implemented. This class is meant for
-    developers only, it has to be used as the parent class of any new operator
-    developed within pylops-mpi.
+      use operators that are already implemented. This class is meant for
+      developers only, it has to be used as the parent class of any new operator
+      developed within pylops-mpi.
 
     Parameters
     ----------
@@ -45,6 +45,25 @@ class MPIStackedLinearOperator(ABC):
         self.rank = self.base_comm.Get_rank()
 
     def matvec(self, x: Union[DistributedArray, StackedDistributedArray]) -> Union[DistributedArray, StackedDistributedArray]:
+        """Matrix-vector multiplication.
+
+        Modified version of pylops_mpi.MPILinearOperator matvec
+        This method makes use of either :class:`pylops_mpi.DistributedArray` or
+        :class:`pylops_mpi.StackedDistributedArray` to calculate matrix vector multiplication
+        in a distributed fashion.
+
+        Parameters
+        ----------
+        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.DistributedArray`
+            A StackedDistributedArray or a DistributedArray of global shape (N, )
+
+        Returns
+        -------
+        y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.DistributedArray`
+            A StackedDistributedArray or a DistributedArray of global shape (M, )
+
+        """
+
         M, N = self.shape
         if isinstance(x, StackedDistributedArray):
             stacked_shape = (np.sum([a.global_shape for a in x.distarrays]), )
@@ -59,6 +78,25 @@ class MPIStackedLinearOperator(ABC):
         pass
 
     def rmatvec(self, x: Union[DistributedArray, StackedDistributedArray]) -> Union[DistributedArray, StackedDistributedArray]:
+        """Adjoint Matrix-vector multiplication.
+
+        Modified version of pylops_mpi.MPILinearOperator rmatvec
+        This method makes use of either :class:`pylops_mpi.DistributedArray` or
+        :class:`pylops_mpi.StackedDistributedArray` to calculate adjoint matrix vector multiplication
+        in a distributed fashion.
+
+        Parameters
+        ----------
+        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.DistributedArray`
+            A StackedDistributedArray or a DistributedArray of global shape (M, )
+
+        Returns
+        -------
+        y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.DistributedArray`
+            A StackedDistributedArray or a DistributedArray of global shape (N, )
+
+        """
+
         M, N = self.shape
         if isinstance(x, StackedDistributedArray):
             stacked_shape = (np.sum([a.global_shape for a in x.distarrays]), )
