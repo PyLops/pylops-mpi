@@ -15,6 +15,7 @@ A list of operators present in pylops_mpi.basicoperators :
     MPIFirstDerivative                First Derivative
     MPISecondDerivative               Second Derivative
     MPILaplacian                      Laplacian
+    MPIGradient                       Gradient
 
 """
 
@@ -24,6 +25,7 @@ from .HStack import *
 from .FirstDerivative import *
 from .SecondDerivative import *
 from .Laplacian import *
+from .Gradient import *
 
 __all__ = [
     "MPIBlockDiag",
@@ -33,5 +35,6 @@ __all__ = [
     "MPIHStack",
     "MPIFirstDerivative",
     "MPISecondDerivative",
-    "MPILaplacian"
+    "MPILaplacian",
+    "MPIGradient"
 ]
