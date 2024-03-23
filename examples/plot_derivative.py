@@ -124,3 +124,37 @@ if rank == 0:
     plt.colorbar(im, ax=axs[2])
     plt.tight_layout()
     plt.subplots_adjust(top=0.8)
+
+###############################################################################
+# We now consider the :py:class:`pylops_mpi.basicoperators.MPIGradient` operator.
+# Given a 2-dimensional array, this operator applies first-order derivatives on both
+# dimensions and concatenates them.
+Gop = pylops_mpi.MPIGradient(dims=(nx, ny), dtype=np.float64)
+
+y_grad_dist = Gop @ x_dist
+# Reshaping to (ndims, nx, ny) for plotting
+y_grad = y_grad_dist.asarray().reshape((2, nx, ny))
+y_grad_adj_dist = Gop.H @ y_grad_dist
+# Reshaping to (nx, ny) for plotting
+y_grad_adj = y_grad_adj_dist.asarray().reshape((nx, ny))
+
+if rank == 0:
+    fig, axs = plt.subplots(2, 2, figsize=(10, 6), sharex=True, sharey=True)
+    fig.suptitle("Gradient", fontsize=12, fontweight="bold", y=0.95)
+    im = axs[0, 0].imshow(x, interpolation="nearest", cmap="rainbow")
+    axs[0, 0].axis("tight")
+    axs[0, 0].set_title("x")
+    plt.colorbar(im, ax=axs[0, 0])
+    im = axs[0, 1].imshow(y_grad[0, ...], interpolation="nearest", cmap="rainbow")
+    axs[0, 1].axis("tight")
+    axs[0, 1].set_title("y - 1st direction")
+    plt.colorbar(im, ax=axs[0, 1])
+    im = axs[1, 1].imshow(y_grad[1, ...], interpolation="nearest", cmap="rainbow")
+    axs[1, 1].axis("tight")
+    axs[1, 1].set_title("y - 2nd direction")
+    plt.colorbar(im, ax=axs[1, 1])
+    im = axs[1, 0].imshow(y_grad_adj, interpolation="nearest", cmap="rainbow")
+    axs[1, 0].axis("tight")
+    axs[1, 0].set_title("xadj")
+    plt.colorbar(im, ax=axs[1, 0])
+    plt.tight_layout()
