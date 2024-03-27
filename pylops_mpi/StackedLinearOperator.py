@@ -15,7 +15,7 @@ class MPIStackedLinearOperator(ABC):
     for StackedLinearOperators.
 
     This class provides methods to perform matrix-vector product and adjoint matrix-vector
-    products on a stack of MPILinearOperator objects.
+    products on a stack of :class:`pylops_mpi.MPILinearOperator` objects.
 
     .. note:: End users of pylops-mpi should not use this class directly but simply
       use operators that are already implemented. This class is meant for
@@ -47,7 +47,7 @@ class MPIStackedLinearOperator(ABC):
     def matvec(self, x: Union[DistributedArray, StackedDistributedArray]) -> Union[DistributedArray, StackedDistributedArray]:
         """Matrix-vector multiplication.
 
-        Modified version of pylops_mpi.MPILinearOperator matvec
+        Modified version of :class:`pylops_mpi.MPILinearOperator` matvec.
         This method makes use of either :class:`pylops_mpi.DistributedArray` or
         :class:`pylops_mpi.StackedDistributedArray` to calculate matrix vector multiplication
         in a distributed fashion.
@@ -80,7 +80,7 @@ class MPIStackedLinearOperator(ABC):
     def rmatvec(self, x: Union[DistributedArray, StackedDistributedArray]) -> Union[DistributedArray, StackedDistributedArray]:
         """Adjoint Matrix-vector multiplication.
 
-        Modified version of pylops_mpi.MPILinearOperator rmatvec
+        Modified version of :class:`pylops_mpi.MPILinearOperator` rmatvec
         This method makes use of either :class:`pylops_mpi.DistributedArray` or
         :class:`pylops_mpi.StackedDistributedArray` to calculate adjoint matrix vector multiplication
         in a distributed fashion.

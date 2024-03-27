@@ -12,10 +12,10 @@ A list of operators present in pylops_mpi.basicoperators :
     MPIVStack                         Vertical Stacking of PyLops operators
     MPIStackedVStack                  Vertical Stacking of PyLops-MPI operators
     MPIHStack                         Horizontal Stacking of PyLops operators
-    MPIFirstDerivative                First Derivative
-    MPISecondDerivative               Second Derivative
-    MPILaplacian                      Laplacian
-    MPIGradient                       Gradient
+    MPIFirstDerivative                First Derivative operator
+    MPISecondDerivative               Second Derivative operator
+    MPILaplacian                      Laplacian operator
+    MPIGradient                       Gradient operator
 
 """
 

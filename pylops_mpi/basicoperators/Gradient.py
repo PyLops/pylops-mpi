@@ -29,9 +29,9 @@ class MPIGradient(MPIStackedLinearOperator):
 
     Parameters
     ----------
-    dims : :obj:`tuple`
+    dims : :obj:`int` or :obj:`tuple`
         Number of samples for each dimension.
-    sampling : :obj:`tuple`, optional
+    sampling : :obj:`int` or :obj:`tuple`, optional
         Sampling steps for each direction.
     edge : :obj:`bool`, optional
         Use reduced order derivative at edges (``True``) or ignore them (``False``).
@@ -48,12 +48,13 @@ class MPIGradient(MPIStackedLinearOperator):
     a multi-dimensional distributed array in forward mode.
 
     We utilize the :py:class:`pylops_mpi.basicoperators.MPIFirstDerivative` to
-    calculate the first derivative along the first direction(i.e., axis=0).
-    For other values of axis, the :py:class:`pylops.FirstDerivative` operator is
+    calculate the first derivative along the first direction (i.e., axis=0).
+    For all remaining axes, the :py:class:`pylops.FirstDerivative` operator is
     pushed into the :py:class:`pylops_mpi.basicoperators.MPIBlockDiag` operator.
 
     Finally, using the :py:class:`pylops_mpi.basicoperators.MPIStackedVStack` we vertically
-    stack the MPIFirstDerivative and the MPIBlockDiag operators.
+    stack the :py:class:`pylops_mpi.basicoperators.MPIFirstDerivative` and the 
+    :py:class:`pylops_mpi.basicoperators.MPIBlockDiag` operators.
 
     For the forward mode, the matrix vector product is performed between the
     :py:class:`pylops_mpi.basicoperators.MPIStackedVStack` and the :py:class:`pylops_mpi.DistributedArray`.
@@ -74,7 +75,7 @@ class MPIGradient(MPIStackedLinearOperator):
 
     def __init__(self,
                  dims: Union[int, InputDimsLike],
-                 sampling: int = 1,
+                 sampling: Union[int, InputDimsLike] = 1,
                  edge: bool = False,
                  kind: str = "centered",
                  base_comm: MPI.Comm = MPI.COMM_WORLD,
