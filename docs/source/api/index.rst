@@ -59,6 +59,7 @@ Derivatives
     MPIFirstDerivative
     MPISecondDerivative
     MPILaplacian
+    MPIGradient
 
 Solvers
 -------

@@ -12,9 +12,10 @@ A list of operators present in pylops_mpi.basicoperators :
     MPIVStack                         Vertical Stacking of PyLops operators
     MPIStackedVStack                  Vertical Stacking of PyLops-MPI operators
     MPIHStack                         Horizontal Stacking of PyLops operators
-    MPIFirstDerivative                First Derivative
-    MPISecondDerivative               Second Derivative
-    MPILaplacian                      Laplacian
+    MPIFirstDerivative                First Derivative operator
+    MPISecondDerivative               Second Derivative operator
+    MPILaplacian                      Laplacian operator
+    MPIGradient                       Gradient operator
 
 """
 
@@ -24,6 +25,7 @@ from .HStack import *
 from .FirstDerivative import *
 from .SecondDerivative import *
 from .Laplacian import *
+from .Gradient import *
 
 __all__ = [
     "MPIBlockDiag",
@@ -33,5 +35,6 @@ __all__ = [
     "MPIHStack",
     "MPIFirstDerivative",
     "MPISecondDerivative",
-    "MPILaplacian"
+    "MPILaplacian",
+    "MPIGradient"
 ]
