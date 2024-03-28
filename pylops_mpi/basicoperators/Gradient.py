@@ -53,7 +53,7 @@ class MPIGradient(MPIStackedLinearOperator):
     pushed into the :py:class:`pylops_mpi.basicoperators.MPIBlockDiag` operator.
 
     Finally, using the :py:class:`pylops_mpi.basicoperators.MPIStackedVStack` we vertically
-    stack the :py:class:`pylops_mpi.basicoperators.MPIFirstDerivative` and the 
+    stack the :py:class:`pylops_mpi.basicoperators.MPIFirstDerivative` and the
     :py:class:`pylops_mpi.basicoperators.MPIBlockDiag` operators.
 
     For the forward mode, the matrix vector product is performed between the
@@ -93,10 +93,10 @@ class MPIGradient(MPIStackedLinearOperator):
         super().__init__(shape=self.Op.shape, dtype=dtype, base_comm=base_comm)
 
     def _matvec(self, x: DistributedArray) -> StackedDistributedArray:
-        return self.Op @ x
+        return self.Op._matvec(x)
 
     def _rmatvec(self, x: StackedDistributedArray) -> DistributedArray:
-        return self.Op.H @ x
+        return self.Op._rmatvec(x)
 
     def _calc_stack_op(self, ndims):
         local_dims = local_split(tuple(self.dims), self.base_comm, Partition.SCATTER, axis=0)
