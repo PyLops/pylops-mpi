@@ -158,7 +158,7 @@ second derivative along two directions of the distributed array.
 We use a symmetrical as well as an asymmetrical (adding more weight to the
 derivative along one direction) version to achieve this.
 
-.. GENERATED FROM PYTHON SOURCE LINES 94-127
+.. GENERATED FROM PYTHON SOURCE LINES 94-128
 
 .. code-block:: Python
 
@@ -198,6 +198,7 @@ derivative along one direction) version to achieve this.
 
 
 
+
 .. image-sg:: /gallery/images/sphx_glr_plot_derivative_003.png
    :alt: Laplacian, x, y sym, y asym
    :srcset: /gallery/images/sphx_glr_plot_derivative_003.png
@@ -207,10 +208,61 @@ derivative along one direction) version to achieve this.
 
 
 
+.. GENERATED FROM PYTHON SOURCE LINES 129-132
+
+We now consider the :py:class:`pylops_mpi.basicoperators.MPIGradient` operator.
+Given a 2-dimensional array, this operator applies first-order derivatives on both
+dimensions and concatenates them.
+
+.. GENERATED FROM PYTHON SOURCE LINES 132-161
+
+.. code-block:: Python
+
+    Gop = pylops_mpi.MPIGradient(dims=(nx, ny), dtype=np.float64)
+
+    y_grad_dist = Gop @ x_dist
+    # Reshaping to (ndims, nx, ny) for plotting
+    y_grad = y_grad_dist.asarray().reshape((2, nx, ny))
+    y_grad_adj_dist = Gop.H @ y_grad_dist
+    # Reshaping to (nx, ny) for plotting
+    y_grad_adj = y_grad_adj_dist.asarray().reshape((nx, ny))
+
+    if rank == 0:
+        fig, axs = plt.subplots(2, 2, figsize=(10, 6), sharex=True, sharey=True)
+        fig.suptitle("Gradient", fontsize=12, fontweight="bold", y=0.95)
+        im = axs[0, 0].imshow(x, interpolation="nearest", cmap="rainbow")
+        axs[0, 0].axis("tight")
+        axs[0, 0].set_title("x")
+        plt.colorbar(im, ax=axs[0, 0])
+        im = axs[0, 1].imshow(y_grad[0, ...], interpolation="nearest", cmap="rainbow")
+        axs[0, 1].axis("tight")
+        axs[0, 1].set_title("y - 1st direction")
+        plt.colorbar(im, ax=axs[0, 1])
+        im = axs[1, 1].imshow(y_grad[1, ...], interpolation="nearest", cmap="rainbow")
+        axs[1, 1].axis("tight")
+        axs[1, 1].set_title("y - 2nd direction")
+        plt.colorbar(im, ax=axs[1, 1])
+        im = axs[1, 0].imshow(y_grad_adj, interpolation="nearest", cmap="rainbow")
+        axs[1, 0].axis("tight")
+        axs[1, 0].set_title("xadj")
+        plt.colorbar(im, ax=axs[1, 0])
+        plt.tight_layout()
+
+
+
+.. image-sg:: /gallery/images/sphx_glr_plot_derivative_004.png
+   :alt: Gradient, x, y - 1st direction, xadj, y - 2nd direction
+   :srcset: /gallery/images/sphx_glr_plot_derivative_004.png
+   :class: sphx-glr-single-img
+
+
+
+
+
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 0.911 seconds)
+   **Total running time of the script:** (0 minutes 1.453 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_derivative.py:

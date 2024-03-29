@@ -1,0 +1,47 @@
+﻿pylops\_mpi.basicoperators.MPIGradient
+======================================
+
+.. currentmodule:: pylops_mpi.basicoperators
+
+.. autoclass:: MPIGradient
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~MPIGradient.__init__
+        ~MPIGradient.adjoint
+        ~MPIGradient.conj
+        ~MPIGradient.dot
+        ~MPIGradient.matvec
+        ~MPIGradient.rmatvec
+        ~MPIGradient.transpose
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.basicoperators.MPIGradient.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+

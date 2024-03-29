@@ -463,12 +463,12 @@ document.write(`
 <span class="sd">    for StackedLinearOperators.</span>
 
 <span class="sd">    This class provides methods to perform matrix-vector product and adjoint matrix-vector</span>
-<span class="sd">    products on a stack of MPILinearOperator objects.</span>
+<span class="sd">    products on a stack of :class:`pylops_mpi.MPILinearOperator` objects.</span>
 
 <span class="sd">    .. note:: End users of pylops-mpi should not use this class directly but simply</span>
-<span class="sd">    use operators that are already implemented. This class is meant for</span>
-<span class="sd">    developers only, it has to be used as the parent class of any new operator</span>
-<span class="sd">    developed within pylops-mpi.</span>
+<span class="sd">      use operators that are already implemented. This class is meant for</span>
+<span class="sd">      developers only, it has to be used as the parent class of any new operator</span>
+<span class="sd">      developed within pylops-mpi.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -493,6 +493,25 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="o">.</span><span class="n">Get_rank</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Matrix-vector multiplication.</span>
+
+<span class="sd">        Modified version of :class:`pylops_mpi.MPILinearOperator` matvec.</span>
+<span class="sd">        This method makes use of either :class:`pylops_mpi.DistributedArray` or</span>
+<span class="sd">        :class:`pylops_mpi.StackedDistributedArray` to calculate matrix vector multiplication</span>
+<span class="sd">        in a distributed fashion.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.DistributedArray`</span>
+<span class="sd">            A StackedDistributedArray or a DistributedArray of global shape (N, )</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.DistributedArray`</span>
+<span class="sd">            A StackedDistributedArray or a DistributedArray of global shape (M, )</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">M</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">):</span>
             <span class="n">stacked_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">global_shape</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">distarrays</span><span class="p">]),</span> <span class="p">)</span>
@@ -507,6 +526,25 @@ document.write(`
         <span class="k">pass</span>
 
     <span class="k">def</span> <span class="nf">rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adjoint Matrix-vector multiplication.</span>
+
+<span class="sd">        Modified version of :class:`pylops_mpi.MPILinearOperator` rmatvec</span>
+<span class="sd">        This method makes use of either :class:`pylops_mpi.DistributedArray` or</span>
+<span class="sd">        :class:`pylops_mpi.StackedDistributedArray` to calculate adjoint matrix vector multiplication</span>
+<span class="sd">        in a distributed fashion.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.DistributedArray`</span>
+<span class="sd">            A StackedDistributedArray or a DistributedArray of global shape (M, )</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.DistributedArray`</span>
+<span class="sd">            A StackedDistributedArray or a DistributedArray of global shape (N, )</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">M</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">):</span>
             <span class="n">stacked_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">global_shape</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">distarrays</span><span class="p">]),</span> <span class="p">)</span>
