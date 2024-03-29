@@ -396,3 +396,46 @@ def test_laplacian(par):
             y_adj_np = Lop.H @ x_global
             assert_allclose(y, y_np, rtol=1e-14)
             assert_allclose(y_adj, y_adj_np, rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par5), (par5e), (par6), (par6e)])
+def test_gradient(par):
+    """MPIGradient Operator"""
+    for kind in ["forward", "backward", "centered"]:
+        Gop_MPI = pylops_mpi.basicoperators.MPIGradient(dims=par['n'], sampling=par['sampling'],
+                                                        kind=kind, edge=par['edge'],
+                                                        dtype=par['dtype'])
+        x_fwd = pylops_mpi.DistributedArray(global_shape=np.prod(par['n']), dtype=par['dtype'])
+        x_fwd[:] = np.random.normal(rank, 10, x_fwd.local_shape)
+        x_global = x_fwd.asarray()
+        # Forward
+        y_dist = Gop_MPI @ x_fwd
+        assert isinstance(y_dist, pylops_mpi.StackedDistributedArray)
+        y = y_dist.asarray()
+
+        # Adjoint
+        x_adj_dist1 = pylops_mpi.DistributedArray(global_shape=int(np.prod(par['n'])), dtype=par['dtype'])
+        x_adj_dist1[:] = np.random.normal(rank, 10, x_adj_dist1.local_shape)
+        x_adj_dist2 = pylops_mpi.DistributedArray(global_shape=int(np.prod(par['n'])), dtype=par['dtype'])
+        x_adj_dist2[:] = np.random.normal(rank, 20, x_adj_dist2.local_shape)
+        x_adj_dist3 = pylops_mpi.DistributedArray(global_shape=int(np.prod(par['n'])), dtype=par['dtype'])
+        x_adj_dist3[:] = np.random.normal(rank, 30, x_adj_dist3.local_shape)
+
+        x_adj = pylops_mpi.StackedDistributedArray(distarrays=[x_adj_dist1, x_adj_dist2, x_adj_dist3])
+
+        x_adj_global = x_adj.asarray()
+        y_adj_dist = Gop_MPI.H @ x_adj
+        assert isinstance(y_adj_dist, pylops_mpi.DistributedArray)
+
+        y_adj = y_adj_dist.asarray()
+
+        if rank == 0:
+            Gop = pylops.Gradient(dims=par['n'], sampling=par['sampling'],
+                                  kind=kind, edge=par['edge'],
+                                  dtype=par['dtype'])
+            assert Gop_MPI.shape == Gop.shape
+            y_np = Gop @ x_global
+            y_adj_np = Gop.H @ x_adj_global
+            assert_allclose(y, y_np, rtol=1e-14)
+            assert_allclose(y_adj, y_adj_np, rtol=1e-14)
