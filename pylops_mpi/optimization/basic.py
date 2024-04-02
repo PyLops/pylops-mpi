@@ -1,14 +1,19 @@
 from typing import Callable, Optional, Tuple, Union
 
 from pylops.utils import NDArray
-from pylops_mpi import MPILinearOperator, DistributedArray, StackedDistributedArray
+from pylops_mpi import (
+    MPILinearOperator,
+    DistributedArray,
+    StackedDistributedArray,
+    MPIStackedLinearOperator
+)
 from pylops_mpi.optimization.cls_basic import CG, CGLS
 
 
 def cg(
-        Op: MPILinearOperator,
-        y: Union[DistributedArray, StackedDistributedArray] ,
-        x0: Optional[DistributedArray] = None,
+        Op: Union[MPILinearOperator, MPIStackedLinearOperator],
+        y: Union[DistributedArray, StackedDistributedArray],
+        x0: Union[DistributedArray, StackedDistributedArray],
         niter: int = 10,
         tol: float = 1e-4,
         show: bool = False,
@@ -17,16 +22,16 @@ def cg(
 ) -> Tuple[Union[DistributedArray, StackedDistributedArray], int, NDArray]:
     r"""Conjugate gradient
 
-    Solve a square system of equations given an MPILinearOperator ``Op`` and
+    Solve a square system of equations given either an MPILinearOperator or an MPIStackedLinearOperator ``Op`` and
     distributed data ``y`` using conjugate gradient iterations.
 
     Parameters
     ----------
-    Op : :obj:`pylops_mpi.MPILinearOperator`
+    Op : :obj:`pylops_mpi.MPILinearOperator` or :obj:`pylops_mpi.MPIStackedLinearOperator`
         Operator to invert of size :math:`[N \times N]`
     y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
         DistributedArray of size (N,)
-    x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`, optional
+    x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
         Initial guess
     niter : :obj:`int`, optional
         Number of iterations
@@ -66,9 +71,9 @@ def cg(
 
 
 def cgls(
-        Op: MPILinearOperator,
+        Op: Union[MPILinearOperator, MPIStackedLinearOperator],
         y: Union[DistributedArray, StackedDistributedArray],
-        x0: Optional[Union[DistributedArray, StackedDistributedArray]] = None,
+        x0: Union[DistributedArray, StackedDistributedArray],
         niter: int = 10,
         damp: float = 0.0,
         tol: float = 1e-4,
@@ -78,16 +83,16 @@ def cgls(
 ) -> Tuple[DistributedArray, int, int, float, float, NDArray]:
     r"""Conjugate gradient least squares
 
-    Solve an overdetermined system of equations given a MPILinearOperator ``Op`` and
+    Solve an overdetermined system of equations given either an MPILinearOperator or an MPIStackedLinearOperator``Op`` and
     distributed data ``y`` using conjugate gradient iterations.
 
     Parameters
     ----------
-    Op : :obj:`pylops_mpi.MPILinearOperator`
+    Op : :obj:`pylops_mpi.MPILinearOperator` or :obj:`pylops_mpi.MPIStackedLinearOperator`
         MPI Linear Operator to invert of size :math:`[N \times M]`
     y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
         DistributedArray of size (N,)
-    x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`, optional
+    x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
         Initial guess
     niter : :obj:`int`, optional
         Number of iterations
