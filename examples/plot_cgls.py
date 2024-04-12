@@ -45,7 +45,11 @@ y = BDiag @ x
 # are then obtained in a :py:class:`pylops_mpi.DistributedArray`. To obtain the
 # overall inversion of the entire MPIBlockDiag, you can utilize the ``asarray()``
 # function of the DistributedArray as shown below.
-xinv, istop, niter, r1norm, r2norm, cost = pylops_mpi.cgls(BDiag, y, niter=15, tol=1e-10, show=True)
+
+# Set initial guess `x0` to zeroes
+x0 = pylops_mpi.DistributedArray(BDiag.shape[1], dtype=np.float128)
+x0[:] = 0
+xinv, istop, niter, r1norm, r2norm, cost = pylops_mpi.cgls(BDiag, y, x0=x0, niter=15, tol=1e-10, show=True)
 xinv_array = xinv.asarray()
 
 if rank == 0:
