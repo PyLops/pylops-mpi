@@ -593,12 +593,17 @@ class StackedDistributedArray:
     ----------
     distarrays : :obj:`list`
         List of :class:`pylops_mpi.DistributedArray` objects.
-
+    base_comm : :obj:`mpi4py.MPI.Comm`, optional
+        Base MPI Communicator.
+        Defaults to ``mpi4py.MPI.COMM_WORLD``.
     """
 
-    def __init__(self, distarrays: List):
+    def __init__(self, distarrays: List, base_comm: MPI.Comm = MPI.COMM_WORLD):
         self.distarrays = distarrays
         self.narrays = len(distarrays)
+        self.base_comm = base_comm
+        self.rank = base_comm.Get_rank()
+        self.size = base_comm.Get_size()
 
     def __getitem__(self, index):
         return self.distarrays[index]
@@ -674,6 +679,8 @@ class StackedDistributedArray:
         return self
 
     def multiply(self, stacked_array):
+        """Stacked Distributed Multiplication of arrays
+        """
         if isinstance(stacked_array, StackedDistributedArray):
             self._check_stacked_size(stacked_array)
         ProductArray = self.copy()
@@ -689,6 +696,8 @@ class StackedDistributedArray:
         return ProductArray
 
     def dot(self, stacked_array):
+        """Dot Product of Stacked Distributed Arrays
+        """
         self._check_stacked_size(stacked_array)
         dotprod = 0.
         for iarr in range(self.narrays):

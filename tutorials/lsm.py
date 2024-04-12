@@ -164,7 +164,10 @@ d_adj = d_adj_dist.asarray().reshape((nstot, nr, nt))
 # solver.
 
 # Inverse
-minv_dist = pylops_mpi.cgls(VStack, d_dist, niter=100, show=True)[0]
+# Initializing x0 to zeroes
+x0 = pylops_mpi.DistributedArray(VStack.shape[1], partition=pylops_mpi.Partition.BROADCAST)
+x0[:] = 0
+minv_dist = pylops_mpi.cgls(VStack, d_dist, x0=x0, niter=100, show=True)[0]
 minv = minv_dist.asarray().reshape((nx, nz))
 d_inv_dist = VStack @ minv_dist
 d_inv = d_inv_dist.asarray().reshape(nstot, nr, nt)
