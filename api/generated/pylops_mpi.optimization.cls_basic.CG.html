@@ -496,12 +496,12 @@ document.write(`
 <dt class="sig sig-object py" id="pylops_mpi.optimization.cls_basic.CG">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylops_mpi.optimization.cls_basic.</span></span><span class="sig-name descname"><span class="pre">CG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callbacks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/optimization/cls_basic.html#CG"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.optimization.cls_basic.CG" title="Link to this definition">#</a></dt>
 <dd><p>Conjugate gradient</p>
-<p>Solve a square system of equations given an MPILinearOperator <code class="docutils literal notranslate"><span class="pre">Op</span></code> and
+<p>Solve a square system of equations given either an MPILinearOperator or an MPIStackedLinearOperator <code class="docutils literal notranslate"><span class="pre">Op</span></code> and
 distributed data <code class="docutils literal notranslate"><span class="pre">y</span></code> using conjugate gradient iterations.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
-<dt><strong>Op</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.MPILinearOperator.html#pylops_mpi.MPILinearOperator" title="pylops_mpi.MPILinearOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.MPILinearOperator</span></code></a></span></dt><dd><p>Operator to invert of size <span class="math notranslate nohighlight">\([N \times N]\)</span></p>
+<dt><strong>Op</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.MPILinearOperator.html#pylops_mpi.MPILinearOperator" title="pylops_mpi.MPILinearOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.MPILinearOperator</span></code></a> or <a class="reference internal" href="pylops_mpi.MPIStackedLinearOperator.html#pylops_mpi.MPIStackedLinearOperator" title="pylops_mpi.MPIStackedLinearOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.MPIStackedLinearOperator</span></code></a></span></dt><dd><p>Operator to invert of size <span class="math notranslate nohighlight">\([N \times N]\)</span></p>
 </dd>
 </dl>
 </dd>
@@ -524,10 +524,10 @@ iterations.</p>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">run</span></code>(x[, niter, show, itershow])</p></td>
 <td><p>Run solver</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup</span></code>(y[, x0, niter, tol, show])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup</span></code>(y, x0[, niter, tol, show])</p></td>
 <td><p>Setup solver</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">solve</span></code>(y[, x0, niter, tol, show, itershow])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">solve</span></code>(y, x0[, niter, tol, show, itershow])</p></td>
 <td><p>Run entire solver</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">step</span></code>(x[, show])</p></td>

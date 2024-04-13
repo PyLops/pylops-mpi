@@ -1047,12 +1047,17 @@ document.write(`
 <span class="sd">    ----------</span>
 <span class="sd">    distarrays : :obj:`list`</span>
 <span class="sd">        List of :class:`pylops_mpi.DistributedArray` objects.</span>
-
+<span class="sd">    base_comm : :obj:`mpi4py.MPI.Comm`, optional</span>
+<span class="sd">        Base MPI Communicator.</span>
+<span class="sd">        Defaults to ``mpi4py.MPI.COMM_WORLD``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">distarrays</span><span class="p">:</span> <span class="n">List</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">distarrays</span><span class="p">:</span> <span class="n">List</span><span class="p">,</span> <span class="n">base_comm</span><span class="p">:</span> <span class="n">MPI</span><span class="o">.</span><span class="n">Comm</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">distarrays</span> <span class="o">=</span> <span class="n">distarrays</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">narrays</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">distarrays</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span> <span class="o">=</span> <span class="n">base_comm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">=</span> <span class="n">base_comm</span><span class="o">.</span><span class="n">Get_rank</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">base_comm</span><span class="o">.</span><span class="n">Get_size</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">distarrays</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
@@ -1128,6 +1133,8 @@ document.write(`
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="k">def</span> <span class="nf">multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stacked_array</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Stacked Distributed Multiplication of arrays</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stacked_array</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_check_stacked_size</span><span class="p">(</span><span class="n">stacked_array</span><span class="p">)</span>
         <span class="n">ProductArray</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -1143,6 +1150,8 @@ document.write(`
         <span class="k">return</span> <span class="n">ProductArray</span>
 
     <span class="k">def</span> <span class="nf">dot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stacked_array</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Dot Product of Stacked Distributed Arrays</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_stacked_size</span><span class="p">(</span><span class="n">stacked_array</span><span class="p">)</span>
         <span class="n">dotprod</span> <span class="o">=</span> <span class="mf">0.</span>
         <span class="k">for</span> <span class="n">iarr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">narrays</span><span class="p">):</span>

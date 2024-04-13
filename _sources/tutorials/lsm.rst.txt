@@ -246,13 +246,16 @@ product with the broadcasted reflectivity at every location on the subsurface.
 We calculate the inverse using the :py:func:`pylops_mpi.optimization.basic.cgls`
 solver.
 
-.. GENERATED FROM PYTHON SOURCE LINES 165-172
+.. GENERATED FROM PYTHON SOURCE LINES 165-175
 
 .. code-block:: Python
 
 
     # Inverse
-    minv_dist = pylops_mpi.cgls(VStack, d_dist, niter=100, show=True)[0]
+    # Initializing x0 to zeroes
+    x0 = pylops_mpi.DistributedArray(VStack.shape[1], partition=pylops_mpi.Partition.BROADCAST)
+    x0[:] = 0
+    minv_dist = pylops_mpi.cgls(VStack, d_dist, x0=x0, niter=100, show=True)[0]
     minv = minv_dist.asarray().reshape((nx, nz))
     d_inv_dist = VStack @ minv_dist
     d_inv = d_inv_dist.asarray().reshape(nstot, nr, nt)
@@ -301,14 +304,14 @@ solver.
         99       -1.2546e-02         2.8528e+00     2.8528e+00
        100       -1.2389e-02         2.8342e+00     2.8342e+00
 
-    Iterations = 100        Total time (s) = 1.16
+    Iterations = 100        Total time (s) = 1.19
     -----------------------------------------------------------------
 
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 173-209
+.. GENERATED FROM PYTHON SOURCE LINES 176-212
 
 .. code-block:: Python
 
@@ -382,7 +385,7 @@ solver.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 3.308 seconds)
+   **Total running time of the script:** (0 minutes 3.154 seconds)
 
 
 .. _sphx_glr_download_tutorials_lsm.py:

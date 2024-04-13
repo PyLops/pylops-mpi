@@ -447,16 +447,21 @@ document.write(`
 <span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">from</span> <span class="nn">pylops.utils</span> <span class="kn">import</span> <span class="n">NDArray</span>
-<span class="kn">from</span> <span class="nn">pylops_mpi</span> <span class="kn">import</span> <span class="n">MPILinearOperator</span><span class="p">,</span> <span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span>
+<span class="kn">from</span> <span class="nn">pylops_mpi</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MPILinearOperator</span><span class="p">,</span>
+    <span class="n">DistributedArray</span><span class="p">,</span>
+    <span class="n">StackedDistributedArray</span><span class="p">,</span>
+    <span class="n">MPIStackedLinearOperator</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">pylops_mpi.optimization.cls_basic</span> <span class="kn">import</span> <span class="n">CG</span><span class="p">,</span> <span class="n">CGLS</span>
 
 
 <div class="viewcode-block" id="cg">
 <a class="viewcode-back" href="../../../api/generated/pylops_mpi.optimization.basic.cg.html#pylops_mpi.optimization.basic.cg">[docs]</a>
 <span class="k">def</span> <span class="nf">cg</span><span class="p">(</span>
-        <span class="n">Op</span><span class="p">:</span> <span class="n">MPILinearOperator</span><span class="p">,</span>
-        <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">]</span> <span class="p">,</span>
-        <span class="n">x0</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">Op</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MPILinearOperator</span><span class="p">,</span> <span class="n">MPIStackedLinearOperator</span><span class="p">],</span>
+        <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">],</span>
+        <span class="n">x0</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">],</span>
         <span class="n">niter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
         <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-4</span><span class="p">,</span>
         <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -465,16 +470,16 @@ document.write(`
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">],</span> <span class="nb">int</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Conjugate gradient</span>
 
-<span class="sd">    Solve a square system of equations given an MPILinearOperator ``Op`` and</span>
+<span class="sd">    Solve a square system of equations given either an MPILinearOperator or an MPIStackedLinearOperator ``Op`` and</span>
 <span class="sd">    distributed data ``y`` using conjugate gradient iterations.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    Op : :obj:`pylops_mpi.MPILinearOperator`</span>
+<span class="sd">    Op : :obj:`pylops_mpi.MPILinearOperator` or :obj:`pylops_mpi.MPIStackedLinearOperator`</span>
 <span class="sd">        Operator to invert of size :math:`[N \times N]`</span>
 <span class="sd">    y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
 <span class="sd">        DistributedArray of size (N,)</span>
-<span class="sd">    x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`, optional</span>
+<span class="sd">    x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
 <span class="sd">        Initial guess</span>
 <span class="sd">    niter : :obj:`int`, optional</span>
 <span class="sd">        Number of iterations</span>
@@ -517,9 +522,9 @@ document.write(`
 <div class="viewcode-block" id="cgls">
 <a class="viewcode-back" href="../../../api/generated/pylops_mpi.optimization.basic.cgls.html#pylops_mpi.optimization.basic.cgls">[docs]</a>
 <span class="k">def</span> <span class="nf">cgls</span><span class="p">(</span>
-        <span class="n">Op</span><span class="p">:</span> <span class="n">MPILinearOperator</span><span class="p">,</span>
+        <span class="n">Op</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MPILinearOperator</span><span class="p">,</span> <span class="n">MPIStackedLinearOperator</span><span class="p">],</span>
         <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">],</span>
-        <span class="n">x0</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">x0</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">],</span>
         <span class="n">niter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
         <span class="n">damp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-4</span><span class="p">,</span>
@@ -529,16 +534,16 @@ document.write(`
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Conjugate gradient least squares</span>
 
-<span class="sd">    Solve an overdetermined system of equations given a MPILinearOperator ``Op`` and</span>
+<span class="sd">    Solve an overdetermined system of equations given either an MPILinearOperator or an MPIStackedLinearOperator``Op`` and</span>
 <span class="sd">    distributed data ``y`` using conjugate gradient iterations.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    Op : :obj:`pylops_mpi.MPILinearOperator`</span>
+<span class="sd">    Op : :obj:`pylops_mpi.MPILinearOperator` or :obj:`pylops_mpi.MPIStackedLinearOperator`</span>
 <span class="sd">        MPI Linear Operator to invert of size :math:`[N \times M]`</span>
 <span class="sd">    y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
 <span class="sd">        DistributedArray of size (N,)</span>
-<span class="sd">    x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`, optional</span>
+<span class="sd">    x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
 <span class="sd">        Initial guess</span>
 <span class="sd">    niter : :obj:`int`, optional</span>
 <span class="sd">        Number of iterations</span>

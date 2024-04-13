@@ -492,7 +492,7 @@ document.write(`
 <h1>pylops_mpi.StackedDistributedArray<a class="headerlink" href="#pylops-mpi-stackeddistributedarray" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="pylops_mpi.StackedDistributedArray">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylops_mpi.</span></span><span class="sig-name descname"><span class="pre">StackedDistributedArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distarrays</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/DistributedArray.html#StackedDistributedArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.StackedDistributedArray" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylops_mpi.</span></span><span class="sig-name descname"><span class="pre">StackedDistributedArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distarrays</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm=&lt;mpi4py.MPI.Intracomm</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/DistributedArray.html#StackedDistributedArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.StackedDistributedArray" title="Link to this definition">#</a></dt>
 <dd><p>Stacked DistributedArrays</p>
 <p>Stack DistributedArray objects and power them with basic mathematical operations.
 This class allows one to work with a series of distributed arrays to avoid having to create
@@ -502,13 +502,16 @@ a single distributed array with some special internal sorting.</p>
 <dd class="field-odd"><dl>
 <dt><strong>distarrays</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code></a></span></dt><dd><p>List of <a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a> objects.</p>
 </dd>
+<dt><strong>base_comm</strong><span class="classifier"><a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/reference/mpi4py.MPI.Comm.html#mpi4py.MPI.Comm" title="(in MPI for Python v3.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpi4py.MPI.Comm</span></code></a>, optional</span></dt><dd><p>Base MPI Communicator.
+Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.MPI.COMM_WORLD</span></code>.</p>
+</dd>
 </dl>
 </dd>
 </dl>
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code>(distarrays)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code>(distarrays[, base_comm])</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add</span></code>(stacked_array)</p></td>
@@ -524,13 +527,13 @@ a single distributed array with some special internal sorting.</p>
 <td><p>Creates a copy of the DistributedArray</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dot</span></code>(stacked_array)</p></td>
-<td><p></p></td>
+<td><p>Dot Product of Stacked Distributed Arrays</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">iadd</span></code>(stacked_array)</p></td>
 <td><p>Stacked Distributed In-Place Addition of arrays</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">multiply</span></code>(stacked_array)</p></td>
-<td><p></p></td>
+<td><p>Stacked Distributed Multiplication of arrays</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm</span></code>([ord])</p></td>
 <td><p>numpy.linalg.norm method on stacked Distributed arrays</p></td>

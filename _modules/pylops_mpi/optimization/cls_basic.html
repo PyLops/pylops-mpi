@@ -459,12 +459,12 @@ document.write(`
 <span class="k">class</span> <span class="nc">CG</span><span class="p">(</span><span class="n">Solver</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Conjugate gradient</span>
 
-<span class="sd">    Solve a square system of equations given an MPILinearOperator ``Op`` and</span>
+<span class="sd">    Solve a square system of equations given either an MPILinearOperator or an MPIStackedLinearOperator ``Op`` and</span>
 <span class="sd">    distributed data ``y`` using conjugate gradient iterations.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    Op : :obj:`pylops_mpi.MPILinearOperator`</span>
+<span class="sd">    Op : :obj:`pylops_mpi.MPILinearOperator` or :obj:`pylops_mpi.MPIStackedLinearOperator`</span>
 <span class="sd">        Operator to invert of size :math:`[N \times N]`</span>
 
 <span class="sd">    Notes</span>
@@ -490,6 +490,8 @@ document.write(`
         <span class="nb">print</span><span class="p">(</span><span class="n">head1</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_print_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">):</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">distarrays</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">strx</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">1.2e</span><span class="si">}</span><span class="s2">        &quot;</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">11.4e</span><span class="si">}</span><span class="s2">        &quot;</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">iiter</span><span class="si">:</span><span class="s2">6g</span><span class="si">}</span><span class="s2">        &quot;</span> <span class="o">+</span> <span class="n">strx</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cost</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">iiter</span><span class="p">]</span><span class="si">:</span><span class="s2">11.4e</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -497,7 +499,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">],</span>
-            <span class="n">x0</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">x0</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">],</span>
             <span class="n">niter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-4</span><span class="p">,</span>
             <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -508,9 +510,8 @@ document.write(`
 <span class="sd">        ----------</span>
 <span class="sd">        y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
 <span class="sd">            Data of size (N,)</span>
-<span class="sd">        x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`, optional</span>
-<span class="sd">            Initial guess of size (N,). If ``None``, initialize</span>
-<span class="sd">            internally as zero vector (will always default to :obj:`pylops_mpi.DistributedArray`)</span>
+<span class="sd">        x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
+<span class="sd">            Initial guess of size (N,).</span>
 <span class="sd">        niter : :obj:`int`, optional</span>
 <span class="sd">            Number of iterations (default to ``None`` in case a user wants to manually step over the solver)</span>
 <span class="sd">        tol : :obj:`float`, optional</span>
@@ -529,16 +530,8 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">niter</span> <span class="o">=</span> <span class="n">niter</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
 
-        <span class="k">if</span> <span class="n">x0</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-                                 <span class="n">partition</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="o">.</span><span class="n">partition</span><span class="p">,</span>
-                                 <span class="n">local_shapes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="o">.</span><span class="n">local_shapes</span><span class="p">,</span>
-                                 <span class="n">dtype</span><span class="o">=</span><span class="n">y</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-            <span class="n">x</span><span class="p">[:]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">x0</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">matvec</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x0</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">matvec</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">rank</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kold</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="o">.</span><span class="n">conj</span><span class="p">()))</span>
@@ -549,7 +542,10 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">iiter</span> <span class="o">=</span> <span class="mi">0</span>
 
         <span class="k">if</span> <span class="n">show</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_print_setup</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_print_setup</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">([</span><span class="n">x1</span><span class="o">.</span><span class="n">local_array</span> <span class="k">for</span> <span class="n">x1</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">distarrays</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_print_setup</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">x</span>
 
     <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">],</span>
@@ -652,21 +648,20 @@ document.write(`
     <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">],</span>
-            <span class="n">x0</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">x0</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">],</span>
             <span class="n">niter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
             <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-4</span><span class="p">,</span>
             <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
             <span class="n">itershow</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">],</span> <span class="nb">int</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Run entire solver</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
 <span class="sd">            Data of size (N,)</span>
-<span class="sd">        x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`, optional</span>
-<span class="sd">            Initial guess of size (N,). If ``None``, initialize</span>
-<span class="sd">            internally as zero vector (will always default to :obj:`pylops_mpi.DistributedArray`)</span>
+<span class="sd">        x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
+<span class="sd">            Initial guess of size (N,).</span>
 <span class="sd">        niter : :obj:`int`, optional</span>
 <span class="sd">            Number of iterations</span>
 <span class="sd">        tol : :obj:`float`, optional</span>
@@ -701,12 +696,12 @@ document.write(`
 <span class="k">class</span> <span class="nc">CGLS</span><span class="p">(</span><span class="n">Solver</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Conjugate gradient least squares</span>
 
-<span class="sd">    Solve an overdetermined system of equations given a MPILinearOperator ``Op``</span>
+<span class="sd">    Solve an overdetermined system of equations given either an MPILinearOperator or an MPIStackedLinearOperator ``Op``</span>
 <span class="sd">    and distributed data ``y`` using conjugate gradient iterations.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    Op : :obj:`pylops_mpi.MPILinearOperator`</span>
+<span class="sd">    Op : :obj:`pylops_mpi.MPILinearOperator` or :obj:`pylops_mpi.MPIStackedLinearOperator`</span>
 <span class="sd">        Operator to invert of size :math:`[N \times M]`</span>
 
 <span class="sd">    Notes</span>
@@ -739,6 +734,8 @@ document.write(`
         <span class="nb">print</span><span class="p">(</span><span class="n">head1</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_print_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">):</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">distarrays</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">strx</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">1.2e</span><span class="si">}</span><span class="s2">   &quot;</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">11.4e</span><span class="si">}</span><span class="s2">        &quot;</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">iiter</span><span class="si">:</span><span class="s2">6g</span><span class="si">}</span><span class="s2">       &quot;</span>
@@ -749,21 +746,20 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
               <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">],</span>
-              <span class="n">x0</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+              <span class="n">x0</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">],</span>
               <span class="n">niter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
               <span class="n">damp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
               <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-4</span><span class="p">,</span>
               <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-              <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+              <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">]:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Setup solver</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
 <span class="sd">            Data of size :math:`[N \times 1]`</span>
-<span class="sd">        x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`, optional</span>
-<span class="sd">            Initial guess  of size (M,). If ``None``, Defaults to a zero vector</span>
-<span class="sd">            (will always default to :obj:`pylops_mpi.DistributedArray`)</span>
+<span class="sd">        x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
+<span class="sd">            Initial guess  of size (M,).</span>
 <span class="sd">        niter : :obj:`int`, optional</span>
 <span class="sd">            Number of iterations (default to ``None`` in case a user wants to</span>
 <span class="sd">            manually step over the solver)</span>
@@ -785,19 +781,10 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">niter</span> <span class="o">=</span> <span class="n">niter</span>
 
-        <span class="c1"># initialize solver</span>
-        <span class="k">if</span> <span class="n">x0</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">y</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
-                                 <span class="n">local_shapes</span><span class="o">=</span><span class="n">r</span><span class="o">.</span><span class="n">local_shapes</span><span class="p">,</span>
-                                 <span class="n">partition</span><span class="o">=</span><span class="n">r</span><span class="o">.</span><span class="n">partition</span><span class="p">)</span>
-            <span class="n">x</span><span class="p">[:]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">x0</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">matvec</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-            <span class="n">damped_x</span> <span class="o">=</span> <span class="n">damp</span> <span class="o">*</span> <span class="n">x</span>
-            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="n">damped_x</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x0</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">matvec</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">damped_x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="n">damp</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="n">damped_x</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">rank</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">matvec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">)</span>
@@ -812,7 +799,10 @@ document.write(`
 
         <span class="c1"># print setup</span>
         <span class="k">if</span> <span class="n">show</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_print_setup</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_print_setup</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">([</span><span class="n">x1</span><span class="o">.</span><span class="n">local_array</span> <span class="k">for</span> <span class="n">x1</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">distarrays</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_print_setup</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">x</span>
 
     <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">],</span>
@@ -874,7 +864,7 @@ document.write(`
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        x : :obj:`pylops_mpi.DistributedArray`</span>
+<span class="sd">        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray</span>
 <span class="sd">            Estimated model of size (M, ).</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -918,7 +908,7 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
               <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">],</span>
-              <span class="n">x0</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+              <span class="n">x0</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">],</span>
               <span class="n">niter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
               <span class="n">damp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
               <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-4</span><span class="p">,</span>
@@ -932,8 +922,7 @@ document.write(`
 <span class="sd">        y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
 <span class="sd">            Data of size (N, )</span>
 <span class="sd">        x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
-<span class="sd">            Initial guess  of size (M, ). If ``None``, initialize internally as zero vector</span>
-<span class="sd">            (will always default to :obj:`pylops_mpi.DistributedArray`)</span>
+<span class="sd">            Initial guess  of size (M, ).</span>
 <span class="sd">        niter : :obj:`int`, optional</span>
 <span class="sd">            Number of iterations (default to ``None`` in case a user wants to</span>
 <span class="sd">            manually step over the solver)</span>
