@@ -1,4 +1,4 @@
-# 0.0.2
+# 0.1.0
 - Adapted `pylops_mpi.optimization.cg` and `pylops_mpi.optimization.cgls` to handle `pylops_mpi.StackedDistributedArray`.
 - Added `pylops_mpi.MPIGradient` operator.
 - Added `pylops_mpi.MPIStackedLinearOperator`, `pylops_mpi.MPIStackedBlockDiag`, and `pylops_mpi.MPIStackedVStack` operators.
