@@ -3,10 +3,10 @@
 Changelog
 =========
 
-Version 0.0.2
+Version 0.1.0
 -------------
 
-*Released on: 15/04/2024*
+*Released on: 13/04/2024*
 
 * Adapted :func:`pylops_mpi.optimization.basic.cg` and :func:`pylops_mpi.optimization.basic.cgls` to handle :class:`pylops_mpi.StackedDistributedArray`.
 * Added :class:`pylops_mpi.basicoperators.MPIGradient` operator.
