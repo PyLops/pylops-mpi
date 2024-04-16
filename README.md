@@ -1,5 +1,6 @@
 ![PyLops-MPI](https://github.com/PyLops/pylops-mpi/blob/main/docs/source/_static/pylopsmpi_b.png)
 
+[![PyPI version](https://badge.fury.io/py/pylops-mpi.svg)](https://badge.fury.io/py/pylops-mpi)
 [![Build status](https://github.com/PyLops/pylops-mpi/actions/workflows/build.yml/badge.svg)](https://github.com/PyLops/pylops-mpi/actions/workflows/build.yml)
 [![Documentation status](https://github.com/PyLops/pylops-mpi/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/PyLops/pylops-mpi/actions/workflows/pages/pages-build-deployment)
 ![OS-support](https://img.shields.io/badge/OS-linux,osx-850A8B.svg)
