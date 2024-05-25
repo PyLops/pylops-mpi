@@ -5,6 +5,7 @@ from mpi4py import MPI
 from enum import Enum
 
 from pylops.utils import DTypeLike, NDArray
+from pylops.utils.backend import get_module
 
 
 class Partition(Enum):
@@ -78,6 +79,8 @@ class DistributedArray:
         Axis along which distribution occurs. Defaults to ``0``.
     local_shapes : :obj:`list`, optional
         List of tuples representing local shapes at each rank.
+    engine : :obj:`str`, optional
+        Engine used to store array (``numpy`` or ``cupy``)
     dtype : :obj:`str`, optional
         Type of elements in input array. Defaults to ``numpy.float64``.
     """
@@ -86,6 +89,7 @@ class DistributedArray:
                  base_comm: Optional[MPI.Comm] = MPI.COMM_WORLD,
                  partition: Partition = Partition.SCATTER, axis: int = 0,
                  local_shapes: Optional[List[Tuple]] = None,
+                 engine: Optional[str] = "numpy",
                  dtype: Optional[DTypeLike] = np.float64):
         if isinstance(global_shape, Integral):
             global_shape = (global_shape,)
@@ -103,7 +107,8 @@ class DistributedArray:
         self._check_local_shapes(local_shapes)
         self._local_shape = local_shapes[base_comm.rank] if local_shapes else local_split(global_shape, base_comm,
                                                                                           partition, axis)
-        self._local_array = np.empty(shape=self.local_shape, dtype=self.dtype)
+        self._engine = engine
+        self._local_array = get_module(engine).empty(shape=self.local_shape, dtype=self.dtype)
 
     def __getitem__(self, index):
         return self.local_array[index]
@@ -159,6 +164,16 @@ class DistributedArray:
         local_shape : :obj:`tuple`
         """
         return self._local_shape
+
+    @property
+    def engine(self):
+        """Engine of the Distributed array
+
+        Returns
+        -------
+        engine : :obj:`str`
+        """
+        return self._engine
 
     @property
     def local_array(self):
@@ -334,6 +349,7 @@ class DistributedArray:
                                partition=self.partition,
                                axis=self.axis,
                                local_shapes=self.local_shapes,
+                               engine=self.engine,
                                dtype=self.dtype)
         arr[:] = -self.local_array
         return arr
@@ -365,6 +381,7 @@ class DistributedArray:
                                     dtype=self.dtype,
                                     partition=self.partition,
                                     local_shapes=self.local_shapes,
+                                    engine=self.engine,
                                     axis=self.axis)
         SumArray[:] = self.local_array + dist_array.local_array
         return SumArray
@@ -387,6 +404,7 @@ class DistributedArray:
                                         dtype=self.dtype,
                                         partition=self.partition,
                                         local_shapes=self.local_shapes,
+                                        engine=self.engine,
                                         axis=self.axis)
         if isinstance(dist_array, DistributedArray):
             # multiply two DistributedArray
@@ -480,6 +498,7 @@ class DistributedArray:
                                 partition=self.partition,
                                 axis=self.axis,
                                 local_shapes=self.local_shapes,
+                                engine=self.engine,
                                 dtype=self.dtype)
         conj[:] = self.local_array.conj()
         return conj
@@ -492,6 +511,7 @@ class DistributedArray:
                                partition=self.partition,
                                axis=self.axis,
                                local_shapes=self.local_shapes,
+                               engine=self.engine,
                                dtype=self.dtype)
         arr[:] = self.local_array
         return arr
