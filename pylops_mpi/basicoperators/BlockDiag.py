@@ -3,8 +3,9 @@ from scipy.sparse.linalg._interface import _get_dtype
 from mpi4py import MPI
 from typing import Optional, Sequence
 
-from pylops.utils import DTypeLike
 from pylops import LinearOperator
+from pylops.utils import DTypeLike
+from pylops.utils.backend import get_module
 
 from pylops_mpi import MPILinearOperator, MPIStackedLinearOperator
 from pylops_mpi import DistributedArray, StackedDistributedArray
@@ -113,22 +114,26 @@ class MPIBlockDiag(MPILinearOperator):
 
     @reshaped(forward=True, stacking=True)
     def _matvec(self, x: DistributedArray) -> DistributedArray:
-        y = DistributedArray(global_shape=self.shape[0], local_shapes=self.local_shapes_n, dtype=self.dtype)
+        ncp = get_module(x.engine)
+        y = DistributedArray(global_shape=self.shape[0], local_shapes=self.local_shapes_n, 
+                             engine=x.engine, dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
             y1.append(oper.matvec(x.local_array[self.mmops[iop]:
                                                 self.mmops[iop + 1]]))
-        y[:] = np.concatenate(y1)
+        y[:] = ncp.concatenate(ncp.asarray(y1))
         return y
 
     @reshaped(forward=False, stacking=True)
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
-        y = DistributedArray(global_shape=self.shape[1], local_shapes=self.local_shapes_m, dtype=self.dtype)
+        ncp = get_module(x.engine)
+        y = DistributedArray(global_shape=self.shape[1], local_shapes=self.local_shapes_m,
+                             engine=x.engine, dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
             y1.append(oper.rmatvec(x.local_array[self.nnops[iop]:
                                                  self.nnops[iop + 1]]))
-        y[:] = np.concatenate(y1)
+        y[:] = ncp.concatenate(ncp.asarray(y1))
         return y
 
 

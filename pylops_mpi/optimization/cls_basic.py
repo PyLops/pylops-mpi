@@ -337,7 +337,7 @@ class CGLS(Solver):
         self.rank = x.rank
         self.c = r.copy()
         self.q = self.Op.matvec(self.c)
-        self.kold = np.abs(r.dot(r.conj()))
+        self.kold = float(np.abs(r.dot(r.conj())))
 
         # create variables to track the residual norm and iterations
         self.cost = []
@@ -373,13 +373,13 @@ class CGLS(Solver):
 
         """
 
-        a = self.kold / (self.q.dot(self.q.conj()) + self.damp * self.c.dot(self.c.conj()))
+        a = float(self.kold / (self.q.dot(self.q.conj()) + self.damp * self.c.dot(self.c.conj())))
         x += a * self.c
         self.s -= a * self.q
         damped_x = self.damp * x
         r = self.Op.rmatvec(self.s) - damped_x
-        k = np.abs(r.dot(r.conj()))
-        b = k / self.kold
+        k = float(np.abs(r.dot(r.conj())))
+        b = float(k / self.kold)
         self.c = r + b * self.c
         self.q = self.Op.matvec(self.c)
         self.kold = k

@@ -5,6 +5,7 @@ from typing import Sequence, Optional
 
 from pylops import LinearOperator
 from pylops.utils import DTypeLike
+from pylops.utils.backend import get_module
 
 from pylops_mpi import (
     MPILinearOperator,
@@ -116,22 +117,26 @@ class MPIVStack(MPILinearOperator):
         super().__init__(shape=shape, dtype=dtype, base_comm=base_comm)
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
+        ncp = get_module(x.engine)
         if x.partition is not Partition.BROADCAST:
             raise ValueError(f"x should have partition={Partition.BROADCAST}, {x.partition} != {Partition.BROADCAST}")
-        y = DistributedArray(global_shape=self.shape[0], local_shapes=self.local_shapes_n, dtype=self.dtype)
+        y = DistributedArray(global_shape=self.shape[0], local_shapes=self.local_shapes_n, 
+                             engine=x.engine, dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
             y1.append(oper.matvec(x.local_array))
-        y[:] = np.concatenate(y1)
+        y[:] = ncp.concatenate(y1)
         return y
 
     @reshaped(forward=False, stacking=True)
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
-        y = DistributedArray(global_shape=self.shape[1], partition=Partition.BROADCAST, dtype=self.dtype)
+        ncp = get_module(x.engine)
+        y = DistributedArray(global_shape=self.shape[1], partition=Partition.BROADCAST, 
+                             engine=x.engine, dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
             y1.append(oper.rmatvec(x.local_array[self.nnops[iop]: self.nnops[iop + 1]]))
-        y1 = np.sum(y1, axis=0)
+        y1 = ncp.sum(ncp.asarray(y1), axis=0)
         y[:] = self.base_comm.allreduce(y1, op=MPI.SUM)
         return y
 
