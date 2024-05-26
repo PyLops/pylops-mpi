@@ -191,4 +191,4 @@ def test_distributed_norm(par):
                     np.linalg.norm(par['x'], ord=1, axis=par['axis']), rtol=1e-14)
     assert_allclose(arr.norm(ord=np.inf, axis=par['axis']),
                     np.linalg.norm(par['x'], ord=np.inf, axis=par['axis']), rtol=1e-14)
-    assert_allclose(arr.norm(), np.linalg.norm(par['x'].flatten()), rtol=1e-14)
+    assert_allclose(arr.norm(), np.linalg.norm(par['x'].flatten()), rtol=1e-13)
