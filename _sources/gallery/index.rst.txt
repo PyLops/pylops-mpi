@@ -22,6 +22,7 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
 
     <div class="sphx-glr-thumbnails">
 
+.. thumbnail-parent-div-open
 
 .. raw:: html
 
@@ -124,6 +125,8 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
       <div class="sphx-glr-thumbnail-title">Stacking Operators</div>
     </div>
 
+
+.. thumbnail-parent-div-close
 
 .. raw:: html
 
