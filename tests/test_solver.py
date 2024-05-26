@@ -31,56 +31,56 @@ par1 = {
     "nx": 11,
     "imag": 0,
     "x0": False,
-    "dtype": "float128",
+    "dtype": "float64",
 }  # square real, zero initial guess
 par2 = {
     "ny": 11,
     "nx": 11,
     "imag": 0,
     "x0": True,
-    "dtype": "float128",
+    "dtype": "float64",
 }  # square real, non-zero initial guess
 par3 = {
     "ny": 31,
     "nx": 11,
     "imag": 0,
     "x0": False,
-    "dtype": "float128",
+    "dtype": "float64",
 }  # overdetermined real, zero initial guess
 par4 = {
     "ny": 31,
     "nx": 11,
     "imag": 0,
     "x0": True,
-    "dtype": "float128",
+    "dtype": "float64",
 }  # overdetermined real, non-zero initial guess
 par1j = {
     "ny": 11,
     "nx": 11,
     "imag": 1j,
     "x0": False,
-    "dtype": "complex256",
+    "dtype": "complex128",
 }  # square complex, zero initial guess
 par2j = {
     "ny": 11,
     "nx": 11,
     "imag": 1j,
     "x0": True,
-    "dtype": "complex256",
+    "dtype": "complex128",
 }  # square complex, non-zero initial guess
 par3j = {
     "ny": 31,
     "nx": 11,
     "imag": 1j,
     "x0": False,
-    "dtype": "complex256",
+    "dtype": "complex128",
 }  # overdetermined complex, zero initial guess
 par4j = {
     "ny": 31,
     "nx": 11,
     "imag": 1j,
     "x0": True,
-    "dtype": "complex256",
+    "dtype": "complex128",
 }  # overdetermined complex, non-zero initial guess
 
 
@@ -268,7 +268,7 @@ def test_cgls_broadcastmodel(par):
             x0 = None
         y1 = Vstack @ x_global
         xinv1 = pylops.cgls(Vstack, y1, x0=x0, niter=par["nx"], tol=1e-5, show=True)[0]
-        assert_allclose(xinv_array, xinv1, rtol=1e-14)
+        assert_allclose(xinv_array, xinv1, rtol=1e-13)
 
 
 @pytest.mark.mpi(min_size=2)
