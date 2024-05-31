@@ -172,7 +172,7 @@ class MPIFirstDerivative(MPILinearOperator):
     def _matvec_backward(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
         y = DistributedArray(global_shape=x.global_shape, local_shapes=x.local_shapes,
-                            axis=x.axis, engine=x.engine, dtype=self.dtype)
+                             axis=x.axis, engine=x.engine, dtype=self.dtype)
         ghosted_x = x.add_ghost_cells(cells_front=1)
         y_backward = ghosted_x[1:] - ghosted_x[:-1]
         if self.rank == 0:
