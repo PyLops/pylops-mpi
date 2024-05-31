@@ -86,7 +86,7 @@ class CG(Solver):
         self.r = self.y - self.Op.matvec(x)
         self.rank = x.rank
         self.c = self.r.copy()
-        self.kold = np.abs(self.r.dot(self.r.conj()))
+        self.kold = float(np.abs(self.r.dot(self.r.conj())))
 
         # create variables to track the residual norm and iterations
         self.cost: List = []
@@ -120,11 +120,11 @@ class CG(Solver):
         """
         Opc = self.Op.matvec(self.c)
         cOpc = np.abs(self.c.dot(Opc.conj()))
-        a = self.kold / cOpc
+        a = float(self.kold / cOpc)
         x += a * self.c
         self.r -= a * Opc
-        k = np.abs(self.r.dot(self.r.conj()))
-        b = k / self.kold
+        k = float(np.abs(self.r.dot(self.r.conj())))
+        b = float(k / self.kold)
         self.c = self.r + b * self.c
         self.kold = k
         self.iiter += 1
