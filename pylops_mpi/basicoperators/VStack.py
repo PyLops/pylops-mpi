@@ -120,7 +120,7 @@ class MPIVStack(MPILinearOperator):
         ncp = get_module(x.engine)
         if x.partition is not Partition.BROADCAST:
             raise ValueError(f"x should have partition={Partition.BROADCAST}, {x.partition} != {Partition.BROADCAST}")
-        y = DistributedArray(global_shape=self.shape[0], local_shapes=self.local_shapes_n, 
+        y = DistributedArray(global_shape=self.shape[0], local_shapes=self.local_shapes_n,
                              engine=x.engine, dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
@@ -131,7 +131,7 @@ class MPIVStack(MPILinearOperator):
     @reshaped(forward=False, stacking=True)
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
-        y = DistributedArray(global_shape=self.shape[1], partition=Partition.BROADCAST, 
+        y = DistributedArray(global_shape=self.shape[1], partition=Partition.BROADCAST,
                              engine=x.engine, dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):

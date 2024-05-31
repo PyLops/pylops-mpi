@@ -14,7 +14,7 @@ par1 = {
     "nz": 600,
     "dz": 1.0,
     "edge": False,
-    "dtype": np.float128,
+    "dtype": np.float64,
     "partition": pylops_mpi.Partition.SCATTER
 }
 
@@ -22,7 +22,7 @@ par1b = {
     "nz": 600,
     "dz": 1.0,
     "edge": False,
-    "dtype": np.float128,
+    "dtype": np.float64,
     "partition": pylops_mpi.Partition.BROADCAST
 }
 
@@ -30,7 +30,7 @@ par1j = {
     "nz": 600,
     "dz": 1.0,
     "edge": False,
-    "dtype": np.complex256,
+    "dtype": np.complex128,
     "partition": pylops_mpi.Partition.SCATTER
 }
 
@@ -38,7 +38,7 @@ par1e = {
     "nz": 600,
     "dz": 1.0,
     "edge": True,
-    "dtype": np.float128,
+    "dtype": np.float64,
     "partition": pylops_mpi.Partition.SCATTER
 }
 
@@ -46,7 +46,7 @@ par2 = {
     "nz": (100, 151),
     "dz": 1.0,
     "edge": False,
-    "dtype": np.float128,
+    "dtype": np.float64,
     "partition": pylops_mpi.Partition.SCATTER
 }
 
@@ -54,7 +54,7 @@ par2b = {
     "nz": (100, 151),
     "dz": 1.0,
     "edge": False,
-    "dtype": np.float128,
+    "dtype": np.float64,
     "partition": pylops_mpi.Partition.BROADCAST
 }
 
@@ -62,7 +62,7 @@ par2j = {
     "nz": (100, 151),
     "dz": 1.0,
     "edge": False,
-    "dtype": np.complex256,
+    "dtype": np.complex128,
     "partition": pylops_mpi.Partition.SCATTER
 }
 
@@ -70,7 +70,7 @@ par2e = {
     "nz": (100, 151),
     "dz": 1.0,
     "edge": True,
-    "dtype": np.float128,
+    "dtype": np.float64,
     "partition": pylops_mpi.Partition.SCATTER
 }
 
@@ -78,7 +78,7 @@ par3 = {
     "nz": (101, 51, 100),
     "dz": 0.4,
     "edge": False,
-    "dtype": np.float128,
+    "dtype": np.float64,
     "partition": pylops_mpi.Partition.SCATTER
 }
 
@@ -86,7 +86,7 @@ par3b = {
     "nz": (101, 51, 100),
     "dz": 0.4,
     "edge": False,
-    "dtype": np.float128,
+    "dtype": np.float64,
     "partition": pylops_mpi.Partition.BROADCAST
 }
 
@@ -94,7 +94,7 @@ par3j = {
     "nz": (101, 51, 100),
     "dz": 0.4,
     "edge": True,
-    "dtype": np.complex256,
+    "dtype": np.complex128,
     "partition": pylops_mpi.Partition.SCATTER
 }
 
@@ -102,7 +102,7 @@ par3e = {
     "nz": (101, 51, 100),
     "dz": 0.4,
     "edge": True,
-    "dtype": np.float128,
+    "dtype": np.float64,
     "partition": pylops_mpi.Partition.SCATTER
 }
 
@@ -110,7 +110,7 @@ par4 = {
     "nz": (79, 101, 50),
     "dz": 0.4,
     "edge": False,
-    "dtype": np.float128,
+    "dtype": np.float64,
     "partition": pylops_mpi.Partition.SCATTER
 }
 
@@ -118,7 +118,7 @@ par4b = {
     "nz": (79, 101, 50),
     "dz": 0.4,
     "edge": False,
-    "dtype": np.float128,
+    "dtype": np.float64,
     "partition": pylops_mpi.Partition.BROADCAST
 }
 
@@ -126,7 +126,7 @@ par4j = {
     "nz": (79, 101, 50),
     "dz": 0.4,
     "edge": True,
-    "dtype": np.complex256,
+    "dtype": np.complex128,
     "partition": pylops_mpi.Partition.SCATTER
 }
 
@@ -134,7 +134,7 @@ par4e = {
     "nz": (79, 101, 50),
     "dz": 0.4,
     "edge": True,
-    "dtype": np.float128,
+    "dtype": np.float64,
     "partition": pylops_mpi.Partition.SCATTER
 }
 
@@ -144,7 +144,7 @@ par5 = {
     "weights": (0.7, 0.7, 0.7),
     "sampling": (1, 1, 1),
     "edge": False,
-    "dtype": np.float128,
+    "dtype": np.float64,
 }
 
 par5e = {
@@ -153,7 +153,7 @@ par5e = {
     "weights": (0.7, 0.7, 0.7),
     "sampling": (1, 1, 1),
     "edge": True,
-    "dtype": np.float128,
+    "dtype": np.float64,
 }
 
 par6 = {
@@ -162,7 +162,7 @@ par6 = {
     "weights": (1, 1, 1),
     "sampling": (0.4, 0.4, 0.4),
     "edge": False,
-    "dtype": np.float128,
+    "dtype": np.float64,
 }
 
 par6e = {
@@ -171,7 +171,7 @@ par6e = {
     "weights": (1, 1, 1),
     "sampling": (0.4, 0.4, 0.4),
     "edge": True,
-    "dtype": np.float128,
+    "dtype": np.float64,
 }
 
 
