@@ -5,7 +5,7 @@ from mpi4py import MPI
 from enum import Enum
 
 from pylops.utils import DTypeLike, NDArray
-from pylops.utils.backend import get_module
+from pylops.utils.backend import get_module, get_array_module, get_module_name
 
 
 class Partition(Enum):
@@ -294,6 +294,7 @@ class DistributedArray:
                                       partition=partition,
                                       axis=axis,
                                       local_shapes=local_shapes,
+                                      engine=get_module_name(get_array_module(x)),
                                       dtype=x.dtype)
         if partition == Partition.BROADCAST:
             dist_array[:] = x
