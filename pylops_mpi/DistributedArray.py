@@ -535,6 +535,7 @@ class DistributedArray:
         arr = DistributedArray(global_shape=np.prod(self.global_shape),
                                local_shapes=local_shapes,
                                partition=self.partition,
+                               engine=self.engine,
                                dtype=self.dtype)
         local_array = np.ravel(self.local_array, order=order)
         x = local_array.copy()
