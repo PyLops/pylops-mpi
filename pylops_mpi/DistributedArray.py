@@ -284,6 +284,7 @@ class DistributedArray:
             Axis of Distribution
         local_shapes : :obj:`list`, optional
             Local Shapes at each rank.
+        
         Returns
         ----------
         dist_array : :obj:`DistributedArray`
