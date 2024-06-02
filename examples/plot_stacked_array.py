@@ -1,6 +1,6 @@
 """
 Stacked Array
-=========================
+=============
 This example shows how to use the :py:class:`pylops_mpi.StackedDistributedArray`.
 This class provides a way to combine and act on multiple :py:class:`pylops_mpi.DistributedArray`
 within the same program. This is very useful in scenarios where an array can be logically
