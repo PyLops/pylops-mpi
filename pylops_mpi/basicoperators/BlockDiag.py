@@ -121,7 +121,7 @@ class MPIBlockDiag(MPILinearOperator):
         for iop, oper in enumerate(self.ops):
             y1.append(oper.matvec(x.local_array[self.mmops[iop]:
                                                 self.mmops[iop + 1]]))
-        y[:] = ncp.concatenate(ncp.asarray(y1))
+        y[:] = ncp.concatenate(y1)
         return y
 
     @reshaped(forward=False, stacking=True)
@@ -133,7 +133,7 @@ class MPIBlockDiag(MPILinearOperator):
         for iop, oper in enumerate(self.ops):
             y1.append(oper.rmatvec(x.local_array[self.nnops[iop]:
                                                  self.nnops[iop + 1]]))
-        y[:] = ncp.concatenate(ncp.asarray(y1))
+        y[:] = ncp.concatenate(y1)
         return y
 
 
