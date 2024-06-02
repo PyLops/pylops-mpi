@@ -86,7 +86,7 @@ class CG(Solver):
         self.r = self.y - self.Op.matvec(x)
         self.rank = x.rank
         self.c = self.r.copy()
-        self.kold = np.abs(self.r.dot(self.r.conj()))
+        self.kold = float(np.abs(self.r.dot(self.r.conj())))
 
         # create variables to track the residual norm and iterations
         self.cost: List = []
@@ -120,11 +120,11 @@ class CG(Solver):
         """
         Opc = self.Op.matvec(self.c)
         cOpc = np.abs(self.c.dot(Opc.conj()))
-        a = self.kold / cOpc
+        a = float(self.kold / cOpc)
         x += a * self.c
         self.r -= a * Opc
-        k = np.abs(self.r.dot(self.r.conj()))
-        b = k / self.kold
+        k = float(np.abs(self.r.dot(self.r.conj())))
+        b = float(k / self.kold)
         self.c = self.r + b * self.c
         self.kold = k
         self.iiter += 1
@@ -337,7 +337,7 @@ class CGLS(Solver):
         self.rank = x.rank
         self.c = r.copy()
         self.q = self.Op.matvec(self.c)
-        self.kold = np.abs(r.dot(r.conj()))
+        self.kold = float(np.abs(r.dot(r.conj())))
 
         # create variables to track the residual norm and iterations
         self.cost = []
@@ -373,13 +373,13 @@ class CGLS(Solver):
 
         """
 
-        a = self.kold / (self.q.dot(self.q.conj()) + self.damp * self.c.dot(self.c.conj()))
+        a = float(self.kold / (self.q.dot(self.q.conj()) + self.damp * self.c.dot(self.c.conj())))
         x += a * self.c
         self.s -= a * self.q
         damped_x = self.damp * x
         r = self.Op.rmatvec(self.s) - damped_x
-        k = np.abs(r.dot(r.conj()))
-        b = k / self.kold
+        k = float(np.abs(r.dot(r.conj())))
+        b = float(k / self.kold)
         self.c = r + b * self.c
         self.q = self.Op.matvec(self.c)
         self.kold = k

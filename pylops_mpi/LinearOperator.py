@@ -81,6 +81,7 @@ class MPILinearOperator:
                                  base_comm=self.base_comm,
                                  partition=x.partition,
                                  axis=x.axis,
+                                 engine=x.engine,
                                  dtype=self.dtype)
             y[:] = self.Op._matvec(x.local_array)
             return y
@@ -117,6 +118,7 @@ class MPILinearOperator:
                                  base_comm=self.base_comm,
                                  partition=x.partition,
                                  axis=x.axis,
+                                 engine=x.engine,
                                  dtype=self.dtype)
             y[:] = self.Op._rmatvec(x.local_array)
             return y
