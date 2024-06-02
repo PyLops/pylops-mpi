@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**02:30.918** total execution time for 8 files **from all galleries**:
+**02:34.372** total execution time for 8 files **from all galleries**:
 
 .. container::
 
@@ -33,25 +33,25 @@ Computation times
      - Time
      - Mem (MB)
    * - :ref:`sphx_glr_tutorials_poststack.py` (``../../tutorials/poststack.py``)
-     - 02:22.721
+     - 02:26.621
      - 0.0
    * - :ref:`sphx_glr_tutorials_lsm.py` (``../../tutorials/lsm.py``)
-     - 00:03.499
+     - 00:03.221
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_distributed_array.py` (``../../examples/plot_distributed_array.py``)
-     - 00:01.951
+     - 00:01.878
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_derivative.py` (``../../examples/plot_derivative.py``)
-     - 00:01.535
+     - 00:01.489
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_stacking.py` (``../../examples/plot_stacking.py``)
-     - 00:00.542
+     - 00:00.524
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_mpilinop.py` (``../../examples/plot_mpilinop.py``)
-     - 00:00.434
+     - 00:00.407
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_cgls.py` (``../../examples/plot_cgls.py``)
-     - 00:00.220
+     - 00:00.217
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_stacked_array.py` (``../../examples/plot_stacked_array.py``)
      - 00:00.016

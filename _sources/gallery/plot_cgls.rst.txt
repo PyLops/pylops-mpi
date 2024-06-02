@@ -155,12 +155,14 @@ function of the DistributedArray as shown below.
         12        1.0133e+00         5.8939e-02     5.8939e-02
         13        1.0095e+00         5.0127e-02     5.0127e-02
         14        9.9946e-01         3.9693e-03     3.9693e-03
-        15        1.0000e+00         2.0763e-10     2.0763e-10
+        15        1.0000e+00         3.7502e-07     3.7502e-07
 
     Iterations = 15        Total time (s) = 0.03
     -----------------------------------------------------------------
 
-    CGLS Solution xinv=[1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]
+    CGLS Solution xinv=[0.99999999 1.00000001 0.99999999 0.99999999 1.00000002 1.
+     1.         0.99999999 0.99999999 1.         1.         1.
+     0.99999999 1.         0.99999996]
 
 
 
@@ -168,7 +170,7 @@ function of the DistributedArray as shown below.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 0.220 seconds)
+   **Total running time of the script:** (0 minutes 0.217 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_cgls.py:
