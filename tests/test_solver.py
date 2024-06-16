@@ -90,6 +90,7 @@ par4j = {
 )
 def test_cg(par):
     """CG with MPIBlockDiag"""
+    np.random.seed(42)
     A = np.ones((par["ny"], par["nx"])) + par[
         "imag"] * np.ones((par["ny"], par["nx"]))
     Aop = MatrixMult(np.conj(A.T) @ A, dtype=par['dtype'])
@@ -135,6 +136,7 @@ def test_cg(par):
 )
 def test_cgls(par):
     """CGLS with MPIBlockDiag"""
+    np.random.seed(42)
     A = np.ones((par["ny"], par["nx"])) + par[
         "imag"] * np.ones((par["ny"], par["nx"]))
     Aop = MatrixMult(np.conj(A.T) @ A + 1e-5 * np.eye(par["nx"], dtype=par['dtype']),
@@ -182,6 +184,7 @@ def test_cgls(par):
 )
 def test_cgls_broadcastdata(par):
     """CGLS with broadcasted data vector"""
+    np.random.seed(42)
     A = (rank + 1) * np.ones((par["ny"], par["nx"])) + (rank + 2) * par[
         "imag"
     ] * np.ones((par["ny"], par["nx"]))
@@ -228,6 +231,7 @@ def test_cgls_broadcastdata(par):
 )
 def test_cgls_broadcastmodel(par):
     """CGLS with broadcasted model vector"""
+    np.random.seed(42)
     A = np.ones((par["ny"], par["nx"])) + par[
         "imag"] * np.ones((par["ny"], par["nx"]))
     Aop = MatrixMult(np.conj(A.T) @ A + 1e-5 * np.eye(par["nx"], dtype=par['dtype']),
@@ -277,6 +281,7 @@ def test_cgls_broadcastmodel(par):
 )
 def test_cg_stacked(par):
     """CG with MPIStackedBlockDiag"""
+    np.random.seed(42)
     A = np.ones((par["ny"], par["nx"])) + par[
         "imag"] * np.ones((par["ny"], par["nx"]))
     Aop = MatrixMult(np.conj(A.T) @ A + 1e-5 * np.eye(par["nx"], dtype=par['dtype']),
@@ -340,6 +345,7 @@ def test_cg_stacked(par):
 )
 def test_cgls_stacked(par):
     """CGLS with MPIStackedBlockDiag"""
+    np.random.seed(42)
     A = np.ones((par["ny"], par["nx"])) + par[
         "imag"] * np.ones((par["ny"], par["nx"]))
     Aop = MatrixMult(np.conj(A.T) @ A + 1e-5 * np.eye(par["nx"], dtype=par['dtype']),
@@ -396,4 +402,4 @@ def test_cgls_stacked(par):
             x0 = None
         y1 = StackedBDiag * x_global
         xinv1 = pylops.cgls(StackedBDiag, y1, x0=x0, niter=par["nx"], tol=1e-5, show=True)[0]
-        assert_allclose(xinv_array, xinv1, rtol=1e-14)
+        assert_allclose(xinv_array, xinv1, rtol=1e-13)

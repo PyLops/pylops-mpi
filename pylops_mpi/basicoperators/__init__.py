@@ -2,11 +2,11 @@
 Basic Linear Operators using MPI
 ================================
 
-The subpackage basicoperators extends some of the basic linear algebra
-operations provided by numpy providing forward and adjoint functionalities
-using MPI.
+The subpackage basicoperators extends some of the basic operations
+provided by pylops.basicoperators providing forward and adjoint 
+functionalities using MPI.
 
-A list of operators present in pylops_mpi.basicoperators :
+A list of operators present in pylops_mpi.basicoperators:
     MPIBlockDiag                      Block Diagonal arrangement of PyLops operators
     MPIStackedBlockDiag               Block Diagonal arrangement of PyLops-MPI operators
     MPIVStack                         Vertical Stacking of PyLops operators

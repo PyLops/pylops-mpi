@@ -5,7 +5,9 @@ from .basicoperators import *
 from . import (
     basicoperators,
     optimization,
-    plotting
+    plotting,
+    signalprocessing,
+    waveeqprocessing,
 )
 from .plotting.plotting import *
 from .optimization.basic import *
