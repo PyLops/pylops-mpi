@@ -12,6 +12,7 @@ build/
 pylops_mpi.egg-info/
 .eggs/
 dist/
+*.pyc
 
 # Documentation
 docs/source/gallery
