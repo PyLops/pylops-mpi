@@ -4,7 +4,7 @@ Multi-Dimensional Convolution
 This example shows how to use the :py:class:`pylops_mpi.waveeqprocessing.MPIMDC` operator
 to convolve a 3D kernel with an input seismic data in a distributed fashion (where
 parallelism is harnessed over the frequency axis when performing repeated matrix-vector
-or matrix-matrix multiplications). 
+or matrix-matrix multiplications).
 
 """
 from matplotlib import pyplot as plt
@@ -84,12 +84,11 @@ Gwav_fft = Gwav_fft[..., : par["nfmax"]]
 m, mwav = m.T, mwav.T
 Gwav_fft = Gwav_fft.transpose(2, 0, 1)
 
-
 ###############################################################################
-# Now that we have created the kernel of our MDC operator in ``Gwav_fft``, we 
-# are ready to define a strategy on how to split it along the first 
-# (i.e., frequency) axis over different ranks. In practical applications, one 
-# would of course pre-compute the kernel and just load the relevant part in 
+# Now that we have created the kernel of our MDC operator in ``Gwav_fft``, we
+# are ready to define a strategy on how to split it along the first
+# (i.e., frequency) axis over different ranks. In practical applications, one
+# would of course pre-compute the kernel and just load the relevant part in
 # each rank from file.
 
 # Choose how to split sources to ranks
@@ -104,21 +103,20 @@ print(f'Rank: {rank}, nf: {nf_rank}, ifin: {ifin_rank}, ifend: {ifend_rank}')
 G = Gwav_fft[ifin_rank:ifend_rank].astype(cdtype)
 print(f'Rank: {rank}, G: {G.shape}')
 
-
 ###############################################################################
-# We can finally create the MDC operator using 
+# We can finally create the MDC operator using
 # :py:class:`pylops_mpi.waveeqprocessing.MPIMDC` so that the most
 # demanding computations can be run in parallel.
 
 # Define operator
 Fop = pylops_mpi.waveeqprocessing.MPIMDC(
-    G, nt=2 * par["nt"] - 1, nv=1, nfreq=nf, 
+    G, nt=2 * par["nt"] - 1, nv=1, nfreq=nf,
     dt=0.004, dr=1.0, twosided=True)
 
 # Apply forward
-md = pylops_mpi.DistributedArray(global_shape=(2 * par["nt"] - 1) * par["nx"] * 1, 
-                                partition=pylops_mpi.Partition.BROADCAST,
-                                dtype=dtype)
+md = pylops_mpi.DistributedArray(global_shape=(2 * par["nt"] - 1) * par["nx"] * 1,
+                                 partition=pylops_mpi.Partition.BROADCAST,
+                                 dtype=dtype)
 md[:] = m.astype(dtype).ravel()
 
 dd = Fop @ md
@@ -132,7 +130,7 @@ madj = madj.reshape(2 * par["nt"] - 1, par["nx"])
 
 ###############################################################################
 # Finally let's display input model, data and adjoint model
- 
+
 if rank == 0:
     fig, axs = plt.subplots(1, 3, figsize=(9, 6))
     axs[0].imshow(

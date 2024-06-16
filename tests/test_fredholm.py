@@ -93,6 +93,7 @@ def test_Gsize1(par):
             )
 """
 
+
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6)])
 def test_Fredholm1(par):
@@ -118,8 +119,8 @@ def test_Fredholm1(par):
         usematmul=par["usematmul"],
         dtype=par["dtype"],
     )
-    
-    x = DistributedArray(global_shape=par["nsl"] * par["ny"] * par["nz"], 
+
+    x = DistributedArray(global_shape=par["nsl"] * par["ny"] * par["nz"],
                          partition=pylops_mpi.Partition.BROADCAST,
                          dtype=par["dtype"])
     x[:] = 1. + par["imag"] * 1.
@@ -130,7 +131,7 @@ def test_Fredholm1(par):
     # Adjoint
     y_adj_dist = Fop_MPI.H @ y_dist
     y_adj = y_adj_dist.asarray()
-    
+
     if rank == 0:
         Fop = pylops.signalprocessing.Fredholm1(
             F,
@@ -145,5 +146,3 @@ def test_Fredholm1(par):
         y_adj_np = Fop.H @ y_np
         assert_allclose(y, y_np, rtol=1e-14)
         assert_allclose(y_adj, y_adj_np, rtol=1e-14)
-
-    

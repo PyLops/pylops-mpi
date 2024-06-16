@@ -1,26 +1,20 @@
 import logging
-import warnings
 import numpy as np
 
 from mpi4py import MPI
-from pylops import Identity, Transpose
+from pylops import Identity
 from pylops.signalprocessing import FFT, Fredholm1
-from pylops.waveeqprocessing.mdd import _MDC
 
-from pylops_mpi import (
-    DistributedArray,
-    MPILinearOperator,
-    Partition
-)
+from pylops_mpi import MPILinearOperator
 from pylops_mpi.signalprocessing.Fredholm1 import MPIFredholm1
 
 
 def _MDC(G, nt, nv, nfmax, dt=1., dr=1., twosided=True,
          saveGt=True, conj=False, prescaled=False,
          base_comm=MPI.COMM_WORLD,
-         _Identity=Identity, _Transpose=Transpose, _FFT=FFT,
-         _Fredholm1=Fredholm1, args_Identity={}, args_Transpose={},
-         args_FFT={}, args_Identity1={}, args_Transpose1={},
+         _Identity=Identity, _FFT=FFT,
+         _Fredholm1=Fredholm1, args_Identity={},
+         args_FFT={}, args_Identity1={},
          args_FFT1={}, args_Fredholm1={}):
     r"""Multi-dimensional convolution.
 
@@ -40,11 +34,11 @@ def _MDC(G, nt, nv, nfmax, dt=1., dr=1., twosided=True,
 
     # create Fredholm operator
     if prescaled:
-        Frop = _Fredholm1(G, nv, saveGt=saveGt, 
+        Frop = _Fredholm1(G, nv, saveGt=saveGt,
                           base_comm=base_comm,
                           dtype=dtype, **args_Fredholm1)
     else:
-        Frop = _Fredholm1(dr * dt * np.sqrt(nt) * G, nv, 
+        Frop = _Fredholm1(dr * dt * np.sqrt(nt) * G, nv,
                           saveGt=saveGt, base_comm=base_comm,
                           dtype=dtype, **args_Fredholm1)
     if conj:
@@ -73,7 +67,7 @@ def _MDC(G, nt, nv, nfmax, dt=1., dr=1., twosided=True,
 
     # create MDC operator
     MDCop = F1opH * I1opH * Frop * Iop * Fop
-    
+
     # force dtype to be real (as FFT operators assume real inputs and outputs)
     MDCop.dtype = rdtype
 
@@ -82,7 +76,7 @@ def _MDC(G, nt, nv, nfmax, dt=1., dr=1., twosided=True,
 
 def MPIMDC(G, nt, nv, nfreq, dt=1., dr=1., twosided=True,
            fftengine='numpy',
-           saveGt=True, conj=False, 
+           saveGt=True, conj=False,
            usematmul=False, prescaled=False,
            base_comm: MPI.Comm = MPI.COMM_WORLD):
     r"""Multi-dimensional convolution.
@@ -92,11 +86,11 @@ def MPIMDC(G, nt, nv, nfreq, dt=1., dr=1., twosided=True,
     :math:`[n_t \times n_r (\times n_{vs})]` and
     :math:`[n_t \times n_s (\times n_{vs})]` (or :math:`2*n_t-1` for
     ``twosided=True``), respectively.
-    
+
     Parameters
     ----------
     G : :obj:`numpy.ndarray`
-        Multi-dimensional convolution kernel in frequency domain of size 
+        Multi-dimensional convolution kernel in frequency domain of size
         :math:`[n_{fmax} \times n_s \times n_r]`
     nt : :obj:`int`
         Number of samples along time axis for model and data (note that this
