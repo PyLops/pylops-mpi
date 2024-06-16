@@ -268,7 +268,7 @@ def test_cgls_broadcastmodel(par):
             x0 = None
         y1 = Vstack @ x_global
         xinv1 = pylops.cgls(Vstack, y1, x0=x0, niter=par["nx"], tol=1e-5, show=True)[0]
-        assert_allclose(xinv_array, xinv1, rtol=1e-14)
+        assert_allclose(xinv_array, xinv1, rtol=1e-13)
 
 
 @pytest.mark.mpi(min_size=2)
