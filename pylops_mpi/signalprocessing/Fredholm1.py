@@ -10,8 +10,6 @@ from pylops_mpi import (
     Partition
 )
 
-from pylops_mpi.utils.decorators import reshaped
-
 
 class MPIFredholm1(MPILinearOperator):
     r"""Fredholm integral of first kind.
@@ -41,17 +39,17 @@ class MPIFredholm1(MPILinearOperator):
         MPI Base Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.
     dtype : :obj:`str`, optional
         Type of elements in input array.
-    
+
     Attributes
     ----------
     shape : :obj:`tuple`
         Operator shape
-    
+
     Raises
     ------
     NotImplementedError
         If the size of the first dimension of ``G`` is equal to 1 in any of the ranks
-    
+
     Notes
     -----
     A multi-dimensional Fredholm integral of first kind can be expressed as
@@ -68,7 +66,7 @@ class MPIFredholm1(MPILinearOperator):
         m(k, y, z) = \int{G^*(k, y, x) d(k, x, z) \,\mathrm{d}x}
         \quad \forall k=1,\ldots,n_{\text{slice}}
 
-    This integral is implemented in a distributed fashion, where ``G`` 
+    This integral is implemented in a distributed fashion, where ``G``
     is split across ranks along its first dimension. The inputs
     of both the forward and adjoint are distributed arrays with broadcast partion:
     each rank takes a portion of such arrays, computes a partial integral, and
@@ -99,7 +97,7 @@ class MPIFredholm1(MPILinearOperator):
         self.rank = base_comm.Get_rank()
         self.dims = (nslstot, self.ny, self.nz)
         self.dimsd = (nslstot, self.nx, self.nz)
-        shape = (np.prod(self.dimsd), 
+        shape = (np.prod(self.dimsd),
                  np.prod(self.dims))
         super().__init__(shape=shape, dtype=np.dtype(dtype), base_comm=base_comm)
 
@@ -157,8 +155,7 @@ class MPIFredholm1(MPILinearOperator):
             else:
                 for isl in range(self.nsl):
                     y1[isl] = ncp.dot(x[isl].T.conj(), self.G[isl]).T.conj()
-        
+
         # gather results
         y[:] = np.vstack(self.base_comm.allgather(y1)).ravel()
         return y
-        

@@ -3,7 +3,7 @@ Basic Linear Operators using MPI
 ================================
 
 The subpackage basicoperators extends some of the basic operations
-provided by pylops.basicoperators providing forward and adjoint 
+provided by pylops.basicoperators providing forward and adjoint
 functionalities using MPI.
 
 A list of operators present in pylops_mpi.basicoperators:
