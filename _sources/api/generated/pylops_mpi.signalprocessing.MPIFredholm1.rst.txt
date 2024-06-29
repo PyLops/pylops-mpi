@@ -1,0 +1,47 @@
+﻿pylops\_mpi.signalprocessing.MPIFredholm1
+=========================================
+
+.. currentmodule:: pylops_mpi.signalprocessing
+
+.. autoclass:: MPIFredholm1
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~MPIFredholm1.__init__
+        ~MPIFredholm1.adjoint
+        ~MPIFredholm1.conj
+        ~MPIFredholm1.dot
+        ~MPIFredholm1.matvec
+        ~MPIFredholm1.rmatvec
+        ~MPIFredholm1.transpose
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.signalprocessing.MPIFredholm1.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+

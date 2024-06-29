@@ -61,6 +61,28 @@ Derivatives
     MPILaplacian
     MPIGradient
 
+Signal Processing
+~~~~~~~~~~~~~~~~~
+
+.. currentmodule:: pylops_mpi.signalprocessing
+
+.. autosummary::
+   :toctree: generated/
+
+    MPIFredholm1
+
+
+Wave-Equation processing
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. currentmodule:: pylops_mpi.waveeqprocessing
+
+.. autosummary::
+   :toctree: generated/
+
+    MPIMDC
+
+
 Solvers
 -------
 

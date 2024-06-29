@@ -94,6 +94,23 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="Multi-Dimensional Convolution">
+
+.. only:: html
+
+  .. image:: /gallery/images/thumb/sphx_glr_plot_mdc_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_gallery_plot_mdc.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Multi-Dimensional Convolution</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Stacked Array">
 
 .. only:: html
@@ -140,6 +157,7 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
    /gallery/plot_derivative
    /gallery/plot_distributed_array
    /gallery/plot_mpilinop
+   /gallery/plot_mdc
    /gallery/plot_stacked_array
    /gallery/plot_stacking
 

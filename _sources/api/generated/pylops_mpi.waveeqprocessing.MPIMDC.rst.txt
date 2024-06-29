@@ -1,0 +1,12 @@
+﻿pylops\_mpi.waveeqprocessing.MPIMDC
+===================================
+
+.. currentmodule:: pylops_mpi.waveeqprocessing
+
+.. autofunction:: MPIMDC
+
+.. include:: backreferences/pylops_mpi.waveeqprocessing.MPIMDC.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
