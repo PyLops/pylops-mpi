@@ -52,7 +52,6 @@ par4 = {
     "nz": 5,
     "saveGt": False,
     "usematmul": False,
-    "saveGt": False,
     "imag": 1j,
     "dtype": "complex64",
 }  # complex, unsaved Gt
