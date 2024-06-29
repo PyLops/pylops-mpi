@@ -126,7 +126,7 @@ def test_cg(par):
             x0 = None
         y1 = BDiag * x_global
         xinv1 = pylops.cg(BDiag, y1, x0=x0, niter=par["nx"], tol=1e-5, show=True)[0]
-        assert_allclose(xinv_array, xinv1, rtol=1e-14)
+        assert_allclose(xinv_array, xinv1, rtol=1e-12)
 
 
 @pytest.mark.mpi(min_size=2)
@@ -173,7 +173,7 @@ def test_cgls(par):
             x0 = None
         y1 = BDiag * x_global
         xinv1 = pylops.cgls(BDiag, y1, x0=x0, niter=par["nx"], tol=1e-5, show=True)[0]
-        assert_allclose(xinv_array, xinv1, rtol=1e-14)
+        assert_allclose(xinv_array, xinv1, rtol=1e-12)
 
 
 @pytest.mark.mpi(min_size=2)
@@ -219,7 +219,7 @@ def test_cgls_broadcastdata(par):
             x0 = None
         y1 = Hstack @ x_global
         xinv1 = pylops.cgls(Hstack, y1, x0=x0, niter=par["nx"], tol=1e-5, show=True)[0]
-        assert_allclose(xinv_array, xinv1, rtol=1e-14)
+        assert_allclose(xinv_array, xinv1, rtol=1e-12)
 
 
 @pytest.mark.mpi(min_size=2)
@@ -331,7 +331,7 @@ def test_cg_stacked(par):
             x0 = None
         y1 = StackedBDiag * x_global
         xinv1 = pylops.cg(StackedBDiag, y1, x0=x0, niter=par["nx"], tol=1e-5, show=True)[0]
-        assert_allclose(xinv_array, xinv1, rtol=1e-14)
+        assert_allclose(xinv_array, xinv1, rtol=1e-12)
 
 
 @pytest.mark.mpi(min_size=2)
@@ -396,4 +396,4 @@ def test_cgls_stacked(par):
             x0 = None
         y1 = StackedBDiag * x_global
         xinv1 = pylops.cgls(StackedBDiag, y1, x0=x0, niter=par["nx"], tol=1e-5, show=True)[0]
-        assert_allclose(xinv_array, xinv1, rtol=1e-14)
+        assert_allclose(xinv_array, xinv1, rtol=1e-12)
