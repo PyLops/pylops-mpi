@@ -1,6 +1,6 @@
-numpy>=1.21.0, <2.0.0
+numpy
 scipy>=1.8.0
-pylops>=2.0
+pylops
 mpi4py
 matplotlib
 pytest
