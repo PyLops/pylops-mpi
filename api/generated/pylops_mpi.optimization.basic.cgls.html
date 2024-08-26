@@ -35,7 +35,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/style.css?v=e5b2244c" />
-    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=61a4c737" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -561,7 +561,7 @@ problem</p>
 \epsilon^2 \mathbf{x}^T\mathbf{x}}\)</span>.
 Equal to <code class="docutils literal notranslate"><span class="pre">r1norm</span></code> if <span class="math notranslate nohighlight">\(\epsilon=0\)</span></p>
 </dd>
-<dt><strong>cost</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a>, optional</span></dt><dd><p>History of r1norm through iterations</p>
+<dt><strong>cost</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a>, optional</span></dt><dd><p>History of r1norm through iterations</p>
 </dd>
 </dl>
 </dd>
@@ -572,13 +572,13 @@ Equal to <code class="docutils literal notranslate"><span class="pre">r1norm</sp
 
 <section id="examples-using-pylops-mpi-optimization-basic-cgls">
 <h2>Examples using <code class="docutils literal notranslate"><span class="pre">pylops_mpi.optimization.basic.cgls</span></code><a class="headerlink" href="#examples-using-pylops-mpi-optimization-basic-cgls" title="Link to this heading">#</a></h2>
-<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the utilization of :pypylops_mpi.optimization.basic.cgls solver. Our ..."><img alt="" src="../../_images/sphx_glr_plot_cgls_thumb.png" />
+<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the utilization of :pypylops_mpi.optimization.basic.cgls solver. Our solver uses the :pypylops_mpi.DistributedArray to reduce the following cost function in a distributed fashion :"><img alt="" src="../../_images/sphx_glr_plot_cgls_thumb.png" />
 <p><a class="reference internal" href="../../gallery/plot_cgls.html#sphx-glr-gallery-plot-cgls-py"><span class="std std-ref">CGLS Solver</span></a></p>
   <div class="sphx-glr-thumbnail-title">CGLS Solver</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="We solve the inverse of the demigration operator to obtain accurate and detailed sub surface im..."><img alt="" src="../../_images/sphx_glr_lsm_thumb.png" />
+</div><div class="sphx-glr-thumbcontainer" tooltip="We solve the inverse of the demigration operator to obtain accurate and detailed sub surface images. Regardless of the choice of the modelling operator (i.e., ray-based or full wavefield-based), the demigration/migration process can be expressed as a linear operator of such kind:"><img alt="" src="../../_images/sphx_glr_lsm_thumb.png" />
 <p><a class="reference internal" href="../../tutorials/lsm.html#sphx-glr-tutorials-lsm-py"><span class="std std-ref">Least-squares Migration</span></a></p>
   <div class="sphx-glr-thumbnail-title">Least-squares Migration</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This tutorial builds on the :pypylops.avo.poststack.PoststackLinearModelling operator to model ..."><img alt="" src="../../_images/sphx_glr_poststack_thumb.png" />
+</div><div class="sphx-glr-thumbcontainer" tooltip="This tutorial builds on the :pypylops.avo.poststack.PoststackLinearModelling operator to model 1d post-stack seismic traces 1d profiles of the subsurface acoustic impedence by means of the following equation"><img alt="" src="../../_images/sphx_glr_poststack_thumb.png" />
 <p><a class="reference internal" href="../../tutorials/poststack.html#sphx-glr-tutorials-poststack-py"><span class="std std-ref">Post Stack Inversion - 3D</span></a></p>
   <div class="sphx-glr-thumbnail-title">Post Stack Inversion - 3D</div>
 </div></div><div style='clear:both'></div></section>
@@ -669,7 +669,7 @@ Equal to <code class="docutils literal notranslate"><span class="pre">r1norm</sp
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.7.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

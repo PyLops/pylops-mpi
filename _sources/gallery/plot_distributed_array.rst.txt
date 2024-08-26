@@ -308,7 +308,7 @@ of the array and multiplies the corresponding elements together.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 1.869 seconds)
+   **Total running time of the script:** (0 minutes 1.502 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_distributed_array.py:
@@ -324,6 +324,10 @@ of the array and multiplies the corresponding elements together.
     .. container:: sphx-glr-download sphx-glr-download-python
 
       :download:`Download Python source code: plot_distributed_array.py <plot_distributed_array.py>`
+
+    .. container:: sphx-glr-download sphx-glr-download-zip
+
+      :download:`Download zipped: plot_distributed_array.zip <plot_distributed_array.zip>`
 
 
 .. only:: html

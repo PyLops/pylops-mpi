@@ -35,7 +35,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/style.css?v=e5b2244c" />
-    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=61a4c737" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -529,7 +529,7 @@ ranks will be discarded and overwritten with the value at rank 0.</p>
 <dd class="field-odd"><dl>
 <dt><strong>global_shape</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a></span></dt><dd><p>Shape of the global array.</p>
 </dd>
-<dt><strong>base_comm</strong><span class="classifier"><a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/reference/mpi4py.MPI.Comm.html#mpi4py.MPI.Comm" title="(in MPI for Python v3.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpi4py.MPI.Comm</span></code></a>, optional</span></dt><dd><p>MPI Communicator over which array is distributed.
+<dt><strong>base_comm</strong><span class="classifier"><a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/reference/mpi4py.MPI.Comm.html#mpi4py.MPI.Comm" title="(in MPI for Python v4.0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpi4py.MPI.Comm</span></code></a>, optional</span></dt><dd><p>MPI Communicator over which array is distributed.
 Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.MPI.COMM_WORLD</span></code>.</p>
 </dd>
 <dt><strong>partition</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.Partition.html#pylops_mpi.Partition" title="pylops_mpi.Partition"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Partition</span></code></a>, optional</span></dt><dd><p>Broadcast or Scatter the array. Defaults to <code class="docutils literal notranslate"><span class="pre">Partition.SCATTER</span></code>.</p>
@@ -591,16 +591,16 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.
 
 <div style='clear:both'></div><section id="examples-using-pylops-mpi-distributedarray">
 <h2>Examples using <code class="docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code><a class="headerlink" href="#examples-using-pylops-mpi-distributedarray" title="Link to this heading">#</a></h2>
-<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the utilization of :pypylops_mpi.optimization.basic.cgls solver. Our ..."><img alt="" src="../../_images/sphx_glr_plot_cgls_thumb.png" />
+<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the utilization of :pypylops_mpi.optimization.basic.cgls solver. Our solver uses the :pypylops_mpi.DistributedArray to reduce the following cost function in a distributed fashion :"><img alt="" src="../../_images/sphx_glr_plot_cgls_thumb.png" />
 <p><a class="reference internal" href="../../gallery/plot_cgls.html#sphx-glr-gallery-plot-cgls-py"><span class="std std-ref">CGLS Solver</span></a></p>
   <div class="sphx-glr-thumbnail-title">CGLS Solver</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="We will be focusing here on the case where the input array x is assumed to be an n-dimensional ..."><img alt="" src="../../_images/sphx_glr_plot_derivative_thumb.png" />
+</div><div class="sphx-glr-thumbcontainer" tooltip="We will be focusing here on the case where the input array x is assumed to be an n-dimensional :pypylops_mpi.DistributedArray and the derivative is applied over the first axis (``axis=0``). Since the array is distributed over multiple processes, the derivative operators must take care of applying the derivatives across the edges using the information from the previous/next processes, using the so-called ghost cells."><img alt="" src="../../_images/sphx_glr_plot_derivative_thumb.png" />
 <p><a class="reference internal" href="../../gallery/plot_derivative.html#sphx-glr-gallery-plot-derivative-py"><span class="std std-ref">Derivatives</span></a></p>
   <div class="sphx-glr-thumbnail-title">Derivatives</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="Distributed Array"><img alt="" src="../../_images/sphx_glr_plot_distributed_array_thumb.png" />
 <p><a class="reference internal" href="../../gallery/plot_distributed_array.html#sphx-glr-gallery-plot-distributed-array-py"><span class="std std-ref">Distributed Array</span></a></p>
   <div class="sphx-glr-thumbnail-title">Distributed Array</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the use of the :pypylops_mpi.MPILinearOperator to wrap PyLops Operato..."><img alt="" src="../../_images/sphx_glr_plot_mpilinop_thumb.png" />
+</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the use of the :pypylops_mpi.MPILinearOperator to wrap PyLops Operators. PyLops operators can be converted into :pypylops_mpi.MPILinearOperator using the :pypylops_mpi.asmpilinearoperator method. Additionally, the example showcases how to use these wrapped PyLops operators with other operators provided by PyLops-MPI."><img alt="" src="../../_images/sphx_glr_plot_mpilinop_thumb.png" />
 <p><a class="reference internal" href="../../gallery/plot_mpilinop.html#sphx-glr-gallery-plot-mpilinop-py"><span class="std std-ref">MPILinearOperator</span></a></p>
   <div class="sphx-glr-thumbnail-title">MPILinearOperator</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="Multi-Dimensional Convolution"><img alt="" src="../../_images/sphx_glr_plot_mdc_thumb.png" />
@@ -609,13 +609,13 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.
 </div><div class="sphx-glr-thumbcontainer" tooltip="Stacked Array"><img alt="" src="../../_images/sphx_glr_plot_stacked_array_thumb.png" />
 <p><a class="reference internal" href="../../gallery/plot_stacked_array.html#sphx-glr-gallery-plot-stacked-array-py"><span class="std std-ref">Stacked Array</span></a></p>
   <div class="sphx-glr-thumbnail-title">Stacked Array</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This example shows how to use &quot;stacking&quot; operators such as :pypylops_mpi.basicoperators.MPIVSta..."><img alt="" src="../../_images/sphx_glr_plot_stacking_thumb.png" />
+</div><div class="sphx-glr-thumbcontainer" tooltip="This example shows how to use &quot;stacking&quot; operators such as :pypylops_mpi.basicoperators.MPIVStack, :pypylops_mpi.basicoperators.MPIHStack and :pypylops_mpi.basicoperators.MPIBlockDiag."><img alt="" src="../../_images/sphx_glr_plot_stacking_thumb.png" />
 <p><a class="reference internal" href="../../gallery/plot_stacking.html#sphx-glr-gallery-plot-stacking-py"><span class="std std-ref">Stacking Operators</span></a></p>
   <div class="sphx-glr-thumbnail-title">Stacking Operators</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="We solve the inverse of the demigration operator to obtain accurate and detailed sub surface im..."><img alt="" src="../../_images/sphx_glr_lsm_thumb.png" />
+</div><div class="sphx-glr-thumbcontainer" tooltip="We solve the inverse of the demigration operator to obtain accurate and detailed sub surface images. Regardless of the choice of the modelling operator (i.e., ray-based or full wavefield-based), the demigration/migration process can be expressed as a linear operator of such kind:"><img alt="" src="../../_images/sphx_glr_lsm_thumb.png" />
 <p><a class="reference internal" href="../../tutorials/lsm.html#sphx-glr-tutorials-lsm-py"><span class="std std-ref">Least-squares Migration</span></a></p>
   <div class="sphx-glr-thumbnail-title">Least-squares Migration</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This tutorial builds on the :pypylops.avo.poststack.PoststackLinearModelling operator to model ..."><img alt="" src="../../_images/sphx_glr_poststack_thumb.png" />
+</div><div class="sphx-glr-thumbcontainer" tooltip="This tutorial builds on the :pypylops.avo.poststack.PoststackLinearModelling operator to model 1d post-stack seismic traces 1d profiles of the subsurface acoustic impedence by means of the following equation"><img alt="" src="../../_images/sphx_glr_poststack_thumb.png" />
 <p><a class="reference internal" href="../../tutorials/poststack.html#sphx-glr-tutorials-poststack-py"><span class="std std-ref">Post Stack Inversion - 3D</span></a></p>
   <div class="sphx-glr-thumbnail-title">Post Stack Inversion - 3D</div>
 </div></div><div style='clear:both'></div></section>
@@ -706,7 +706,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.7.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

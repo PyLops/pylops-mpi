@@ -35,7 +35,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/style.css?v=e5b2244c" />
-    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=61a4c737" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -538,7 +538,7 @@ ignore them (<code class="docutils literal notranslate"><span class="pre">False<
 </dd>
 <dt><strong>kind</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Derivative kind (<code class="docutils literal notranslate"><span class="pre">forward</span></code>, <code class="docutils literal notranslate"><span class="pre">centered</span></code>, or <code class="docutils literal notranslate"><span class="pre">backward</span></code>)</p>
 </dd>
-<dt><strong>base_comm</strong><span class="classifier"><a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/reference/mpi4py.MPI.Comm.html#mpi4py.MPI.Comm" title="(in MPI for Python v3.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpi4py.MPI.Comm</span></code></a>, optional</span></dt><dd><p>MPI Base Communicator. Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.MPI.COMM_WORLD</span></code>.</p>
+<dt><strong>base_comm</strong><span class="classifier"><a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/reference/mpi4py.MPI.Comm.html#mpi4py.MPI.Comm" title="(in MPI for Python v4.0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpi4py.MPI.Comm</span></code></a>, optional</span></dt><dd><p>MPI Base Communicator. Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.MPI.COMM_WORLD</span></code>.</p>
 </dd>
 <dt><strong>dtype</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Type of elements in input array.</p>
 </dd>
@@ -556,7 +556,7 @@ ignore them (<code class="docutils literal notranslate"><span class="pre">False<
 a multi-dimensional distributed array.</p>
 <p>We utilize the <a class="reference internal" href="pylops_mpi.basicoperators.MPISecondDerivative.html#pylops_mpi.basicoperators.MPISecondDerivative" title="pylops_mpi.basicoperators.MPISecondDerivative"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPISecondDerivative</span></code></a> to
 calculate the second derivative along the first direction(i.e., axis=0).
-For other values of axis, the <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.SecondDerivative.html#pylops.SecondDerivative" title="(in PyLops vdev)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops.SecondDerivative</span></code></a> operator is
+For other values of axis, the <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.SecondDerivative.html#pylops.SecondDerivative" title="(in PyLops v2.3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops.SecondDerivative</span></code></a> operator is
 pushed into the <a class="reference internal" href="pylops_mpi.basicoperators.MPIBlockDiag.html#pylops_mpi.basicoperators.MPIBlockDiag" title="pylops_mpi.basicoperators.MPIBlockDiag"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIBlockDiag</span></code></a> operator.
 Subsequently, the matrix-vector product is performed between the
 SecondDerivative operator and the distributed data.</p>
@@ -679,7 +679,7 @@ SecondDerivative operator and the distributed data.</p>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.7.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

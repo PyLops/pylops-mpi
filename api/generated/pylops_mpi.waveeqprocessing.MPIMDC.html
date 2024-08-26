@@ -35,7 +35,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/style.css?v=e5b2244c" />
-    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=61a4c737" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -522,7 +522,7 @@ should be provided after flattening 2- or 3-dimensional arrays of size
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
-<dt><strong>G</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a></span></dt><dd><p>Multi-dimensional convolution kernel in frequency domain of size
+<dt><strong>G</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a></span></dt><dd><p>Multi-dimensional convolution kernel in frequency domain of size
 <span class="math notranslate nohighlight">\([n_{fmax} \times n_s \times n_r]\)</span></p>
 </dd>
 <dt><strong>nt</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a></span></dt><dd><p>Number of samples along time axis for model and data (note that this
@@ -540,14 +540,14 @@ only positive (<code class="docutils literal notranslate"><span class="pre">Fals
 <dt><strong>fftengine</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Engine used for fft computation (<code class="docutils literal notranslate"><span class="pre">numpy</span></code> or <code class="docutils literal notranslate"><span class="pre">fftw</span></code>)</p>
 </dd>
 <dt><strong>saveGt</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Save <code class="docutils literal notranslate"><span class="pre">G</span></code> and <code class="docutils literal notranslate"><span class="pre">G^H</span></code> to speed up the computation of adjoint of
-<a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.signalprocessing.Fredholm1.html#pylops.signalprocessing.Fredholm1" title="(in PyLops vdev)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops.signalprocessing.Fredholm1</span></code></a> (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or create
+<a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.signalprocessing.Fredholm1.html#pylops.signalprocessing.Fredholm1" title="(in PyLops v2.3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops.signalprocessing.Fredholm1</span></code></a> (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or create
 <code class="docutils literal notranslate"><span class="pre">G^H</span></code> on-the-fly (<code class="docutils literal notranslate"><span class="pre">False</span></code>) Note that <code class="docutils literal notranslate"><span class="pre">saveGt=True</span></code> will be
 faster but double the amount of required memory</p>
 </dd>
 <dt><strong>conj</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Perform Fredholm integral computation with complex conjugate of <code class="docutils literal notranslate"><span class="pre">G</span></code></p>
 </dd>
-<dt><strong>usematmul</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Use <code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.matmul</span></code> (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or for-loop with <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dot.html#numpy.dot" title="(in NumPy v2.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.dot</span></code></a>
-(<code class="docutils literal notranslate"><span class="pre">False</span></code>) in <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.signalprocessing.Fredholm1.html#pylops.signalprocessing.Fredholm1" title="(in PyLops vdev)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops.signalprocessing.Fredholm1</span></code></a> operator.
+<dt><strong>usematmul</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Use <code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.matmul</span></code> (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or for-loop with <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dot.html#numpy.dot" title="(in NumPy v2.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.dot</span></code></a>
+(<code class="docutils literal notranslate"><span class="pre">False</span></code>) in <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.signalprocessing.Fredholm1.html#pylops.signalprocessing.Fredholm1" title="(in PyLops v2.3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops.signalprocessing.Fredholm1</span></code></a> operator.
 Refer to Fredholm1 documentation for details.</p>
 </dd>
 <dt><strong>prescaled</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Apply scaling to kernel (<code class="docutils literal notranslate"><span class="pre">False</span></code>) or not (<code class="docutils literal notranslate"><span class="pre">False</span></code>) when performing
@@ -555,7 +555,7 @@ spatial and temporal summations. In case <code class="docutils literal notransla
 kernel is assumed to have been pre-scaled when passed to the MDC
 routine.</p>
 </dd>
-<dt><strong>base_comm</strong><span class="classifier"><a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/reference/mpi4py.MPI.Comm.html#mpi4py.MPI.Comm" title="(in MPI for Python v3.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpi4py.MPI.Comm</span></code></a>, optional</span></dt><dd><p>MPI Base Communicator. Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.MPI.COMM_WORLD</span></code>.</p>
+<dt><strong>base_comm</strong><span class="classifier"><a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/reference/mpi4py.MPI.Comm.html#mpi4py.MPI.Comm" title="(in MPI for Python v4.0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpi4py.MPI.Comm</span></code></a>, optional</span></dt><dd><p>MPI Base Communicator. Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.MPI.COMM_WORLD</span></code>.</p>
 </dd>
 </dl>
 </dd>
@@ -697,7 +697,7 @@ pp. 1335-1364. 2011.</p>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.7.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

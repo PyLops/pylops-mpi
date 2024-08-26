@@ -35,7 +35,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/style.css?v=e5b2244c" />
-    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=61a4c737" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -520,7 +520,7 @@ a single distributed array with some special internal sorting.</p>
 <dd class="field-odd"><dl>
 <dt><strong>distarrays</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code></a></span></dt><dd><p>List of <a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a> objects.</p>
 </dd>
-<dt><strong>base_comm</strong><span class="classifier"><a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/reference/mpi4py.MPI.Comm.html#mpi4py.MPI.Comm" title="(in MPI for Python v3.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpi4py.MPI.Comm</span></code></a>, optional</span></dt><dd><p>Base MPI Communicator.
+<dt><strong>base_comm</strong><span class="classifier"><a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/reference/mpi4py.MPI.Comm.html#mpi4py.MPI.Comm" title="(in MPI for Python v4.0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpi4py.MPI.Comm</span></code></a>, optional</span></dt><dd><p>Base MPI Communicator.
 Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.MPI.COMM_WORLD</span></code>.</p>
 </dd>
 </dl>
@@ -563,13 +563,13 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.
 
 <div style='clear:both'></div><section id="examples-using-pylops-mpi-stackeddistributedarray">
 <h2>Examples using <code class="docutils literal notranslate"><span class="pre">pylops_mpi.StackedDistributedArray</span></code><a class="headerlink" href="#examples-using-pylops-mpi-stackeddistributedarray" title="Link to this heading">#</a></h2>
-<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="We will be focusing here on the case where the input array x is assumed to be an n-dimensional ..."><img alt="" src="../../_images/sphx_glr_plot_derivative_thumb.png" />
+<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="We will be focusing here on the case where the input array x is assumed to be an n-dimensional :pypylops_mpi.DistributedArray and the derivative is applied over the first axis (``axis=0``). Since the array is distributed over multiple processes, the derivative operators must take care of applying the derivatives across the edges using the information from the previous/next processes, using the so-called ghost cells."><img alt="" src="../../_images/sphx_glr_plot_derivative_thumb.png" />
 <p><a class="reference internal" href="../../gallery/plot_derivative.html#sphx-glr-gallery-plot-derivative-py"><span class="std std-ref">Derivatives</span></a></p>
   <div class="sphx-glr-thumbnail-title">Derivatives</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="Stacked Array"><img alt="" src="../../_images/sphx_glr_plot_stacked_array_thumb.png" />
 <p><a class="reference internal" href="../../gallery/plot_stacked_array.html#sphx-glr-gallery-plot-stacked-array-py"><span class="std std-ref">Stacked Array</span></a></p>
   <div class="sphx-glr-thumbnail-title">Stacked Array</div>
-</div><div class="sphx-glr-thumbcontainer" tooltip="This tutorial builds on the :pypylops.avo.poststack.PoststackLinearModelling operator to model ..."><img alt="" src="../../_images/sphx_glr_poststack_thumb.png" />
+</div><div class="sphx-glr-thumbcontainer" tooltip="This tutorial builds on the :pypylops.avo.poststack.PoststackLinearModelling operator to model 1d post-stack seismic traces 1d profiles of the subsurface acoustic impedence by means of the following equation"><img alt="" src="../../_images/sphx_glr_poststack_thumb.png" />
 <p><a class="reference internal" href="../../tutorials/poststack.html#sphx-glr-tutorials-poststack-py"><span class="std std-ref">Post Stack Inversion - 3D</span></a></p>
   <div class="sphx-glr-thumbnail-title">Post Stack Inversion - 3D</div>
 </div></div><div style='clear:both'></div></section>
@@ -660,7 +660,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.7.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

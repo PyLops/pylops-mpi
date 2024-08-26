@@ -262,7 +262,7 @@ dimensions and concatenates them.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 1.491 seconds)
+   **Total running time of the script:** (0 minutes 1.286 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_derivative.py:
@@ -278,6 +278,10 @@ dimensions and concatenates them.
     .. container:: sphx-glr-download sphx-glr-download-python
 
       :download:`Download Python source code: plot_derivative.py <plot_derivative.py>`
+
+    .. container:: sphx-glr-download sphx-glr-download-zip
+
+      :download:`Download zipped: plot_derivative.zip <plot_derivative.zip>`
 
 
 .. only:: html

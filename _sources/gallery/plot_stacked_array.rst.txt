@@ -364,9 +364,9 @@ distributed array
  .. code-block:: none
 
     StackedVStack y <StackedDistributedArray with 2 distributed arrays: 
-    <DistributedArray with global shape=(5,), local shape=(5,), dtype=float64, processes=[0])> 
-    <DistributedArray with global shape=(8,), local shape=(8,), dtype=float64, processes=[0])>  [10. 10. 10. 10. 10. 20. 20. 20. 20. 20. 20. 20. 20.] (13,)
-    StackedVStack xadj <DistributedArray with global shape=(10,), local shape=(10,), dtype=float64, processes=[0])>  [370. 370. 370. 370. 370. 370. 370. 370. 370. 370.] (10,)
+    <DistributedArray with global shape=(np.int64(5),), local shape=(np.int64(5),), dtype=float64, processes=[0])> 
+    <DistributedArray with global shape=(np.int64(8),), local shape=(np.int64(8),), dtype=float64, processes=[0])>  [10. 10. 10. 10. 10. 20. 20. 20. 20. 20. 20. 20. 20.] (13,)
+    StackedVStack xadj <DistributedArray with global shape=(np.int64(10),), local shape=(np.int64(10),), dtype=float64, processes=[0])>  [370. 370. 370. 370. 370. 370. 370. 370. 370. 370.] (10,)
 
 
 
@@ -403,7 +403,7 @@ of distributed arrays
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 0.015 seconds)
+   **Total running time of the script:** (0 minutes 0.014 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_stacked_array.py:
@@ -419,6 +419,10 @@ of distributed arrays
     .. container:: sphx-glr-download sphx-glr-download-python
 
       :download:`Download Python source code: plot_stacked_array.py <plot_stacked_array.py>`
+
+    .. container:: sphx-glr-download sphx-glr-download-zip
+
+      :download:`Download zipped: plot_stacked_array.zip <plot_stacked_array.zip>`
 
 
 .. only:: html
