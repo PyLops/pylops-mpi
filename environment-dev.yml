@@ -5,10 +5,10 @@ channels:
 dependencies:
   - python >= 3.8.0
   - pip
-  - numpy>=1.21.0
+  - numpy
   - scipy>=1.8.0
   - mpi4py
-  - pylops >= 2.0
+  - pylops
   - matplotlib
   - ipython
   - pytest
