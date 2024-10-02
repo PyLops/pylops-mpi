@@ -373,7 +373,7 @@ class CGLS(Solver):
 
         """
 
-        a = float(self.kold / (self.q.dot(self.q.conj()) + self.damp * self.c.dot(self.c.conj())))
+        a = float(np.abs(self.kold / (self.q.dot(self.q.conj()) + self.damp * self.c.dot(self.c.conj()))))
         x += a * self.c
         self.s -= a * self.q
         damped_x = self.damp * x
