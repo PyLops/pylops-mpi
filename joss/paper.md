@@ -46,29 +46,21 @@ When addressing distributed inverse problems, we identify three distinct use cas
 flexible, scalable framework:
 
 - **Fully Distributed Models and Data**: Both the model and data are distributed across nodes, with minimal
-  communication during the modeling process. Communication
-  occurs mainly during the solver stage when dot products or regularization, such as the Laplacian, are applied. This
-  scenario is common
-  in [Post-Stack seismic inversion](https://pylops.readthedocs.io/en/stable/tutorials/poststack.html#sphx-glr-tutorials-poststack-py),
-  where each node handles a portion of the model and data, and communication only happens when adding spatial
-  regularizers.
+  communication during the modeling process. Communication occurs mainly during the solver stage when dot 
+  products or regularization, such as the Laplacian, are applied. In this scenario where each node
+  handles a portion of the model and data, and communication only happens between the model and data at each node.
 
 - **Distributed Data, Model Available on All Nodes**: In this case, data is distributed across nodes while the model is
-  available at all nodes. Communication is required
-  during the adjoint pass when models produced by each node need to be summed, and in the solver when performing dot
-  products on the data. This pattern is typical in fields
-  like [CT/MRI imaging](https://pylops.readthedocs.io/en/stable/tutorials/ctscan.html#sphx-glr-tutorials-ctscan-py)
-  and [seismic least-squares migration](https://pylops.readthedocs.io/en/stable/tutorials/lsm.html#sphx-glr-tutorials-lsm-py).
+  available at all nodes. Communication is required during the adjoint pass when models produced by each node need 
+  to be summed, and in the solver when performing dot products on the data.
 
 - **Model and Data Available on All Nodes or Master**: Here, communication is confined to the operator, with the master
-  node distributing parts of the model or data to
-  workers. The workers then perform computations without requiring communication in the solver. An example of this is
-  [MDC-based inversions](https://github.com/DIG-Kaust/TLR-MDC), which allow for the storage
-  of out-of-memory kernels.
+  node distributing parts of the model or data to workers. The workers then perform computations without requiring 
+  communication in the solver.
 
-Recent updates to mpi4py (version 3.0 and above) [@Dalcin] have simplified its integration, enabling more efficient data
+Recent updates to mpi4py (version 3.0 and above) [@Dalcin:2021] have simplified its integration, enabling more efficient data
 communication between nodes and processes.
-Some projects in the Python ecosystem, such as mpi4py-fft [@Mortensen2019], mcdc [@Morgan2024], and mpi4jax [@mpi4jax],
+Some projects in the Python ecosystem, such as mpi4py-fft [@Mortensen:2019], mcdc [@Morgan:2024], and mpi4jax [@mpi4jax],
 utilize MPI to extend its capabilities,
 improving the efficiency and scalability of distributed computing.
 
@@ -97,7 +89,7 @@ The main components of the library include:
 
 The `pylops_mpi.DistributedArray` class serves as the fundamental array class used throughout the library. It enables
 the
-partitioning of large NumPy[@harris2020array] or CuPy[@cupy_learningsys2017] arrays into smaller local arrays, which can
+partitioning of large NumPy[@Harris:2020] or CuPy[@cupy] arrays into smaller local arrays, which can
 be distributed across different ranks.
 Additionally, it allows for broadcasting the NumPy or CuPy array to multiple processes.
 
@@ -153,8 +145,14 @@ the need for explicit inter-process communication, thereby avoiding heavy commun
 
 # Use Cases
 
-- *Post Stack Inversion - 3D* - 
+- *Post Stack Inversion - 3D* - Post-stack inversion represents the quantitative characterization of the
+  subsurface [@Ravasi:2021]. In 3D, both the post-stack linear model and the data are three-dimensional. PyLops-MPI
+  solves this problem by distributing one of the axes across different ranks, allowing matrix-vector products and
+  inversions to take place at each rank, which are later gathered to obtain the inverted model.
 
-- *Least-Squares Seismic Migration* - 
+- *Least-Squares Seismic Migration (LSSM)* involves manipulating seismic data to create an image of subsurface
+  reflectivity[@Nemeth:1999]. PyLops MPI breaks this problem by distributing the sources across different MPI ranks.
+  Each rank applies the source modeling operator to perform matrix-vector products with the broadcasted reflectivity.
+  The resulting data is then inverted using the MPI-Powered solvers to produce the desired subsurface image.
 
 # References
