@@ -173,5 +173,6 @@ def MPIMDC(G, nt, nv, nfreq, dt=1., dr=1., twosided=True,
                 saveGt=saveGt, conj=conj, prescaled=prescaled,
                 base_comm=base_comm,
                 _Fredholm1=MPIFredholm1,
-                args_FFT={'engine': fftengine},
+                args_FFT={"engine": fftengine},
+                args_FFT1={"engine": fftengine},
                 args_Fredholm1={'usematmul': usematmul})
