@@ -168,5 +168,8 @@ discussed. More specifically:
   value chain to create datasets deprived of overburden effects[@Ravasi:2022]. PyLops-MPI addresses this large-scale inverse problem by
   splitting the kernel of the so-called Multi-Dimensional Deconvolution (MDC) operator across ranks, such that each process can perform a portion of the
   batched matrix-vector (or matrix-matrix) multiplication required by such an operator. Here, both the model and data are available on all ranks for the entire inverse process.
-  
+
+Finally, we anticipate that similar patterns can be found in many other inverse problems in different disciplines and therefore we foresee a wide adoption of 
+the PyLops-MPI frameworks in other scientific fields.
+
 # References
