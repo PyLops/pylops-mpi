@@ -31,7 +31,7 @@ Large-scale linear operations and inverse problems are fundamental to numerous a
 processing, geophysics, signal processing, and remote sensing. This paper presents PyLops-MPI, an extension of PyLops
 designed for distributed and parallel processing of large-scale challenges. PyLops-MPI facilitates forward and adjoint
 matrix-vector products, as well as inversion solvers, in a distributed framework. By using the Message Passing
-Interface (MPI), this framework effectively utilizes the computational power of multiple nodes or processors, enabling
+Interface (MPI), this framework effectively utilizes the computational power of multiple nodes or ranks, enabling
 efficient solutions to large and complex inversion tasks in a parallelized manner.
 
 # Statement of need
@@ -46,22 +46,21 @@ When addressing distributed inverse problems, we identify three distinct use cas
 flexible, scalable framework:
 
 - **Fully Distributed Models and Data**: Both the model and data are distributed across nodes, with minimal
-  communication during the modeling process. Communication occurs mainly during the solver stage when dot 
+  communication during the modeling process. Communication occurs mainly during the solver stage when dot
   products or regularization, such as the Laplacian, are applied. In this scenario where each node
   handles a portion of the model and data, and communication only happens between the model and data at each node.
 
 - **Distributed Data, Model Available on All Nodes**: In this case, data is distributed across nodes while the model is
-  available at all nodes. Communication is required during the adjoint pass when models produced by each node need 
+  available at all nodes. Communication is required during the adjoint pass when models produced by each node need
   to be summed, and in the solver when performing dot products on the data.
 
 - **Model and Data Available on All Nodes or Master**: Here, communication is confined to the operator, with the master
   node distributing parts of the model or data to workers. The workers then perform computations without requiring 
   communication in the solver.
 
-Recent updates to mpi4py (version 3.0 and above) [@Dalcin:2021] have simplified its integration, enabling more efficient data
-communication between nodes and processes.
-Some projects in the Python ecosystem, such as mpi4py-fft [@Mortensen:2019], mcdc [@Morgan:2024], and mpi4jax [@mpi4jax],
-utilize MPI to extend its capabilities,
+Recent updates to mpi4py (version 3.0 and above) [@Dalcin:2021] have simplified its integration, enabling more efficient
+data communication between nodes and processes. Some projects in the Python ecosystem, such as 
+mpi4py-fft [@Mortensen:2019], mcdc [@Morgan:2024], and mpi4jax [@mpi4jax], utilize MPI to extend its capabilities, 
 improving the efficiency and scalability of distributed computing.
 
 PyLops-MPI is built on top of PyLops[@Ravasi:2020] and utilizes mpi4py to enable an efficient framework to deal with
@@ -154,5 +153,10 @@ the need for explicit inter-process communication, thereby avoiding heavy commun
   reflectivity[@Nemeth:1999]. PyLops MPI breaks this problem by distributing the sources across different MPI ranks.
   Each rank applies the source modeling operator to perform matrix-vector products with the broadcasted reflectivity.
   The resulting data is then inverted using the MPI-Powered solvers to produce the desired subsurface image.
+
+- *Multi-Dimensional Deconvolution (MDD)* is a powerful technique used at various stages of the seismic processing
+  sequence to create ideal datasets deprived of overburden effects[@Ravasi:2022]. PyLops-MPI addresses this issue by
+  ensuring that the model is available on all ranks and that the data is broadcasted. Operations are performed
+  independently at each rank, eliminating the need for communication during the solving process.
 
 # References
