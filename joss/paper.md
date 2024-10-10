@@ -37,29 +37,25 @@ changes to their single-node PyLops code.
 
 # Statement of need
 
-As scientific datasets grow and demand higher resolution, need for distributed computing and matrix-free linear algebra becomes essential. 
-Models and datasets now often exceed a single machine's memory, making efficient, accurate computation challenging. However, 
-many linear operators in scientific inverse problems can be decomposed into a series of computational blocks that, though 
-resource-intensive, are well-suited for parallelization, highlighting the need for a distributed approach.
+As scientific datasets grow, the need for distributed computing and matrix-free linear algebra becomes crucial. 
+Models and datasets often exceed a single machine’s memory, making efficient computation challenging. Many linear operators 
+in scientific inverse problems can be decomposed into a series of computational blocks that are well-suited for parallelization, 
+emphasizing the need for a distributed approach.
 
 When addressing distributed inverse problems, we identify three distinct families of problems:
 
-- **1. Fully distributed models and data**: Both model and data are distributed across nodes with minimal communication during 
-  modeling, mainly occurring in the solver for dot products or regularization (e.g., Laplacian). Each node handles a portion 
-  of the model and data when applying the operator and its adjoint.
+- **1. Fully distributed models and data**: Both the model and data are split across nodes with minimal communication, mainly 
+  in the solver for dot products or regularization. Each node processes its own portion of the model and data.
 
-- **2. Distributed data, model available on all nodes**: In this case, data is distributed across nodes while the model is
-  available across all. Communication occurs during the adjoint pass when models produced by each node need
-  to be summed together, and in the solver for dot products on the data vector.
+- **2. Distributed data, model available on all nodes**: Data is distributed across nodes, but the model is available on all. 
+  Communication happens during the adjoint pass to sum models and in the solver for data vector operations.
 
-- **3. Model and data available on all nodes**: Here, communication is limited to the operator, with nodes having identical
-  copies of the data and model master. All nodes perform computations in the forward and adjoint passes of the operator, requiring
-  no communication in the solver.
+- **3. Model and data available on all nodes**: All nodes have identical copies of the data and model. Communication is limited 
+  to operator calculations, with no communication in solver needed.
 
 MPI for Python (mpi4py [@Dalcin:2021]) provides Python bindings for the MPI standard, allowing applications to leverage multiple 
-processors across workstations, clusters, and supercomputers. Recent updates (version 3.0 and above) have simplified usage and improved 
-data communication efficiency between nodes. Projects like mpi4py-fft [@Mortensen:2019], mcdc [@Morgan:2024], and mpi4jax [@mpi4jax] utilize mpi4py 
-to expand their distributed computing capabilities, improving efficiency and scalability.
+processors across workstations, clusters, and supercomputers. Projects like mpi4py-fft [@Mortensen:2019], mcdc [@Morgan:2024], and mpi4jax [@mpi4jax] 
+utilize mpi4py to expand their distributed computing capabilities, improving efficiency and scalability.
 
 PyLops-MPI, built on top of PyLops [@Ravasi:2020], leverages mpi4py to address large-scale problems in a distributed and parallel manner. It provides an 
 intuitive API for scattering and broadcasting data and models across nodes, allowing various mathematical operations (e.g., summation, subtraction, norms) 
@@ -80,37 +76,27 @@ The main components of the library include:
 
 ## DistributedArray
 
-The `pylops_mpi.DistributedArray` class serves as the fundamental array class used throughout the library, enabling 
-partitioning of large NumPy [@Harris:2020] or CuPy [@cupy] arrays into smaller local arrays distributed across different ranks 
-and supporting broadcasting these arrays to multiple processes.
-
-The DistributedArray supports two partition types via the **partition** attribute: `Partition.SCATTER` distributes data across all ranks 
-with user-defined load, while `Partition.BROADCAST` creates a copy of the data for all ranks. Furthermore, various basic mathematical functions 
-can be applied to DistributedArray objects, including addition (+), subtraction (-), multiplication (*), dot product (@), conjugate (Conj), vector norms, and 
-deep copying (Copy). Additionally, users can stack `pylops_mpi.DistributedArray` objects using the `pylops_mpi.StackedDistributedArray` class for further mathematical 
-operations.
-
-## MPILinearOperator and MPIStackedLinearOperator
-
-`pylops_mpi.MPILinearOperator` is the base class for creating MPI linear operators that perform matrix-vector products on DistributedArray objects.
-
-`pylops_mpi.MPIStackedLinearOperator` represents a second level of abstraction in the creation of MPI-powered linear operators; allowing users to stack MPILinearOperator objects, 
-enabling execution in a distributed manner and supporting matrix-vector products with both DistributedArray and StackedDistributedArray.
+The `pylops_mpi.DistributedArray` class serves as the fundamental array class, enabling partitioning of large 
+NumPy [@Harris:2020] or CuPy [@cupy] arrays into smaller local arrays distributed across different ranks and supporting 
+broadcasting these arrays to multiple processes. The DistributedArray provides two partition types: `Partition.SCATTER` and 
+`Partition.BROADCAST`. It also supports basic math operations such as addition (+), multiplication (*), dot-product (@), and 
+more. Additionally, DistributedArray objects can be stacked using `pylops_mpi.StackedDistributedArray` for further operations.
 
 ## HStack, VStack, BlockDiag Operators
 
-One of PyLops' main features is the ability to create combinations of linear operators easily through three main design patterns:
-i) horizontal stacking, ii) vertical stacking, and iii) diagonal stacking. PyLops-MPI offers distributed versions of these operators. Specifically, 
-`pylops_mpi.MPIBlockDiag` enables multiple PyLops operators to run in parallel across different processes, each working on a portion of the model and 
-data (see family 1). In contrast, `pylops_mpi.MPIVStack` runs multiple operators in parallel on the entire model in forward mode; its adjoint applies to different 
-portions of the data vector, with individual outputs being sum-reduced (see family 2). Finally, `pylops_mpi.MPIHStack` is the adjoint of `pylops_mpi.MPIVStack`.
+`pylops_mpi.MPILinearOperator` and `pylops_mpi.MPIStackedLinearOperator` serve as the foundation for creating new MPI operators. 
+All existing operators subclass one of these classes.
+
+PyLops enables easy combinations of linear operators via i)horizontal, ii)vertical, and iii)diagonal stacking. PyLops-MPI provides 
+distributed versions of these, like `pylops_mpi.MPIBlockDiag`, which runs multiple operators in parallel on separate portions of the model 
+and data (family 1). `pylops_mpi.MPIVStack` applies multiple operators in parallel to the whole model, with its adjoint summing different 
+parts of the data vector (family 2). `pylops_mpi.MPIHStack` is the adjoint of MPIVStack.
 
 ## Halo Exchange
 
-PyLops-MPI Linear Operators typically use halo exchange to transfer portions of the model and data between consecutive ranks. While users should ensure 
-consistent local data shapes across ranks for matrix-vector products without external communication, this may not always be feasible. When local shapes 
-differ, the operator performs a halo exchange, transferring boundary data cells (or "ghost cells") to and from neighboring processes. This alignment of 
-model and data vector shapes at each rank allows efficient local computations without explicit inter-process communication, minimizing communication overhead.
+PyLops-MPI Linear Operators use halo exchange to transfer model and data portions between ranks. Users should ensure consistent local data shapes to avoid extra communication during
+matrix-vector products. If shapes differ, the operator exchanges boundary data ("ghost cells") between neighboring processes, aligning shapes for efficient local computations 
+and minimizing overhead.
 
 ## MPI-powered Solvers
 
@@ -123,7 +109,7 @@ We briefly discuss three use cases in geophysical inverse problems that correspo
 Specifically:
 
 - *1. Seismic Post-Stack Inversion* represents an effective approach to quantitative characterization of the
-  subsurface [@Ravasi:2021] from seismic data.  In 3D applications, both the model and data are three-dimensional (2 spatial coordinates and depth/time). PyLops-MPI addresses this by 
+  subsurface [@Ravasi:2021] from seismic data. In 3D applications, both the model and data are three-dimensional (2 spatial coordinates and depth/time). PyLops-MPI addresses this by 
   distributing one spatial axis across different ranks, enabling matrix-vector products and inversions at each rank, which are then gathered to obtain the inverted model. 
   Communication typically occurs due to the introduction of regularization terms that promote smooth or blocky solutions.
 
