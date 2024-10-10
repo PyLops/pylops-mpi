@@ -63,7 +63,7 @@ multiple processors on workstations, clusters and supercomputers. Recent updates
 mpi4py-fft [@Mortensen:2019], mcdc [@Morgan:2024], and mpi4jax [@mpi4jax], utilize mpi4py to extend their capabilities to distributed computing
 ultimately improving the efficiency and scalability of the exposed operations.
 
-PyLops-MPI is built on top of PyLops[@Ravasi:2020] and utilizes mpi4py to enable the solution of
+PyLops-MPI is built on top of PyLops [@Ravasi:2020] and utilizes mpi4py to enable the solution of
 large scale problems in a distributed and parallelized manner. PyLops-MPI offers an intuitive API that allows users to 
 easily scatter and broadcast data and models across different nodes or processors, enabling to perform various mathematical operations on them (e.g., summmation, subtraction, norms) in a distributed manner. Moreover, it provides a suite of MPI-powered linear operators and linear solver and is designed in a flexible way, allowing any user to easily add custom operators and solvers tailored to their specific needs.
 
@@ -84,7 +84,7 @@ The main components of the library include:
 ## DistributedArray
 
 The `pylops_mpi.DistributedArray` class serves as the fundamental array class used throughout the library. It enables
-the partitioning of large NumPy[@Harris:2020] or CuPy[@cupy] arrays into smaller local arrays, which can
+the partitioning of large NumPy [@Harris:2020] or CuPy [@cupy] arrays into smaller local arrays, which can
 be distributed across different ranks. Additionally, it allows for broadcasting the NumPy or CuPy array to multiple processes.
 
 The DistributedArray supports two types of partitions through the **partition** attribute: `Partition.SCATTER`
@@ -160,12 +160,12 @@ discussed. More specifically:
   because of the introducing of regularization terms that ensure the solution to be smooth or blocky.
 
 - *2. Least-Squares Migration (LSM)* is the process of explaining seismic data via a Born modelling engine to produce an image of the subsurface
-  reflectivity[@Nemeth:1999]. PyLops-MPI tackles this problem by distributing all of the available sources across different MPI ranks.
+  reflectivity [@Nemeth:1999]. PyLops-MPI tackles this problem by distributing all of the available sources across different MPI ranks.
   Each rank applies the expensive Born modeling operator for a subset of sources with the broadcasted reflectivity.
   The resulting data is therefore scattered across the different ranks, and inversion is again perfromed using one of MPI-Powered solvers to produce the desired subsurface reflectivity image.
 
 - *3. Multi-Dimensional Deconvolution (MDD)* is a powerful technique used at various stages of the seismic processing
-  value chain to create datasets deprived of overburden effects[@Ravasi:2022]. PyLops-MPI addresses this large-scale inverse problem by
+  value chain to create datasets deprived of overburden effects [@Ravasi:2022]. PyLops-MPI addresses this large-scale inverse problem by
   splitting the kernel of the so-called Multi-Dimensional Deconvolution (MDC) operator across ranks, such that each process can perform a portion of the
   batched matrix-vector (or matrix-matrix) multiplication required by such an operator. Here, both the model and data are available on all ranks for the entire inverse process.
 
