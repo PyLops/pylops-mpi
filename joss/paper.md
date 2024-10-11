@@ -76,7 +76,7 @@ and data. `pylops_mpi.MPIVStack` applies multiple operators in parallel to the w
 
 ## Halo Exchange
 
-PyLops-MPI uses halo exchange to transfer portions of the model and data between ranks. Users should ensure consistent local data shapes to avoid extra communication during matrix-vector products. If shapes differ, the operator exchanges boundary data ("ghost cells") between neighboring processes, aligning shapes to enablr efficient local computations and minimize overhead.
+PyLops-MPI uses halo exchange to transfer portions of the model and data between ranks. Users should ensure consistent local data shapes to avoid extra communication during matrix-vector products. If shapes differ, the operator exchanges boundary data ("ghost cells") between neighboring processes, aligning shapes to enable efficient local computations and minimize overhead.
 
 ## MPI-powered Solvers
 
@@ -88,11 +88,11 @@ the mathematical operations implemented in these classes and call the operator's
 Here we present three use cases in geophysical inverse problems that correspond to the previously mentioned families of problems:
 
 - *Seismic Post-Stack Inversion* can be used to characterize the
-  subsurface [@Ravasi:2021] from seismic data. In 3D applications, when both the model and data are three-dimensional arrays, PyLops-MPI distibutes one spatial axis across different ranks. Each rank therefore processes a subset of the entire data and model. 
+  subsurface [@Ravasi:2021] from seismic data. In 3D applications, when both the model and data are three-dimensional arrays, PyLops-MPI distributes one spatial axis across different ranks. Each rank therefore processes a subset of the entire data and model. 
   Communication occurs due to the introduction of regularization terms that promote smooth or blocky solutions.
 
 - *Least-Squares Migration (LSM)* explains seismic data via a Born modelling engine to produce high-resolution images of the subsurface 
-  reflectivity. [@Nemeth:1999]. PyLops-MPI distributes the available sources across different MPI ranks, and
+  reflectivity [@Nemeth:1999]. PyLops-MPI distributes the available sources across different MPI ranks, and
   each rank applies the Born modeling operator for a subset of sources with the broadcasted reflectivity.
 
 - *Multi-Dimensional Deconvolution (MDD)* is a powerful technique used to estimate seismic datasets without overburden effects [@Ravasi:2022]. 
