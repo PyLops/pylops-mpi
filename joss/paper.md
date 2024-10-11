@@ -15,7 +15,7 @@ authors:
     orcid: 0000-0002-0741-6602
     affiliation: 3
 affiliations:
-  - name: Computer Science and Engineering, Cluster Innovation Center, University of Delhi, Delhi, India.
+  - name: Cluster Innovation Center, University of Delhi, Delhi, India.
     index: 1
   - name: Earth Science and Engineering, Physical Sciences and Engineering (PSE), King Abdullah University of Science and Technology (KAUST), Thuwal, Kingdom of Saudi Arabia.
     index: 2
@@ -39,13 +39,13 @@ in scientific inverse problems can be decomposed into a series of computational 
 
 When addressing distributed inverse problems, we identify three distinct families of problems:
 
-- Both model and data are split across nodes, with each node processing its own portion of the model and data. This leads to minimal  
+- **1. Fully distributed models and data**: Both model and data are split across nodes, with each node processing its own portion of the model and data. This leads to minimal  
   communication, mainly when performing dot products in the solver or in the regularization terms. 
 
-- Data is distributed across nodes, whilst the model is available on all nodes. 
+- **2. Distributed data, model available on all nodes**: Data is distributed across nodes, whilst the model is available on all nodes. 
   Communication happens during the adjoint pass to sum models and in the solver for data vector operations.
 
-- All nodes have identical copies of the data and model. Communication only happens within 
+- **3. Model and data available on all nodes**: All nodes have identical copies of the data and model. Communication only happens within 
   the operator, with no communication in solver needed.
 
 MPI for Python (mpi4py [@Dalcin:2021]) provides Python bindings for the MPI standard, allowing applications to leverage multiple 
@@ -53,6 +53,7 @@ processors. Projects like mpi4py-fft [@Mortensen:2019], mcdc [@Morgan:2024], and
 utilize mpi4py to provide distributed computing capabilities. Similarly, PyLops-MPI, which is built on top of PyLops [@Ravasi:2020] leverages mpi4py to solve large-scale problems in a distributed fashion. 
 Its intuitive API provide functionalities to scatter and broadcast data and model vector across nodes and allows various mathematical operations (e.g., summation, subtraction, norms) 
 to be performed. Additionally, a suite of MPI-powered linear operators and solvers is offered, and its flexible design eases the integration of custom operators and solvers.
+PyLops-MPI enables users to solve complex inverse problems without concerns about data leaks or MPI management.
 
 # Software Framework
 
