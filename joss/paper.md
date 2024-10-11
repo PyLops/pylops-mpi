@@ -53,7 +53,6 @@ processors. Projects like mpi4py-fft [@Mortensen:2019], mcdc [@Morgan:2024], and
 utilize mpi4py to provide distributed computing capabilities. Similarly, PyLops-MPI, which is built on top of PyLops [@Ravasi:2020] leverages mpi4py to solve large-scale problems in a distributed fashion. 
 Its intuitive API provide functionalities to scatter and broadcast data and model vector across nodes and allows various mathematical operations (e.g., summation, subtraction, norms) 
 to be performed. Additionally, a suite of MPI-powered linear operators and solvers is offered, and its flexible design eases the integration of custom operators and solvers.
-PyLops-MPI enables users to solve complex inverse problems without concerns about data leaks or MPI management.
 
 # Software Framework
 
