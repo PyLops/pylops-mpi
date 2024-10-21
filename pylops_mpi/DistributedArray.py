@@ -79,7 +79,7 @@ class DistributedArray:
     axis : :obj:`int`, optional
         Axis along which distribution occurs. Defaults to ``0``.
     local_shapes : :obj:`list`, optional
-        List of tuples of integers representing local shapes at each rank.
+        List of tuples or integers representing local shapes at each rank.
     engine : :obj:`str`, optional
         Engine used to store array (``numpy`` or ``cupy``)
     dtype : :obj:`str`, optional
@@ -106,8 +106,7 @@ class DistributedArray:
         self._partition = partition
         self._axis = axis
 
-        if local_shapes is not None:
-            local_shapes = [_value_or_sized_to_tuple(local_shape) for local_shape in local_shapes]
+        local_shapes = local_shapes if local_shapes is None else [_value_or_sized_to_tuple(local_shape) for local_shape in local_shapes]
         self._check_local_shapes(local_shapes)
         self._local_shape = local_shapes[base_comm.rank] if local_shapes else local_split(global_shape, base_comm,
                                                                                           partition, axis)
