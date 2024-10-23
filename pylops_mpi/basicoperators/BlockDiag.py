@@ -1,7 +1,8 @@
 import numpy as np
 from scipy.sparse.linalg._interface import _get_dtype
 from mpi4py import MPI
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Union, List
+from numbers import Integral
 
 from pylops import LinearOperator
 from pylops.utils import DTypeLike
@@ -28,6 +29,9 @@ class MPIBlockDiag(MPILinearOperator):
         One or more :class:`pylops.LinearOperator` to be stacked.
     base_comm : :obj:`mpi4py.MPI.Comm`, optional
         Base MPI Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.
+    mask : :obj:`list`, optional
+        Mask defining subsets of ranks to consider when performing 'global' operations on
+        the distributed array such as dot product or norm.
     dtype : :obj:`str`, optional
         Type of elements in input array.
 
@@ -95,8 +99,10 @@ class MPIBlockDiag(MPILinearOperator):
 
     def __init__(self, ops: Sequence[LinearOperator],
                  base_comm: MPI.Comm = MPI.COMM_WORLD,
+                 mask: Optional[List[Integral]] = None,
                  dtype: Optional[DTypeLike] = None):
         self.ops = ops
+        self.mask = mask
         mops = np.zeros(len(self.ops), dtype=np.int64)
         nops = np.zeros(len(self.ops), dtype=np.int64)
         for iop, oper in enumerate(self.ops):
@@ -116,7 +122,7 @@ class MPIBlockDiag(MPILinearOperator):
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
         y = DistributedArray(global_shape=self.shape[0], local_shapes=self.local_shapes_n,
-                             engine=x.engine, dtype=self.dtype)
+                             mask=self.mask, engine=x.engine, dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
             y1.append(oper.matvec(x.local_array[self.mmops[iop]:
@@ -128,7 +134,7 @@ class MPIBlockDiag(MPILinearOperator):
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
         y = DistributedArray(global_shape=self.shape[1], local_shapes=self.local_shapes_m,
-                             engine=x.engine, dtype=self.dtype)
+                             mask=self.mask, engine=x.engine, dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
             y1.append(oper.rmatvec(x.local_array[self.nnops[iop]:
