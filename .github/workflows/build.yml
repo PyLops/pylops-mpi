@@ -16,6 +16,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
         mpi: ['mpich', 'openmpi', 'intelmpi']
+        rank: ['2', '3', '4']
         exclude:
           - os: macos-latest
             mpi: 'intelmpi'
@@ -52,4 +53,4 @@ jobs:
       - name: Install pylops-mpi
         run: pip install .
       - name: Testing using pytest-mpi
-        run: mpiexec -n 2 pytest --with-mpi
+        run: mpiexec -n ${{ matrix.rank }} pytest --with-mpi
