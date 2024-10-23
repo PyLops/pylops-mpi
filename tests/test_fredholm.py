@@ -16,7 +16,7 @@ size = MPI.COMM_WORLD.Get_size()
 
 
 par1 = {
-    "nsl": 6,
+    "nsl": 12,
     "ny": 6,
     "nx": 4,
     "nz": 5,
@@ -26,7 +26,7 @@ par1 = {
     "dtype": "float32",
 }  # real, saved Gt
 par2 = {
-    "nsl": 6,
+    "nsl": 12,
     "ny": 6,
     "nx": 4,
     "nz": 5,
@@ -36,7 +36,7 @@ par2 = {
     "dtype": "float32",
 }  # real, unsaved Gt
 par3 = {
-    "nsl": 6,
+    "nsl": 12,
     "ny": 6,
     "nx": 4,
     "nz": 5,
@@ -46,7 +46,7 @@ par3 = {
     "dtype": "complex64",
 }  # complex, saved Gt
 par4 = {
-    "nsl": 6,
+    "nsl": 12,
     "ny": 6,
     "nx": 4,
     "nz": 5,
@@ -56,7 +56,7 @@ par4 = {
     "dtype": "complex64",
 }  # complex, unsaved Gt
 par5 = {
-    "nsl": 6,
+    "nsl": 12,
     "ny": 6,
     "nx": 4,
     "nz": 1,
@@ -66,7 +66,7 @@ par5 = {
     "dtype": "float32",
 }  # real, saved Gt, nz=1
 par6 = {
-    "nsl": 6,
+    "nsl": 12,
     "ny": 6,
     "nx": 4,
     "nz": 1,
