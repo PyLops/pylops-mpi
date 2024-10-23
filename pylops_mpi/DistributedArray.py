@@ -319,7 +319,7 @@ class DistributedArray:
             operations on the distributed array such as dot product or norm.
 
         Returns
-        ----------
+        -------
         dist_array : :obj:`DistributedArray`
             Distributed Array of the Global Array
         """

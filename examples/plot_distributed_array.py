@@ -128,24 +128,76 @@ global_shape = local_shape * size
 
 # Create mask
 nsub = 2
-mask = np.repeat(np.arange(size // nsub), nsub)
-if rank == 0: print(f"Mask: {mask}")
+subsize = max(1, size // nsub)
+mask = np.repeat(np.arange(size // subsize), subsize)
+if rank == 0:
+    print("1D masked arrays")
+    print(f"Mask: {mask}")
 
 # Create and fill the distributed array
 x = pylops_mpi.DistributedArray(global_shape=global_shape,
                                 partition=Partition.SCATTER,
                                 mask=mask)
-x[:] = (MPI.COMM_WORLD.Get_rank() + 1) * np.ones(local_shape)
+x[:] = (MPI.COMM_WORLD.Get_rank() % subsize + 1.) * np.ones(local_shape)
 xloc = x.asarray()
 
 # Dot product
 dot = x.dot(x)
-dotloc = np.dot(xloc[local_shape * nsub * (rank // nsub):local_shape * nsub * (rank // nsub + 1)],
-                xloc[local_shape * nsub * (rank // nsub):local_shape * nsub * (rank // nsub + 1)])
+dotloc = np.dot(xloc[local_shape * subsize * (rank // subsize):local_shape * subsize * (rank // subsize + 1)],
+                xloc[local_shape * subsize * (rank // subsize):local_shape * subsize * (rank // subsize + 1)])
 print(f"Dot check (Rank {rank}): {np.allclose(dot, dotloc)}")
 
 # Norm
 norm = x.norm(ord=2)
-normloc = np.linalg.norm(xloc[local_shape * nsub * (rank // nsub):local_shape * nsub * (rank // nsub + 1)],
+normloc = np.linalg.norm(xloc[local_shape * subsize * (rank // subsize):local_shape * subsize * (rank // subsize + 1)],
                          ord=2)
+print(f"Norm check (Rank {rank}): {np.allclose(norm, normloc)}")
+
+###############################################################################
+# And with 2d-arrays distributed over axis=1
+extra_dim_shape = 2
+if rank == 0:
+    print("2D masked arrays (over axis=1)")
+
+# Create and fill the distributed array
+x = pylops_mpi.DistributedArray(global_shape=(extra_dim_shape, global_shape),
+                                partition=Partition.SCATTER,
+                                axis=1, mask=mask)
+x[:] = (MPI.COMM_WORLD.Get_rank() % subsize + 1.) * np.ones((extra_dim_shape, local_shape))
+xloc = x.asarray()
+
+# Dot product
+dot = x.dot(x)
+dotloc = np.dot(xloc[:, local_shape * subsize * (rank // subsize):local_shape * subsize * (rank // subsize + 1)].ravel(),
+                xloc[:, local_shape * subsize * (rank // subsize):local_shape * subsize * (rank // subsize + 1)].ravel())
+print(f"Dot check (Rank {rank}): {np.allclose(dot, dotloc)}")
+
+# Norm
+norm = x.norm(ord=2, axis=1)
+normloc = np.linalg.norm(xloc[:, local_shape * subsize * (rank // subsize):local_shape * subsize * (rank // subsize + 1)],
+                         ord=2, axis=1)
+print(f"Norm check (Rank {rank}): {np.allclose(norm, normloc)}")
+
+###############################################################################
+# And finally with 2d-arrays distributed over axis=0
+if rank == 0:
+    print("2D masked arrays (over axis=0)")
+
+# Create and fill the distributed array
+x = pylops_mpi.DistributedArray(global_shape=(global_shape, extra_dim_shape),
+                                partition=Partition.SCATTER,
+                                axis=0, mask=mask)
+x[:] = (MPI.COMM_WORLD.Get_rank() % subsize + 1.) * np.ones((local_shape, extra_dim_shape))
+xloc = x.asarray()
+
+# Dot product
+dot = x.dot(x)
+dotloc = np.dot(xloc[local_shape * subsize * (rank // subsize):local_shape * subsize * (rank // subsize + 1)].ravel(),
+                xloc[local_shape * subsize * (rank // subsize):local_shape * subsize * (rank // subsize + 1)].ravel())
+print(f"Dot check (Rank {rank}): {np.allclose(dot, dotloc)}")
+
+# Norm
+norm = x.norm(ord=2, axis=0)
+normloc = np.linalg.norm(xloc[local_shape * subsize * (rank // subsize):local_shape * subsize * (rank // subsize + 1)],
+                         ord=2, axis=0)
 print(f"Norm check (Rank {rank}): {np.allclose(norm, normloc)}")
