@@ -42,6 +42,23 @@ Tutorials
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="More precisely, compared to its counterpart in the PyLops documentation, this example distributes the frequency slices of the kernel of the MDC operator across multiple processes. Whilst both the entire model and data sit on all processes, within the MDC operator, and more precisely when the :pypylops_mpi.signalprocessing.Fredholm1 is called, different groups of frequencies are processed by the different ranks.">
+
+.. only:: html
+
+  .. image:: /tutorials/images/thumb/sphx_glr_mdd_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_tutorials_mdd.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Multi-Dimensional Deconvolution</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="This tutorial builds on the :pypylops.avo.poststack.PoststackLinearModelling operator to model 1d post-stack seismic traces 1d profiles of the subsurface acoustic impedence by means of the following equation">
 
 .. only:: html
@@ -68,6 +85,7 @@ Tutorials
    :hidden:
 
    /tutorials/lsm
+   /tutorials/mdd
    /tutorials/poststack
 
 
