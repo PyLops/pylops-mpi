@@ -16,13 +16,18 @@ import pylops_mpi
 plt.close("all")
 np.random.seed(42)
 
+# MPI parameters
+size = MPI.COMM_WORLD.Get_size()  # number of nodes
+rank = MPI.COMM_WORLD.Get_rank()  # rank of current node
+
+
 # Defining the global shape of the distributed array
 global_shape = (10, 5)
 
 ###############################################################################
-# Let's start by defining the
-# class with the input parameters ``global_shape``,
-# ``partition``, and ``axis``. Here's an example implementation of the class with ``axis=0``.
+# Let's start by defining the class with the input parameters ``global_shape``,
+# ``partition``, and ``axis``. Here's an example implementation of the class
+# with ``axis=0``.
 arr = pylops_mpi.DistributedArray(global_shape=global_shape,
                                   partition=pylops_mpi.Partition.SCATTER,
                                   axis=0)
@@ -72,6 +77,9 @@ pylops_mpi.plot_local_arrays(arr1, "Distributed Array - 1", vmin=0, vmax=1)
 pylops_mpi.plot_local_arrays(arr2, "Distributed Array - 2", vmin=0, vmax=1)
 
 ###############################################################################
+# Let's move now to consider various operations that one can perform on
+# :py:class:`pylops_mpi.DistributedArray` objects.
+#
 # **Scaling** - Each process operates on its local portion of
 # the array and scales the corresponding elements by a given scalar.
 scale_arr = .5 * arr1
@@ -101,3 +109,43 @@ pylops_mpi.plot_local_arrays(diff_arr, "Subtraction", vmin=0, vmax=1)
 # of the array and multiplies the corresponding elements together.
 mult_arr = arr1 * arr2
 pylops_mpi.plot_local_arrays(mult_arr, "Multiplication", vmin=0, vmax=1)
+
+###############################################################################
+# Finally, let's look at the case where parallelism could be applied over
+# multiple axes - and more specifically one belonging to the model/data and one
+# to the operator. This kind of "2D"-parallelism requires repeating parts of
+# the model/data over groups of ranks. However, when global operations such as
+# ``dot`` or ``norm`` are applied on a ``pylops_mpi.DistributedArray`` of
+# this kind, we need to ensure that the repeated portions to do all contribute
+# to the computation. This can be achieved via the ``mask`` input parameter:
+# a list of size equal to the number of ranks, whose elements contain the index
+# of the subgroup/subcommunicator (with partial arrays in different groups
+# are identical to each other).
+
+# Defining the local and global shape of the distributed array
+local_shape = 5
+global_shape = local_shape * size
+
+# Create mask
+nsub = 2
+mask = np.repeat(np.arange(size // nsub), nsub)
+if rank == 0: print(f"Mask: {mask}")
+
+# Create and fill the distributed array
+x = pylops_mpi.DistributedArray(global_shape=global_shape,
+                                partition=Partition.SCATTER,
+                                mask=mask)
+x[:] = (MPI.COMM_WORLD.Get_rank() + 1) * np.ones(local_shape)
+xloc = x.asarray()
+
+# Dot product
+dot = x.dot(x)
+dotloc = np.dot(xloc[local_shape * nsub * (rank // nsub):local_shape * nsub * (rank // nsub + 1)],
+                xloc[local_shape * nsub * (rank // nsub):local_shape * nsub * (rank // nsub + 1)])
+print(f"Dot check (Rank {rank}): {np.allclose(dot, dotloc)}")
+
+# Norm
+norm = x.norm(ord=2)
+normloc = np.linalg.norm(xloc[local_shape * nsub * (rank // nsub):local_shape * nsub * (rank // nsub + 1)],
+                         ord=2)
+print(f"Norm check (Rank {rank}): {np.allclose(norm, normloc)}")
