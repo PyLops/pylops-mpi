@@ -199,9 +199,16 @@ def test_distributed_norm(par):
                                         (par8, par9), (par8b, par9b)])
 def test_distributed_maskeddot(par1, par2):
     """Test Distributed Dot product with masked array"""
-    nsub = 3  # number of subcommunicators
+    # number of subcommunicators
+    if MPI.COMM_WORLD.Get_size() % 2 == 0:
+        nsub = 2   
+    elif MPI.COMM_WORLD.Get_size() % 3 == 0:
+        nsub = 3
+    else:
+        pass
     subsize = max(1, MPI.COMM_WORLD.Get_size() // nsub)
     mask = np.repeat(np.arange(nsub), subsize)
+    print('subsize, mask', subsize, mask)
     # Replicate x1 and x2 as required in masked arrays
     x1, x2 = par1['x'], par2['x']
     if par1['axis'] != 0:
@@ -227,7 +234,13 @@ def test_distributed_maskeddot(par1, par2):
                                  (par8), (par8b), (par9), (par9b)])
 def test_distributed_maskednorm(par):
     """Test Distributed numpy.linalg.norm method with masked array"""
-    nsub = 3  # number of subcommunicators
+    # number of subcommunicators
+    if MPI.COMM_WORLD.Get_size() % 2 == 0:
+        nsub = 2   
+    elif MPI.COMM_WORLD.Get_size() % 3 == 0:
+        nsub = 3
+    else:
+        pass
     subsize = max(1, MPI.COMM_WORLD.Get_size() // nsub)
     mask = np.repeat(np.arange(nsub), subsize)
     # Replicate x as required in masked arrays
