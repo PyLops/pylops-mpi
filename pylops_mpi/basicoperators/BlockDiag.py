@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.sparse.linalg._interface import _get_dtype
 from mpi4py import MPI
-from typing import Optional, Sequence, Union, List
+from typing import Optional, Sequence, List
 from numbers import Integral
 
 from pylops import LinearOperator
