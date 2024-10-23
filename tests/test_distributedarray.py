@@ -199,7 +199,7 @@ def test_distributed_norm(par):
                                         (par8, par9), (par8b, par9b)])
 def test_distributed_maskeddot(par1, par2):
     """Test Distributed Dot product with masked array"""
-    nsub = 3 # number of subcommunicators
+    nsub = 3  # number of subcommunicators
     subsize = max(1, MPI.COMM_WORLD.Get_size() // nsub)
     mask = np.repeat(np.arange(nsub), subsize)
     # Replicate x1 and x2 as required in masked arrays
