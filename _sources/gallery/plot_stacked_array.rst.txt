@@ -108,8 +108,8 @@ We combine them into a single
  .. code-block:: none
 
     Stacked array: <StackedDistributedArray with 2 distributed arrays: 
-    <DistributedArray with global shape=(10,), local shape=(10,), dtype=<class 'numpy.float64'>, processes=[0])> 
-    <DistributedArray with global shape=(4,), local shape=(4,), dtype=<class 'numpy.float64'>, processes=[0])> 
+    <DistributedArray with global shape=(np.int64(10),), local shape=(10,), dtype=<class 'numpy.float64'>, processes=[0])> 
+    <DistributedArray with global shape=(np.int64(4),), local shape=(4,), dtype=<class 'numpy.float64'>, processes=[0])> 
     Full array: [1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 2. 2. 2. 2.]
     Modified full array: [10. 10. 10. 10. 10. 10. 10. 10. 10. 10.  2.  2.  2.  2.]
 
@@ -150,8 +150,8 @@ and perform different mathematical operations on those two objects.
  .. code-block:: none
 
     Stacked array 2: <StackedDistributedArray with 2 distributed arrays: 
-    <DistributedArray with global shape=(10,), local shape=(10,), dtype=<class 'numpy.float64'>, processes=[0])> 
-    <DistributedArray with global shape=(4,), local shape=(4,), dtype=<class 'numpy.float64'>, processes=[0])> 
+    <DistributedArray with global shape=(np.int64(10),), local shape=(10,), dtype=<class 'numpy.float64'>, processes=[0])> 
+    <DistributedArray with global shape=(np.int64(4),), local shape=(4,), dtype=<class 'numpy.float64'>, processes=[0])> 
     Full array2: [5. 5. 5. 5. 5. 5. 5. 5. 5. 5. 6. 6. 6. 6.]
 
 
@@ -403,7 +403,7 @@ of distributed arrays
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 0.014 seconds)
+   **Total running time of the script:** (0 minutes 0.016 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_stacked_array.py:

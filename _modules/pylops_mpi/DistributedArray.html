@@ -437,6 +437,7 @@
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 
 <span class="kn">from</span> <span class="nn">pylops.utils</span> <span class="kn">import</span> <span class="n">DTypeLike</span><span class="p">,</span> <span class="n">NDArray</span>
+<span class="kn">from</span> <span class="nn">pylops.utils._internal</span> <span class="kn">import</span> <span class="n">_value_or_sized_to_tuple</span>
 <span class="kn">from</span> <span class="nn">pylops.utils.backend</span> <span class="kn">import</span> <span class="n">get_module</span><span class="p">,</span> <span class="n">get_array_module</span><span class="p">,</span> <span class="n">get_module_name</span>
 
 
@@ -515,7 +516,7 @@
 <span class="sd">    axis : :obj:`int`, optional</span>
 <span class="sd">        Axis along which distribution occurs. Defaults to ``0``.</span>
 <span class="sd">    local_shapes : :obj:`list`, optional</span>
-<span class="sd">        List of tuples representing local shapes at each rank.</span>
+<span class="sd">        List of tuples or integers representing local shapes at each rank.</span>
 <span class="sd">    engine : :obj:`str`, optional</span>
 <span class="sd">        Engine used to store array (``numpy`` or ``cupy``)</span>
 <span class="sd">    dtype : :obj:`str`, optional</span>
@@ -525,7 +526,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">global_shape</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">,</span> <span class="n">Integral</span><span class="p">],</span>
                  <span class="n">base_comm</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MPI</span><span class="o">.</span><span class="n">Comm</span><span class="p">]</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">,</span>
                  <span class="n">partition</span><span class="p">:</span> <span class="n">Partition</span> <span class="o">=</span> <span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-                 <span class="n">local_shapes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">local_shapes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">,</span> <span class="n">Integral</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                  <span class="n">engine</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;numpy&quot;</span><span class="p">,</span>
                  <span class="n">dtype</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DTypeLike</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">global_shape</span><span class="p">,</span> <span class="n">Integral</span><span class="p">):</span>
@@ -537,10 +538,12 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Should be either </span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="si">}</span><span class="s2"> &quot;</span>
                              <span class="sa">f</span><span class="s2">&quot;or </span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_global_shape</span> <span class="o">=</span> <span class="n">global_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_global_shape</span> <span class="o">=</span> <span class="n">_value_or_sized_to_tuple</span><span class="p">(</span><span class="n">global_shape</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_base_comm</span> <span class="o">=</span> <span class="n">base_comm</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_partition</span> <span class="o">=</span> <span class="n">partition</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span> <span class="o">=</span> <span class="n">axis</span>
+
+        <span class="n">local_shapes</span> <span class="o">=</span> <span class="n">local_shapes</span> <span class="k">if</span> <span class="n">local_shapes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[</span><span class="n">_value_or_sized_to_tuple</span><span class="p">(</span><span class="n">local_shape</span><span class="p">)</span> <span class="k">for</span> <span class="n">local_shape</span> <span class="ow">in</span> <span class="n">local_shapes</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_local_shapes</span><span class="p">(</span><span class="n">local_shapes</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_local_shape</span> <span class="o">=</span> <span class="n">local_shapes</span><span class="p">[</span><span class="n">base_comm</span><span class="o">.</span><span class="n">rank</span><span class="p">]</span> <span class="k">if</span> <span class="n">local_shapes</span> <span class="k">else</span> <span class="n">local_split</span><span class="p">(</span><span class="n">global_shape</span><span class="p">,</span> <span class="n">base_comm</span><span class="p">,</span>
                                                                                           <span class="n">partition</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
