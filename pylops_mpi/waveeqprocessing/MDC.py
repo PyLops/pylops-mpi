@@ -20,7 +20,7 @@ def _MDC(G, nt, nv, nfmax, dt=1., dr=1., twosided=True,
 
     Used to be able to provide operators from different libraries to
     MDC. It operates in the same way as public method
-    (PoststackLinearModelling) but has additional input parameters allowing
+    (MPIMDC) but has additional input parameters allowing
     passing a different operator and additional arguments to be passed to such
     operator.
 
@@ -81,8 +81,10 @@ def MPIMDC(G, nt, nv, nfreq, dt=1., dr=1., twosided=True,
            base_comm: MPI.Comm = MPI.COMM_WORLD):
     r"""Multi-dimensional convolution.
 
-    Apply multi-dimensional convolution between two datasets. Model and data
-    should be provided after flattening 2- or 3-dimensional arrays of size
+    Apply multi-dimensional convolution between two datasets in a distributed
+    fashion, with ``G`` distributed over ranks across the frequency axis.
+    Model and data are broadcasted and should be provided after flattening
+    2- or 3-dimensional arrays of size
     :math:`[n_t \times n_r (\times n_{vs})]` and
     :math:`[n_t \times n_s (\times n_{vs})]` (or :math:`2*n_t-1` for
     ``twosided=True``), respectively.
@@ -91,7 +93,7 @@ def MPIMDC(G, nt, nv, nfreq, dt=1., dr=1., twosided=True,
     ----------
     G : :obj:`numpy.ndarray`
         Multi-dimensional convolution kernel in frequency domain of size
-        :math:`[n_{fmax} \times n_s \times n_r]`
+        :math:`[n_{f,rank} \times n_s \times n_r]`
     nt : :obj:`int`
         Number of samples along time axis for model and data (note that this
         must be equal to ``2*n_t-1`` when working with ``twosided=True``.
