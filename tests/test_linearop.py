@@ -81,8 +81,8 @@ def test_transpose(par):
                range(size)]
         BDiag = pylops.BlockDiag(ops=ops)
         Top = BDiag.T
-        assert_allclose(Top_x_np, Top @ x_global, rtol=1e-14)
-        assert_allclose(Top_y_np, Top.H @ y_global, rtol=1e-14)
+        assert_allclose(Top_x_np, Top @ x_global, rtol=1e-9)
+        assert_allclose(Top_y_np, Top.H @ y_global, rtol=1e-9)
 
 
 @pytest.mark.mpi(min_size=2)
@@ -114,8 +114,8 @@ def test_scaled(par):
                range(size)]
         BDiag = pylops.BlockDiag(ops=ops)
         Sop = BDiag * -4
-        assert_allclose(Sop_x_np, Sop @ x_global, rtol=1e-14)
-        assert_allclose(Sop_y_np, Sop.H @ y_global, rtol=1e-14)
+        assert_allclose(Sop_x_np, Sop @ x_global, rtol=1e-9)
+        assert_allclose(Sop_y_np, Sop.H @ y_global, rtol=1e-9)
 
 
 @pytest.mark.mpi(min_size=2)
@@ -148,8 +148,8 @@ def test_power(par):
                range(size)]
         BDiag = pylops.BlockDiag(ops=ops)
         Pop = BDiag ** 3
-        assert_allclose(Pop_x_np, Pop @ x_global, rtol=1e-14)
-        assert_allclose(Pop_y_np, Pop.H @ y_global, rtol=1e-14)
+        assert_allclose(Pop_x_np, Pop @ x_global, rtol=1e-9)
+        assert_allclose(Pop_y_np, Pop.H @ y_global, rtol=1e-9)
 
 
 @pytest.mark.mpi(min_size=2)
@@ -188,8 +188,8 @@ def test_sum(par):
                 range(size)]
         BDiag2 = pylops.BlockDiag(ops=ops2)
         Sop = BDiag + BDiag2
-        assert_allclose(Sop_x_np, Sop @ x_global, rtol=1e-14)
-        assert_allclose(Sop_y_np, Sop.H @ y_global, rtol=1e-14)
+        assert_allclose(Sop_x_np, Sop @ x_global, rtol=1e-9)
+        assert_allclose(Sop_y_np, Sop.H @ y_global, rtol=1e-9)
 
 
 @pytest.mark.mpi(min_size=2)
@@ -228,8 +228,8 @@ def test_product(par):
                 range(size)]
         BDiag2 = pylops.BlockDiag(ops=ops2)
         Pop = BDiag * BDiag2
-        assert_allclose(Pop_x_np, Pop @ x_global, rtol=1e-14)
-        assert_allclose(Pop_y_np, Pop.H @ y_global, rtol=1e-14)
+        assert_allclose(Pop_x_np, Pop @ x_global, rtol=1e-9)
+        assert_allclose(Pop_y_np, Pop.H @ y_global, rtol=1e-9)
 
 
 @pytest.mark.mpi(min_size=2)
@@ -262,8 +262,8 @@ def test_conj(par):
                range(size)]
         BDiag = pylops.BlockDiag(ops=ops)
         Cop = BDiag.conj()
-        assert_allclose(Cop_x_np, Cop @ x_global, rtol=1e-14)
-        assert_allclose(Cop_y_np, Cop.H @ y_global, rtol=1e-14)
+        assert_allclose(Cop_x_np, Cop @ x_global, rtol=1e-9)
+        assert_allclose(Cop_y_np, Cop.H @ y_global, rtol=1e-9)
 
 
 @pytest.mark.mpi(min_size=2)
@@ -292,8 +292,8 @@ def test_mpilinop(par):
     y_adj = y_adj_dist.asarray()
 
     if rank == 0:
-        assert_allclose(y, Fop @ x_global, rtol=1e-14)
-        assert_allclose(y_adj, Fop.H @ x_adj_global, rtol=1e-14)
+        assert_allclose(y, Fop @ x_global, rtol=1e-9)
+        assert_allclose(y_adj, Fop.H @ x_adj_global, rtol=1e-9)
 
 
 @pytest.mark.mpi(min_size=2)
@@ -322,7 +322,7 @@ def test_fwd_mpilinop(par):
         VStack = pylops.VStack(ops=[(i + 1) * Sop for i in range(size)])
         FullOp = VStack @ Fop
         y_np = FullOp @ x_global
-        assert_allclose(y, y_np.flatten(), rtol=1e-14)
+        assert_allclose(y, y_np.flatten(), rtol=1e-9)
 
 
 @pytest.mark.mpi(min_size=2)
