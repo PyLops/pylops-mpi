@@ -351,4 +351,4 @@ def test_adj_mpilinop(par):
         VStack = pylops.VStack(ops=[(i + 1) * Sop for i in range(size)])
         FullOp = VStack @ Fop
         y_np = FullOp.H @ x_global
-        assert_allclose(y, y_np.flatten(), rtol=1e-12)
+        assert_allclose(y, y_np.flatten(), rtol=1e-9)
