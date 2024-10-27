@@ -80,9 +80,12 @@ class DistributedArray:
         Axis along which distribution occurs. Defaults to ``0``.
     local_shapes : :obj:`list`, optional
         List of tuples or integers representing local shapes at each rank.
+<<<<<<< HEAD
     mask : :obj:`list`, optional
         Mask defining subsets of ranks to consider when performing 'global'
         operations on the distributed array such as dot product or norm.
+=======
+>>>>>>> 57b793e8ce4c150d90866d1e41c0bd9e88cae985
     engine : :obj:`str`, optional
         Engine used to store array (``numpy`` or ``cupy``)
     dtype : :obj:`str`, optional
@@ -93,7 +96,10 @@ class DistributedArray:
                  base_comm: Optional[MPI.Comm] = MPI.COMM_WORLD,
                  partition: Partition = Partition.SCATTER, axis: int = 0,
                  local_shapes: Optional[List[Union[Tuple, Integral]]] = None,
+<<<<<<< HEAD
                  mask: Optional[List[Integral]] = None,
+=======
+>>>>>>> 57b793e8ce4c150d90866d1e41c0bd9e88cae985
                  engine: Optional[str] = "numpy",
                  dtype: Optional[DTypeLike] = np.float64):
         if isinstance(global_shape, Integral):
@@ -109,8 +115,11 @@ class DistributedArray:
         self._base_comm = base_comm
         self._partition = partition
         self._axis = axis
+<<<<<<< HEAD
         self._mask = mask
         self._sub_comm = base_comm if mask is None else base_comm.Split(color=mask[base_comm.rank], key=base_comm.rank)
+=======
+>>>>>>> 57b793e8ce4c150d90866d1e41c0bd9e88cae985
 
         local_shapes = local_shapes if local_shapes is None else [_value_or_sized_to_tuple(local_shape) for local_shape in local_shapes]
         self._check_local_shapes(local_shapes)
