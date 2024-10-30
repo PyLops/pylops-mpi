@@ -1,3 +1,7 @@
+"""Test the MPIStackedLinearOperator class
+    Designed to run with n processes
+    $ mpiexec -n 10 pytest test_stackedlinearop.py --with-mpi
+"""
 import numpy as np
 from numpy.testing import assert_allclose
 from mpi4py import MPI
