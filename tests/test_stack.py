@@ -1,3 +1,7 @@
+"""Test the stacking classes
+    Designed to run with n processes
+    $ mpiexec -n 10 pytest test_stack.py --with-mpi
+"""
 import numpy as np
 from numpy.testing import assert_allclose
 from mpi4py import MPI
@@ -5,6 +9,7 @@ import pytest
 
 import pylops
 import pylops_mpi
+from pylops_mpi.utils.dottest import dottest
 
 par1 = {'ny': 101, 'nx': 101, 'imag': 0, 'dtype': np.float64}
 par1j = {'ny': 101, 'nx': 101, 'imag': 1j, 'dtype': np.complex128}
@@ -36,10 +41,14 @@ def test_vstack(par):
     y[:] = np.ones(shape=par['ny'], dtype=par['dtype'])
     y_global = y.asarray()
 
+    # Forward
     x_mat = VStack_MPI @ x
+    # Adjoint
     y_rmat = VStack_MPI.H @ y
     assert isinstance(x_mat, pylops_mpi.DistributedArray)
     assert isinstance(y_rmat, pylops_mpi.DistributedArray)
+    # Dot test
+    dottest(VStack_MPI, x, y, size * par['ny'], par['nx'])
 
     x_mat_mpi = x_mat.asarray()
     y_rmat_mpi = y_rmat.asarray()
