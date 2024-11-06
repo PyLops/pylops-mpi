@@ -130,10 +130,7 @@ class DistributedArray:
             Represents the value that will be assigned to the local array at
             the specified index positions.
         """
-        if self.partition is Partition.BROADCAST:
-            self.local_array[index] = self.base_comm.bcast(value)
-        else:
-            self.local_array[index] = value
+        self.local_array[index] = value
 
     @property
     def global_shape(self):
