@@ -139,10 +139,12 @@ class DistributedArray:
             Represents the value that will be assigned to the local array at
             the specified index positions.
         """
-        if self.partition is Partition.BROADCAST:
-            self.local_array[index] = self.base_comm.bcast(value)
-        else:
-            self.local_array[index] = value
+        # if self.partition is Partition.BROADCAST:
+        #     self.local_array[index] = self.base_comm.bcast(value)
+        # else:
+        #     self.local_array[index] = value
+        # testing this... avoid broadcasting and just let the user store the same value in each rank
+        self.local_array[index] = value
 
     @property
     def global_shape(self):
@@ -526,6 +528,19 @@ class DistributedArray:
             recv_buf = self._allreduce_subcomm(np.sum(np.abs(np.float_power(local_array, ord)), axis=axis))
             recv_buf = np.power(recv_buf, 1. / ord)
         return recv_buf
+
+    def zeros_like(self):
+        """Creates a copy of the DistributedArray filled with zeros
+        """
+        arr = DistributedArray(global_shape=self.global_shape,
+                               base_comm=self.base_comm,
+                               partition=self.partition,
+                               axis=self.axis,
+                               local_shapes=self.local_shapes,
+                               engine=self.engine,
+                               dtype=self.dtype)
+        arr[:] = 0.
+        return arr
 
     def norm(self, ord: Optional[int] = None,
              axis: int = -1):
