@@ -1,17 +1,22 @@
+"""Test the MPIBlockDiag and MPIStackedBlockDiag classes
+    Designed to run with n processes
+    $ mpiexec -n 10 pytest test_blockdiag.py --with-mpi
+"""
 from mpi4py import MPI
 import numpy as np
 from numpy.testing import assert_allclose
-np.random.seed(42)
-
 import pytest
 
 import pylops
 import pylops_mpi
+from pylops_mpi.utils.dottest import dottest
 
 par1 = {'ny': 101, 'nx': 101, 'dtype': np.float64}
 par1j = {'ny': 101, 'nx': 101, 'dtype': np.complex128}
 par2 = {'ny': 301, 'nx': 101, 'dtype': np.float64}
 par2j = {'ny': 301, 'nx': 101, 'dtype': np.complex128}
+
+np.random.seed(42)
 
 
 @pytest.mark.mpi(min_size=2)
@@ -30,10 +35,14 @@ def test_blockdiag(par):
     y[:] = np.ones(shape=par['ny'], dtype=par['dtype'])
     y_global = y.asarray()
 
+    # Forward
     x_mat = BDiag_MPI @ x
+    # Adjoint
     y_rmat = BDiag_MPI.H @ y
     assert isinstance(x_mat, pylops_mpi.DistributedArray)
     assert isinstance(y_rmat, pylops_mpi.DistributedArray)
+    # Dot test
+    dottest(BDiag_MPI, x, y, size * par['ny'], size * par['nx'])
 
     x_mat_mpi = x_mat.asarray()
     y_rmat_mpi = y_rmat.asarray()
@@ -73,10 +82,14 @@ def test_stacked_blockdiag(par):
     y = pylops_mpi.StackedDistributedArray(distarrays=[dist1, dist2])
     y_global = y.asarray()
 
+    # Forward
     x_mat = StackedBDiag_MPI @ x
+    # Adjoint
     y_rmat = StackedBDiag_MPI.H @ y
     assert isinstance(x_mat, pylops_mpi.StackedDistributedArray)
     assert isinstance(y_rmat, pylops_mpi.StackedDistributedArray)
+    # Dot test
+    dottest(StackedBDiag_MPI, x, y, size * par['ny'] + par['nx'] * par['ny'], size * par['nx'] + par['nx'] * par['ny'])
 
     x_mat_mpi = x_mat.asarray()
     y_rmat_mpi = y_rmat.asarray()

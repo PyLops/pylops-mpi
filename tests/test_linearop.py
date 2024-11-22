@@ -1,3 +1,7 @@
+"""Test the MPILinearOperator class
+    Designed to run with n processes
+    $ mpiexec -n 10 pytest test_linearop.py --with-mpi
+"""
 import numpy as np
 from numpy.testing import assert_allclose
 from mpi4py import MPI
@@ -58,6 +62,7 @@ def test_transpose(par):
     """Test the TransposeLinearOperator"""
     Op = pylops.MatrixMult(A=((rank + 1) * np.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
     BDiag_MPI = MPIBlockDiag(ops=[Op, ])
+
     # Tranposed Op
     Top_MPI = BDiag_MPI.T
 
@@ -76,6 +81,7 @@ def test_transpose(par):
     Top_y = Top_MPI.H @ y
     assert isinstance(Top_y, DistributedArray)
     Top_y_np = Top_y.asarray()
+
     if rank == 0:
         ops = [pylops.MatrixMult((i + 1) * np.ones(shape=(par['ny'], par['nx'])).astype(par['dtype'])) for i in
                range(size)]
@@ -109,6 +115,7 @@ def test_scaled(par):
     Sop_y = Sop_MPI.H @ y
     assert isinstance(Sop_y, DistributedArray)
     Sop_y_np = Sop_y.asarray()
+
     if rank == 0:
         ops = [pylops.MatrixMult((i + 1) * np.ones(shape=(par['ny'], par['nx'])).astype(par['dtype'])) for i in
                range(size)]

@@ -1,3 +1,7 @@
+"""Test the MPIFredholm1 class
+    Designed to run with n processes
+    $ mpiexec -n 10 pytest test_fredholm.py --with-mpi
+"""
 import numpy as np
 from numpy.testing import assert_allclose
 from mpi4py import MPI
@@ -9,11 +13,11 @@ import pylops_mpi
 from pylops_mpi import DistributedArray
 from pylops_mpi.DistributedArray import local_split, Partition
 from pylops_mpi.signalprocessing import MPIFredholm1
+from pylops_mpi.utils.dottest import dottest
 
 np.random.seed(42)
 rank = MPI.COMM_WORLD.Get_rank()
 size = MPI.COMM_WORLD.Get_size()
-
 
 par1 = {
     "nsl": 6,
@@ -130,6 +134,8 @@ def test_Fredholm1(par):
     # Adjoint
     y_adj_dist = Fop_MPI.H @ y_dist
     y_adj = y_adj_dist.asarray()
+    # Dot test
+    dottest(Fop_MPI, x, y_dist, par["nsl"] * par["nx"] * par["nz"],par["nsl"] * par["ny"] * par["nz"])
 
     if rank == 0:
         Fop = pylops.signalprocessing.Fredholm1(

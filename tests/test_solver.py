@@ -1,3 +1,7 @@
+"""Test solvers
+    Designed to run with n processes
+    $ mpiexec -n 10 pytest test_solver.py --with-mpi
+"""
 import numpy as np
 from numpy.testing import assert_allclose
 from mpi4py import MPI
