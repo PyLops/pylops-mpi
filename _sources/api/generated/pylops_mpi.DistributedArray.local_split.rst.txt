@@ -1,0 +1,12 @@
+﻿pylops\_mpi.DistributedArray.local\_split
+=========================================
+
+.. currentmodule:: pylops_mpi.DistributedArray
+
+.. autofunction:: local_split
+
+.. include:: backreferences/pylops_mpi.DistributedArray.local_split.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>

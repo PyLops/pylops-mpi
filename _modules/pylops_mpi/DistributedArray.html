@@ -456,6 +456,8 @@
 
 
 
+<div class="viewcode-block" id="local_split">
+<a class="viewcode-back" href="../../api/generated/pylops_mpi.DistributedArray.local_split.html#pylops_mpi.local_split">[docs]</a>
 <span class="k">def</span> <span class="nf">local_split</span><span class="p">(</span><span class="n">global_shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">base_comm</span><span class="p">:</span> <span class="n">MPI</span><span class="o">.</span><span class="n">Comm</span><span class="p">,</span>
                 <span class="n">partition</span><span class="p">:</span> <span class="n">Partition</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;To get the local shape from the global shape</span>
@@ -485,7 +487,8 @@
             <span class="n">local_shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">global_shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">//</span> <span class="n">base_comm</span><span class="o">.</span><span class="n">Get_size</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">local_shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">global_shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">//</span> <span class="n">base_comm</span><span class="o">.</span><span class="n">Get_size</span><span class="p">()</span>
-    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">local_shape</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">local_shape</span><span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="DistributedArray">

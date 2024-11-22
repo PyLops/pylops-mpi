@@ -104,3 +104,22 @@ Basic
 
     cg
     cgls
+
+
+Utils
+-----
+
+.. currentmodule:: pylops_mpi.DistributedArray
+
+.. autosummary::
+   :toctree: generated/
+
+    local_split
+
+
+.. currentmodule:: pylops_mpi.utils.dottest
+
+.. autosummary::
+   :toctree: generated/
+
+    dottest
