@@ -1,6 +1,7 @@
 from typing import List, Optional, Tuple, Union
-import numpy as np
+import sys
 import time
+import numpy as np
 
 from pylops.optimization.basesolver import Solver
 from pylops.utils import NDArray
@@ -40,6 +41,7 @@ class CG(Solver):
         else:
             head1 = "    Itn              x[0]                  r2norm"
         print(head1)
+        sys.stdout.flush()
 
     def _print_step(self, x: Union[DistributedArray, StackedDistributedArray]) -> None:
         if isinstance(x, StackedDistributedArray):
@@ -47,6 +49,7 @@ class CG(Solver):
         strx = f"{x[0]:1.2e}        " if np.iscomplexobj(x.local_array) else f"{x[0]:11.4e}        "
         msg = f"{self.iiter:6g}        " + strx + f"{self.cost[self.iiter]:11.4e}"
         print(msg)
+        sys.stdout.flush()
 
     def setup(
             self,
@@ -281,6 +284,7 @@ class CGLS(Solver):
         else:
             head1 = "    Itn             x[0]             r1norm         r2norm"
         print(head1)
+        sys.stdout.flush()
 
     def _print_step(self, x: Union[DistributedArray, StackedDistributedArray]) -> None:
         if isinstance(x, StackedDistributedArray):
@@ -292,6 +296,7 @@ class CGLS(Solver):
             + f"{self.cost[self.iiter]:11.4e}    {self.cost1[self.iiter]:11.4e}"
         )
         print(msg)
+        sys.stdout.flush()
 
     def setup(self,
               y: Union[DistributedArray, StackedDistributedArray],
