@@ -73,7 +73,7 @@ class DistributedArray:
         the content of the array in different ranks in a different way. To
         avoid broadcasting, one can use :obj:`pylops_mpi.Partition.UNSAFE_BROADCAST`
         instead.
-        
+
     Parameters
     ----------
     global_shape : :obj:`tuple` or :obj:`int`
