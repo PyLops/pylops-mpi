@@ -66,11 +66,14 @@ class DistributedArray:
     .. warning:: When setting the partition of the DistributedArray to
         :obj:`pylops_mpi.Partition.BROADCAST`, it is crucial to be aware
         that any attempts to make arrays different from rank to rank will be
-        overwritten by the actions of rank 0. This means that if you modify
-        the DistributedArray on a specific rank, and are using broadcast to
-        synchronize the arrays across all ranks, the modifications made by other
-        ranks will be discarded and overwritten with the value at rank 0.
-
+        overwritten by the actions of rank 0. This is accomplished internally
+        by broadcasting the content of rank 0 every time a modification of
+        the array is attempted. Such a behaviour does however incur a cost
+        as communication may be not needed if the user ensures not to modify
+        the content of the array in different ranks in a different way. To
+        avoid broadcasting, one can use :obj:`pylops_mpi.Partition.UNSAFE_BROADCAST`
+        instead.
+        
     Parameters
     ----------
     global_shape : :obj:`tuple` or :obj:`int`
