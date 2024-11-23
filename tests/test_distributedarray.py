@@ -45,28 +45,28 @@ par5 = {'x': np.random.normal(300, 300, (500, 501)),
 par5j = {'x': np.random.normal(300, 300, (500, 501)) + 1.0j * np.random.normal(50, 50, (500, 501)),
          'partition': Partition.SCATTER, 'axis': 1}
 
-par6 = {'x': np.random.normal(100, 100, (500, 500)),
+par6 = {'x': np.random.normal(100, 100, (600, 600)),
         'partition': Partition.SCATTER, 'axis': 0}
 
-par6b = {'x': np.random.normal(100, 100, (500, 500)),
+par6b = {'x': np.random.normal(100, 100, (600, 600)),
          'partition': Partition.BROADCAST, 'axis': 0}
 
-par7 = {'x': np.random.normal(300, 300, (500, 500)),
+par7 = {'x': np.random.normal(300, 300, (600, 600)),
         'partition': Partition.SCATTER, 'axis': 0}
 
-par7b = {'x': np.random.normal(300, 300, (500, 500)),
+par7b = {'x': np.random.normal(300, 300, (600, 600)),
          'partition': Partition.BROADCAST, 'axis': 0}
 
-par8 = {'x': np.random.normal(100, 100, (1000,)),
+par8 = {'x': np.random.normal(100, 100, (1200,)),
         'partition': Partition.SCATTER, 'axis': 0}
 
-par8b = {'x': np.random.normal(100, 100, (1000,)),
+par8b = {'x': np.random.normal(100, 100, (1200,)),
          'partition': Partition.BROADCAST, 'axis': 0}
 
-par9 = {'x': np.random.normal(300, 300, (1000,)),
+par9 = {'x': np.random.normal(300, 300, (1200,)),
         'partition': Partition.SCATTER, 'axis': 0}
 
-par9b = {'x': np.random.normal(300, 300, (1000,)),
+par9b = {'x': np.random.normal(300, 300, (1200,)),
          'partition': Partition.BROADCAST, 'axis': 0}
 
 
@@ -192,3 +192,69 @@ def test_distributed_norm(par):
     assert_allclose(arr.norm(ord=np.inf, axis=par['axis']),
                     np.linalg.norm(par['x'], ord=np.inf, axis=par['axis']), rtol=1e-14)
     assert_allclose(arr.norm(), np.linalg.norm(par['x'].flatten()), rtol=1e-13)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par1, par2", [(par6, par7), (par6b, par7b),
+                                        (par8, par9), (par8b, par9b)])
+def test_distributed_maskeddot(par1, par2):
+    """Test Distributed Dot product with masked array"""
+    # number of subcommunicators
+    if MPI.COMM_WORLD.Get_size() % 2 == 0:
+        nsub = 2   
+    elif MPI.COMM_WORLD.Get_size() % 3 == 0:
+        nsub = 3
+    else:
+        pass
+    subsize = max(1, MPI.COMM_WORLD.Get_size() // nsub)
+    mask = np.repeat(np.arange(nsub), subsize)
+    print('subsize, mask', subsize, mask)
+    # Replicate x1 and x2 as required in masked arrays
+    x1, x2 = par1['x'], par2['x']
+    if par1['axis'] != 0:
+        x1 = np.swapaxes(x1, par1['axis'], 0)
+    for isub in range(1, nsub):
+        x1[(x1.shape[0] // nsub) * isub:(x1.shape[0] // nsub) * (isub + 1)] = x1[:x1.shape[0] // nsub]
+    if par1['axis'] != 0:
+        x1 = np.swapaxes(x1, 0, par1['axis'])
+    if par2['axis'] != 0:
+        x2 = np.swapaxes(x2, par2['axis'], 0)
+    for isub in range(1, nsub):
+        x2[(x2.shape[0] // nsub) * isub:(x2.shape[0] // nsub) * (isub + 1)] = x2[:x2.shape[0] // nsub]
+    if par2['axis'] != 0:
+        x2 = np.swapaxes(x2, 0, par2['axis'])
+
+    arr1 = DistributedArray.to_dist(x=x1, partition=par1['partition'], mask=mask, axis=par1['axis'])
+    arr2 = DistributedArray.to_dist(x=x2, partition=par2['partition'], mask=mask, axis=par2['axis'])
+    assert_allclose(arr1.dot(arr2), np.dot(x1.flatten(), x2.flatten()) / nsub, rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par6), (par6b), (par7), (par7b),
+                                 (par8), (par8b), (par9), (par9b)])
+def test_distributed_maskednorm(par):
+    """Test Distributed numpy.linalg.norm method with masked array"""
+    # number of subcommunicators
+    if MPI.COMM_WORLD.Get_size() % 2 == 0:
+        nsub = 2   
+    elif MPI.COMM_WORLD.Get_size() % 3 == 0:
+        nsub = 3
+    else:
+        pass
+    subsize = max(1, MPI.COMM_WORLD.Get_size() // nsub)
+    mask = np.repeat(np.arange(nsub), subsize)
+    # Replicate x as required in masked arrays
+    x = par['x']
+    if par['axis'] != 0:
+        x = np.swapaxes(x, par['axis'], 0)
+    for isub in range(1, nsub):
+        x[(x.shape[0] // nsub) * isub:(x.shape[0] // nsub) * (isub + 1)] = x[:x.shape[0] // nsub]
+    if par['axis'] != 0:
+        x = np.swapaxes(x, 0, par['axis'])
+    arr = DistributedArray.to_dist(x=x, mask=mask, axis=par['axis'])
+    assert_allclose(arr.norm(ord=1, axis=par['axis']),
+                    np.linalg.norm(par['x'], ord=1, axis=par['axis']) / nsub, rtol=1e-14)
+    assert_allclose(arr.norm(ord=np.inf, axis=par['axis']),
+                    np.linalg.norm(par['x'], ord=np.inf, axis=par['axis']), rtol=1e-14)
+    assert_allclose(arr.norm(ord=2, axis=par['axis']),
+                    np.linalg.norm(par['x'], ord=2, axis=par['axis']) / np.sqrt(nsub), rtol=1e-13)

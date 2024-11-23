@@ -14,10 +14,14 @@ class Partition(Enum):
 
     Distributing data among different processes.
 
-    - ``BROADCAST``: Distributes data to all processes.
+    - ``BROADCAST``: Distributes data to all processes
+      (ensuring that data is kept consistent across processes)
+    - ``UNSAFE_BROADCAST``: Distributes data to all processes
+      (without ensuring that data is kept consistent across processes)
     - ``SCATTER``: Distributes unique portions to each process.
     """
     BROADCAST = "Broadcast"
+    UNSAFE_BROADCAST = "UnsafeBroadcast"
     SCATTER = "Scatter"
 
 
@@ -41,7 +45,7 @@ def local_split(global_shape: Tuple, base_comm: MPI.Comm,
     local_shape : :obj:`tuple`
         Shape of the local array.
     """
-    if partition == Partition.BROADCAST:
+    if partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
         local_shape = global_shape
     # Split the array
     else:
@@ -62,10 +66,13 @@ class DistributedArray:
     .. warning:: When setting the partition of the DistributedArray to
         :obj:`pylops_mpi.Partition.BROADCAST`, it is crucial to be aware
         that any attempts to make arrays different from rank to rank will be
-        overwritten by the actions of rank 0. This means that if you modify
-        the DistributedArray on a specific rank, and are using broadcast to
-        synchronize the arrays across all ranks, the modifications made by other
-        ranks will be discarded and overwritten with the value at rank 0.
+        overwritten by the actions of rank 0. This is accomplished internally
+        by broadcasting the content of rank 0 every time a modification of
+        the array is attempted. Such a behaviour does however incur a cost
+        as communication may be not needed if the user ensures not to modify
+        the content of the array in different ranks in a different way. To
+        avoid broadcasting, one can use :obj:`pylops_mpi.Partition.UNSAFE_BROADCAST`
+        instead.
 
     Parameters
     ----------
@@ -75,11 +82,14 @@ class DistributedArray:
         MPI Communicator over which array is distributed.
         Defaults to ``mpi4py.MPI.COMM_WORLD``.
     partition : :obj:`Partition`, optional
-        Broadcast or Scatter the array. Defaults to ``Partition.SCATTER``.
+        Broadcast, UnsafeBroadcast, or Scatter the array. Defaults to ``Partition.SCATTER``.
     axis : :obj:`int`, optional
         Axis along which distribution occurs. Defaults to ``0``.
     local_shapes : :obj:`list`, optional
         List of tuples or integers representing local shapes at each rank.
+    mask : :obj:`list`, optional
+        Mask defining subsets of ranks to consider when performing 'global'
+        operations on the distributed array such as dot product or norm.
     engine : :obj:`str`, optional
         Engine used to store array (``numpy`` or ``cupy``)
     dtype : :obj:`str`, optional
@@ -90,6 +100,7 @@ class DistributedArray:
                  base_comm: Optional[MPI.Comm] = MPI.COMM_WORLD,
                  partition: Partition = Partition.SCATTER, axis: int = 0,
                  local_shapes: Optional[List[Union[Tuple, Integral]]] = None,
+                 mask: Optional[List[Integral]] = None,
                  engine: Optional[str] = "numpy",
                  dtype: Optional[DTypeLike] = np.float64):
         if isinstance(global_shape, Integral):
@@ -98,13 +109,15 @@ class DistributedArray:
             raise IndexError(f"Axis {axis} out of range for DistributedArray "
                              f"of shape {global_shape}")
         if partition not in Partition:
-            raise ValueError(f"Should be either {Partition.BROADCAST} "
-                             f"or {Partition.SCATTER}")
+            raise ValueError(f"Should be either {Partition.BROADCAST}, "
+                             f"{Partition.UNSAFE_BROADCAST} or {Partition.SCATTER}")
         self.dtype = dtype
         self._global_shape = _value_or_sized_to_tuple(global_shape)
         self._base_comm = base_comm
         self._partition = partition
         self._axis = axis
+        self._mask = mask
+        self._sub_comm = base_comm if mask is None else base_comm.Split(color=mask[base_comm.rank], key=base_comm.rank)
 
         local_shapes = local_shapes if local_shapes is None else [_value_or_sized_to_tuple(local_shape) for local_shape in local_shapes]
         self._check_local_shapes(local_shapes)
@@ -120,6 +133,9 @@ class DistributedArray:
         """Setter Method
 
         `Partition.SCATTER` - Local Arrays are assigned their
+        unique values.
+
+        `Partition.UNSAFE_SCATTER` - Local Arrays are assigned their
         unique values.
 
         `Partition.BROADCAST` - The value at rank-0 is broadcasted
@@ -167,6 +183,16 @@ class DistributedArray:
         local_shape : :obj:`tuple`
         """
         return self._local_shape
+
+    @property
+    def mask(self):
+        """Mask of the Distributed array
+
+        Returns
+        -------
+        engine : :obj:`list`
+        """
+        return self._mask
 
     @property
     def engine(self):
@@ -249,6 +275,16 @@ class DistributedArray:
         """
         return self.base_comm.allgather(self.local_shape)
 
+    @property
+    def sub_comm(self):
+        """MPI Sub-Communicator
+
+        Returns
+        -------
+        sub_comm : :obj:`MPI.Comm`
+        """
+        return self._sub_comm
+
     def asarray(self):
         """Global view of the array
 
@@ -260,7 +296,7 @@ class DistributedArray:
             Global Array gathered at all ranks
         """
         # Since the global array was replicated at all ranks
-        if self.partition == Partition.BROADCAST:
+        if self.partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
             # Get only self.local_array.
             return self.local_array
         # Gather all the local arrays and apply concatenation.
@@ -272,7 +308,8 @@ class DistributedArray:
                 base_comm: MPI.Comm = MPI.COMM_WORLD,
                 partition: Partition = Partition.SCATTER,
                 axis: int = 0,
-                local_shapes: Optional[List[Tuple]] = None):
+                local_shapes: Optional[List[Tuple]] = None,
+                mask: Optional[List[Integral]] = None):
         """Convert A Global Array to a Distributed Array
 
         Parameters
@@ -287,9 +324,12 @@ class DistributedArray:
             Axis of Distribution
         local_shapes : :obj:`list`, optional
             Local Shapes at each rank.
+        mask : :obj:`list`, optional
+            Mask defining subsets of ranks to consider when performing 'global'
+            operations on the distributed array such as dot product or norm.
 
         Returns
-        ----------
+        -------
         dist_array : :obj:`DistributedArray`
             Distributed Array of the Global Array
         """
@@ -298,9 +338,10 @@ class DistributedArray:
                                       partition=partition,
                                       axis=axis,
                                       local_shapes=local_shapes,
+                                      mask=mask,
                                       engine=get_module_name(get_array_module(x)),
                                       dtype=x.dtype)
-        if partition == Partition.BROADCAST:
+        if partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
             dist_array[:] = x
         else:
             slices = [slice(None)] * x.ndim
@@ -319,7 +360,7 @@ class DistributedArray:
                 raise ValueError(f"Length of local shapes is not equal to number of processes; "
                                  f"{len(local_shapes)} != {self.size}")
             # Check if local shape == global shape
-            if self.partition is Partition.BROADCAST and local_shapes[self.rank] != self.global_shape:
+            if self.partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST] and local_shapes[self.rank] != self.global_shape:
                 raise ValueError(f"Local shape is not equal to global shape at rank = {self.rank};"
                                  f"{local_shapes[self.rank]} != {self.global_shape}")
             elif self.partition is Partition.SCATTER:
@@ -339,6 +380,12 @@ class DistributedArray:
             raise ValueError(f"Local Array Shape Mismatch - "
                              f"{self.local_shape} != {dist_array.local_shape}")
 
+    def _check_mask(self, dist_array):
+        """Check mask of the Array
+        """
+        if not np.array_equal(self.mask, dist_array.mask):
+            raise ValueError("Mask of both the arrays must be same")
+
     def _allreduce(self, send_buf, recv_buf=None, op: MPI.Op = MPI.SUM):
         """MPI Allreduce operation
         """
@@ -348,12 +395,22 @@ class DistributedArray:
         self.base_comm.Allreduce(send_buf, recv_buf, op)
         return recv_buf
 
+    def _allreduce_subcomm(self, send_buf, recv_buf=None, op: MPI.Op = MPI.SUM):
+        """MPI Allreduce operation with subcommunicator
+        """
+        if recv_buf is None:
+            return self.sub_comm.allreduce(send_buf, op)
+        # For MIN and MAX which require recv_buf
+        self.sub_comm.Allreduce(send_buf, recv_buf, op)
+        return recv_buf
+
     def __neg__(self):
         arr = DistributedArray(global_shape=self.global_shape,
                                base_comm=self.base_comm,
                                partition=self.partition,
                                axis=self.axis,
                                local_shapes=self.local_shapes,
+                               mask=self.mask,
                                engine=self.engine,
                                dtype=self.dtype)
         arr[:] = -self.local_array
@@ -381,11 +438,13 @@ class DistributedArray:
         """Distributed Addition of arrays
         """
         self._check_partition_shape(dist_array)
+        self._check_mask(dist_array)
         SumArray = DistributedArray(global_shape=self.global_shape,
                                     base_comm=self.base_comm,
                                     dtype=self.dtype,
                                     partition=self.partition,
                                     local_shapes=self.local_shapes,
+                                    mask=self.mask,
                                     engine=self.engine,
                                     axis=self.axis)
         SumArray[:] = self.local_array + dist_array.local_array
@@ -395,6 +454,7 @@ class DistributedArray:
         """Distributed In-place Addition of arrays
         """
         self._check_partition_shape(dist_array)
+        self._check_mask(dist_array)
         self[:] = self.local_array + dist_array.local_array
         return self
 
@@ -403,12 +463,14 @@ class DistributedArray:
         """
         if isinstance(dist_array, DistributedArray):
             self._check_partition_shape(dist_array)
+            self._check_mask(dist_array)
 
         ProductArray = DistributedArray(global_shape=self.global_shape,
                                         base_comm=self.base_comm,
                                         dtype=self.dtype,
                                         partition=self.partition,
                                         local_shapes=self.local_shapes,
+                                        mask=self.mask,
                                         engine=self.engine,
                                         axis=self.axis)
         if isinstance(dist_array, DistributedArray):
@@ -423,13 +485,15 @@ class DistributedArray:
         """Distributed Dot Product
         """
         self._check_partition_shape(dist_array)
+        self._check_mask(dist_array)
+
         # Convert to Partition.SCATTER if Partition.BROADCAST
         x = DistributedArray.to_dist(x=self.local_array) \
-            if self.partition is Partition.BROADCAST else self
+            if self.partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST] else self
         y = DistributedArray.to_dist(x=dist_array.local_array) \
-            if self.partition is Partition.BROADCAST else dist_array
+            if self.partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST] else dist_array
         # Flatten the local arrays and calculate dot product
-        return self._allreduce(np.dot(x.local_array.flatten(), y.local_array.flatten()))
+        return self._allreduce_subcomm(np.dot(x.local_array.flatten(), y.local_array.flatten()))
 
     def _compute_vector_norm(self, local_array: NDArray,
                              axis: int, ord: Optional[int] = None):
@@ -456,22 +520,35 @@ class DistributedArray:
             raise ValueError(f"norm-{ord} not possible for vectors")
         elif ord == 0:
             # Count non-zero then sum reduction
-            recv_buf = self._allreduce(np.count_nonzero(local_array, axis=axis).astype(np.float64))
+            recv_buf = self._allreduce_subcomm(np.count_nonzero(local_array, axis=axis).astype(np.float64))
         elif ord == np.inf:
             # Calculate max followed by max reduction
-            recv_buf = self._allreduce(np.max(np.abs(local_array), axis=axis).astype(np.float64),
-                                       recv_buf, op=MPI.MAX)
+            recv_buf = self._allreduce_subcomm(np.max(np.abs(local_array), axis=axis).astype(np.float64),
+                                               recv_buf, op=MPI.MAX)
             recv_buf = np.squeeze(recv_buf, axis=axis)
         elif ord == -np.inf:
             # Calculate min followed by min reduction
-            recv_buf = self._allreduce(np.min(np.abs(local_array), axis=axis).astype(np.float64),
-                                       recv_buf, op=MPI.MIN)
+            recv_buf = self._allreduce_subcomm(np.min(np.abs(local_array), axis=axis).astype(np.float64),
+                                               recv_buf, op=MPI.MIN)
             recv_buf = np.squeeze(recv_buf, axis=axis)
 
         else:
-            recv_buf = self._allreduce(np.sum(np.abs(np.float_power(local_array, ord)), axis=axis))
+            recv_buf = self._allreduce_subcomm(np.sum(np.abs(np.float_power(local_array, ord)), axis=axis))
             recv_buf = np.power(recv_buf, 1. / ord)
         return recv_buf
+
+    def zeros_like(self):
+        """Creates a copy of the DistributedArray filled with zeros
+        """
+        arr = DistributedArray(global_shape=self.global_shape,
+                               base_comm=self.base_comm,
+                               partition=self.partition,
+                               axis=self.axis,
+                               local_shapes=self.local_shapes,
+                               engine=self.engine,
+                               dtype=self.dtype)
+        arr[:] = 0.
+        return arr
 
     def norm(self, ord: Optional[int] = None,
              axis: int = -1):
@@ -486,7 +563,7 @@ class DistributedArray:
         """
         # Convert to Partition.SCATTER if Partition.BROADCAST
         x = DistributedArray.to_dist(x=self.local_array) \
-            if self.partition is Partition.BROADCAST else self
+            if self.partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST] else self
         if axis == -1:
             # Flatten the local arrays and calculate norm
             return x._compute_vector_norm(x.local_array.flatten(), axis=0, ord=ord)
@@ -503,6 +580,7 @@ class DistributedArray:
                                 partition=self.partition,
                                 axis=self.axis,
                                 local_shapes=self.local_shapes,
+                                mask=self.mask,
                                 engine=self.engine,
                                 dtype=self.dtype)
         conj[:] = self.local_array.conj()
@@ -516,6 +594,7 @@ class DistributedArray:
                                partition=self.partition,
                                axis=self.axis,
                                local_shapes=self.local_shapes,
+                               mask=self.mask,
                                engine=self.engine,
                                dtype=self.dtype)
         arr[:] = self.local_array
@@ -538,6 +617,7 @@ class DistributedArray:
         local_shapes = [(np.prod(local_shape, axis=-1), ) for local_shape in self.local_shapes]
         arr = DistributedArray(global_shape=np.prod(self.global_shape),
                                local_shapes=local_shapes,
+                               mask=self.mask,
                                partition=self.partition,
                                engine=self.engine,
                                dtype=self.dtype)
