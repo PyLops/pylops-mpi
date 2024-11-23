@@ -24,7 +24,7 @@ This example shows how to use the :py:class:`pylops_mpi.DistributedArray`.
 This class provides a way to distribute arrays across multiple processes in
 a parallel computing environment.
 
-.. GENERATED FROM PYTHON SOURCE LINES 8-22
+.. GENERATED FROM PYTHON SOURCE LINES 8-27
 
 .. code-block:: Python
 
@@ -39,6 +39,11 @@ a parallel computing environment.
     plt.close("all")
     np.random.seed(42)
 
+    # MPI parameters
+    size = MPI.COMM_WORLD.Get_size()  # number of nodes
+    rank = MPI.COMM_WORLD.Get_rank()  # rank of current node
+
+
     # Defining the global shape of the distributed array
     global_shape = (10, 5)
 
@@ -49,13 +54,13 @@ a parallel computing environment.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 23-26
+.. GENERATED FROM PYTHON SOURCE LINES 28-31
 
-Let's start by defining the
-class with the input parameters ``global_shape``,
-``partition``, and ``axis``. Here's an example implementation of the class with ``axis=0``.
+Let's start by defining the class with the input parameters ``global_shape``,
+``partition``, and ``axis``. Here's an example implementation of the class
+with ``axis=0``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 26-34
+.. GENERATED FROM PYTHON SOURCE LINES 31-39
 
 .. code-block:: Python
 
@@ -79,12 +84,12 @@ class with the input parameters ``global_shape``,
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 35-37
+.. GENERATED FROM PYTHON SOURCE LINES 40-42
 
 Below is an implementation to show how the global array is distributed along
 the second axis.
 
-.. GENERATED FROM PYTHON SOURCE LINES 37-45
+.. GENERATED FROM PYTHON SOURCE LINES 42-50
 
 .. code-block:: Python
 
@@ -108,7 +113,7 @@ the second axis.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 46-51
+.. GENERATED FROM PYTHON SOURCE LINES 51-56
 
 You also have the option of directly including the ``local_shapes`` as a parameter
 to the :py:class:`pylops_mpi.DistributedArray`. This will enable the assignment
@@ -116,7 +121,7 @@ of shapes to local arrays on each rank. However, it's essential to ensure that
 the number of processes matches the length of ``local_shapes``, and that the
 combined local shapes should align with the ``global_shape`` along the desired ``axis``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 51-59
+.. GENERATED FROM PYTHON SOURCE LINES 56-64
 
 .. code-block:: Python
 
@@ -140,14 +145,14 @@ combined local shapes should align with the ``global_shape`` along the desired `
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 60-64
+.. GENERATED FROM PYTHON SOURCE LINES 65-69
 
 To convert a random NumPy array into a ``pylops_mpi.DistributedArray``,
 you can use the ``to_dist`` classmethod. This method allows you to distribute
 the array across multiple processes for parallel computation.
 Below is an example implementation depicting the same.
 
-.. GENERATED FROM PYTHON SOURCE LINES 64-74
+.. GENERATED FROM PYTHON SOURCE LINES 69-79
 
 .. code-block:: Python
 
@@ -185,12 +190,15 @@ Below is an example implementation depicting the same.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 75-77
+.. GENERATED FROM PYTHON SOURCE LINES 80-85
+
+Let's move now to consider various operations that one can perform on
+:py:class:`pylops_mpi.DistributedArray` objects.
 
 **Scaling** - Each process operates on its local portion of
 the array and scales the corresponding elements by a given scalar.
 
-.. GENERATED FROM PYTHON SOURCE LINES 77-80
+.. GENERATED FROM PYTHON SOURCE LINES 85-88
 
 .. code-block:: Python
 
@@ -209,12 +217,12 @@ the array and scales the corresponding elements by a given scalar.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 81-83
+.. GENERATED FROM PYTHON SOURCE LINES 89-91
 
 **Element-wise Addition** - Each process operates on its local portion of
 the array and adds the corresponding elements together.
 
-.. GENERATED FROM PYTHON SOURCE LINES 83-86
+.. GENERATED FROM PYTHON SOURCE LINES 91-94
 
 .. code-block:: Python
 
@@ -233,13 +241,13 @@ the array and adds the corresponding elements together.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 87-90
+.. GENERATED FROM PYTHON SOURCE LINES 95-98
 
 **Element-wise In-place Addition** - Similar to the previous one but the
 addition is performed directly on one of the addends without creating a new
 distributed array.
 
-.. GENERATED FROM PYTHON SOURCE LINES 90-93
+.. GENERATED FROM PYTHON SOURCE LINES 98-101
 
 .. code-block:: Python
 
@@ -258,12 +266,12 @@ distributed array.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 94-96
+.. GENERATED FROM PYTHON SOURCE LINES 102-104
 
 **Element-wise Subtraction** - Each process operates on its local portion
 of the array and subtracts the corresponding elements together.
 
-.. GENERATED FROM PYTHON SOURCE LINES 96-99
+.. GENERATED FROM PYTHON SOURCE LINES 104-107
 
 .. code-block:: Python
 
@@ -282,17 +290,18 @@ of the array and subtracts the corresponding elements together.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 100-102
+.. GENERATED FROM PYTHON SOURCE LINES 108-110
 
 **Element-wise Multiplication** - Each process operates on its local portion
 of the array and multiplies the corresponding elements together.
 
-.. GENERATED FROM PYTHON SOURCE LINES 102-104
+.. GENERATED FROM PYTHON SOURCE LINES 110-113
 
 .. code-block:: Python
 
     mult_arr = arr1 * arr2
     pylops_mpi.plot_local_arrays(mult_arr, "Multiplication", vmin=0, vmax=1)
+
 
 
 
@@ -305,10 +314,165 @@ of the array and multiplies the corresponding elements together.
 
 
 
+.. GENERATED FROM PYTHON SOURCE LINES 114-124
+
+Finally, let's look at the case where parallelism could be applied over
+multiple axes - and more specifically one belonging to the model/data and one
+to the operator. This kind of "2D"-parallelism requires repeating parts of
+the model/data over groups of ranks. However, when global operations such as
+``dot`` or ``norm`` are applied on a ``pylops_mpi.DistributedArray`` of
+this kind, we need to ensure that the repeated portions to do all contribute
+to the computation. This can be achieved via the ``mask`` input parameter:
+a list of size equal to the number of ranks, whose elements contain the index
+of the subgroup/subcommunicator (with partial arrays in different groups
+are identical to each other).
+
+.. GENERATED FROM PYTHON SOURCE LINES 124-156
+
+.. code-block:: Python
+
+
+    # Defining the local and global shape of the distributed array
+    local_shape = 5
+    global_shape = local_shape * size
+
+    # Create mask
+    nsub = 2
+    subsize = max(1, size // nsub)
+    mask = np.repeat(np.arange(size // subsize), subsize)
+    if rank == 0:
+        print("1D masked arrays")
+        print(f"Mask: {mask}")
+
+    # Create and fill the distributed array
+    x = pylops_mpi.DistributedArray(global_shape=global_shape,
+                                    partition=Partition.SCATTER,
+                                    mask=mask)
+    x[:] = (MPI.COMM_WORLD.Get_rank() % subsize + 1.) * np.ones(local_shape)
+    xloc = x.asarray()
+
+    # Dot product
+    dot = x.dot(x)
+    dotloc = np.dot(xloc[local_shape * subsize * (rank // subsize):local_shape * subsize * (rank // subsize + 1)],
+                    xloc[local_shape * subsize * (rank // subsize):local_shape * subsize * (rank // subsize + 1)])
+    print(f"Dot check (Rank {rank}): {np.allclose(dot, dotloc)}")
+
+    # Norm
+    norm = x.norm(ord=2)
+    normloc = np.linalg.norm(xloc[local_shape * subsize * (rank // subsize):local_shape * subsize * (rank // subsize + 1)],
+                             ord=2)
+    print(f"Norm check (Rank {rank}): {np.allclose(norm, normloc)}")
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    1D masked arrays
+    Mask: [0]
+    Dot check (Rank 0): True
+    Norm check (Rank 0): True
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 157-158
+
+And with 2d-arrays distributed over axis=1
+
+.. GENERATED FROM PYTHON SOURCE LINES 158-181
+
+.. code-block:: Python
+
+    extra_dim_shape = 2
+    if rank == 0:
+        print("2D masked arrays (over axis=1)")
+
+    # Create and fill the distributed array
+    x = pylops_mpi.DistributedArray(global_shape=(extra_dim_shape, global_shape),
+                                    partition=Partition.SCATTER,
+                                    axis=1, mask=mask)
+    x[:] = (MPI.COMM_WORLD.Get_rank() % subsize + 1.) * np.ones((extra_dim_shape, local_shape))
+    xloc = x.asarray()
+
+    # Dot product
+    dot = x.dot(x)
+    dotloc = np.dot(xloc[:, local_shape * subsize * (rank // subsize):local_shape * subsize * (rank // subsize + 1)].ravel(),
+                    xloc[:, local_shape * subsize * (rank // subsize):local_shape * subsize * (rank // subsize + 1)].ravel())
+    print(f"Dot check (Rank {rank}): {np.allclose(dot, dotloc)}")
+
+    # Norm
+    norm = x.norm(ord=2, axis=1)
+    normloc = np.linalg.norm(xloc[:, local_shape * subsize * (rank // subsize):local_shape * subsize * (rank // subsize + 1)],
+                             ord=2, axis=1)
+    print(f"Norm check (Rank {rank}): {np.allclose(norm, normloc)}")
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    2D masked arrays (over axis=1)
+    Dot check (Rank 0): True
+    Norm check (Rank 0): True
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 182-183
+
+And finally with 2d-arrays distributed over axis=0
+
+.. GENERATED FROM PYTHON SOURCE LINES 183-204
+
+.. code-block:: Python
+
+    if rank == 0:
+        print("2D masked arrays (over axis=0)")
+
+    # Create and fill the distributed array
+    x = pylops_mpi.DistributedArray(global_shape=(global_shape, extra_dim_shape),
+                                    partition=Partition.SCATTER,
+                                    axis=0, mask=mask)
+    x[:] = (MPI.COMM_WORLD.Get_rank() % subsize + 1.) * np.ones((local_shape, extra_dim_shape))
+    xloc = x.asarray()
+
+    # Dot product
+    dot = x.dot(x)
+    dotloc = np.dot(xloc[local_shape * subsize * (rank // subsize):local_shape * subsize * (rank // subsize + 1)].ravel(),
+                    xloc[local_shape * subsize * (rank // subsize):local_shape * subsize * (rank // subsize + 1)].ravel())
+    print(f"Dot check (Rank {rank}): {np.allclose(dot, dotloc)}")
+
+    # Norm
+    norm = x.norm(ord=2, axis=0)
+    normloc = np.linalg.norm(xloc[local_shape * subsize * (rank // subsize):local_shape * subsize * (rank // subsize + 1)],
+                             ord=2, axis=0)
+    print(f"Norm check (Rank {rank}): {np.allclose(norm, normloc)}")
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    2D masked arrays (over axis=0)
+    Dot check (Rank 0): True
+    Norm check (Rank 0): True
+
+
+
+
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 1.494 seconds)
+   **Total running time of the script:** (0 minutes 1.537 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_distributed_array.py:

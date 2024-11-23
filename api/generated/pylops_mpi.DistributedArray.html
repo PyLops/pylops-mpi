@@ -490,7 +490,7 @@
 <h1>pylops_mpi.DistributedArray<a class="headerlink" href="#pylops-mpi-distributedarray" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="pylops_mpi.DistributedArray">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylops_mpi.</span></span><span class="sig-name descname"><span class="pre">DistributedArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">global_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm=&lt;mpi4py.MPI.Intracomm</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partition=Partition.SCATTER</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_shapes=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">engine='numpy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'numpy.float64'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/DistributedArray.html#DistributedArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.DistributedArray" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylops_mpi.</span></span><span class="sig-name descname"><span class="pre">DistributedArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">global_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm=&lt;mpi4py.MPI.Intracomm</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partition=Partition.SCATTER</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_shapes=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">engine='numpy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'numpy.float64'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/DistributedArray.html#DistributedArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.DistributedArray" title="Link to this definition">#</a></dt>
 <dd><p>Distributed Numpy Arrays</p>
 <p>Multidimensional NumPy-like distributed arrays.
 It brings NumPy arrays to high-performance computing.</p>
@@ -499,10 +499,13 @@ It brings NumPy arrays to high-performance computing.</p>
 <p>When setting the partition of the DistributedArray to
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.Partition.BROADCAST</span></code>, it is crucial to be aware
 that any attempts to make arrays different from rank to rank will be
-overwritten by the actions of rank 0. This means that if you modify
-the DistributedArray on a specific rank, and are using broadcast to
-synchronize the arrays across all ranks, the modifications made by other
-ranks will be discarded and overwritten with the value at rank 0.</p>
+overwritten by the actions of rank 0. This is accomplished internally
+by broadcasting the content of rank 0 every time a modification of
+the array is attempted. Such a behaviour does however incur a cost
+as communication may be not needed if the user ensures not to modify
+the content of the array in different ranks in a different way. To
+avoid broadcasting, one can use <code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.Partition.UNSAFE_BROADCAST</span></code>
+instead.</p>
 </div>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -512,11 +515,14 @@ ranks will be discarded and overwritten with the value at rank 0.</p>
 <dt><strong>base_comm</strong><span class="classifier"><a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/reference/mpi4py.MPI.Comm.html#mpi4py.MPI.Comm" title="(in MPI for Python v4.0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpi4py.MPI.Comm</span></code></a>, optional</span></dt><dd><p>MPI Communicator over which array is distributed.
 Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.MPI.COMM_WORLD</span></code>.</p>
 </dd>
-<dt><strong>partition</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.Partition.html#pylops_mpi.Partition" title="pylops_mpi.Partition"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Partition</span></code></a>, optional</span></dt><dd><p>Broadcast or Scatter the array. Defaults to <code class="docutils literal notranslate"><span class="pre">Partition.SCATTER</span></code>.</p>
+<dt><strong>partition</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.Partition.html#pylops_mpi.Partition" title="pylops_mpi.Partition"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Partition</span></code></a>, optional</span></dt><dd><p>Broadcast, UnsafeBroadcast, or Scatter the array. Defaults to <code class="docutils literal notranslate"><span class="pre">Partition.SCATTER</span></code>.</p>
 </dd>
 <dt><strong>axis</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a>, optional</span></dt><dd><p>Axis along which distribution occurs. Defaults to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
 </dd>
 <dt><strong>local_shapes</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code></a>, optional</span></dt><dd><p>List of tuples or integers representing local shapes at each rank.</p>
+</dd>
+<dt><strong>mask</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code></a>, optional</span></dt><dd><p>Mask defining subsets of ranks to consider when performing ‘global’
+operations on the distributed array such as dot product or norm.</p>
 </dd>
 <dt><strong>engine</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Engine used to store array (<code class="docutils literal notranslate"><span class="pre">numpy</span></code> or <code class="docutils literal notranslate"><span class="pre">cupy</span></code>)</p>
 </dd>
@@ -563,6 +569,9 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_dist</span></code>(x[, base_comm, partition, axis, ...])</p></td>
 <td><p>Convert A Global Array to a Distributed Array</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">zeros_like</span></code>()</p></td>
+<td><p>Creates a copy of the DistributedArray filled with zeros</p></td>
 </tr>
 </tbody>
 </table>

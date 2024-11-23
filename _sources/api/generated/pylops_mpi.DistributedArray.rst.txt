@@ -21,6 +21,7 @@
         ~DistributedArray.norm
         ~DistributedArray.ravel
         ~DistributedArray.to_dist
+        ~DistributedArray.zeros_like
 
 
 

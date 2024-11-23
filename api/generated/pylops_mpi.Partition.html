@@ -494,7 +494,10 @@
 <dd><p>Enum class</p>
 <p>Distributing data among different processes.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">BROADCAST</span></code>: Distributes data to all processes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BROADCAST</span></code>: Distributes data to all processes
+(ensuring that data is kept consistent across processes)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">UNSAFE_BROADCAST</span></code>: Distributes data to all processes
+(without ensuring that data is kept consistent across processes)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">SCATTER</span></code>: Distributes unique portions to each process.</p></li>
 </ul>
 <p class="rubric">Methods</p>

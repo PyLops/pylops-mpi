@@ -492,7 +492,7 @@
 <h1>pylops_mpi.basicoperators.MPIBlockDiag<a class="headerlink" href="#pylops-mpi-basicoperators-mpiblockdiag" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="pylops_mpi.basicoperators.MPIBlockDiag">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylops_mpi.basicoperators.</span></span><span class="sig-name descname"><span class="pre">MPIBlockDiag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ops</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm=&lt;mpi4py.MPI.Intracomm</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/basicoperators/BlockDiag.html#MPIBlockDiag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.basicoperators.MPIBlockDiag" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylops_mpi.basicoperators.</span></span><span class="sig-name descname"><span class="pre">MPIBlockDiag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ops</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm=&lt;mpi4py.MPI.Intracomm</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/basicoperators/BlockDiag.html#MPIBlockDiag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.basicoperators.MPIBlockDiag" title="Link to this definition">#</a></dt>
 <dd><p>MPI Block-diagonal operator.</p>
 <p>Create a block-diagonal operator from a set of linear operators using MPI.
 Each rank must initialize this operator by providing one or more linear operators
@@ -505,6 +505,9 @@ according to the shapes of the different linear operators.</p>
 <dt><strong>ops</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code></a></span></dt><dd><p>One or more <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.LinearOperator.html#pylops.LinearOperator" title="(in PyLops v2.3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops.LinearOperator</span></code></a> to be stacked.</p>
 </dd>
 <dt><strong>base_comm</strong><span class="classifier"><a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/reference/mpi4py.MPI.Comm.html#mpi4py.MPI.Comm" title="(in MPI for Python v4.0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpi4py.MPI.Comm</span></code></a>, optional</span></dt><dd><p>Base MPI Communicator. Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.MPI.COMM_WORLD</span></code>.</p>
+</dd>
+<dt><strong>mask</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code></a>, optional</span></dt><dd><p>Mask defining subsets of ranks to consider when performing ‘global’ operations on
+the distributed array such as dot product or norm.</p>
 </dd>
 <dt><strong>dtype</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Type of elements in input array.</p>
 </dd>
@@ -569,7 +572,7 @@ referred as <strong>d</strong>.</p>
 <p class="rubric">Methods</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code>(ops[, base_comm, dtype])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code>(ops[, base_comm, mask, dtype])</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">adjoint</span></code>()</p></td>

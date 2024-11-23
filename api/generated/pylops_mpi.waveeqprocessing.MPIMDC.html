@@ -494,8 +494,10 @@
 <dt class="sig sig-object py" id="pylops_mpi.waveeqprocessing.MPIMDC">
 <span class="sig-prename descclassname"><span class="pre">pylops_mpi.waveeqprocessing.</span></span><span class="sig-name descname"><span class="pre">MPIMDC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nfreq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dr=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">twosided=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fftengine='numpy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saveGt=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conj=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">usematmul=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prescaled=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm=&lt;mpi4py.MPI.Intracomm</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/waveeqprocessing/MDC.html#MPIMDC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.waveeqprocessing.MPIMDC" title="Link to this definition">#</a></dt>
 <dd><p>Multi-dimensional convolution.</p>
-<p>Apply multi-dimensional convolution between two datasets. Model and data
-should be provided after flattening 2- or 3-dimensional arrays of size
+<p>Apply multi-dimensional convolution between two datasets in a distributed
+fashion, with <code class="docutils literal notranslate"><span class="pre">G</span></code> distributed over ranks across the frequency axis.
+Model and data are broadcasted and should be provided after flattening
+2- or 3-dimensional arrays of size
 <span class="math notranslate nohighlight">\([n_t \times n_r (\times n_{vs})]\)</span> and
 <span class="math notranslate nohighlight">\([n_t \times n_s (\times n_{vs})]\)</span> (or <span class="math notranslate nohighlight">\(2*n_t-1\)</span> for
 <code class="docutils literal notranslate"><span class="pre">twosided=True</span></code>), respectively.</p>
@@ -503,7 +505,7 @@ should be provided after flattening 2- or 3-dimensional arrays of size
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
 <dt><strong>G</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a></span></dt><dd><p>Multi-dimensional convolution kernel in frequency domain of size
-<span class="math notranslate nohighlight">\([n_{fmax} \times n_s \times n_r]\)</span></p>
+<span class="math notranslate nohighlight">\([n_{f,rank} \times n_s \times n_r]\)</span></p>
 </dd>
 <dt><strong>nt</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a></span></dt><dd><p>Number of samples along time axis for model and data (note that this
 must be equal to <code class="docutils literal notranslate"><span class="pre">2*n_t-1</span></code> when working with <code class="docutils literal notranslate"><span class="pre">twosided=True</span></code>.</p>

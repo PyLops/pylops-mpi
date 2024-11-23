@@ -452,7 +452,7 @@
 
 <span class="sd">    Used to be able to provide operators from different libraries to</span>
 <span class="sd">    MDC. It operates in the same way as public method</span>
-<span class="sd">    (PoststackLinearModelling) but has additional input parameters allowing</span>
+<span class="sd">    (MPIMDC) but has additional input parameters allowing</span>
 <span class="sd">    passing a different operator and additional arguments to be passed to such</span>
 <span class="sd">    operator.</span>
 
@@ -515,8 +515,10 @@
            <span class="n">base_comm</span><span class="p">:</span> <span class="n">MPI</span><span class="o">.</span><span class="n">Comm</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Multi-dimensional convolution.</span>
 
-<span class="sd">    Apply multi-dimensional convolution between two datasets. Model and data</span>
-<span class="sd">    should be provided after flattening 2- or 3-dimensional arrays of size</span>
+<span class="sd">    Apply multi-dimensional convolution between two datasets in a distributed</span>
+<span class="sd">    fashion, with ``G`` distributed over ranks across the frequency axis.</span>
+<span class="sd">    Model and data are broadcasted and should be provided after flattening</span>
+<span class="sd">    2- or 3-dimensional arrays of size</span>
 <span class="sd">    :math:`[n_t \times n_r (\times n_{vs})]` and</span>
 <span class="sd">    :math:`[n_t \times n_s (\times n_{vs})]` (or :math:`2*n_t-1` for</span>
 <span class="sd">    ``twosided=True``), respectively.</span>
@@ -525,7 +527,7 @@
 <span class="sd">    ----------</span>
 <span class="sd">    G : :obj:`numpy.ndarray`</span>
 <span class="sd">        Multi-dimensional convolution kernel in frequency domain of size</span>
-<span class="sd">        :math:`[n_{fmax} \times n_s \times n_r]`</span>
+<span class="sd">        :math:`[n_{f,rank} \times n_s \times n_r]`</span>
 <span class="sd">    nt : :obj:`int`</span>
 <span class="sd">        Number of samples along time axis for model and data (note that this</span>
 <span class="sd">        must be equal to ``2*n_t-1`` when working with ``twosided=True``.</span>
