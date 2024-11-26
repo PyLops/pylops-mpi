@@ -108,8 +108,9 @@ class MPIFredholm1(MPILinearOperator):
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
-        if x.partition is not Partition.BROADCAST:
-            raise ValueError(f"x should have partition={Partition.BROADCAST}, {x.partition} != {Partition.BROADCAST}")
+        if x.partition not in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
+            raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
+                             f"Got  {x.partition} instead...")
         y = DistributedArray(global_shape=self.shape[0], partition=Partition.BROADCAST,
                              engine=x.engine, dtype=self.dtype)
         x = x.local_array.reshape(self.dims).squeeze()
@@ -129,8 +130,9 @@ class MPIFredholm1(MPILinearOperator):
 
     def _rmatvec(self, x: NDArray) -> NDArray:
         ncp = get_module(x.engine)
-        if x.partition is not Partition.BROADCAST:
-            raise ValueError(f"x should have partition={Partition.BROADCAST}, {x.partition} != {Partition.BROADCAST}")
+        if x.partition not in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
+            raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
+                             f"Got  {x.partition} instead...")
         y = DistributedArray(global_shape=self.shape[1], partition=Partition.BROADCAST,
                              engine=x.engine, dtype=self.dtype)
         x = x.local_array.reshape(self.dimsd).squeeze()

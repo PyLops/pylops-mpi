@@ -118,8 +118,9 @@ class MPIVStack(MPILinearOperator):
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
-        if x.partition is not Partition.BROADCAST:
-            raise ValueError(f"x should have partition={Partition.BROADCAST}, {x.partition} != {Partition.BROADCAST}")
+        if x.partition not in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
+            raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
+                             f"Got  {x.partition} instead...")
         y = DistributedArray(global_shape=self.shape[0], local_shapes=self.local_shapes_n,
                              engine=x.engine, dtype=self.dtype)
         y1 = []
