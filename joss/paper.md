@@ -59,7 +59,7 @@ to be performed. Additionally, a suite of MPI-powered linear operators and solve
 PyLops-MPI is designed to tackle large-scale linear inverse problems that are difficult to solve using a single process 
 (due to either extremely high computational cost or memory requirements).
 
-![Software Framework representation of the ``PyLops-MPI`` API.](figs/software_framework.png)
+![Software Framework representation of the ``PyLops-MPI`` API.](figs/soft_framework.png)
 
 Fig. 1 illustrates the main components of the library, emphasizing the relationship between the DistributedArray class, stacked operators, and MPI-powered solvers.
 
