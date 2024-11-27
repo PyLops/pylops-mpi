@@ -61,7 +61,7 @@ PyLops-MPI is designed to tackle large-scale linear inverse problems that are di
 
 ![Software Framework representation of the ``PyLops-MPI`` API.](figs/software_framework.png)
 
-Fig. 1 illustrates the main components of the library, emphasizing the relationship between the DistributedArray class, stacked operators, and MPI-powered solvers. The figure highlights the integration of data partitioning, halo exchange mechanisms, and the facilitation of parallel computation.
+Fig. 1 illustrates the main components of the library, emphasizing the relationship between the DistributedArray class, stacked operators, and MPI-powered solvers.
 
 ## DistributedArray
 
