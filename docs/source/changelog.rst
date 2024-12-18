@@ -3,6 +3,17 @@
 Changelog
 =========
 
+Version 0.2.0
+-------------
+
+*Released on: 16/12/2024*
+
+* Added support for using CuPy arrays with PyLops-MPI.
+* Introduced the :class:`pylops_mpi.signalprocessing.MPIFredholm1` and :class:`pylops_mpi.waveeqprocessing.MPIMDC` operators.
+* Allowed the ``UNSAFE_BROADCAST`` partition to give users an option to handle overflow in broadcast scenarios.
+* Added a dottest function to perform dot tests on PyLops-MPI operators.
+* Created a tutorial for Multi-Dimensional Deconvolution (MDD).
+
 Version 0.1.0
 -------------
 
