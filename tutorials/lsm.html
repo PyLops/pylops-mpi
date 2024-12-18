@@ -20,8 +20,8 @@
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
-  <!-- 
-    this give us a css class that will be invisible only if js is disabled 
+  <!--
+    this give us a css class that will be invisible only if js is disabled
   -->
   <noscript>
     <style>
@@ -31,8 +31,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
@@ -44,10 +44,10 @@
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e45f66c9" />
   
   <!-- So that users can add custom icons -->
-  <script src="../_static/scripts/fontawesome.js?digest=26a4bc78f4c0ddb94549"></script>
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
@@ -180,7 +180,9 @@
 </li>
 
             <li class="nav-item dropdown">
-                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-nav-more-links">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
                     More
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
@@ -398,9 +400,14 @@
   
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
   </div>
-  
-  <div id="rtd-footer-container"></div>
 
 
       </div>
@@ -468,7 +475,7 @@ is the wavelet. Ultimately, while the Green’s functions can be computed in man
 solving this system of equations for the reflectivity model is what we generally
 refer to as Least-squares migration (LSM).</p>
 <p>We can easily set up this problem where sources are distributed across different ranks,
-and each <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.waveeqprocessing.LSM.html#pylops.waveeqprocessing.LSM" title="(in PyLops v2.3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops.waveeqprocessing.LSM</span></code></a> is responsible for performing modelling
+and each <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.waveeqprocessing.LSM.html#pylops.waveeqprocessing.LSM" title="(in PyLops vdev)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops.waveeqprocessing.LSM</span></code></a> is responsible for performing modelling
 with the reflectivity at each rank in the subsurface. In a compact matrix-vector notation,
 this problem can be written as:</p>
 <div class="math notranslate nohighlight">
@@ -567,7 +574,7 @@ across different ranks.</p>
 <li><img src="../_images/sphx_glr_lsm_001.png" srcset="../_images/sphx_glr_lsm_001.png" alt="Velocity" class = "sphx-glr-multi-img"/></li>
 <li><img src="../_images/sphx_glr_lsm_002.png" srcset="../_images/sphx_glr_lsm_002.png" alt="Reflectivity" class = "sphx-glr-multi-img"/></li>
 </ul>
-<p>We create a <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.waveeqprocessing.LSM.html#pylops.waveeqprocessing.LSM" title="(in PyLops v2.3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops.waveeqprocessing.LSM</span></code></a> at each rank and then push them
+<p>We create a <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.waveeqprocessing.LSM.html#pylops.waveeqprocessing.LSM" title="(in PyLops vdev)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops.waveeqprocessing.LSM</span></code></a> at each rank and then push them
 into a <a class="reference internal" href="../api/generated/pylops_mpi.basicoperators.MPIVStack.html#pylops_mpi.basicoperators.MPIVStack" title="pylops_mpi.basicoperators.MPIVStack"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIVStack</span></code></a> to perform a matrix-vector
 product with the broadcasted reflectivity at every location on the subsurface.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Wavelet</span>
@@ -651,7 +658,7 @@ damp = 0.000000e+00     tol = 1.000000e-04      niter = 100
     99       -1.2546e-02         2.8528e+00     2.8528e+00
    100       -1.2389e-02         2.8342e+00     2.8342e+00
 
-Iterations = 100        Total time (s) = 1.30
+Iterations = 100        Total time (s) = 1.18
 -----------------------------------------------------------------
 </pre></div>
 </div>
@@ -698,7 +705,7 @@ Iterations = 100        Total time (s) = 1.30
 <li><img src="../_images/sphx_glr_lsm_004.png" srcset="../_images/sphx_glr_lsm_004.png" alt="$d$, $d_{adj}$, $d_{inv}$" class = "sphx-glr-multi-img"/></li>
 <li><img src="../_images/sphx_glr_lsm_005.png" srcset="../_images/sphx_glr_lsm_005.png" alt="$d$, $d_{adj}$, $d_{inv}$" class = "sphx-glr-multi-img"/></li>
 </ul>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 3.265 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 3.093 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-lsm-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/d5dae76a02f3b395d667034f44fd5555/lsm.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">lsm.ipynb</span></code></a></p>
@@ -759,8 +766,8 @@ Iterations = 100        Total time (s) = 1.30
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549"></script>
-<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -793,7 +800,8 @@ Iterations = 100        Total time (s) = 1.30
       
         <div class="footer-item">
 <p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.0.
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
 </p></div>
       
     </div>

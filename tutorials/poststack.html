@@ -20,8 +20,8 @@
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
-  <!-- 
-    this give us a css class that will be invisible only if js is disabled 
+  <!--
+    this give us a css class that will be invisible only if js is disabled
   -->
   <noscript>
     <style>
@@ -31,8 +31,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
@@ -44,10 +44,10 @@
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e45f66c9" />
   
   <!-- So that users can add custom icons -->
-  <script src="../_static/scripts/fontawesome.js?digest=26a4bc78f4c0ddb94549"></script>
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
@@ -180,7 +180,9 @@
 </li>
 
             <li class="nav-item dropdown">
-                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-nav-more-links">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
                     More
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
@@ -398,9 +400,14 @@
   
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
   </div>
-  
-  <div id="rtd-footer-container"></div>
 
 
       </div>
@@ -457,7 +464,7 @@ to download the full example code.</p>
 of a first part showing how to model a 3D synthetic post-stack seismic data from a 3D model of the
 subsurface acoustic impedance in a distributed manner, following by a second part when inversion
 is carried out.</p>
-<p>This tutorial builds on the <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.avo.poststack.PoststackLinearModelling.html#pylops.avo.poststack.PoststackLinearModelling" title="(in PyLops v2.3.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops.avo.poststack.PoststackLinearModelling</span></code></a>
+<p>This tutorial builds on the <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.avo.poststack.PoststackLinearModelling.html#pylops.avo.poststack.PoststackLinearModelling" title="(in PyLops vdev)"><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops.avo.poststack.PoststackLinearModelling</span></code></a>
 operator to model 1d post-stack seismic traces 1d profiles of the subsurface acoustic impedence
 by means of the following equation</p>
 <div class="math notranslate nohighlight">
@@ -508,7 +515,7 @@ operator.</p>
 </pre></div>
 </div>
 <p>Let’s start by defining all the parameters required by the
-<a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.avo.poststack.PoststackLinearModelling.html#pylops.avo.poststack.PoststackLinearModelling" title="(in PyLops v2.3.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops.avo.poststack.PoststackLinearModelling</span></code></a> operator.</p>
+<a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.avo.poststack.PoststackLinearModelling.html#pylops.avo.poststack.PoststackLinearModelling" title="(in PyLops vdev)"><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops.avo.poststack.PoststackLinearModelling</span></code></a> operator.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Model</span>
 <a href="https://numpy.org/doc/stable/reference/generated/numpy.lib.npyio.NpzFile.html#numpy.lib.npyio.NpzFile" title="numpy.lib.npyio.NpzFile" class="sphx-glr-backref-module-numpy-lib-npyio sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">model</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.load.html#numpy.load" title="numpy.load" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">load</span></a><span class="p">(</span><span class="s2">&quot;../testdata/avo/poststack_model.npz&quot;</span><span class="p">)</span>
 <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">x</span></a><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">z</span></a><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">m</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.lib.npyio.NpzFile.html#numpy.lib.npyio.NpzFile" title="numpy.lib.npyio.NpzFile" class="sphx-glr-backref-module-numpy-lib-npyio sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">model</span></a><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">][::</span><span class="mi">3</span><span class="p">],</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.lib.npyio.NpzFile.html#numpy.lib.npyio.NpzFile" title="numpy.lib.npyio.NpzFile" class="sphx-glr-backref-module-numpy-lib-npyio sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">model</span></a><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">],</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ufunc.html#numpy.ufunc" title="numpy.ufunc" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">np</span><span class="o">.</span><span class="n">log</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.lib.npyio.NpzFile.html#numpy.lib.npyio.NpzFile" title="numpy.lib.npyio.NpzFile" class="sphx-glr-backref-module-numpy-lib-npyio sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">model</span></a><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">])[:,</span> <span class="p">::</span><span class="mi">3</span><span class="p">]</span>
@@ -540,14 +547,14 @@ operator.</p>
 </pre></div>
 </div>
 <p>We now create the linear operator version of
-<a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.avo.poststack.PoststackLinearModelling.html#pylops.avo.poststack.PoststackLinearModelling" title="(in PyLops v2.3.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops.avo.poststack.PoststackLinearModelling</span></code></a> at each rank to model a
+<a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.avo.poststack.PoststackLinearModelling.html#pylops.avo.poststack.PoststackLinearModelling" title="(in PyLops vdev)"><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops.avo.poststack.PoststackLinearModelling</span></code></a> at each rank to model a
 subset of the data along the y-axis. Such operators are passed
 to the <a class="reference internal" href="../api/generated/pylops_mpi.basicoperators.MPIBlockDiag.html#pylops_mpi.basicoperators.MPIBlockDiag" title="pylops_mpi.basicoperators.MPIBlockDiag"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIBlockDiag</span></code></a> operator, which is then used to perform
 the different forward operations of each individual operator
 at different ranks to compute the overall data. Note that to simplify the
 handling of the model and data, we split and distribute the first axis,
-and use <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.Transpose.html#pylops.Transpose" title="(in PyLops v2.3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops.Transpose</span></code></a> to rearrange the model and data
-in the form required by the <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.avo.poststack.PoststackLinearModelling.html#pylops.avo.poststack.PoststackLinearModelling" title="(in PyLops v2.3.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops.avo.poststack.PoststackLinearModelling</span></code></a>
+and use <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.Transpose.html#pylops.Transpose" title="(in PyLops vdev)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops.Transpose</span></code></a> to rearrange the model and data
+in the form required by the <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.avo.poststack.PoststackLinearModelling.html#pylops.avo.poststack.PoststackLinearModelling" title="(in PyLops vdev)"><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops.avo.poststack.PoststackLinearModelling</span></code></a>
 operator.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create flattened model data</span>
 <span class="n">m3d_dist</span> <span class="o">=</span> <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ny</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nx</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nz</span></a><span class="p">)</span>
@@ -653,7 +660,7 @@ damp = 0.000000e+00     tol = 1.000000e-04      niter = 100
     99        6.1544e-01         6.5026e-01     6.5026e-01
    100        6.1561e-01         6.4212e-01     6.4212e-01
 
-Iterations = 100        Total time (s) = 29.20
+Iterations = 100        Total time (s) = 29.52
 -----------------------------------------------------------------
 </pre></div>
 </div>
@@ -703,7 +710,7 @@ tol = 1.000000e-04      niter = 100
     99         6.3033e-01         1.9903e+02
    100         6.3026e-01         1.9777e+02
 
-Iterations = 100        Total time (s) = 44.51
+Iterations = 100        Total time (s) = 43.63
 -------------------------------------------------------
 </pre></div>
 </div>
@@ -797,7 +804,7 @@ Iterations = 100        Total time (s) = 44.51
 Smooth Distr == Local True
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (2 minutes 18.681 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (2 minutes 18.529 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-poststack-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/25d0d43c288bbcf46dfd5c529fe808c5/poststack.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">poststack.ipynb</span></code></a></p>
@@ -858,8 +865,8 @@ Smooth Distr == Local True
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549"></script>
-<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -892,7 +899,8 @@ Smooth Distr == Local True
       
         <div class="footer-item">
 <p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.0.
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
 </p></div>
       
     </div>
