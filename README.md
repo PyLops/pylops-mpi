@@ -5,6 +5,7 @@
 [![Documentation status](https://github.com/PyLops/pylops-mpi/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/PyLops/pylops-mpi/actions/workflows/pages/pages-build-deployment)
 ![OS-support](https://img.shields.io/badge/OS-linux,osx-850A8B.svg)
 [![Slack Status](https://img.shields.io/badge/chat-slack-green.svg)](https://pylops.slack.com)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.07512/status.svg)](https://doi.org/10.21105/joss.07512)
 
 ## PyLops MPI
 pylops-mpi is a Python library built on top of [PyLops](https://pylops.readthedocs.io/en/stable/), designed to enable distributed and parallel processing of 
