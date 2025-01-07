@@ -71,7 +71,7 @@ NumPy [@Harris:2020] or CuPy [@cupy] arrays across multiple processes. It also s
 ## HStack, VStack, BlockDiag Operators
 
 PyLops facilitates the combinations of multiple linear operators via horizontal, vertical, or diagonal stacking. PyLops-MPI provides 
-distributed versions of these operations Examples include `pylops_mpi.MPIBlockDiag`, which applies different operators in parallel on separate portions of the model 
+distributed versions of these operations. Examples include `pylops_mpi.MPIBlockDiag`, which applies different operators in parallel on separate portions of the model 
 and data, `pylops_mpi.MPIVStack`, which applies multiple operators in parallel to the whole model, with its adjoint applies the adjoint of each individual operator to portions of the data vector and sums the individual output, and `pylops_mpi.MPIHStack`, which is the adjoint of MPIVStack.
 
 ## Halo Exchange
