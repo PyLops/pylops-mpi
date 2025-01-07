@@ -33,7 +33,7 @@
   <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/style.css?v=e5b2244c" />
     <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
@@ -437,19 +437,19 @@
                 <article class="bd-article">
                   
   <h1>Source code for pylops_mpi.basicoperators.Gradient</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
-<span class="kn">from</span> <span class="nn">mpi4py</span> <span class="kn">import</span> <span class="n">MPI</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">pylops</span> <span class="kn">import</span> <span class="n">FirstDerivative</span>
-<span class="kn">from</span> <span class="nn">pylops.utils</span> <span class="kn">import</span> <span class="n">InputDimsLike</span><span class="p">,</span> <span class="n">DTypeLike</span>
-<span class="kn">from</span> <span class="nn">pylops.utils._internal</span> <span class="kn">import</span> <span class="n">_value_or_sized_to_tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops</span><span class="w"> </span><span class="kn">import</span> <span class="n">FirstDerivative</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">InputDimsLike</span><span class="p">,</span> <span class="n">DTypeLike</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils._internal</span><span class="w"> </span><span class="kn">import</span> <span class="n">_value_or_sized_to_tuple</span>
 
-<span class="kn">from</span> <span class="nn">pylops_mpi</span> <span class="kn">import</span> <span class="n">MPIStackedLinearOperator</span>
-<span class="kn">from</span> <span class="nn">pylops_mpi.basicoperators.VStack</span> <span class="kn">import</span> <span class="n">MPIStackedVStack</span>
-<span class="kn">from</span> <span class="nn">pylops_mpi.basicoperators.BlockDiag</span> <span class="kn">import</span> <span class="n">MPIBlockDiag</span>
-<span class="kn">from</span> <span class="nn">pylops_mpi.basicoperators.FirstDerivative</span> <span class="kn">import</span> <span class="n">MPIFirstDerivative</span>
-<span class="kn">from</span> <span class="nn">pylops_mpi.DistributedArray</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPIStackedLinearOperator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.basicoperators.VStack</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPIStackedVStack</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.basicoperators.BlockDiag</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPIBlockDiag</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.basicoperators.FirstDerivative</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPIFirstDerivative</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.DistributedArray</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DistributedArray</span><span class="p">,</span>
     <span class="n">StackedDistributedArray</span><span class="p">,</span>
     <span class="n">Partition</span><span class="p">,</span>
@@ -459,7 +459,7 @@
 
 <div class="viewcode-block" id="MPIGradient">
 <a class="viewcode-back" href="../../../api/generated/pylops_mpi.basicoperators.MPIGradient.html#pylops_mpi.basicoperators.MPIGradient">[docs]</a>
-<span class="k">class</span> <span class="nc">MPIGradient</span><span class="p">(</span><span class="n">MPIStackedLinearOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MPIGradient</span><span class="p">(</span><span class="n">MPIStackedLinearOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;MPI Gradient</span>
 
 <span class="sd">    Apply gradient operator to a multi-dimensional distributed</span>
@@ -514,7 +514,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">dims</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">InputDimsLike</span><span class="p">],</span>
                  <span class="n">sampling</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">InputDimsLike</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
                  <span class="n">edge</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -533,13 +533,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">Op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_stack_op</span><span class="p">(</span><span class="n">ndims</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">base_comm</span><span class="o">=</span><span class="n">base_comm</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StackedDistributedArray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StackedDistributedArray</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">_matvec</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">StackedDistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">StackedDistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="o">.</span><span class="n">_rmatvec</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_calc_stack_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ndims</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calc_stack_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ndims</span><span class="p">):</span>
         <span class="n">local_dims</span> <span class="o">=</span> <span class="n">local_split</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dims</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span> <span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">grad_ops</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">Op1</span> <span class="o">=</span> <span class="n">MPIFirstDerivative</span><span class="p">(</span><span class="n">dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span> <span class="n">sampling</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sampling</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
@@ -600,7 +600,7 @@
 
   <p class="copyright">
     
-      © Copyright 2024, PyLops Development Team.
+      © Copyright 2025, PyLops Development Team.
       <br/>
     
   </p>

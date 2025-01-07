@@ -33,7 +33,7 @@
   <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/style.css?v=e5b2244c" />
     <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
@@ -437,26 +437,26 @@
                 <article class="bd-article">
                   
   <h1>Source code for pylops_mpi.basicoperators.FirstDerivative</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Union</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">mpi4py</span> <span class="kn">import</span> <span class="n">MPI</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
 
-<span class="kn">from</span> <span class="nn">pylops.utils.backend</span> <span class="kn">import</span> <span class="n">get_module</span>
-<span class="kn">from</span> <span class="nn">pylops.utils.typing</span> <span class="kn">import</span> <span class="n">DTypeLike</span><span class="p">,</span> <span class="n">InputDimsLike</span>
-<span class="kn">from</span> <span class="nn">pylops.utils._internal</span> <span class="kn">import</span> <span class="n">_value_or_sized_to_tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils.backend</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_module</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">DTypeLike</span><span class="p">,</span> <span class="n">InputDimsLike</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils._internal</span><span class="w"> </span><span class="kn">import</span> <span class="n">_value_or_sized_to_tuple</span>
 
-<span class="kn">from</span> <span class="nn">pylops_mpi</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DistributedArray</span><span class="p">,</span>
     <span class="n">MPILinearOperator</span><span class="p">,</span>
     <span class="n">Partition</span>
 <span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">pylops_mpi.utils.decorators</span> <span class="kn">import</span> <span class="n">reshaped</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.utils.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">reshaped</span>
 
 
 <div class="viewcode-block" id="MPIFirstDerivative">
 <a class="viewcode-back" href="../../../api/generated/pylops_mpi.basicoperators.MPIFirstDerivative.html#pylops_mpi.basicoperators.MPIFirstDerivative">[docs]</a>
-<span class="k">class</span> <span class="nc">MPIFirstDerivative</span><span class="p">(</span><span class="n">MPILinearOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MPIFirstDerivative</span><span class="p">(</span><span class="n">MPILinearOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;MPI First Derivative</span>
 
 <span class="sd">    Apply a first derivative using a multiple-point stencil finite-difference</span>
@@ -522,7 +522,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">dims</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">InputDimsLike</span><span class="p">],</span>
                  <span class="n">sampling</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
                  <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;centered&quot;</span><span class="p">,</span>
@@ -539,7 +539,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="n">order</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_register_multiplications</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_register_multiplications</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_register_multiplications</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
             <span class="n">order</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -567,20 +567,20 @@
                 <span class="s2">&quot;&#39;kind&#39; must be &#39;forward&#39;, &#39;centered&#39;, or &#39;backward&#39;&quot;</span>
             <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="c1"># If Partition.BROADCAST, then convert to Partition.SCATTER</span>
         <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">partition</span> <span class="ow">is</span> <span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="p">:</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="o">.</span><span class="n">to_dist</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hmatvec</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="c1"># If Partition.BROADCAST, then convert to Partition.SCATTER</span>
         <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">partition</span> <span class="ow">is</span> <span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="p">:</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="o">.</span><span class="n">to_dist</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hrmatvec</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
     <span class="nd">@reshaped</span>
-    <span class="k">def</span> <span class="nf">_matvec_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_matvec_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="n">ncp</span> <span class="o">=</span> <span class="n">get_module</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">global_shape</span><span class="p">,</span> <span class="n">local_shapes</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">local_shapes</span><span class="p">,</span>
                              <span class="n">axis</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
@@ -592,7 +592,7 @@
         <span class="k">return</span> <span class="n">y</span>
 
     <span class="nd">@reshaped</span>
-    <span class="k">def</span> <span class="nf">_rmatvec_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rmatvec_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="n">ncp</span> <span class="o">=</span> <span class="n">get_module</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">global_shape</span><span class="p">,</span> <span class="n">local_shapes</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">local_shapes</span><span class="p">,</span>
                              <span class="n">axis</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
@@ -610,7 +610,7 @@
         <span class="k">return</span> <span class="n">y</span>
 
     <span class="nd">@reshaped</span>
-    <span class="k">def</span> <span class="nf">_matvec_backward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_matvec_backward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="n">ncp</span> <span class="o">=</span> <span class="n">get_module</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">global_shape</span><span class="p">,</span> <span class="n">local_shapes</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">local_shapes</span><span class="p">,</span>
                              <span class="n">axis</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
@@ -622,7 +622,7 @@
         <span class="k">return</span> <span class="n">y</span>
 
     <span class="nd">@reshaped</span>
-    <span class="k">def</span> <span class="nf">_rmatvec_backward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rmatvec_backward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="n">ncp</span> <span class="o">=</span> <span class="n">get_module</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">global_shape</span><span class="p">,</span> <span class="n">local_shapes</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">local_shapes</span><span class="p">,</span>
                              <span class="n">axis</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
@@ -640,7 +640,7 @@
         <span class="k">return</span> <span class="n">y</span>
 
     <span class="nd">@reshaped</span>
-    <span class="k">def</span> <span class="nf">_matvec_centered3</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_matvec_centered3</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="n">ncp</span> <span class="o">=</span> <span class="n">get_module</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">global_shape</span><span class="p">,</span> <span class="n">local_shapes</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">local_shapes</span><span class="p">,</span>
                              <span class="n">axis</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
@@ -660,7 +660,7 @@
         <span class="k">return</span> <span class="n">y</span>
 
     <span class="nd">@reshaped</span>
-    <span class="k">def</span> <span class="nf">_rmatvec_centered3</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rmatvec_centered3</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="n">ncp</span> <span class="o">=</span> <span class="n">get_module</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">global_shape</span><span class="p">,</span> <span class="n">local_shapes</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">local_shapes</span><span class="p">,</span>
                              <span class="n">axis</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
@@ -688,7 +688,7 @@
         <span class="k">return</span> <span class="n">y</span>
 
     <span class="nd">@reshaped</span>
-    <span class="k">def</span> <span class="nf">_matvec_centered5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_matvec_centered5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="n">ncp</span> <span class="o">=</span> <span class="n">get_module</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">global_shape</span><span class="p">,</span> <span class="n">local_shapes</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">local_shapes</span><span class="p">,</span>
                              <span class="n">axis</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
@@ -715,7 +715,7 @@
         <span class="k">return</span> <span class="n">y</span>
 
     <span class="nd">@reshaped</span>
-    <span class="k">def</span> <span class="nf">_rmatvec_centered5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rmatvec_centered5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="n">ncp</span> <span class="o">=</span> <span class="n">get_module</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">global_shape</span><span class="p">,</span> <span class="n">local_shapes</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">local_shapes</span><span class="p">,</span>
                              <span class="n">axis</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
@@ -800,7 +800,7 @@
 
   <p class="copyright">
     
-      © Copyright 2024, PyLops Development Team.
+      © Copyright 2025, PyLops Development Team.
       <br/>
     
   </p>

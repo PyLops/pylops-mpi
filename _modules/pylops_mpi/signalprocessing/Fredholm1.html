@@ -33,7 +33,7 @@
   <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/style.css?v=e5b2244c" />
     <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
@@ -437,13 +437,13 @@
                 <article class="bd-article">
                   
   <h1>Source code for pylops_mpi.signalprocessing.Fredholm1</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">mpi4py</span> <span class="kn">import</span> <span class="n">MPI</span>
-<span class="kn">from</span> <span class="nn">pylops.utils.backend</span> <span class="kn">import</span> <span class="n">get_module</span>
-<span class="kn">from</span> <span class="nn">pylops.utils.typing</span> <span class="kn">import</span> <span class="n">DTypeLike</span><span class="p">,</span> <span class="n">NDArray</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils.backend</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_module</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">DTypeLike</span><span class="p">,</span> <span class="n">NDArray</span>
 
-<span class="kn">from</span> <span class="nn">pylops_mpi</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DistributedArray</span><span class="p">,</span>
     <span class="n">MPILinearOperator</span><span class="p">,</span>
     <span class="n">Partition</span>
@@ -452,7 +452,7 @@
 
 <div class="viewcode-block" id="MPIFredholm1">
 <a class="viewcode-back" href="../../../api/generated/pylops_mpi.signalprocessing.MPIFredholm1.html#pylops_mpi.signalprocessing.MPIFredholm1">[docs]</a>
-<span class="k">class</span> <span class="nc">MPIFredholm1</span><span class="p">(</span><span class="n">MPILinearOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MPIFredholm1</span><span class="p">(</span><span class="n">MPILinearOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Fredholm integral of first kind.</span>
 
 <span class="sd">    Implement a multi-dimensional Fredholm integral of first kind distributed</span>
@@ -516,7 +516,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">G</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
         <span class="n">nz</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
@@ -547,7 +547,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">GT</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">usematmul</span> <span class="o">=</span> <span class="n">usematmul</span>
 
-    <span class="k">def</span> <span class="nf">_matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="n">ncp</span> <span class="o">=</span> <span class="n">get_module</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">partition</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="p">,</span> <span class="n">Partition</span><span class="o">.</span><span class="n">UNSAFE_BROADCAST</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;x should have partition=</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">UNSAFE_BROADCAST</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -569,7 +569,7 @@
         <span class="n">y</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="o">.</span><span class="n">allgather</span><span class="p">(</span><span class="n">y1</span><span class="p">))</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">y</span>
 
-    <span class="k">def</span> <span class="nf">_rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
         <span class="n">ncp</span> <span class="o">=</span> <span class="n">get_module</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">partition</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="p">,</span> <span class="n">Partition</span><span class="o">.</span><span class="n">UNSAFE_BROADCAST</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;x should have partition=</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">UNSAFE_BROADCAST</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -644,7 +644,7 @@
 
   <p class="copyright">
     
-      © Copyright 2024, PyLops Development Team.
+      © Copyright 2025, PyLops Development Team.
       <br/>
     
   </p>

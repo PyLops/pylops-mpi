@@ -34,7 +34,7 @@
   <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="_static/style.css?v=e5b2244c" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=d2d258e8" />
@@ -465,11 +465,11 @@ While this varies from operator to operator, you will always need to import the 
 which we use in this library as an alternative to the NumPy arrays. This class allows you to work with distributed arrays that
 are partitioned/broadcasted across different ranks or processes in a parallel computing environment. Additionally, you will
 need to import the <a class="reference internal" href="api/generated/pylops_mpi.MPILinearOperator.html#pylops_mpi.MPILinearOperator" title="pylops_mpi.MPILinearOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.MPILinearOperator</span></code></a> class, which serves as the <strong>parent</strong> class for any of our operators:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pylops_mpi</span> <span class="kn">import</span> <span class="n">DistributedArray</span><span class="p">,</span> <span class="n">MPILinearOperator</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi</span><span class="w"> </span><span class="kn">import</span> <span class="n">DistributedArray</span><span class="p">,</span> <span class="n">MPILinearOperator</span>
 </pre></div>
 </div>
 <p>After that we define our new operator:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MPIBlockDiag</span><span class="p">(</span><span class="n">MPILinearOperator</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MPIBlockDiag</span><span class="p">(</span><span class="n">MPILinearOperator</span><span class="p">):</span>
 </pre></div>
 </div>
 <p>followed by a <a class="reference external" href="https://numpydoc.readthedocs.io/en/latest/format.html">numpydoc docstring</a>
@@ -487,7 +487,7 @@ with an MPI base communicator (<a class="reference external" href="https://mpi4p
 communicating between different processes. In the context of MPIBlockDiag, we calculate the <code class="docutils literal notranslate"><span class="pre">shape</span></code> by performing
 a sum-reduction on the shapes of each operator. If the <code class="docutils literal notranslate"><span class="pre">dtype</span></code> is not provided, it is determined from the operators,
 while the <code class="docutils literal notranslate"><span class="pre">base_comm</span></code> is set to <code class="docutils literal notranslate"><span class="pre">MPI.COMM_WORLD</span></code> if not provided.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ops</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LinearOperator</span><span class="p">],</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ops</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LinearOperator</span><span class="p">],</span>
              <span class="n">base_comm</span><span class="p">:</span> <span class="n">MPI</span><span class="o">.</span><span class="n">Comm</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">,</span>
              <span class="n">dtype</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DTypeLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">ops</span> <span class="o">=</span> <span class="n">ops</span>
@@ -512,7 +512,7 @@ Such method is always composed of two inputs (the object itself <code class="doc
 Here, both the input model <code class="docutils literal notranslate"><span class="pre">x</span></code> and input data <code class="docutils literal notranslate"><span class="pre">y</span></code> are instances of <a class="reference internal" href="api/generated/pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>.
 In the case of MPIBlockDiag, each set of operators performs a matrix-vector product in forward mode,
 and the final result is collected in a DistributedArray.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">local_shapes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">local_shapes_n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
     <span class="n">y1</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">iop</span><span class="p">,</span> <span class="n">oper</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">):</span>
@@ -531,7 +531,7 @@ Such method is also composed of two inputs (the object itself <code class="docut
 Similar to <code class="docutils literal notranslate"><span class="pre">_matvec</span></code>, both the input model <code class="docutils literal notranslate"><span class="pre">x</span></code> and input data <code class="docutils literal notranslate"><span class="pre">y</span></code> are instances of <a class="reference internal" href="api/generated/pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>.
 In the case of MPIBlockDiag, each set of operators performs a matrix-vector product in adjoint mode,
 and the final result is collected in a DistributedArray.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">local_shapes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">local_shapes_m</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
     <span class="n">y1</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">iop</span><span class="p">,</span> <span class="n">oper</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">):</span>
@@ -556,7 +556,7 @@ that the tests need to be run with MPI processes, with a <code class="docutils l
 test.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">mpi</span><span class="p">(</span><span class="n">min_size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">parametrize</span><span class="p">(</span><span class="s2">&quot;par&quot;</span><span class="p">,</span> <span class="p">[(</span><span class="n">par1</span><span class="p">),</span> <span class="p">(</span><span class="n">par2</span><span class="p">)])</span>
-<span class="k">def</span> <span class="nf">test_blockdiag</span><span class="p">(</span><span class="n">par</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_blockdiag</span><span class="p">(</span><span class="n">par</span><span class="p">):</span>
 </pre></div>
 </div>
 <p>After this, you can write your test for the operator inside this method. We recommend using the <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.testing.assert_allclose.html#numpy.testing.assert_allclose" title="(in NumPy v2.2)"><code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.testing.assert_allclose</span></code></a>
@@ -673,7 +673,7 @@ create a small toy example where the operator is applied in forward mode.</p></l
 
   <p class="copyright">
     
-      © Copyright 2024, PyLops Development Team.
+      © Copyright 2025, PyLops Development Team.
       <br/>
     
   </p>

@@ -34,7 +34,7 @@
   <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../_static/style.css?v=e5b2244c" />
     <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
@@ -495,17 +495,17 @@ this problem can be written as:</p>
 is the data, and <span class="math notranslate nohighlight">\(m\)</span> is the broadcasted reflectivity at every location on the subsurface.</p>
 <p>In this tutorial, we will use the <a class="reference internal" href="../api/generated/pylops_mpi.basicoperators.MPIVStack.html#pylops_mpi.basicoperators.MPIVStack" title="pylops_mpi.basicoperators.MPIVStack"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIVStack</span></code></a> to perform
 vertical stacking of LSMs and solve our problem.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">warnings</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <a href="https://docs.python.org/3/library/warnings.html#warnings.filterwarnings" title="warnings.filterwarnings" class="sphx-glr-backref-module-warnings sphx-glr-backref-type-py-function"><span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span></a><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
-<span class="kn">from</span> <span class="nn">mpi4py</span> <span class="kn">import</span> <span class="n">MPI</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
 
-<span class="kn">from</span> <span class="nn">pylops.utils.wavelets</span> <span class="kn">import</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.utils.wavelets.ricker.html#pylops.utils.wavelets.ricker" title="pylops.utils.wavelets.ricker" class="sphx-glr-backref-module-pylops-utils-wavelets sphx-glr-backref-type-py-function"><span class="n">ricker</span></a>
-<span class="kn">from</span> <span class="nn">pylops.waveeqprocessing.lsm</span> <span class="kn">import</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.waveeqprocessing.LSM.html#pylops.waveeqprocessing.LSM" title="pylops.waveeqprocessing.LSM" class="sphx-glr-backref-module-pylops-waveeqprocessing sphx-glr-backref-type-py-class"><span class="n">LSM</span></a>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils.wavelets</span><span class="w"> </span><span class="kn">import</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.utils.wavelets.ricker.html#pylops.utils.wavelets.ricker" title="pylops.utils.wavelets.ricker" class="sphx-glr-backref-module-pylops-utils-wavelets sphx-glr-backref-type-py-function"><span class="n">ricker</span></a>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops.waveeqprocessing.lsm</span><span class="w"> </span><span class="kn">import</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.waveeqprocessing.LSM.html#pylops.waveeqprocessing.LSM" title="pylops.waveeqprocessing.LSM" class="sphx-glr-backref-module-pylops-waveeqprocessing sphx-glr-backref-type-py-class"><span class="n">LSM</span></a>
 
-<span class="kn">import</span> <span class="nn">pylops_mpi</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pylops_mpi</span>
 
 <a href="https://numpy.org/doc/stable/reference/random/generated/numpy.random.seed.html#numpy.random.seed" title="numpy.random.seed" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span></a><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
 <a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.close.html#matplotlib.pyplot.close" title="matplotlib.pyplot.close" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">close</span></a><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
@@ -658,7 +658,7 @@ damp = 0.000000e+00     tol = 1.000000e-04      niter = 100
     99       -1.2546e-02         2.8528e+00     2.8528e+00
    100       -1.2389e-02         2.8342e+00     2.8342e+00
 
-Iterations = 100        Total time (s) = 1.18
+Iterations = 100        Total time (s) = 1.27
 -----------------------------------------------------------------
 </pre></div>
 </div>
@@ -705,7 +705,7 @@ Iterations = 100        Total time (s) = 1.18
 <li><img src="../_images/sphx_glr_lsm_004.png" srcset="../_images/sphx_glr_lsm_004.png" alt="$d$, $d_{adj}$, $d_{inv}$" class = "sphx-glr-multi-img"/></li>
 <li><img src="../_images/sphx_glr_lsm_005.png" srcset="../_images/sphx_glr_lsm_005.png" alt="$d$, $d_{adj}$, $d_{inv}$" class = "sphx-glr-multi-img"/></li>
 </ul>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 3.093 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 3.297 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-lsm-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/d5dae76a02f3b395d667034f44fd5555/lsm.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">lsm.ipynb</span></code></a></p>
@@ -778,7 +778,7 @@ Iterations = 100        Total time (s) = 1.18
 
   <p class="copyright">
     
-      © Copyright 2024, PyLops Development Team.
+      © Copyright 2025, PyLops Development Team.
       <br/>
     
   </p>

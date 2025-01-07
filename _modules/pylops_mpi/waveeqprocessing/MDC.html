@@ -33,7 +33,7 @@
   <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/style.css?v=e5b2244c" />
     <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
@@ -437,18 +437,18 @@
                 <article class="bd-article">
                   
   <h1>Source code for pylops_mpi.waveeqprocessing.MDC</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">mpi4py</span> <span class="kn">import</span> <span class="n">MPI</span>
-<span class="kn">from</span> <span class="nn">pylops</span> <span class="kn">import</span> <span class="n">Identity</span>
-<span class="kn">from</span> <span class="nn">pylops.signalprocessing</span> <span class="kn">import</span> <span class="n">FFT</span><span class="p">,</span> <span class="n">Fredholm1</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops</span><span class="w"> </span><span class="kn">import</span> <span class="n">Identity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops.signalprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">FFT</span><span class="p">,</span> <span class="n">Fredholm1</span>
 
-<span class="kn">from</span> <span class="nn">pylops_mpi</span> <span class="kn">import</span> <span class="n">MPILinearOperator</span>
-<span class="kn">from</span> <span class="nn">pylops_mpi.signalprocessing.Fredholm1</span> <span class="kn">import</span> <span class="n">MPIFredholm1</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPILinearOperator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.signalprocessing.Fredholm1</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPIFredholm1</span>
 
 
-<span class="k">def</span> <span class="nf">_MDC</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nt</span><span class="p">,</span> <span class="n">nv</span><span class="p">,</span> <span class="n">nfmax</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">dr</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">twosided</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_MDC</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nt</span><span class="p">,</span> <span class="n">nv</span><span class="p">,</span> <span class="n">nfmax</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">dr</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">twosided</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
          <span class="n">saveGt</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">conj</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">prescaled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
          <span class="n">base_comm</span><span class="o">=</span><span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">,</span>
          <span class="n">_Identity</span><span class="o">=</span><span class="n">Identity</span><span class="p">,</span> <span class="n">_FFT</span><span class="o">=</span><span class="n">FFT</span><span class="p">,</span>
@@ -515,7 +515,7 @@
 
 <div class="viewcode-block" id="MPIMDC">
 <a class="viewcode-back" href="../../../api/generated/pylops_mpi.waveeqprocessing.MPIMDC.html#pylops_mpi.waveeqprocessing.MPIMDC">[docs]</a>
-<span class="k">def</span> <span class="nf">MPIMDC</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nt</span><span class="p">,</span> <span class="n">nv</span><span class="p">,</span> <span class="n">nfreq</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">dr</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">twosided</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">MPIMDC</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nt</span><span class="p">,</span> <span class="n">nv</span><span class="p">,</span> <span class="n">nfreq</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">dr</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">twosided</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
            <span class="n">fftengine</span><span class="o">=</span><span class="s1">&#39;numpy&#39;</span><span class="p">,</span>
            <span class="n">saveGt</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">conj</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
            <span class="n">usematmul</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">prescaled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -661,7 +661,7 @@
 
   <p class="copyright">
     
-      © Copyright 2024, PyLops Development Team.
+      © Copyright 2025, PyLops Development Team.
       <br/>
     
   </p>

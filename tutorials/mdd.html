@@ -34,7 +34,7 @@
   <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../_static/style.css?v=e5b2244c" />
     <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
@@ -466,17 +466,17 @@ the frequency slices of the kernel of the MDC operator across multiple processes
 entire model and data sit on all processes, within the MDC operator, and more precisely when the
 <code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.signalprocessing.Fredholm1</span></code> is called, different groups of frequencies are
 processed by the different ranks.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">scipy.signal</span> <span class="kn">import</span> <span class="n">filtfilt</span>
-<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
-<span class="kn">from</span> <span class="nn">mpi4py</span> <span class="kn">import</span> <span class="n">MPI</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.signal</span><span class="w"> </span><span class="kn">import</span> <span class="n">filtfilt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
 
-<span class="kn">from</span> <span class="nn">pylops.utils.seismicevents</span> <span class="kn">import</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.utils.seismicevents.hyperbolic2d.html#pylops.utils.seismicevents.hyperbolic2d" title="pylops.utils.seismicevents.hyperbolic2d" class="sphx-glr-backref-module-pylops-utils-seismicevents sphx-glr-backref-type-py-function"><span class="n">hyperbolic2d</span></a><span class="p">,</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.utils.seismicevents.makeaxis.html#pylops.utils.seismicevents.makeaxis" title="pylops.utils.seismicevents.makeaxis" class="sphx-glr-backref-module-pylops-utils-seismicevents sphx-glr-backref-type-py-function"><span class="n">makeaxis</span></a>
-<span class="kn">from</span> <span class="nn">pylops.utils.tapers</span> <span class="kn">import</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.utils.tapers.taper3d.html#pylops.utils.tapers.taper3d" title="pylops.utils.tapers.taper3d" class="sphx-glr-backref-module-pylops-utils-tapers sphx-glr-backref-type-py-function"><span class="n">taper3d</span></a>
-<span class="kn">from</span> <span class="nn">pylops.utils.wavelets</span> <span class="kn">import</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.utils.wavelets.ricker.html#pylops.utils.wavelets.ricker" title="pylops.utils.wavelets.ricker" class="sphx-glr-backref-module-pylops-utils-wavelets sphx-glr-backref-type-py-function"><span class="n">ricker</span></a>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils.seismicevents</span><span class="w"> </span><span class="kn">import</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.utils.seismicevents.hyperbolic2d.html#pylops.utils.seismicevents.hyperbolic2d" title="pylops.utils.seismicevents.hyperbolic2d" class="sphx-glr-backref-module-pylops-utils-seismicevents sphx-glr-backref-type-py-function"><span class="n">hyperbolic2d</span></a><span class="p">,</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.utils.seismicevents.makeaxis.html#pylops.utils.seismicevents.makeaxis" title="pylops.utils.seismicevents.makeaxis" class="sphx-glr-backref-module-pylops-utils-seismicevents sphx-glr-backref-type-py-function"><span class="n">makeaxis</span></a>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils.tapers</span><span class="w"> </span><span class="kn">import</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.utils.tapers.taper3d.html#pylops.utils.tapers.taper3d" title="pylops.utils.tapers.taper3d" class="sphx-glr-backref-module-pylops-utils-tapers sphx-glr-backref-type-py-function"><span class="n">taper3d</span></a>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils.wavelets</span><span class="w"> </span><span class="kn">import</span> <a href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.utils.wavelets.ricker.html#pylops.utils.wavelets.ricker" title="pylops.utils.wavelets.ricker" class="sphx-glr-backref-module-pylops-utils-wavelets sphx-glr-backref-type-py-function"><span class="n">ricker</span></a>
 
-<span class="kn">import</span> <span class="nn">pylops_mpi</span>
-<span class="kn">from</span> <span class="nn">pylops_mpi.DistributedArray</span> <span class="kn">import</span> <span class="n">local_split</span><span class="p">,</span> <span class="n">Partition</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pylops_mpi</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.DistributedArray</span><span class="w"> </span><span class="kn">import</span> <span class="n">local_split</span><span class="p">,</span> <span class="n">Partition</span>
 
 <a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.close.html#matplotlib.pyplot.close" title="matplotlib.pyplot.close" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">close</span></a><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
 <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rank</span></a> <span class="o">=</span> <a href="https://mpi4py.readthedocs.io/en/stable/reference/mpi4py.MPI.Comm.html#mpi4py.MPI.Comm.Get_rank" title="mpi4py.MPI.Comm.Get_rank" class="sphx-glr-backref-module-mpi4py-MPI sphx-glr-backref-type-py-method"><span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="o">.</span><span class="n">Get_rank</span></a><span class="p">()</span>
@@ -718,11 +718,11 @@ damp = 0.000000e+00     tol = 1.000000e-04      niter = 50
     49       0.00e+00+0.00e+00j    3.7578e-01     3.7578e-01
     50       0.00e+00+0.00e+00j    3.6788e-01     3.6788e-01
 
-Iterations = 50        Total time (s) = 1.03
+Iterations = 50        Total time (s) = 1.17
 -----------------------------------------------------------------
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 1.882 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 2.052 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-mdd-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/08957b6282c8e5ab465f2f63e869b6d8/mdd.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">mdd.ipynb</span></code></a></p>
@@ -795,7 +795,7 @@ Iterations = 50        Total time (s) = 1.03
 
   <p class="copyright">
     
-      © Copyright 2024, PyLops Development Team.
+      © Copyright 2025, PyLops Development Team.
       <br/>
     
   </p>
