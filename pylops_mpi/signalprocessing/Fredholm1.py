@@ -111,7 +111,7 @@ class MPIFredholm1(MPILinearOperator):
         if x.partition not in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
             raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
                              f"Got  {x.partition} instead...")
-        y = DistributedArray(global_shape=self.shape[0], partition=Partition.BROADCAST,
+        y = DistributedArray(global_shape=self.shape[0], partition=x.partition,
                              engine=x.engine, dtype=self.dtype)
         x = x.local_array.reshape(self.dims).squeeze()
         x = x[self.islstart[self.rank]:self.islend[self.rank]]
@@ -133,7 +133,7 @@ class MPIFredholm1(MPILinearOperator):
         if x.partition not in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
             raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
                              f"Got  {x.partition} instead...")
-        y = DistributedArray(global_shape=self.shape[1], partition=Partition.BROADCAST,
+        y = DistributedArray(global_shape=self.shape[1], partition=x.partition,
                              engine=x.engine, dtype=self.dtype)
         x = x.local_array.reshape(self.dimsd).squeeze()
         x = x[self.islstart[self.rank]:self.islend[self.rank]]
