@@ -404,24 +404,20 @@ class DistributedArray:
                 self.local_array, pad_size, mode="constant", constant_values=0
             )
 
+            # NCCL recommends to use one MPI Process per GPU
             ndev = MPI.COMM_WORLD.Get_size()
             recv_buf = cp.zeros(ndev * send_buf.size, dtype=send_buf.dtype)
             self._allgather(send_buf, recv_buf)
 
             chunk_size = cp.prod(cp.asarray(send_shape))
             chunks = [
-                recv_buf[i * chunk_size : (i + 1) * chunk_size] for i in range(ndev)
+                recv_buf[i * chunk_size:(i + 1) * chunk_size] for i in range(ndev)
             ]
 
-            local_size = list(map(cp.prod, cp.asarray(self.local_shapes)))
-
-            final_array = cp.concatenate(
-                [
-                    chunks[i][: local_size[i]].reshape(self.local_shapes[i])
-                    for i in range(ndev)
-                ],
-                axis=self.axis,
-            )
+            for i in range(ndev):
+                slicing = tuple(slice(0, end) for end in self.local_shapes[i])
+                chunks[i] = chunks[i].reshape(send_shape)[slicing]
+            final_array = cp.concatenate([chunks[i] for i in range(ndev)], axis=self.axis)
             return final_array
 
         else:
