@@ -59,7 +59,7 @@ class SUMMAMatrixMult(MPILinearOperator):
         self.base_comm.Barrier()
         my_C_rows    = ncp.hstack(self._group_comm.allgather(C_local))
         
-        mask         = [i % self._P_prime for i in range(self.base_comm.Get_size())]
+        mask         = [i % self._P_prime for i in range(self.size)]
         row_lens     = self.base_comm.allgather(self.A.shape[0])
         tot_row_lens = np.add.reduce(row_lens, 0)
         y    = DistributedArray(global_shape=(tot_row_lens, self.N),
