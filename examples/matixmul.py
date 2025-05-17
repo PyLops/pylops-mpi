@@ -17,9 +17,9 @@ C       = int(math.ceil(nProcs / P_prime))
 assert P_prime * C >= nProcs
 
 # matrix dims
-M = 4    # any M
+M = 5    # any M
 K = 4    # any K
-N = 4    # any N
+N = 5    # any N
 
 blk_rows = int(math.ceil(M / P_prime))
 blk_cols = int(math.ceil(N / P_prime))
@@ -65,9 +65,11 @@ else:
 
 comm.Barrier()
 
-MMop_MPI =  SUMMAMatrixMult(A_p, N)
-
-x = DistributedArray(global_shape=K * blk_cols * nProcs,
+MMop_MPI   = SUMMAMatrixMult(A_p, N)
+col_lens   = comm.allgather(my_own_cols)
+total_cols = np.add.reduce(col_lens, 0)
+x = DistributedArray(global_shape=K * total_cols,
+                     local_shapes=[K * col_len for col_len in col_lens],
                      partition=Partition.SCATTER,
                      mask=[i % P_prime for i in range(comm.Get_size())],
                      dtype=np.float32)
