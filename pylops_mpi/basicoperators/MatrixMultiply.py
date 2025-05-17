@@ -31,10 +31,14 @@ class SUMMAMatrixMult(MPILinearOperator):
         self._layer_comm = base_comm.Split(color=self._my_layer, key=self._my_group)
         self._group_comm = base_comm.Split(color=self._my_group, key=self._my_layer)
         K_global = A.shape[1]
-        if N % self._P_prime != 0:
-            raise ValueError(f"N should be divisible by sqrt(Processes)")
-        blk_cols = int(math.ceil(N / self._P_prime))
-        self.dims = (nProcs, K_global, blk_cols)
+
+        blk_cols = int(math.ceil(self.N / self._P_prime))
+        col_start = self._my_group * blk_cols
+        col_end = min(self.N, col_start + blk_cols)
+        my_own_cols = col_end - col_start
+        total_cols = base_comm.allreduce(my_own_cols, op=MPI.SUM)
+        self.dims = (K_global, total_cols)
+
         super().__init__(shape=(1, int(np.prod(self.dims))), dtype=np.dtype(dtype), base_comm=base_comm)
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
@@ -45,7 +49,7 @@ class SUMMAMatrixMult(MPILinearOperator):
         col_start    = self._my_group * blk_cols
         col_end      = min(self.N, col_start + blk_cols)
         my_own_cols  = col_end - col_start
-        x = x.local_array.reshape((self.dims[1], my_own_cols))
+        x = x.local_array.reshape((self.dims[0], my_own_cols))
         C_local = None
         for t in range(self._P_prime):
             responsible_layer = t % self._C
@@ -54,11 +58,12 @@ class SUMMAMatrixMult(MPILinearOperator):
                 if t == self._my_layer: C_local = ncp.matmul(self.A, B_block)
         self.base_comm.Barrier()
         my_C_rows    = ncp.hstack(self._group_comm.allgather(C_local))
-
-        M_global = self._layer_comm.allreduce(self.A.shape[0], op=MPI.SUM)
-        blk_rows = int(math.ceil(M_global / self._P_prime))
-        mask = [i % self._P_prime for i in range(self.base_comm.Get_size())]
-        y    = DistributedArray(global_shape=(self.size, blk_rows , self.N),
+        
+        mask         = [i % self._P_prime for i in range(self.base_comm.Get_size())]
+        row_lens     = self.base_comm.allgather(self.A.shape[0])
+        tot_row_lens = np.add.reduce(row_lens, 0)
+        y    = DistributedArray(global_shape=(tot_row_lens, self.N),
+                                local_shapes=[(r, self.N) for r in row_lens],
                                 mask = mask,
                                 partition=Partition.SCATTER)
         y[:] = my_C_rows
