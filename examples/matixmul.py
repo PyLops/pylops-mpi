@@ -1,3 +1,4 @@
+import sys
 import math
 import numpy as np
 from mpi4py import MPI
@@ -17,9 +18,9 @@ C       = int(math.ceil(nProcs / P_prime))
 assert P_prime * C >= nProcs
 
 # matrix dims
-M = 5    # any M
-K = 4    # any K
-N = 5    # any N
+M = 37    # any M
+K = 37    # any K
+N = 37    # any N
 
 blk_rows = int(math.ceil(M / P_prime))
 blk_cols = int(math.ceil(N / P_prime))
@@ -65,7 +66,7 @@ else:
 
 comm.Barrier()
 
-MMop_MPI   = SUMMAMatrixMult(A_p, N)
+Aop        = SUMMAMatrixMult(A_p, N)
 col_lens   = comm.allgather(my_own_cols)
 total_cols = np.add.reduce(col_lens, 0)
 x = DistributedArray(global_shape=K * total_cols,
@@ -74,13 +75,31 @@ x = DistributedArray(global_shape=K * total_cols,
                      mask=[i % P_prime for i in range(comm.Get_size())],
                      dtype=np.float32)
 x[:] = B_p.flatten()
-y = MMop_MPI  @ x
+y = Aop @ x
 
 # ======================= VERIFICATION =================-=============
-C_true = (np.arange(M*K).reshape(M, K).astype(np.float32)
-            @ np.arange(K*N).reshape(K, N).astype(np.float32))
-expect = C_true[row_start:row_end, :]
-if not np.allclose(y.local_array, expect, atol=1e-6):
-    print(f"RANK {rank}: VERIFICATION FAILED")
+A      = np.arange(M*K).reshape(M, K).astype(np.float32)
+B      = np.arange(K*N).reshape(K, N).astype(np.float32)
+C_true = A @ B
+Z_true = (A.T.dot(C_true.conj())).conj()
+
+
+col_start   = my_layer * blk_cols   # note: same my_group index on cols
+col_end     = min(N, col_start + blk_cols)
+my_own_cols = col_end - col_start
+expected_y = C_true[:,col_start:col_end].flatten()
+
+if not np.allclose(y.local_array, expected_y, atol=1e-6):
+    print(f"RANK {rank}: FORWARD VERIFICATION FAILED")
+    print(f'{rank} local: {y.local_array}, expected: {C_true[:,col_start:col_end]}')
 else:
-    print(f"RANK {rank}: VERIFICATION PASSED")
+    print(f"RANK {rank}: FORWARD VERIFICATION PASSED")
+
+
+z = Aop.H @ y
+expected_z = Z_true[:,col_start:col_end].flatten()
+if not np.allclose(z.local_array, expected_z, atol=1e-6):
+    print(f"RANK {rank}: ADJOINT VERIFICATION FAILED")
+    print(f'{rank} local: {y.local_array}, expected: {C_true[:,col_start:col_end]}')
+else:
+    print(f"RANK {rank}: ADJOINT VERIFICATION PASSED")
