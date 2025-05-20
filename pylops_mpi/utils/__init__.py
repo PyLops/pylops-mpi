@@ -1,2 +1,6 @@
 # isort: skip_file
-from .dottest import *
+
+# currently dottest create circular dependency with DistributedArray.py
+# from .dottest import * 
+from .deps import *
+from .backend import *

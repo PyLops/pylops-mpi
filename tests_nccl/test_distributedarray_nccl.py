@@ -12,42 +12,16 @@ from numpy.testing import assert_allclose
 
 from pylops_mpi import DistributedArray, Partition
 from pylops_mpi.DistributedArray import local_split
+from pylops_mpi.utils.backend import initialize_nccl_comm, get_cupy
 
-import cupy as cp
-import cupy.cuda.nccl as nccl
-import os
+cp = get_cupy()
+
+pytestmark = pytest.mark.skipif(cp is None, reason="CuPy not available")
 
 np.random.seed(42)
 
-comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-size = comm.Get_size()
-host = MPI.Get_processor_name()
-
-
-# Use MPI to set-up NCCL Communication
-def initialize_nccl_comm():
-    local_rank = int(
-        os.environ.get("SLURM_LOCALID")
-        or os.environ.get("OMPI_COMM_WORLD_LOCAL_RANK")
-        or rank % cp.cuda.runtime.getDeviceCount()
-    )
-    device_id = local_rank
-    cp.cuda.Device(device_id).use()
-
-    if rank == 0:
-        nccl_id = nccl.get_unique_id()
-    else:
-        nccl_id = None
-    nccl_id = comm.bcast(nccl_id, root=0)
-
-    nccl_comm = nccl.NcclCommunicator(size, nccl_id, rank)
-    return nccl_comm
-
-
 nccl_comm = initialize_nccl_comm()
 
-# NCCL Does not support complex type
 par1 = {
     "global_shape": (500, 501),
     "partition": Partition.SCATTER,

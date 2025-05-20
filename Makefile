@@ -2,7 +2,7 @@ PIP := $(shell command -v pip3 2> /dev/null || command which pip 2> /dev/null)
 PYTHON := $(shell command -v python3 2> /dev/null || command which python 2> /dev/null)
 NUM_PROCESSES = 3
 
-.PHONY: install dev-install install_conda dev-install_conda tests doc docupdate run_examples run_tutorials
+.PHONY: install dev-install install_conda dev-install_conda tests tests_nccl doc docupdate run_examples run_tutorials
 
 pipcheck:
 ifndef PIP
@@ -35,6 +35,10 @@ lint:
 
 tests:
 	mpiexec -n $(NUM_PROCESSES) pytest tests/ --with-mpi
+
+# assuming NUM_PRCESS <= number of gpus available
+tests_nccl:	
+	mpiexec -n $(NUM_PROCESSES) pytest tests_nccl/ --with-mpi
 
 doc:
 	cd docs  && rm -rf source/api/generated && rm -rf source/gallery &&\
