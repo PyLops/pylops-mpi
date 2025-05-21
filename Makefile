@@ -30,6 +30,9 @@ install_conda:
 dev-install_conda:
 	conda env create -f environment-dev.yml && conda activate pylops_mpi && pip install -e .
 
+dev-install_conda_nccl:
+	conda env create -f environment-dev.yml && conda activate pylops_mpi && conda install -c conda-forge cupy cudnn cutensor nccl && pip install -e .
+
 lint:
 	flake8 pylops_mpi/ tests/ examples/ tutorials/
 

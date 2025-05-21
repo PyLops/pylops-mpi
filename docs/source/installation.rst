@@ -34,6 +34,7 @@ After installing MPI, verify its installation by opening a terminal and running 
 
    >> mpiexec --version
 
+
 Fork PyLops-MPI
 ===============
 Fork the `PyLops-MPI repository <https://github.com/PyLops/pylops-mpi>`_ and clone it by executing the following in your terminal:
@@ -100,6 +101,14 @@ If you prefer a ``pip`` installation, we provide the following command
 Note that, differently from the  ``conda`` command, the above **will not** create a virtual environment.
 Make sure you create and activate your environment previously.
 
+Enable Nvidia Collective Communication Library (NCCL)
+=======================================================
+For the highly-optimized performance on GPU clusters, PyLops-MPI also supports the Nvidia's collective communication calls (NCCL).
+
+.. code-block:: bash
+
+   >> make dev-install_conda_nccl
+
 Run tests
 =========
 To ensure that everything has been setup correctly, run tests:
@@ -109,6 +118,11 @@ To ensure that everything has been setup correctly, run tests:
    >> make tests
 
 Make sure no tests fail, this guarantees that the installation has been successful.
+
+If PyLops-MPI is installed with NCCL, also run tests:
+.. code-block:: bash
+
+   >> make tests_nccl
 
 Run examples and tutorials
 ==========================
