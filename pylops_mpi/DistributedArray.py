@@ -2,14 +2,12 @@ from enum import Enum
 from numbers import Integral
 from typing import List, Optional, Tuple, Union
 
-import cupy as cp
-import cupy.cuda.nccl as nccl
 import numpy as np
 from mpi4py import MPI
 from pylops.utils import DTypeLike, NDArray
 from pylops.utils._internal import _value_or_sized_to_tuple
 from pylops.utils.backend import get_array_module, get_module, get_module_name
-from pylops_mpi.utils.backend import cupy_to_nccl_dtype, mpi_op_to_nccl
+from pylops_mpi.utils.backend import nccl_split, nccl_allgather, nccl_allreduce, nccl_bcast, nccl_asarray
 
 
 class Partition(Enum):
@@ -62,7 +60,7 @@ def local_split(global_shape: Tuple, base_comm: MPI.Comm,
     return tuple(local_shape)
 
 
-def subcomm_split(mask, base_comm: MPI.Comm):
+def subcomm_split(mask, base_comm: MPI.Comm = MPI.COMM_WORLD):
     """Create new communicators based on mask
     This method creates new NCCL communicators based on ``mask``.
     Contrary to MPI, NCCL does not provide support for splitting of a communicator in multiple subcommunicators;
@@ -82,20 +80,12 @@ def subcomm_split(mask, base_comm: MPI.Comm):
     -------
         Union[mpi4py.MPI.Comm, cupy.cuda.nccl.NcclCommunicator]]: a subcommunicator according to mask
     """
-    comm = MPI.COMM_WORLD
-    rank = comm.Get_rank()
-    sub_comm = comm.Split(color=mask[rank], key=rank)
-    if isinstance(base_comm, nccl.NcclCommunicator):
-        sub_rank = sub_comm.Get_rank()
-        sub_size = sub_comm.Get_size()
-
-        if sub_rank == 0:
-            nccl_id_bytes = nccl.get_unique_id()
-        else:
-            nccl_id_bytes = None
-        nccl_id_bytes = sub_comm.bcast(nccl_id_bytes, root=0)
-        sub_comm = nccl.NcclCommunicator(sub_size, nccl_id_bytes, sub_rank)
-
+    if isinstance(base_comm, MPI.Comm):
+        comm = MPI.COMM_WORLD
+        rank = comm.Get_rank()
+        sub_comm = comm.Split(color=mask[rank], key=rank)
+    else:
+        sub_comm = nccl_split(mask)
     return sub_comm
 
 
@@ -138,8 +128,9 @@ class DistributedArray:
         Type of elements in input array. Defaults to ``numpy.float64``.
     """
 
+    # TODO: Type Annotation for base_comm without NCCL import
     def __init__(self, global_shape: Union[Tuple, Integral],
-                 base_comm: Optional[Union[MPI.Comm, nccl.NcclCommunicator]] = MPI.COMM_WORLD,
+                 base_comm=MPI.COMM_WORLD,
                  partition: Partition = Partition.SCATTER, axis: int = 0,
                  local_shapes: Optional[List[Union[Tuple, Integral]]] = None,
                  mask: Optional[List[Integral]] = None,
@@ -153,7 +144,7 @@ class DistributedArray:
         if partition not in Partition:
             raise ValueError(f"Should be either {Partition.BROADCAST}, "
                              f"{Partition.UNSAFE_BROADCAST} or {Partition.SCATTER}")
-        if isinstance(base_comm, nccl.NcclCommunicator) and engine != "cupy":
+        if not isinstance(base_comm, MPI.Comm) and engine != "cupy":
             raise ValueError("NCCL Communicator only works with engine `cupy`")
 
         self.dtype = dtype
@@ -199,16 +190,7 @@ class DistributedArray:
             if isinstance(self.base_comm, MPI.Comm):
                 self.local_array[index] = self.base_comm.bcast(value)
             else:
-                # NCCL
-                if self.rank == 0:
-                    self.local_array[index] = value
-                self.base_comm.bcast(
-                    self.local_array[index].data.ptr,
-                    self.local_array[index].size,
-                    cupy_to_nccl_dtype[str(self.local_array[index].dtype)],
-                    0,
-                    cp.cuda.Stream.null.ptr,
-                )
+                nccl_bcast(self.base_comm, self.local_array, index, value)
         else:
             self.local_array[index] = value
 
@@ -375,34 +357,7 @@ class DistributedArray:
             final_array = self._allgather(self.local_array)
             return np.concatenate(final_array, axis=self.axis)
         else:
-            sizes_each_dim = list(zip(*self.local_shapes))
-            # NCCL allGather requires the send_buf to have the same
-            # size for every device
-            send_shape = tuple(map(max, sizes_each_dim))
-            pad_size = [
-                (0, send_shape[i] - self.local_array.shape[i])
-                for i in range(len(send_shape))
-            ]
-
-            send_buf = cp.pad(
-                self.local_array, pad_size, mode="constant", constant_values=0
-            )
-
-            # NCCL recommends to use one MPI Process per GPU
-            ndev = MPI.COMM_WORLD.Get_size()
-            recv_buf = cp.zeros(ndev * send_buf.size, dtype=send_buf.dtype)
-            self._allgather(send_buf, recv_buf)
-
-            chunk_size = cp.prod(cp.asarray(send_shape))
-            chunks = [
-                recv_buf[i * chunk_size:(i + 1) * chunk_size] for i in range(ndev)
-            ]
-
-            for i in range(ndev):
-                slicing = tuple(slice(0, end) for end in self.local_shapes[i])
-                chunks[i] = chunks[i].reshape(send_shape)[slicing]
-            final_array = cp.concatenate([chunks[i] for i in range(ndev)], axis=self.axis)
-            return final_array
+            return nccl_asarray(self.base_comm, self.local_array, self.local_shapes, self.axis)
 
     @classmethod
     def to_dist(cls, x: NDArray,
@@ -497,22 +452,7 @@ class DistributedArray:
             self.base_comm.Allreduce(send_buf, recv_buf, op)
             return recv_buf
         else:
-            # NCCL
-            send_buf = (
-                send_buf if isinstance(send_buf, cp.ndarray) else cp.asarray(send_buf)
-            )
-            if recv_buf is None:
-                recv_buf = cp.zeros(send_buf.size, dtype=send_buf.dtype)
-
-            self.base_comm.allReduce(
-                send_buf.data.ptr,
-                recv_buf.data.ptr,
-                send_buf.size,
-                cupy_to_nccl_dtype[str(send_buf.dtype)],
-                mpi_op_to_nccl(op),
-                cp.cuda.Stream.null.ptr,
-            )
-            return recv_buf
+            return nccl_allreduce(self.base_comm, send_buf, recv_buf, op)
 
     def _allreduce_subcomm(self, send_buf, recv_buf=None, op: MPI.Op = MPI.SUM):
 
@@ -527,21 +467,7 @@ class DistributedArray:
             return recv_buf
 
         else:
-            send_buf = (
-                send_buf if isinstance(send_buf, cp.ndarray) else cp.asarray(send_buf)
-            )
-            if recv_buf is None:
-                recv_buf = cp.zeros(send_buf.size, dtype=send_buf.dtype)
-
-            self.sub_comm.allReduce(
-                send_buf.data.ptr,
-                recv_buf.data.ptr,
-                send_buf.size,
-                cupy_to_nccl_dtype[str(send_buf.dtype)],
-                mpi_op_to_nccl(op),
-                cp.cuda.Stream.null.ptr,
-            )
-            return recv_buf
+            return nccl_allreduce(self.sub_comm, send_buf, recv_buf, op)
 
     def _allgather(self, send_buf, recv_buf=None):
         """Allgather operation
@@ -552,24 +478,7 @@ class DistributedArray:
             self.base_comm.Allgather(send_buf, recv_buf)
             return recv_buf
         else:
-            # NCCL
-            # Wrap primitive type to cupy array
-            send_buf = (
-                send_buf if isinstance(send_buf, cp.ndarray) else cp.asarray(send_buf)
-            )
-            if recv_buf is None:
-                recv_buf = cp.zeros(
-                    MPI.COMM_WORLD.Get_size() * send_buf.size,
-                    dtype=send_buf.dtype,
-                )
-            self.base_comm.allGather(
-                send_buf.data.ptr,
-                recv_buf.data.ptr,
-                send_buf.size,
-                cupy_to_nccl_dtype[str(send_buf.dtype)],
-                cp.cuda.Stream.null.ptr,
-            )
-            return recv_buf
+            return nccl_allgather(self.base_comm, send_buf, recv_buf)
 
     def __neg__(self):
         arr = DistributedArray(global_shape=self.global_shape,
