@@ -498,16 +498,19 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="pylops_mpi.MPIStackedLinearOperator">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylops_mpi.</span></span><span class="sig-name descname"><span class="pre">MPIStackedLinearOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm=&lt;mpi4py.MPI.Intracomm</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/StackedLinearOperator.html#MPIStackedLinearOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.MPIStackedLinearOperator" title="Link to this definition">#</a></dt>
-<dd><p>Common interface for performing matrix-vector products in distributed fashion
-for StackedLinearOperators.</p>
-<p>This class provides methods to perform matrix-vector product and adjoint matrix-vector
-products on a stack of <a class="reference internal" href="pylops_mpi.MPILinearOperator.html#pylops_mpi.MPILinearOperator" title="pylops_mpi.MPILinearOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.MPILinearOperator</span></code></a> objects.</p>
+<dd><p>Stack of MPI-enabled PyLops Linear Operators</p>
+<p>Common interface for performing matrix-vector products in distributed fashion
+for a stack of <a class="reference internal" href="pylops_mpi.MPILinearOperator.html#pylops_mpi.MPILinearOperator" title="pylops_mpi.MPILinearOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.MPILinearOperator</span></code></a> operators.</p>
+<p>In practice, this class provides methods to perform matrix-vector and adjoint
+matrix-vector products on a stack of <a class="reference internal" href="pylops_mpi.MPILinearOperator.html#pylops_mpi.MPILinearOperator" title="pylops_mpi.MPILinearOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.MPILinearOperator</span></code></a>
+operators, allowing the actual execution of each operator to be distributed,
+whilst dispatching the execution of the different operators in sequential order.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>End users of pylops-mpi should not use this class directly but simply
-use operators that are already implemented. This class is meant for
-developers only, it has to be used as the parent class of any new operator
-developed within pylops-mpi.</p>
+use operators that are already implemented as extensions of this class.
+This class is meant for developers only, it has to be used as the parent
+class of any new stacked operator developed within pylops-mpi.</p>
 </div>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

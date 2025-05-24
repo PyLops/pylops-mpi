@@ -498,20 +498,23 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="pylops_mpi.MPILinearOperator">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylops_mpi.</span></span><span class="sig-name descname"><span class="pre">MPILinearOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Op=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm=&lt;mpi4py.MPI.Intracomm</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/LinearOperator.html#MPILinearOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.MPILinearOperator" title="Link to this definition">#</a></dt>
-<dd><p>Common interface for performing matrix-vector products in distributed fashion.</p>
-<p>This class provides methods to perform matrix-vector product and adjoint matrix-vector
-products using MPI.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>End users of pylops-mpi should not use this class directly but simply
-use operators that are already implemented. This class is meant for
-developers only, it has to be used as the parent class of any new operator
-developed within pylops-mpi.</p>
-</div>
+<dd><p>MPI-enabled PyLops Linear Operator</p>
+<p>Common interface for performing matrix-vector products in distributed fashion.</p>
+<p>In practice, this class provides methods to perform matrix-vector and
+adjoint matrix-vector products between any <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.LinearOperator.html#pylops.LinearOperator" title="(in PyLops vdev)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops.LinearOperator</span></code></a>
+(which must be the same across ranks) and a <a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>
+with <code class="docutils literal notranslate"><span class="pre">Partition.BROADCAST</span></code> and <code class="docutils literal notranslate"><span class="pre">Partition.UNSAFE_BROADCAST</span></code> partition. It
+internally handles the extraction of the local array from the distributed array
+and the creation of the output <a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>.</p>
+<p>Note that whilst this operator could also be used with different
+<a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.LinearOperator.html#pylops.LinearOperator" title="(in PyLops vdev)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops.LinearOperator</span></code></a> across ranks, and with a
+<a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a> with <code class="docutils literal notranslate"><span class="pre">Partition.SCATTER</span></code>, it is however
+reccomended to use the <a class="reference internal" href="pylops_mpi.basicoperators.MPIBlockDiag.html#pylops_mpi.basicoperators.MPIBlockDiag" title="pylops_mpi.basicoperators.MPIBlockDiag"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIBlockDiag</span></code></a> operator
+instead as this can also handle distributed arrays with subcommunicators.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
-<dt><strong>Op</strong><span class="classifier"><a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.LinearOperator.html#pylops.LinearOperator" title="(in PyLops vdev)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops.LinearOperator</span></code></a>, optional</span></dt><dd><p>Linear Operator. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<dt><strong>Op</strong><span class="classifier"><a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.LinearOperator.html#pylops.LinearOperator" title="(in PyLops vdev)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops.LinearOperator</span></code></a>, optional</span></dt><dd><p>PyLops Linear Operator to wrap. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 </dd>
 <dt><strong>shape</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple(int,</span> <span class="pre">int)</span></code>, optional</span></dt><dd><p>Shape of the MPI Linear Operator. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 </dd>

@@ -453,20 +453,27 @@
 <div class="viewcode-block" id="MPILinearOperator">
 <a class="viewcode-back" href="../../api/generated/pylops_mpi.MPILinearOperator.html#pylops_mpi.MPILinearOperator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MPILinearOperator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Common interface for performing matrix-vector products in distributed fashion.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;MPI-enabled PyLops Linear Operator</span>
 
-<span class="sd">    This class provides methods to perform matrix-vector product and adjoint matrix-vector</span>
-<span class="sd">    products using MPI.</span>
+<span class="sd">    Common interface for performing matrix-vector products in distributed fashion.</span>
 
-<span class="sd">    .. note:: End users of pylops-mpi should not use this class directly but simply</span>
-<span class="sd">      use operators that are already implemented. This class is meant for</span>
-<span class="sd">      developers only, it has to be used as the parent class of any new operator</span>
-<span class="sd">      developed within pylops-mpi.</span>
+<span class="sd">    In practice, this class provides methods to perform matrix-vector and</span>
+<span class="sd">    adjoint matrix-vector products between any :obj:`pylops.LinearOperator`</span>
+<span class="sd">    (which must be the same across ranks) and a :class:`pylops_mpi.DistributedArray`</span>
+<span class="sd">    with ``Partition.BROADCAST`` and ``Partition.UNSAFE_BROADCAST`` partition. It</span>
+<span class="sd">    internally handles the extraction of the local array from the distributed array</span>
+<span class="sd">    and the creation of the output :class:`pylops_mpi.DistributedArray`.</span>
+
+<span class="sd">    Note that whilst this operator could also be used with different</span>
+<span class="sd">    :obj:`pylops.LinearOperator` across ranks, and with a</span>
+<span class="sd">    :class:`pylops_mpi.DistributedArray` with ``Partition.SCATTER``, it is however</span>
+<span class="sd">    reccomended to use the :class:`pylops_mpi.basicoperators.MPIBlockDiag` operator</span>
+<span class="sd">    instead as this can also handle distributed arrays with subcommunicators.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    Op : :obj:`pylops.LinearOperator`, optional</span>
-<span class="sd">        Linear Operator. Defaults to ``None``.</span>
+<span class="sd">        PyLops Linear Operator to wrap. Defaults to ``None``.</span>
 <span class="sd">    shape : :obj:`tuple(int, int)`, optional</span>
 <span class="sd">        Shape of the MPI Linear Operator. Defaults to ``None``.</span>
 <span class="sd">    dtype : :obj:`str`, optional</span>

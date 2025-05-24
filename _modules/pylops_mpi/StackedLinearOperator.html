@@ -452,16 +452,20 @@
 <div class="viewcode-block" id="MPIStackedLinearOperator">
 <a class="viewcode-back" href="../../api/generated/pylops_mpi.MPIStackedLinearOperator.html#pylops_mpi.MPIStackedLinearOperator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MPIStackedLinearOperator</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Common interface for performing matrix-vector products in distributed fashion</span>
-<span class="sd">    for StackedLinearOperators.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Stack of MPI-enabled PyLops Linear Operators</span>
 
-<span class="sd">    This class provides methods to perform matrix-vector product and adjoint matrix-vector</span>
-<span class="sd">    products on a stack of :class:`pylops_mpi.MPILinearOperator` objects.</span>
+<span class="sd">    Common interface for performing matrix-vector products in distributed fashion</span>
+<span class="sd">    for a stack of :class:`pylops_mpi.MPILinearOperator` operators.</span>
+
+<span class="sd">    In practice, this class provides methods to perform matrix-vector and adjoint</span>
+<span class="sd">    matrix-vector products on a stack of :class:`pylops_mpi.MPILinearOperator`</span>
+<span class="sd">    operators, allowing the actual execution of each operator to be distributed,</span>
+<span class="sd">    whilst dispatching the execution of the different operators in sequential order.</span>
 
 <span class="sd">    .. note:: End users of pylops-mpi should not use this class directly but simply</span>
-<span class="sd">      use operators that are already implemented. This class is meant for</span>
-<span class="sd">      developers only, it has to be used as the parent class of any new operator</span>
-<span class="sd">      developed within pylops-mpi.</span>
+<span class="sd">      use operators that are already implemented as extensions of this class.</span>
+<span class="sd">      This class is meant for developers only, it has to be used as the parent</span>
+<span class="sd">      class of any new stacked operator developed within pylops-mpi.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
