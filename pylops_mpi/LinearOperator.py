@@ -31,8 +31,8 @@ class MPILinearOperator:
 
     Parameters
     ----------
-    Op : :obj:`pylops.LinearOperator`
-        PyLops Linear Operator to wrap.
+    Op : :obj:`pylops.LinearOperator`, optional
+        PyLops Linear Operator to wrap. Defaults to ``None``.
     shape : :obj:`tuple(int, int)`, optional
         Shape of the MPI Linear Operator. Defaults to ``None``.
     dtype : :obj:`str`, optional
@@ -42,7 +42,7 @@ class MPILinearOperator:
 
     """
 
-    def __init__(self, Op: LinearOperator, shape: Optional[ShapeLike] = None,
+    def __init__(self, Op: Optional[LinearOperator] = None, shape: Optional[ShapeLike] = None,
                  dtype: Optional[DTypeLike] = None, base_comm: MPI.Comm = MPI.COMM_WORLD):
         if Op:
             self.Op = Op
