@@ -100,6 +100,16 @@ If you prefer a ``pip`` installation, we provide the following command
 Note that, differently from the  ``conda`` command, the above **will not** create a virtual environment.
 Make sure you create and activate your environment previously.
 
+Enable Nvidia Collective Communication Library (NCCL)
+=======================================================
+To obtain highly-optimized performance on GPU clusters, PyLops-MPI also supports the Nvidia's collective communication calls (NCCL).
+`NCCL <https://developer.nvidia.com/nccl>
+
+.. code-block:: bash
+
+   >> make dev-install_conda_nc
+
+
 Run tests
 =========
 To ensure that everything has been setup correctly, run tests:
@@ -109,6 +119,12 @@ To ensure that everything has been setup correctly, run tests:
    >> make tests
 
 Make sure no tests fail, this guarantees that the installation has been successful.
+
+If PyLops-MPI is installed with NCCL, also run tests:
+
+.. code-block:: bash
+
+   >> make tests_nccl
 
 Run examples and tutorials
 ==========================
