@@ -11,16 +11,20 @@ from pylops_mpi.DistributedArray import DistributedArray, StackedDistributedArra
 
 
 class MPIStackedLinearOperator(ABC):
-    """Common interface for performing matrix-vector products in distributed fashion
-    for StackedLinearOperators.
+    """Stack of MPI-enabled PyLops Linear Operators
 
-    This class provides methods to perform matrix-vector product and adjoint matrix-vector
-    products on a stack of :class:`pylops_mpi.MPILinearOperator` objects.
+    Common interface for performing matrix-vector products in distributed fashion
+    for a stack of :class:`pylops_mpi.MPILinearOperator` operators.
+
+    In practice, this class provides methods to perform matrix-vector and adjoint
+    matrix-vector products on a stack of :class:`pylops_mpi.MPILinearOperator`
+    operators, allowing the actual execution of each operator to be distributed,
+    whilst dispatching the execution of the different operators in sequential order.
 
     .. note:: End users of pylops-mpi should not use this class directly but simply
-      use operators that are already implemented. This class is meant for
-      developers only, it has to be used as the parent class of any new operator
-      developed within pylops-mpi.
+      use operators that are already implemented as extensions of this class.
+      This class is meant for developers only, it has to be used as the parent
+      class of any new stacked operator developed within pylops-mpi.
 
     Parameters
     ----------
