@@ -1,13 +1,22 @@
 from enum import Enum
 from numbers import Integral
-from typing import List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
 import numpy as np
 from mpi4py import MPI
-from pylops.utils import DTypeLike, NDArray
+from pylops.utils import DTypeLike, NDArray, deps
 from pylops.utils._internal import _value_or_sized_to_tuple
 from pylops.utils.backend import get_array_module, get_module, get_module_name
-from pylops_mpi.utils.backend import nccl_split, nccl_allgather, nccl_allreduce, nccl_bcast, nccl_asarray
+from pylops_mpi.utils import deps as pylops_mpi_deps
+
+cupy_message = deps.cupy_import("the DistributedArray module")
+nccl_message = pylops_mpi_deps.nccl_import("the DistributedArray module")
+
+if nccl_message is None and cupy_message is None:
+    from pylops_mpi.utils._nccl import nccl_allgather, nccl_allreduce, nccl_asarray, nccl_bcast, nccl_split
+    from cupy.cuda.nccl import NcclCommunicator
+else:
+    NcclCommunicator = Any
 
 
 class Partition(Enum):
@@ -62,9 +71,10 @@ def local_split(global_shape: Tuple, base_comm: MPI.Comm,
 
 def subcomm_split(mask, base_comm: MPI.Comm = MPI.COMM_WORLD):
     """Create new communicators based on mask
+
     This method creates new NCCL communicators based on ``mask``.
-    Contrary to MPI, NCCL does not provide support for splitting of a communicator in multiple subcommunicators;
-    this is therefore handled explicitly by this method.
+    Contrary to MPI, NCCL does not provide support for splitting of a communicator 
+    in multiple subcommunicators; this is therefore handled explicitly by this method.
 
     Parameters
     ----------
@@ -78,7 +88,8 @@ def subcomm_split(mask, base_comm: MPI.Comm = MPI.COMM_WORLD):
 
     Returns:
     -------
-        Union[mpi4py.MPI.Comm, cupy.cuda.nccl.NcclCommunicator]]: a subcommunicator according to mask
+    sub_comm : :obj:`mpi4py.MPI.Comm` or :obj:`cupy.cuda.nccl.NcclCommunicator`
+        Subcommunicator according to mask
     """
     if isinstance(base_comm, MPI.Comm):
         comm = MPI.COMM_WORLD
@@ -128,9 +139,8 @@ class DistributedArray:
         Type of elements in input array. Defaults to ``numpy.float64``.
     """
 
-    # TODO: Type Annotation for base_comm without NCCL import
     def __init__(self, global_shape: Union[Tuple, Integral],
-                 base_comm=MPI.COMM_WORLD,
+                 base_comm: Optional[Union[MPI.Comm, NcclCommunicator]] = MPI.COMM_WORLD,
                  partition: Partition = Partition.SCATTER, axis: int = 0,
                  local_shapes: Optional[List[Union[Tuple, Integral]]] = None,
                  mask: Optional[List[Integral]] = None,
@@ -320,11 +330,11 @@ class DistributedArray:
         if self.base_comm is MPI.COMM_WORLD:
             return self._allgather(self.local_shape)
         else:
-            # NCCL allgather returns the 1-Dimensional array
-            # of shapes from every rank
-            tuple_len = len(self.local_shape)
+            # gather tuple of shapes from every rank and copy from GPU to CPU
             all_tuples = self._allgather(self.local_shape).get()
+            # NCCL returns the flat array that packs every tuple as 1-dimensional array
             # unpack each tuple from each rank
+            tuple_len = len(self.local_shape)
             return [tuple(all_tuples[i : i + tuple_len]) for i in range(0, len(all_tuples), tuple_len)]
 
     @property
@@ -455,7 +465,6 @@ class DistributedArray:
             return nccl_allreduce(self.base_comm, send_buf, recv_buf, op)
 
     def _allreduce_subcomm(self, send_buf, recv_buf=None, op: MPI.Op = MPI.SUM):
-
         """Allreduce operation with subcommunicator
         """
 

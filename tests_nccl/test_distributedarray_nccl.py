@@ -6,17 +6,14 @@ This file employs the same test sets as test_distributedarray under NCCL environ
 """
 
 import numpy as np
+import cupy as cp
 from mpi4py import MPI
 import pytest
 from numpy.testing import assert_allclose
 
 from pylops_mpi import DistributedArray, Partition
 from pylops_mpi.DistributedArray import local_split
-from pylops_mpi.utils.backend import initialize_nccl_comm, get_cupy
-
-cp = get_cupy()
-
-pytestmark = pytest.mark.skipif(cp is None, reason="CuPy not available")
+from pylops_mpi.utils._nccl import initialize_nccl_comm
 
 np.random.seed(42)
 
@@ -325,7 +322,6 @@ def test_distributed_maskeddot_nccl(par1, par2):
         pass
     subsize = max(1, MPI.COMM_WORLD.Get_size() // nsub)
     mask = np.repeat(np.arange(nsub), subsize)
-    print("subsize, mask", subsize, mask)
     # Replicate x1 and x2 as required in masked arrays
     x1, x2 = par1["x"], par2["x"]
     if par1["axis"] != 0:
