@@ -1,22 +1,25 @@
 from enum import Enum
 from numbers import Integral
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union, NewType
 
 import numpy as np
 from mpi4py import MPI
-from pylops.utils import DTypeLike, NDArray, deps
+from pylops.utils import DTypeLike, NDArray
+from pylops.utils import deps as pylops_deps  # avoid namespace crashes with pylops_mpi.utils
 from pylops.utils._internal import _value_or_sized_to_tuple
 from pylops.utils.backend import get_array_module, get_module, get_module_name
-from pylops_mpi.utils import deps as pylops_mpi_deps
+from pylops_mpi.utils import deps
 
-cupy_message = deps.cupy_import("the DistributedArray module")
-nccl_message = pylops_mpi_deps.nccl_import("the DistributedArray module")
+cupy_message = pylops_deps.cupy_import("the DistributedArray module")
+nccl_message = deps.nccl_import("the DistributedArray module")
 
 if nccl_message is None and cupy_message is None:
     from pylops_mpi.utils._nccl import nccl_allgather, nccl_allreduce, nccl_asarray, nccl_bcast, nccl_split
     from cupy.cuda.nccl import NcclCommunicator
 else:
     NcclCommunicator = Any
+
+NcclCommunicatorType = NewType("NcclCommunicator", NcclCommunicator)
 
 
 class Partition(Enum):
@@ -57,24 +60,20 @@ def local_split(global_shape: Tuple, base_comm: MPI.Comm,
     """
     if partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
         local_shape = global_shape
-    # Split the array
     else:
-        # TODO: Both NCCL and MPI have to use MPI.COMM_WORLD for shape splitting
-        # So it was decided to make it explicit. This will make base_comm unused.
+        # Split the array
         local_shape = list(global_shape)
-        if MPI.COMM_WORLD.Get_rank() < (global_shape[axis] % MPI.COMM_WORLD.Get_size()):
-            local_shape[axis] = global_shape[axis] // MPI.COMM_WORLD.Get_size() + 1
+        if base_comm.Get_rank() < (global_shape[axis] % base_comm.Get_size()):
+            local_shape[axis] = global_shape[axis] // base_comm.Get_size() + 1
         else:
-            local_shape[axis] = global_shape[axis] // MPI.COMM_WORLD.Get_size()
+            local_shape[axis] = global_shape[axis] // base_comm.Get_size()
     return tuple(local_shape)
 
 
-def subcomm_split(mask, base_comm: MPI.Comm = MPI.COMM_WORLD):
+def subcomm_split(mask, comm: Optional[Union[MPI.Comm, NcclCommunicatorType]] = MPI.COMM_WORLD):
     """Create new communicators based on mask
 
-    This method creates new NCCL communicators based on ``mask``.
-    Contrary to MPI, NCCL does not provide support for splitting of a communicator 
-    in multiple subcommunicators; this is therefore handled explicitly by this method.
+    This method creates new communicators based on ``mask``.
 
     Parameters
     ----------
@@ -82,7 +81,7 @@ def subcomm_split(mask, base_comm: MPI.Comm = MPI.COMM_WORLD):
         Mask defining subsets of ranks to consider when performing 'global'
         operations on the distributed array such as dot product or norm.
 
-    base_comm : :obj:`mpi4py.MPI.Comm`, optional
+    comm : :obj:`mpi4py.MPI.Comm` or `cupy.cuda.nccl.NcclCommunicator`, optional
         A Communicator over which array is distributed
         Defaults to ``mpi4py.MPI.COMM_WORLD``.
 
@@ -91,12 +90,12 @@ def subcomm_split(mask, base_comm: MPI.Comm = MPI.COMM_WORLD):
     sub_comm : :obj:`mpi4py.MPI.Comm` or :obj:`cupy.cuda.nccl.NcclCommunicator`
         Subcommunicator according to mask
     """
-    if isinstance(base_comm, MPI.Comm):
-        comm = MPI.COMM_WORLD
+    # NcclCommunicatorType cannot be used with isinstance() so check the negate of MPI.Comm
+    if deps.nccl_enabled and not isinstance(comm, MPI.Comm):
+        sub_comm = nccl_split(mask)
+    else:
         rank = comm.Get_rank()
         sub_comm = comm.Split(color=mask[rank], key=rank)
-    else:
-        sub_comm = nccl_split(mask)
     return sub_comm
 
 
@@ -124,6 +123,8 @@ class DistributedArray:
     base_comm : :obj:`mpi4py.MPI.Comm`, optional
         MPI Communicator over which array is distributed.
         Defaults to ``mpi4py.MPI.COMM_WORLD``.
+    base_comm_nccl : :obj:`cupy.cuda.nccl.NcclCommunicator`, optional
+        NCCL Communicator over which array is distributed.
     partition : :obj:`Partition`, optional
         Broadcast, UnsafeBroadcast, or Scatter the array. Defaults to ``Partition.SCATTER``.
     axis : :obj:`int`, optional
@@ -140,7 +141,8 @@ class DistributedArray:
     """
 
     def __init__(self, global_shape: Union[Tuple, Integral],
-                 base_comm: Optional[Union[MPI.Comm, NcclCommunicator]] = MPI.COMM_WORLD,
+                 base_comm: Optional[MPI.Comm] = MPI.COMM_WORLD,
+                 base_comm_nccl: Optional[NcclCommunicatorType] = None,
                  partition: Partition = Partition.SCATTER, axis: int = 0,
                  local_shapes: Optional[List[Union[Tuple, Integral]]] = None,
                  mask: Optional[List[Integral]] = None,
@@ -154,16 +156,17 @@ class DistributedArray:
         if partition not in Partition:
             raise ValueError(f"Should be either {Partition.BROADCAST}, "
                              f"{Partition.UNSAFE_BROADCAST} or {Partition.SCATTER}")
-        if not isinstance(base_comm, MPI.Comm) and engine != "cupy":
+        if base_comm_nccl and engine != "cupy":
             raise ValueError("NCCL Communicator only works with engine `cupy`")
 
         self.dtype = dtype
         self._global_shape = _value_or_sized_to_tuple(global_shape)
         self._base_comm = base_comm
+        self._base_comm_nccl = base_comm_nccl
         self._partition = partition
         self._axis = axis
         self._mask = mask
-        self._sub_comm = base_comm if mask is None else subcomm_split(mask, base_comm)
+        self._sub_comm = (base_comm if base_comm_nccl is None else base_comm_nccl) if mask is None else subcomm_split(mask, (base_comm if base_comm_nccl is None else base_comm_nccl))
         local_shapes = local_shapes if local_shapes is None else [_value_or_sized_to_tuple(local_shape) for local_shape in local_shapes]
         self._check_local_shapes(local_shapes)
         self._local_shape = local_shapes[self.rank] if local_shapes else local_split(global_shape, base_comm,
@@ -195,12 +198,11 @@ class DistributedArray:
             Represents the value that will be assigned to the local array at
             the specified index positions.
         """
-
         if self.partition is Partition.BROADCAST:
-            if isinstance(self.base_comm, MPI.Comm):
-                self.local_array[index] = self.base_comm.bcast(value)
+            if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
+                nccl_bcast(self.base_comm_nccl, self.local_array, index, value)
             else:
-                nccl_bcast(self.base_comm, self.local_array, index, value)
+                self.local_array[index] = self.base_comm.bcast(value)
         else:
             self.local_array[index] = value
 
@@ -223,6 +225,16 @@ class DistributedArray:
         base_comm : :obj:`MPI.Comm`
         """
         return self._base_comm
+
+    @property
+    def base_comm_nccl(self):
+        """Base NCCL Communicator
+
+        Returns
+        -------
+        base_comm : :obj:`cupy.cuda.nccl.NcclCommunicator`
+        """
+        return self._base_comm_nccl
 
     @property
     def local_shape(self):
@@ -327,15 +339,15 @@ class DistributedArray:
         -------
         local_shapes : :obj:`list`
         """
-        if self.base_comm is MPI.COMM_WORLD:
-            return self._allgather(self.local_shape)
-        else:
+        if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
             # gather tuple of shapes from every rank and copy from GPU to CPU
             all_tuples = self._allgather(self.local_shape).get()
             # NCCL returns the flat array that packs every tuple as 1-dimensional array
             # unpack each tuple from each rank
             tuple_len = len(self.local_shape)
             return [tuple(all_tuples[i : i + tuple_len]) for i in range(0, len(all_tuples), tuple_len)]
+        else:
+            return self._allgather(self.local_shape)
 
     @property
     def sub_comm(self):
@@ -343,7 +355,7 @@ class DistributedArray:
 
         Returns
         -------
-        sub_comm : :obj:`MPI.Comm`
+        sub_comm : :obj:`MPI.Comm` or `cupy.cuda.nccl.NcclCommunicator`
         """
         return self._sub_comm
 
@@ -362,16 +374,17 @@ class DistributedArray:
             # Get only self.local_array.
             return self.local_array
 
-        if isinstance(self.base_comm, MPI.Comm):
+        if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
+            return nccl_asarray(self.base_comm_nccl, self.local_array, self.local_shapes, self.axis)
+        else:
             # Gather all the local arrays and apply concatenation.
             final_array = self._allgather(self.local_array)
             return np.concatenate(final_array, axis=self.axis)
-        else:
-            return nccl_asarray(self.base_comm, self.local_array, self.local_shapes, self.axis)
 
     @classmethod
     def to_dist(cls, x: NDArray,
                 base_comm: MPI.Comm = MPI.COMM_WORLD,
+                base_comm_nccl: NcclCommunicatorType = None,
                 partition: Partition = Partition.SCATTER,
                 axis: int = 0,
                 local_shapes: Optional[List[Tuple]] = None,
@@ -383,7 +396,9 @@ class DistributedArray:
         x : :obj:`numpy.ndarray`
             Global array.
         base_comm : :obj:`MPI.Comm`, optional
-            Type of elements in input array. Defaults to ``MPI.COMM_WORLD``
+            MPI base communicator
+        base_comm_nccl : :obj:`cupy.cuda.nccl.NcclCommunicator`, optional
+            NCCL base communicator
         partition : :obj:`Partition`, optional
             Distributes the array, Defaults to ``Partition.Scatter``.
         axis : :obj:`int`, optional
@@ -401,6 +416,7 @@ class DistributedArray:
         """
         dist_array = DistributedArray(global_shape=x.shape,
                                       base_comm=base_comm,
+                                      base_comm_nccl=base_comm_nccl,
                                       partition=partition,
                                       axis=axis,
                                       local_shapes=local_shapes,
@@ -455,39 +471,37 @@ class DistributedArray:
     def _allreduce(self, send_buf, recv_buf=None, op: MPI.Op = MPI.SUM):
         """Allreduce operation
         """
-        if isinstance(self.base_comm, MPI.Comm):
+        if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
+            return nccl_allreduce(self.base_comm_nccl, send_buf, recv_buf, op)
+        else:
             if recv_buf is None:
                 return self.base_comm.allreduce(send_buf, op)
             # For MIN and MAX which require recv_buf
             self.base_comm.Allreduce(send_buf, recv_buf, op)
             return recv_buf
-        else:
-            return nccl_allreduce(self.base_comm, send_buf, recv_buf, op)
 
     def _allreduce_subcomm(self, send_buf, recv_buf=None, op: MPI.Op = MPI.SUM):
         """Allreduce operation with subcommunicator
         """
-
-        if isinstance(self.base_comm, MPI.Comm):
+        if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
+            return nccl_allreduce(self.sub_comm, send_buf, recv_buf, op)
+        else:
             if recv_buf is None:
                 return self.sub_comm.allreduce(send_buf, op)
             # For MIN and MAX which require recv_buf
             self.sub_comm.Allreduce(send_buf, recv_buf, op)
             return recv_buf
 
-        else:
-            return nccl_allreduce(self.sub_comm, send_buf, recv_buf, op)
-
     def _allgather(self, send_buf, recv_buf=None):
         """Allgather operation
         """
-        if isinstance(self.base_comm, MPI.Comm):
+        if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
+            return nccl_allgather(self.base_comm_nccl, send_buf, recv_buf)
+        else:
             if recv_buf is None:
                 return self.base_comm.allgather(send_buf)
             self.base_comm.Allgather(send_buf, recv_buf)
             return recv_buf
-        else:
-            return nccl_allgather(self.base_comm, send_buf, recv_buf)
 
     def __neg__(self):
         arr = DistributedArray(global_shape=self.global_shape,

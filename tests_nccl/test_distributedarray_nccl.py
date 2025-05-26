@@ -1,6 +1,6 @@
 """Test the DistributedArray class
-Designed to run with n processes
-$ mpiexec -n 10 pytest test_distributedarray.py --with-mpi
+Designed to run with n GPUs (with 1 MPI process per GPU)
+$ mpiexec -n 3 pytest test_distributedarray_nccl.py --with-mpi
 
 This file employs the same test sets as test_distributedarray under NCCL environment
 """
@@ -107,7 +107,7 @@ def test_creation_nccl(par):
     """Test creation of local arrays"""
     distributed_array = DistributedArray(
         global_shape=par["global_shape"],
-        base_comm=nccl_comm,
+        base_comm_nccl=nccl_comm,
         partition=par["partition"],
         dtype=par["dtype"],
         axis=par["axis"],
@@ -125,7 +125,7 @@ def test_creation_nccl(par):
     # Distributed array of ones
     distributed_ones = DistributedArray(
         global_shape=par["global_shape"],
-        base_comm=nccl_comm,
+        base_comm_nccl=nccl_comm,
         partition=par["partition"],
         dtype=par["dtype"],
         axis=par["axis"],
@@ -135,7 +135,7 @@ def test_creation_nccl(par):
     # Distributed array of zeroes
     distributed_zeroes = DistributedArray(
         global_shape=par["global_shape"],
-        base_comm=nccl_comm,
+        base_comm_nccl=nccl_comm,
         partition=par["partition"],
         dtype=par["dtype"],
         axis=par["axis"],
@@ -175,7 +175,7 @@ def test_to_dist_nccl(par):
     x_gpu = cp.asarray(par["x"])
     dist_array = DistributedArray.to_dist(
         x=x_gpu,
-        base_comm=nccl_comm,
+        base_comm_nccl=nccl_comm,
         partition=par["partition"],
         axis=par["axis"],
     )
@@ -194,7 +194,7 @@ def test_local_shapes_nccl(par):
     )[::-1]
     distributed_array = DistributedArray(
         global_shape=par["global_shape"],
-        base_comm=nccl_comm,
+        base_comm_nccl=nccl_comm,
         partition=par["partition"],
         axis=par["axis"],
         local_shapes=loc_shapes,
@@ -225,10 +225,10 @@ def test_distributed_math_nccl(par1, par2):
     x1_gpu = cp.asarray(par1["x"])
     x2_gpu = cp.asarray(par2["x"])
     arr1 = DistributedArray.to_dist(
-        x=x1_gpu, base_comm=nccl_comm, partition=par1["partition"]
+        x=x1_gpu, base_comm_nccl=nccl_comm, partition=par1["partition"]
     )
     arr2 = DistributedArray.to_dist(
-        x=x2_gpu, base_comm=nccl_comm, partition=par2["partition"]
+        x=x2_gpu, base_comm_nccl=nccl_comm, partition=par2["partition"]
     )
 
     # Addition
@@ -262,10 +262,10 @@ def test_distributed_dot_nccl(par1, par2):
     x1_gpu = cp.asarray(par1["x"])
     x2_gpu = cp.asarray(par2["x"])
     arr1 = DistributedArray.to_dist(
-        x=x1_gpu, base_comm=nccl_comm, partition=par1["partition"], axis=par1["axis"]
+        x=x1_gpu, base_comm_nccl=nccl_comm, partition=par1["partition"], axis=par1["axis"]
     )
     arr2 = DistributedArray.to_dist(
-        x=x2_gpu, base_comm=nccl_comm, partition=par2["partition"], axis=par2["axis"]
+        x=x2_gpu, base_comm_nccl=nccl_comm, partition=par2["partition"], axis=par2["axis"]
     )
     assert_allclose(
         (arr1.dot(arr2)).get(),
@@ -293,7 +293,7 @@ def test_distributed_dot_nccl(par1, par2):
 def test_distributed_norm_nccl(par):
     """Test Distributed numpy.linalg.norm method"""
     x_gpu = cp.asarray(par["x"])
-    arr = DistributedArray.to_dist(x=x_gpu, base_comm=nccl_comm, axis=par["axis"])
+    arr = DistributedArray.to_dist(x=x_gpu, base_comm_nccl=nccl_comm, axis=par["axis"])
     assert_allclose(
         arr.norm(ord=1, axis=par["axis"]).get(),
         np.linalg.norm(par["x"], ord=1, axis=par["axis"]),
@@ -344,14 +344,14 @@ def test_distributed_maskeddot_nccl(par1, par2):
     x1_gpu, x2_gpu = cp.asarray(x1), cp.asarray(x2)
     arr1 = DistributedArray.to_dist(
         x=x1_gpu,
-        base_comm=nccl_comm,
+        base_comm_nccl=nccl_comm,
         partition=par1["partition"],
         mask=mask,
         axis=par1["axis"],
     )
     arr2 = DistributedArray.to_dist(
         x=x2_gpu,
-        base_comm=nccl_comm,
+        base_comm_nccl=nccl_comm,
         partition=par2["partition"],
         mask=mask,
         axis=par2["axis"],
@@ -389,7 +389,7 @@ def test_distributed_maskednorm_nccl(par):
 
     x_gpu = cp.asarray(x)
     arr = DistributedArray.to_dist(
-        x=x_gpu, base_comm=nccl_comm, mask=mask, axis=par["axis"]
+        x=x_gpu, base_comm_nccl=nccl_comm, mask=mask, axis=par["axis"]
     )
     assert_allclose(
         arr.norm(ord=1, axis=par["axis"]).get(),
