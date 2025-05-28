@@ -124,7 +124,8 @@ class DistributedArray:
         MPI Communicator over which array is distributed.
         Defaults to ``mpi4py.MPI.COMM_WORLD``.
     base_comm_nccl : :obj:`cupy.cuda.nccl.NcclCommunicator`, optional
-        NCCL Communicator over which array is distributed.
+        NCCL Communicator over which array is distributed. Whenever NCCL
+        Communicator is provided, the base_comm will be set to MPI.COMM_WORLD.
     partition : :obj:`Partition`, optional
         Broadcast, UnsafeBroadcast, or Scatter the array. Defaults to ``Partition.SCATTER``.
     axis : :obj:`int`, optional
@@ -161,8 +162,11 @@ class DistributedArray:
 
         self.dtype = dtype
         self._global_shape = _value_or_sized_to_tuple(global_shape)
-        self._base_comm = base_comm
         self._base_comm_nccl = base_comm_nccl
+        if base_comm_nccl is None:
+            self._base_comm = base_comm
+        else:
+            self._base_comm = MPI.COMM_WORLD
         self._partition = partition
         self._axis = axis
         self._mask = mask
