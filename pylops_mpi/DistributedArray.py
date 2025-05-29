@@ -808,8 +808,8 @@ class StackedDistributedArray:
         self.distarrays = distarrays
         self.narrays = len(distarrays)
         self.base_comm = base_comm
-        self.rank = self.base_comm.Get_rank()
-        self.size = self.base_comm.Get_size()
+        self.rank = base_comm.Get_rank()
+        self.size = base_comm.Get_size()
 
     def __getitem__(self, index):
         return self.distarrays[index]
