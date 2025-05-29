@@ -24,6 +24,10 @@ dev-install:
 	make pipcheck
 	$(PIP) install -r requirements-dev.txt && $(PIP) install -e .
 
+dev-install_nccl:
+	make pipcheck
+	$(PIP) install cupy-cuda12x nvidia-nccl-cu12 && $(PIP) install -r requirements-dev.txt && $(PIP) install -e .
+
 install_conda:
 	conda env create -f environment.yml && conda activate pylops_mpi && pip install .
 
