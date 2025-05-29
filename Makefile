@@ -36,6 +36,10 @@ lint:
 tests:
 	mpiexec -n $(NUM_PROCESSES) pytest tests/ --with-mpi
 
+# assuming NUM_PRCESS <= number of gpus available
+tests_nccl:	
+	mpiexec -n $(NUM_PROCESSES) pytest tests_nccl/ --with-mpi
+
 doc:
 	cd docs  && rm -rf source/api/generated && rm -rf source/gallery &&\
 	rm -rf source/tutorials && rm -rf build &&\

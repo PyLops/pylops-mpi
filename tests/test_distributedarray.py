@@ -201,7 +201,7 @@ def test_distributed_maskeddot(par1, par2):
     """Test Distributed Dot product with masked array"""
     # number of subcommunicators
     if MPI.COMM_WORLD.Get_size() % 2 == 0:
-        nsub = 2   
+        nsub = 2
     elif MPI.COMM_WORLD.Get_size() % 3 == 0:
         nsub = 3
     else:
@@ -236,7 +236,7 @@ def test_distributed_maskednorm(par):
     """Test Distributed numpy.linalg.norm method with masked array"""
     # number of subcommunicators
     if MPI.COMM_WORLD.Get_size() % 2 == 0:
-        nsub = 2   
+        nsub = 2
     elif MPI.COMM_WORLD.Get_size() % 3 == 0:
         nsub = 3
     else:
