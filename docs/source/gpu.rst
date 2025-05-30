@@ -22,6 +22,15 @@ can handle both scenarios. Note that, since most operators in PyLops-mpi are thi
 some of the operators in PyLops that lack a GPU implementation cannot be used also in PyLops-mpi when working with
 cupy arrays.
 
+Moreover, PyLops-MPI also supports the Nvidia's Collective Communication Library (NCCL) for highly-optimized
+collective operations, such as AllReduce, AllGather, etc. This allows PyLops-MPI users to leverage the
+proprietary technology like NVLink that might be available in their infrastructure for fast data communication.
+
+.. note::
+
+   Set environment variable ``NCCL_PYLOPS_MPI=0`` to explicitly force PyLops-MPI to ignore the ``NCCL`` backend.
+   However, this is optional as users may opt-out for NCCL by skip passing `cupy.cuda.nccl.NcclCommunicator` to
+   the :class:`pylops_mpi.StackedDistributedArray` 
 
 Example
 -------
@@ -79,7 +88,71 @@ your GPU:
 The code is almost unchanged apart from the fact that we now use ``cupy`` arrays,
 PyLops-mpi will figure this out!
 
+If NCCL is available, ``cupy.cuda.nccl.NcclCommunicator`` can be initialized and passed to :class:`pylops_mpi.DistributedArray`
+as follows:
+
+.. code-block:: python
+
+    from pylops_mpi.utils._nccl import initialize_nccl_comm
+
+    # Initilize NCCL Communicator
+    nccl_comm = initialize_nccl_comm()
+
+    # Create distributed data (broadcast)
+    nxl, nt = 20, 20
+    dtype = np.float32
+    d_dist = pylops_mpi.DistributedArray(global_shape=nxl * nt,
+                                        base_comm_nccl=nccl_comm,
+                                        partition=pylops_mpi.Partition.BROADCAST,
+                                        engine="cupy", dtype=dtype)
+    d_dist[:] = cp.ones(d_dist.local_shape, dtype=dtype)
+
+    # Create and apply VStack operator
+    Sop = pylops.MatrixMult(cp.ones((nxl, nxl)), otherdims=(nt, ))
+    HOp = pylops_mpi.MPIVStack(ops=[Sop, ])
+    y_dist = HOp @ d_dist
+
+Under the hood, PyLops-MPI use both MPI Communicator and NCCL Communicator to manage distributed operations. Each GPU is logically binded to 
+one MPI process. Generally speaking, the small operation like array-related shape and size remain using MPI while the collective calls 
+like AllReduce will be carried through NCCL.
+
 .. note::
 
-   The CuPy backend is in active development, with many examples not yet in the docs.
+   The CuPy and NCCL backend is in active development, with many examples not yet in the docs.
    You can find many `other examples <https://github.com/PyLops/pylops_notebooks/tree/master/developement-mpi/Cupy_MPI>`_ from the `PyLops Notebooks repository <https://github.com/PyLops/pylops_notebooks>`_.
+
+Supports for NCCL Backend
+-------------------
+In the following, we provide a list of modules in which operates on :class:`pylops_mpi.DistributedArray` 
+that can leverage NCCL backend
+
+.. list-table::
+   :widths: 50 25 
+   :header-rows: 1
+
+   * - modules
+     - NCCL supported
+   * - :class:`pylops_mpi.DistributedArray`
+     - / 
+   * - :class:`pylops_mpi.basicoperators.MPIVStack`
+     - Ongoing
+   * - :class:`pylops_mpi.basicoperators.MPIHStack`
+     - Ongoing
+   * - :class:`pylops_mpi.basicoperators.MPIBlockDiag`
+     - Ongoing
+   * - :class:`pylops_mpi.basicoperators.MPIGradient`
+     - Ongoing
+   * - :class:`pylops_mpi.basicoperators.MPIFirstDerivative`
+     - Ongoing
+   * - :class:`pylops_mpi.basicoperators.MPISecondDerivative`
+     - Ongoing
+   * - :class:`pylops_mpi.basicoperators.MPILaplacian`
+     - Ongoing
+   * - :class:`pylops_mpi.optimization.basic.cg`
+     - Ongoing
+   * - :class:`pylops_mpi.optimization.basic.cgls`
+     - Ongoing
+   * - ISTA Solver
+     - Planned 
+   * - Complex Numeric Data Type for NCCL 
+     - Planned 
