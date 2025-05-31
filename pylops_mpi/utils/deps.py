@@ -3,7 +3,7 @@ __all__ = [
 ]
 
 import os
-from importlib import import_module, util
+from importlib import util
 from typing import Optional
 
 
@@ -23,10 +23,10 @@ def nccl_import(message: Optional[str] = None) -> str:
         else:
             # if unable to import but the package is installed
             nccl_message = (
-                        f"cupy is installed but cupy.cuda.nccl not available, Falling back to pure MPI."
-                        "Please ensure your CUDA NCCL environment is set up correctly "
-                        "for more details visit 'https://docs.cupy.dev/en/stable/install.html'"
-                    )
+                "cupy is installed but cupy.cuda.nccl not available, Falling back to pure MPI."
+                "Please ensure your CUDA NCCL environment is set up correctly "
+                "for more details visit 'https://docs.cupy.dev/en/stable/install.html'"
+            )
             print(UserWarning(nccl_message))
     else:
         nccl_message = (
