@@ -11,23 +11,22 @@ from typing import Optional
 def nccl_import(message: Optional[str] = None) -> str:
     nccl_test = (
         # detect if nccl is available and the user is expecting it to be used
-        # CuPy must be checked first otherwise util.find_spec assumes it presents and check nccl immediately and lead to crash
-        util.find_spec("cupy") is not None and util.find_spec("cupy.cuda.nccl") is not None and int(os.getenv("NCCL_PYLOPS_MPI", 1)) == 1
+        # cupy.cuda.nccl comes with cupy installation so check the cupy
+        util.find_spec("cupy") is not None and int(os.getenv("NCCL_PYLOPS_MPI", 1)) == 1
     )
     if nccl_test:
-        # try importing it
-        try:
-            import_module("cupy.cuda.nccl")  # noqa: F401
-
-            # if succesful, set the message to None
+        # if cupy is present, this import will not throw error. The NCCL existence is checked with nccl.avaiable
+        import cupy.cuda.nccl as nccl
+        if nccl.available:
+            # if succesfull, set the message to None
             nccl_message = None
-        # if unable to import but the package is installed
-        except (ImportError, ModuleNotFoundError) as e:
+        else:
+            # if unable to import but the package is installed
             nccl_message = (
-                f"Fail to import cupy.cuda.nccl, Falling back to pure MPI (error: {e})."
-                "Please ensure your CUDA NCCL environment is set up correctly "
-                "for more detials visit 'https://docs.cupy.dev/en/stable/install.html'"
-            )
+                        f"cupy is installed but cupy.cuda.nccl not available, Falling back to pure MPI."
+                        "Please ensure your CUDA NCCL environment is set up correctly "
+                        "for more details visit 'https://docs.cupy.dev/en/stable/install.html'"
+                    )
             print(UserWarning(nccl_message))
     else:
         nccl_message = (
