@@ -256,7 +256,7 @@ class DistributedArray:
 
         Returns
         -------
-        engine : :obj:`list`
+        mask : :obj:`list`
         """
         return self._mask
 
@@ -288,11 +288,7 @@ class DistributedArray:
         -------
         rank : :obj:`int`
         """
-        # cp.cuda.Device().id will give local rank
-        # It works ok in the single-node multi-gpu environment.
-        # But in multi-node environment, the function will break.
-        # So we have to use MPI.COMM_WORLD() in both cases of base_comm (MPI and NCCL)
-        return MPI.COMM_WORLD.Get_rank()
+        return self.base_comm.Get_rank()
 
     @property
     def size(self):
@@ -303,7 +299,7 @@ class DistributedArray:
         -------
         size : :obj:`int`
         """
-        return MPI.COMM_WORLD.Get_size()
+        return self.base_comm.Get_size()
 
     @property
     def axis(self):
@@ -812,8 +808,8 @@ class StackedDistributedArray:
         self.distarrays = distarrays
         self.narrays = len(distarrays)
         self.base_comm = base_comm
-        self.rank = MPI.COMM_WORLD.Get_rank()
-        self.size = MPI.COMM_WORLD.Get_size()
+        self.rank = base_comm.Get_rank()
+        self.size = base_comm.Get_size()
 
     def __getitem__(self, index):
         return self.distarrays[index]

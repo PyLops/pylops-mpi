@@ -135,7 +135,7 @@ def test_Fredholm1(par):
     y_adj_dist = Fop_MPI.H @ y_dist
     y_adj = y_adj_dist.asarray()
     # Dot test
-    dottest(Fop_MPI, x, y_dist, par["nsl"] * par["nx"] * par["nz"],par["nsl"] * par["ny"] * par["nz"])
+    dottest(Fop_MPI, x, y_dist, par["nsl"] * par["nx"] * par["nz"], par["nsl"] * par["ny"] * par["nz"])
 
     if rank == 0:
         Fop = pylops.signalprocessing.Fredholm1(

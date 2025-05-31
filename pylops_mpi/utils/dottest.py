@@ -4,7 +4,7 @@ from typing import Optional
 
 import numpy as np
 
-from pylops_mpi.DistributedArray import DistributedArray
+from pylops_mpi import DistributedArray
 from pylops.utils.backend import to_numpy
 
 
