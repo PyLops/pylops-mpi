@@ -703,7 +703,7 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        engine : :obj:`list`</span>
+<span class="sd">        mask : :obj:`list`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span>
 
@@ -735,11 +735,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        rank : :obj:`int`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># cp.cuda.Device().id will give local rank</span>
-        <span class="c1"># It works ok in the single-node multi-gpu environment.</span>
-        <span class="c1"># But in multi-node environment, the function will break.</span>
-        <span class="c1"># So we have to use MPI.COMM_WORLD() in both cases of base_comm (MPI and NCCL)</span>
-        <span class="k">return</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="o">.</span><span class="n">Get_rank</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="o">.</span><span class="n">Get_rank</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -750,7 +746,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        size : :obj:`int`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="o">.</span><span class="n">Get_size</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="o">.</span><span class="n">Get_size</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">axis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1262,8 +1258,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">distarrays</span> <span class="o">=</span> <span class="n">distarrays</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">narrays</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">distarrays</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span> <span class="o">=</span> <span class="n">base_comm</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="o">.</span><span class="n">Get_rank</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="o">.</span><span class="n">Get_size</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">=</span> <span class="n">base_comm</span><span class="o">.</span><span class="n">Get_rank</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">base_comm</span><span class="o">.</span><span class="n">Get_size</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">distarrays</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>

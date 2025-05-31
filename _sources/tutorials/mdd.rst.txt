@@ -30,13 +30,12 @@ entire model and data sit on all processes, within the MDC operator, and more pr
 :py:class:`pylops_mpi.signalprocessing.Fredholm1` is called, different groups of frequencies are
 processed by the different ranks.
 
-.. GENERATED FROM PYTHON SOURCE LINES 15-34
+.. GENERATED FROM PYTHON SOURCE LINES 15-33
 
 .. code-block:: Python
 
 
     import numpy as np
-    from scipy.signal import filtfilt
     from matplotlib import pyplot as plt
     from mpi4py import MPI
 
@@ -60,12 +59,12 @@ processed by the different ranks.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 35-37
+.. GENERATED FROM PYTHON SOURCE LINES 34-36
 
 Let's start by creating a set of hyperbolic events to be used as
 our MDC kernel as well as the model
 
-.. GENERATED FROM PYTHON SOURCE LINES 37-104
+.. GENERATED FROM PYTHON SOURCE LINES 36-103
 
 .. code-block:: Python
 
@@ -143,12 +142,12 @@ our MDC kernel as well as the model
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 105-107
+.. GENERATED FROM PYTHON SOURCE LINES 104-106
 
 Let's now define the distributed operator and model as well as compute the
 data
 
-.. GENERATED FROM PYTHON SOURCE LINES 107-124
+.. GENERATED FROM PYTHON SOURCE LINES 106-123
 
 .. code-block:: Python
 
@@ -176,11 +175,11 @@ data
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 125-126
+.. GENERATED FROM PYTHON SOURCE LINES 124-125
 
 Let's display what we have so far: operator, input model, and data
 
-.. GENERATED FROM PYTHON SOURCE LINES 126-182
+.. GENERATED FROM PYTHON SOURCE LINES 125-181
 
 .. code-block:: Python
 
@@ -264,12 +263,12 @@ Let's display what we have so far: operator, input model, and data
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 183-185
+.. GENERATED FROM PYTHON SOURCE LINES 182-184
 
 We are now ready to compute the adjoint (i.e., cross-correlation) and invert
 back for our input model
 
-.. GENERATED FROM PYTHON SOURCE LINES 185-235
+.. GENERATED FROM PYTHON SOURCE LINES 184-234
 
 .. code-block:: Python
 
@@ -367,7 +366,7 @@ back for our input model
         49       0.00e+00+0.00e+00j    3.7578e-01     3.7578e-01
         50       0.00e+00+0.00e+00j    3.6788e-01     3.6788e-01
 
-    Iterations = 50        Total time (s) = 0.97
+    Iterations = 50        Total time (s) = 1.03
     -----------------------------------------------------------------
 
 
@@ -377,7 +376,7 @@ back for our input model
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 1.748 seconds)
+   **Total running time of the script:** (0 minutes 1.850 seconds)
 
 
 .. _sphx_glr_download_tutorials_mdd.py:

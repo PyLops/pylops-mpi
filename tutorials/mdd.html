@@ -467,7 +467,6 @@ entire model and data sit on all processes, within the MDC operator, and more pr
 <code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.signalprocessing.Fredholm1</span></code> is called, different groups of frequencies are
 processed by the different ranks.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.signal</span><span class="w"> </span><span class="kn">import</span> <span class="n">filtfilt</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
 
@@ -718,11 +717,11 @@ damp = 0.000000e+00     tol = 1.000000e-04      niter = 50
     49       0.00e+00+0.00e+00j    3.7578e-01     3.7578e-01
     50       0.00e+00+0.00e+00j    3.6788e-01     3.6788e-01
 
-Iterations = 50        Total time (s) = 0.97
+Iterations = 50        Total time (s) = 1.03
 -----------------------------------------------------------------
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 1.748 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 1.850 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-mdd-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/08957b6282c8e5ab465f2f63e869b6d8/mdd.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">mdd.ipynb</span></code></a></p>
