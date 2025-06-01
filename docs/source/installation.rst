@@ -115,7 +115,7 @@ Note that, differently from the  ``conda`` command, the above **will not** creat
 Make sure you create and activate your environment previously.
 
 Simlarly, if you want to enable `NCCL <https://developer.nvidia.com/nccl>`_ but prefer using pip,
-you must first check CUDA version of your system:
+you must first check the CUDA version of your system:
 
 .. code-block:: bash
 
@@ -127,7 +127,7 @@ The `Makefile` is pre-configured with CUDA 12.x. If you use this version, run
 
    >> make dev-install_nccl
 
-Otherwise, you can change the command in `Makefile` to appropriate CUDA version
+Otherwise, you can change the command in `Makefile` to an appropriate CUDA version
 i.e., If you use CUDA 11.x, change ``cupy-cuda12x`` and ``nvidia-nccl-cu12`` to ``cupy-cuda11x`` and ``nvidia-nccl-cu11``  
 and run the command.
 

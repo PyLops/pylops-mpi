@@ -30,7 +30,7 @@ proprietary technology like NVLink that might be available in their infrastructu
 
    Set environment variable ``NCCL_PYLOPS_MPI=0`` to explicitly force PyLops-MPI to ignore the ``NCCL`` backend.
    However, this is optional as users may opt-out for NCCL by skip passing `cupy.cuda.nccl.NcclCommunicator` to
-   the :class:`pylops_mpi.StackedDistributedArray` 
+   the :class:`pylops_mpi.DistributedArray` 
 
 Example
 -------
@@ -88,7 +88,7 @@ your GPU:
 The code is almost unchanged apart from the fact that we now use ``cupy`` arrays,
 PyLops-mpi will figure this out!
 
-If NCCL is available, ``cupy.cuda.nccl.NcclCommunicator`` can be initialized and passed to :class:`pylops_mpi.DistributedArray`
+Finally, if NCCL is available, a ``cupy.cuda.nccl.NcclCommunicator`` can be initialized and passed to :class:`pylops_mpi.DistributedArray`
 as follows:
 
 .. code-block:: python
@@ -102,9 +102,9 @@ as follows:
     nxl, nt = 20, 20
     dtype = np.float32
     d_dist = pylops_mpi.DistributedArray(global_shape=nxl * nt,
-                                        base_comm_nccl=nccl_comm,
-                                        partition=pylops_mpi.Partition.BROADCAST,
-                                        engine="cupy", dtype=dtype)
+                                         base_comm_nccl=nccl_comm,
+                                         partition=pylops_mpi.Partition.BROADCAST,
+                                         engine="cupy", dtype=dtype)
     d_dist[:] = cp.ones(d_dist.local_shape, dtype=dtype)
 
     # Create and apply VStack operator
@@ -113,8 +113,7 @@ as follows:
     y_dist = HOp @ d_dist
 
 Under the hood, PyLops-MPI use both MPI Communicator and NCCL Communicator to manage distributed operations. Each GPU is logically binded to 
-one MPI process. Generally speaking, the small operation like array-related shape and size remain using MPI while the collective calls 
-like AllReduce will be carried through NCCL.
+one MPI process. In fact, minor communications like those dealing with array-related shapes and sizes are still performed using MPI, while collective calls on array like AllReduce are carried through NCCL
 
 .. note::
 
@@ -122,9 +121,8 @@ like AllReduce will be carried through NCCL.
    You can find many `other examples <https://github.com/PyLops/pylops_notebooks/tree/master/developement-mpi/Cupy_MPI>`_ from the `PyLops Notebooks repository <https://github.com/PyLops/pylops_notebooks>`_.
 
 Supports for NCCL Backend
--------------------
-In the following, we provide a list of modules in which operates on :class:`pylops_mpi.DistributedArray` 
-that can leverage NCCL backend
+----------------------------
+In the following, we provide a list of modules (i.e., operators and solvers) where we plan to support NCCL and the current status:
 
 .. list-table::
    :widths: 50 25 
