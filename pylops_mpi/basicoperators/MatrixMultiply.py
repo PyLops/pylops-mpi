@@ -36,7 +36,8 @@ class SUMMAMatrixMult(MPILinearOperator):
         self._layer_comm = base_comm.Split(color=self._layer_id, key=self._group_id)
         self._group_comm = base_comm.Split(color=self._group_id, key=self._layer_id)
 
-        self.A = A
+        self.dtype = np.dtype(dtype)
+        self.A    = np.array(A, dtype=self.dtype, copy=False)
 
         self.M = self._layer_comm.allreduce(self.A.shape[0], op=MPI.SUM)
         self.K = A.shape[1]
@@ -70,19 +71,19 @@ class SUMMAMatrixMult(MPILinearOperator):
         blk_cols    = int(math.ceil(self.N / self._P_prime))
         col_start   = self._group_id * blk_cols
         col_end     = min(self.N, col_start + blk_cols)
-        my_own_cols = col_end - col_start
+        my_own_cols = max(0, col_end - col_start)
         x = x.local_array.reshape((self.dims[0], my_own_cols))
-        B_block = self._layer_comm.bcast(x if self._group_id == self._layer_id else None,
-                                         root=self._layer_id)
+        x = x.astype(self.dtype, copy=False)
+        B_block = self._layer_comm.bcast(x if self._group_id == self._layer_id else None, root=self._layer_id)
         C_local = ncp.vstack(
             self._layer_comm.allgather(
-                ncp.matmul(self.A, B_block, dtype=self.dtype)
+                ncp.matmul(self.A, B_block)
             )
         )
 
         layer_col_start = self._layer_id * blk_cols
         layer_col_end   = min(self.N, layer_col_start + blk_cols)
-        layer_ncols     = layer_col_end - layer_col_start
+        layer_ncols     = max(0, layer_col_end - layer_col_start)
         layer_col_lens  = self.base_comm.allgather(layer_ncols)
         mask = [i // self._P_prime for i in range(self.size)]
 
@@ -106,22 +107,21 @@ class SUMMAMatrixMult(MPILinearOperator):
         layer_col_end   = min(self.N, layer_col_start + blk_cols)
         layer_ncols     = layer_col_end - layer_col_start
         layer_col_lens  = self.base_comm.allgather(layer_ncols)
-        x = x.local_array.reshape((self.M, layer_ncols))
+        x               = x.local_array.reshape((self.M, layer_ncols))
 
         # Determine local row block for this process group
         blk_rows  = int(math.ceil(self.M / self._P_prime))
         row_start = self._group_id * blk_rows
         row_end   = min(self.M, row_start + blk_rows)
 
-        B_tile = x[row_start:row_end, :]
+        B_tile = x[row_start:row_end, :].astype(self.dtype, copy=False)
         A_local = self.A.T.conj()
 
-        # Pad A_local so its first dimension is divisible by _P_prime, then batch it
-        m, b = A_local.shape
-        r = math.ceil(m / self._P_prime)
-        A_pad        = np.zeros((r * self._P_prime, b), dtype=self.dtype)
-        A_pad[:m, :] = A_local
-        A_batch      = A_pad.reshape(self._P_prime, r, b)
+        m, b    = A_local.shape
+        pad     = (-m) % self._P_prime
+        r       = (m + pad) // self._P_prime
+        A_pad   = np.pad(A_local, ((0, pad), (0, 0)),  mode='constant', constant_values=0)
+        A_batch = A_pad.reshape(self._P_prime, r, b)
 
         # Perform local matmul and unpad
         Y_batch = ncp.matmul(A_batch, B_tile)
@@ -129,7 +129,6 @@ class SUMMAMatrixMult(MPILinearOperator):
         y_local = Y_pad[:m, :]
         y_layer = self._layer_comm.allreduce(y_local, op=MPI.SUM)
 
-        # Build the output DistributedArray with SCATTER partition
         mask = [i // self._P_prime for i in range(self.size)]
         y = DistributedArray(
             global_shape=(self.K * self.dimsd[1]),
