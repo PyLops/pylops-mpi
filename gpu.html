@@ -465,6 +465,15 @@ generated using both <code class="docutils literal notranslate"><span class="pre
 can handle both scenarios. Note that, since most operators in PyLops-mpi are thin-wrappers around PyLops operators,
 some of the operators in PyLops that lack a GPU implementation cannot be used also in PyLops-mpi when working with
 cupy arrays.</p>
+<p>Moreover, PyLops-MPI also supports the Nvidia’s Collective Communication Library (NCCL) for highly-optimized
+collective operations, such as AllReduce, AllGather, etc. This allows PyLops-MPI users to leverage the
+proprietary technology like NVLink that might be available in their infrastructure for fast data communication.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Set environment variable <code class="docutils literal notranslate"><span class="pre">NCCL_PYLOPS_MPI=0</span></code> to explicitly force PyLops-MPI to ignore the <code class="docutils literal notranslate"><span class="pre">NCCL</span></code> backend.
+However, this is optional as users may opt-out for NCCL by skip passing <cite>cupy.cuda.nccl.NcclCommunicator</cite> to
+the <a class="reference internal" href="api/generated/pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a></p>
+</div>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
@@ -515,10 +524,88 @@ your GPU:</p>
 </div>
 <p>The code is almost unchanged apart from the fact that we now use <code class="docutils literal notranslate"><span class="pre">cupy</span></code> arrays,
 PyLops-mpi will figure this out!</p>
+<p>Finally, if NCCL is available, a <code class="docutils literal notranslate"><span class="pre">cupy.cuda.nccl.NcclCommunicator</span></code> can be initialized and passed to <a class="reference internal" href="api/generated/pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>
+as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.utils._nccl</span><span class="w"> </span><span class="kn">import</span> <span class="n">initialize_nccl_comm</span>
+
+<span class="c1"># Initilize NCCL Communicator</span>
+<span class="n">nccl_comm</span> <span class="o">=</span> <span class="n">initialize_nccl_comm</span><span class="p">()</span>
+
+<span class="c1"># Create distributed data (broadcast)</span>
+<span class="n">nxl</span><span class="p">,</span> <span class="n">nt</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span>
+<span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span>
+<span class="n">d_dist</span> <span class="o">=</span> <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="n">nxl</span> <span class="o">*</span> <span class="n">nt</span><span class="p">,</span>
+                                     <span class="n">base_comm_nccl</span><span class="o">=</span><span class="n">nccl_comm</span><span class="p">,</span>
+                                     <span class="n">partition</span><span class="o">=</span><span class="n">pylops_mpi</span><span class="o">.</span><span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="p">,</span>
+                                     <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;cupy&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+<span class="n">d_dist</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">d_dist</span><span class="o">.</span><span class="n">local_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+
+<span class="c1"># Create and apply VStack operator</span>
+<span class="n">Sop</span> <span class="o">=</span> <span class="n">pylops</span><span class="o">.</span><span class="n">MatrixMult</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">nxl</span><span class="p">,</span> <span class="n">nxl</span><span class="p">)),</span> <span class="n">otherdims</span><span class="o">=</span><span class="p">(</span><span class="n">nt</span><span class="p">,</span> <span class="p">))</span>
+<span class="n">HOp</span> <span class="o">=</span> <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">MPIVStack</span><span class="p">(</span><span class="n">ops</span><span class="o">=</span><span class="p">[</span><span class="n">Sop</span><span class="p">,</span> <span class="p">])</span>
+<span class="n">y_dist</span> <span class="o">=</span> <span class="n">HOp</span> <span class="o">@</span> <span class="n">d_dist</span>
+</pre></div>
+</div>
+<p>Under the hood, PyLops-MPI use both MPI Communicator and NCCL Communicator to manage distributed operations. Each GPU is logically binded to
+one MPI process. In fact, minor communications like those dealing with array-related shapes and sizes are still performed using MPI, while collective calls on array like AllReduce are carried through NCCL</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The CuPy backend is in active development, with many examples not yet in the docs.
+<p>The CuPy and NCCL backend is in active development, with many examples not yet in the docs.
 You can find many <a class="reference external" href="https://github.com/PyLops/pylops_notebooks/tree/master/developement-mpi/Cupy_MPI">other examples</a> from the <a class="reference external" href="https://github.com/PyLops/pylops_notebooks">PyLops Notebooks repository</a>.</p>
+</div>
+</section>
+<section id="supports-for-nccl-backend">
+<h2>Supports for NCCL Backend<a class="headerlink" href="#supports-for-nccl-backend" title="Link to this heading">#</a></h2>
+<p>In the following, we provide a list of modules (i.e., operators and solvers) where we plan to support NCCL and the current status:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 66.7%" />
+<col style="width: 33.3%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>modules</p></th>
+<th class="head"><p>NCCL supported</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="api/generated/pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a></p></td>
+<td><p>/</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPIVStack.html#pylops_mpi.basicoperators.MPIVStack" title="pylops_mpi.basicoperators.MPIVStack"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIVStack</span></code></a></p></td>
+<td><p>Ongoing</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPIHStack.html#pylops_mpi.basicoperators.MPIHStack" title="pylops_mpi.basicoperators.MPIHStack"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIHStack</span></code></a></p></td>
+<td><p>Ongoing</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPIBlockDiag.html#pylops_mpi.basicoperators.MPIBlockDiag" title="pylops_mpi.basicoperators.MPIBlockDiag"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIBlockDiag</span></code></a></p></td>
+<td><p>Ongoing</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPIGradient.html#pylops_mpi.basicoperators.MPIGradient" title="pylops_mpi.basicoperators.MPIGradient"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIGradient</span></code></a></p></td>
+<td><p>Ongoing</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPIFirstDerivative.html#pylops_mpi.basicoperators.MPIFirstDerivative" title="pylops_mpi.basicoperators.MPIFirstDerivative"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIFirstDerivative</span></code></a></p></td>
+<td><p>Ongoing</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPISecondDerivative.html#pylops_mpi.basicoperators.MPISecondDerivative" title="pylops_mpi.basicoperators.MPISecondDerivative"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPISecondDerivative</span></code></a></p></td>
+<td><p>Ongoing</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPILaplacian.html#pylops_mpi.basicoperators.MPILaplacian" title="pylops_mpi.basicoperators.MPILaplacian"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPILaplacian</span></code></a></p></td>
+<td><p>Ongoing</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/generated/pylops_mpi.optimization.basic.cg.html#pylops_mpi.optimization.basic.cg" title="pylops_mpi.optimization.basic.cg"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.optimization.basic.cg</span></code></a></p></td>
+<td><p>Ongoing</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/generated/pylops_mpi.optimization.basic.cgls.html#pylops_mpi.optimization.basic.cgls" title="pylops_mpi.optimization.basic.cgls"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.optimization.basic.cgls</span></code></a></p></td>
+<td><p>Ongoing</p></td>
+</tr>
+<tr class="row-even"><td><p>ISTA Solver</p></td>
+<td><p>Planned</p></td>
+</tr>
+<tr class="row-odd"><td><p>Complex Numeric Data Type for NCCL</p></td>
+<td><p>Planned</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 </section>
 </section>
@@ -572,6 +659,7 @@ You can find many <a class="reference external" href="https://github.com/PyLops/
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supports-for-nccl-backend">Supports for NCCL Backend</a></li>
 </ul>
   </nav></div>
 

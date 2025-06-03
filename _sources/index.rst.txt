@@ -14,6 +14,10 @@ By integrating MPI (Message Passing Interface), PyLops-MPI optimizes the collabo
 computing nodes, enabling large and intricate tasks to be divided, solved, and aggregated in an efficient and
 parallelized manner.
 
+PyLops-MPI also supports the Nvidia's Collective Communication Library `(NCCL) <https://developer.nvidia.com/nccl>`_ for high-performance
+GPU-to-GPU communications. The PyLops-MPI's NCCL engine works congruently with MPI by delegating the GPU-to-GPU communication tasks to 
+highly-optimized NCCL, while leveraging MPI for CPU-side coordination and orchestration.
+
 Get started by :ref:`installing PyLops-MPI <Installation>` and following our quick tour.
 
 Terminology

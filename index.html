@@ -430,6 +430,9 @@ PyLops-MPI also provides iterative solvers (e.g. cgls) for many different types 
 <p>By integrating MPI (Message Passing Interface), PyLops-MPI optimizes the collaborative processing power of multiple
 computing nodes, enabling large and intricate tasks to be divided, solved, and aggregated in an efficient and
 parallelized manner.</p>
+<p>PyLops-MPI also supports the Nvidia’s Collective Communication Library <a class="reference external" href="https://developer.nvidia.com/nccl">(NCCL)</a> for high-performance
+GPU-to-GPU communications. The PyLops-MPI’s NCCL engine works congruently with MPI by delegating the GPU-to-GPU communication tasks to
+highly-optimized NCCL, while leveraging MPI for CPU-side coordination and orchestration.</p>
 <p>Get started by <a class="reference internal" href="installation.html#installation"><span class="std std-ref">installing PyLops-MPI</span></a> and following our quick tour.</p>
 <section id="terminology">
 <h2>Terminology<a class="headerlink" href="#terminology" title="Link to this heading">#</a></h2>

@@ -489,6 +489,14 @@ Follow the installation instructions provided by the MPI vendor.</p>
 <p>We recommend installing dependencies into a separate environment.
 For that end, we provide a <cite>Makefile</cite> with useful commands for setting up the environment.</p>
 </section>
+<section id="enable-nvidia-collective-communication-library">
+<h3>Enable Nvidia Collective Communication Library<a class="headerlink" href="#enable-nvidia-collective-communication-library" title="Link to this heading">#</a></h3>
+<p>To obtain highly-optimized performance on GPU clusters, PyLops-MPI also supports the Nvidia’s collective communication calls
+<a class="reference external" href="https://developer.nvidia.com/nccl">(NCCL)</a>. Two additional dependencies are required: CuPy and NCCL</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://docs.cupy.dev/en/stable/install.html">CuPy with NCCL</a></p></li>
+</ul>
+</section>
 </section>
 <section id="step-by-step-installation-for-users">
 <h2>Step-by-step installation for users<a class="headerlink" href="#step-by-step-installation-for-users" title="Link to this heading">#</a></h2>
@@ -523,15 +531,31 @@ Make sure you create and activate your environment previously.</p>
 </pre></div>
 </div>
 <p>This will create and activate an environment called <code class="docutils literal notranslate"><span class="pre">pylops_mpi</span></code>, with all required and optional dependencies.</p>
+<p>If you want to enable <a class="reference external" href="https://developer.nvidia.com/nccl">NCCL</a> in PyLops-MPI, run this instead</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>make<span class="w"> </span>dev-install_conda_nccl
+</pre></div>
+</div>
 </section>
-<section id="id3">
-<h4>Pip<a class="headerlink" href="#id3" title="Link to this heading">#</a></h4>
+<section id="id4">
+<h4>Pip<a class="headerlink" href="#id4" title="Link to this heading">#</a></h4>
 <p>If you prefer a <code class="docutils literal notranslate"><span class="pre">pip</span></code> installation, we provide the following command</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>make<span class="w"> </span>dev-install
 </pre></div>
 </div>
 <p>Note that, differently from the  <code class="docutils literal notranslate"><span class="pre">conda</span></code> command, the above <strong>will not</strong> create a virtual environment.
 Make sure you create and activate your environment previously.</p>
+<p>Simlarly, if you want to enable <a class="reference external" href="https://developer.nvidia.com/nccl">NCCL</a> but prefer using pip,
+you must first check the CUDA version of your system:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>nvidia-smi
+</pre></div>
+</div>
+<p>The <cite>Makefile</cite> is pre-configured with CUDA 12.x. If you use this version, run</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>make<span class="w"> </span>dev-install_nccl
+</pre></div>
+</div>
+<p>Otherwise, you can change the command in <cite>Makefile</cite> to an appropriate CUDA version
+i.e., If you use CUDA 11.x, change <code class="docutils literal notranslate"><span class="pre">cupy-cuda12x</span></code> and <code class="docutils literal notranslate"><span class="pre">nvidia-nccl-cu12</span></code> to <code class="docutils literal notranslate"><span class="pre">cupy-cuda11x</span></code> and <code class="docutils literal notranslate"><span class="pre">nvidia-nccl-cu11</span></code>
+and run the command.</p>
 </section>
 </section>
 <section id="run-tests">
@@ -541,6 +565,10 @@ Make sure you create and activate your environment previously.</p>
 </pre></div>
 </div>
 <p>Make sure no tests fail, this guarantees that the installation has been successful.</p>
+<p>If PyLops-MPI is installed with NCCL, also run tests:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>make<span class="w"> </span>tests_nccl
+</pre></div>
+</div>
 </section>
 <section id="run-examples-and-tutorials">
 <h3>Run examples and tutorials<a class="headerlink" href="#run-examples-and-tutorials" title="Link to this heading">#</a></h3>
@@ -641,6 +669,7 @@ Apart from ensuring that docstrings are properly formatted, they can aid in catc
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#download-and-install-mpi">Download and Install MPI</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#verify-mpi-installation">Verify MPI Installation</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fork-pylops-mpi">Fork PyLops-MPI</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-nvidia-collective-communication-library">Enable Nvidia Collective Communication Library</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-by-step-installation-for-users">Step-by-step installation for users</a><ul class="nav section-nav flex-column">
@@ -651,7 +680,7 @@ Apart from ensuring that docstrings are properly formatted, they can aid in catc
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-by-step-installation-for-developers">Step-by-step installation for developers</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#install-dependencies">Install dependencies</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Conda</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Pip</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Pip</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#run-tests">Run tests</a></li>
