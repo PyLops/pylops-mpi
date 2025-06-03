@@ -19,8 +19,8 @@ from pylops_mpi.utils.decorators import reshaped
 from pylops_mpi.DistributedArray import NcclCommunicatorType
 from pylops_mpi.utils import deps
 
-cupy_message = pylops_deps.cupy_import("the DistributedArray module")
-nccl_message = deps.nccl_import("the DistributedArray module")
+cupy_message = pylops_deps.cupy_import("the VStack module")
+nccl_message = deps.nccl_import("the VStack module")
 
 if nccl_message is None and cupy_message is None:
     from pylops_mpi.utils._nccl import nccl_allreduce
