@@ -6,6 +6,7 @@ from typing import Sequence, Optional
 from pylops import LinearOperator
 from pylops.utils import DTypeLike
 from pylops.utils.backend import get_module
+from pylops.utils import deps as pylops_deps  # avoid namespace crashes with pylops_mpi.utils
 
 from pylops_mpi import (
     MPILinearOperator,
@@ -15,6 +16,14 @@ from pylops_mpi import (
     StackedDistributedArray
 )
 from pylops_mpi.utils.decorators import reshaped
+from pylops_mpi.DistributedArray import NcclCommunicatorType
+from pylops_mpi.utils import deps
+
+cupy_message = pylops_deps.cupy_import("the DistributedArray module")
+nccl_message = deps.nccl_import("the DistributedArray module")
+
+if nccl_message is None and cupy_message is None:
+    from pylops_mpi.utils._nccl import nccl_allreduce
 
 
 class MPIVStack(MPILinearOperator):
@@ -31,6 +40,8 @@ class MPIVStack(MPILinearOperator):
         One or more :class:`pylops.LinearOperator` to be vertically stacked.
     base_comm : :obj:`mpi4py.MPI.Comm`, optional
         Base MPI Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.
+    base_comm_nccl : :obj:`cupy.cuda.nccl.NcclCommunicator`, optional
+        NCCL Communicator over which operators and arrays are distributed.
     dtype : :obj:`str`, optional
         Type of elements in input array.
 
@@ -99,8 +110,10 @@ class MPIVStack(MPILinearOperator):
 
     def __init__(self, ops: Sequence[LinearOperator],
                  base_comm: MPI.Comm = MPI.COMM_WORLD,
+                 base_comm_nccl: NcclCommunicatorType = None,
                  dtype: Optional[DTypeLike] = None):
         self.ops = ops
+        self.base_comm_nccl = base_comm_nccl
         nops = np.zeros(len(self.ops), dtype=np.int64)
         for iop, oper in enumerate(self.ops):
             nops[iop] = oper.shape[0]
@@ -121,7 +134,8 @@ class MPIVStack(MPILinearOperator):
         if x.partition not in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
             raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
                              f"Got  {x.partition} instead...")
-        y = DistributedArray(global_shape=self.shape[0], local_shapes=self.local_shapes_n,
+        # the output y should use NCCL if the operand x uses it
+        y = DistributedArray(global_shape=self.shape[0], base_comm_nccl=x.base_comm_nccl, local_shapes=self.local_shapes_n,
                              engine=x.engine, dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
@@ -132,13 +146,16 @@ class MPIVStack(MPILinearOperator):
     @reshaped(forward=False, stacking=True)
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
-        y = DistributedArray(global_shape=self.shape[1], partition=Partition.BROADCAST,
+        y = DistributedArray(global_shape=self.shape[1], base_comm_nccl=x.base_comm_nccl, partition=Partition.BROADCAST,
                              engine=x.engine, dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
             y1.append(oper.rmatvec(x.local_array[self.nnops[iop]: self.nnops[iop + 1]]))
         y1 = ncp.sum(ncp.vstack(y1), axis=0)
-        y[:] = self.base_comm.allreduce(y1, op=MPI.SUM)
+        if deps.nccl_enabled and self.base_comm_nccl:
+            y[:] = nccl_allreduce(self.base_comm_nccl, y1, op=MPI.SUM)
+        else:
+            y[:] = self.base_comm.allreduce(y1, op=MPI.SUM)
         return y
 
 

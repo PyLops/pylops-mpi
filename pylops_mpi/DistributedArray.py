@@ -748,7 +748,13 @@ class DistributedArray:
         """
         ghosted_array = self.local_array.copy()
         if cells_front is not None:
-            total_cells_front = self._allgather(cells_front) + [0]
+            # TODO: these are metadata (small size). Under current API, it will
+            # call nccl allgather, should we force it to always use MPI?
+            cells_fronts = self._allgather(cells_front)
+            if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
+                total_cells_front = cells_fronts.tolist() + [0]
+            else:
+                total_cells_front = cells_fronts + [0]
             # Read cells_front which needs to be sent to rank + 1(cells_front for rank + 1)
             cells_front = total_cells_front[self.rank + 1]
             if self.rank != 0:
@@ -761,10 +767,16 @@ class DistributedArray:
                                      f"{self.local_shape[self.axis]} < {cells_front}; "
                                      f"to achieve this use NUM_PROCESSES <= "
                                      f"{max(1, self.global_shape[self.axis] // cells_front)}")
+                # TODO: this array maybe large. Currently it will always use MPI.
+                # Should we enable NCCL point-point here ?
                 self.base_comm.send(np.take(self.local_array, np.arange(-cells_front, 0), axis=self.axis),
                                     dest=self.rank + 1, tag=1)
         if cells_back is not None:
-            total_cells_back = self._allgather(cells_back) + [0]
+            cells_backs = self._allgather(cells_back)
+            if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
+                total_cells_back = cells_backs.tolist() + [0]
+            else:
+                total_cells_back = cells_backs + [0]
             # Read cells_back which needs to be sent to rank - 1(cells_back for rank - 1)
             cells_back = total_cells_back[self.rank - 1]
             if self.rank != 0:
