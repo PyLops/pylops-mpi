@@ -14,7 +14,6 @@ processed by the different ranks.
 """
 
 import numpy as np
-from scipy.signal import filtfilt
 from matplotlib import pyplot as plt
 from mpi4py import MPI
 
