@@ -34,6 +34,10 @@ and running the following command:
       ```
       make install_conda
       ```
+Optionally, if you work with multi-GPU environment and want to use Nvidia's collective communication calls (NCCL) enabled, install your environment with
+   ```
+   make install_conda_nccl 
+   ```
    
 ## Run Pylops-MPI
 Once you have installed the prerequisites and pylops-mpi, you can run pylops-mpi using the `mpiexec` command. 

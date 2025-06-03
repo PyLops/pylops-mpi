@@ -45,6 +45,14 @@ Fork the `PyLops-MPI repository <https://github.com/PyLops/pylops-mpi>`_ and clo
 We recommend installing dependencies into a separate environment.
 For that end, we provide a `Makefile` with useful commands for setting up the environment.
 
+Enable Nvidia Collective Communication Library
+=======================================================
+To obtain highly-optimized performance on GPU clusters, PyLops-MPI also supports the Nvidia's collective communication calls
+`(NCCL) <https://developer.nvidia.com/nccl>`_. Two additional dependencies are required: CuPy and NCCL 
+
+* `CuPy with NCCL <https://docs.cupy.dev/en/stable/install.html>`_
+
+
 Step-by-step installation for users
 ***********************************
 
@@ -89,6 +97,12 @@ For a ``conda`` environment, run
 
 This will create and activate an environment called ``pylops_mpi``, with all required and optional dependencies.
 
+If you want to enable `NCCL <https://developer.nvidia.com/nccl>`_ in PyLops-MPI, run this instead
+
+.. code-block:: bash
+
+   >> make dev-install_conda_nccl
+
 Pip
 ---
 If you prefer a ``pip`` installation, we provide the following command
@@ -100,6 +114,23 @@ If you prefer a ``pip`` installation, we provide the following command
 Note that, differently from the  ``conda`` command, the above **will not** create a virtual environment.
 Make sure you create and activate your environment previously.
 
+Simlarly, if you want to enable `NCCL <https://developer.nvidia.com/nccl>`_ but prefer using pip,
+you must first check the CUDA version of your system:
+
+.. code-block:: bash
+
+   >> nvidia-smi
+
+The `Makefile` is pre-configured with CUDA 12.x. If you use this version, run
+
+.. code-block:: bash
+
+   >> make dev-install_nccl
+
+Otherwise, you can change the command in `Makefile` to an appropriate CUDA version
+i.e., If you use CUDA 11.x, change ``cupy-cuda12x`` and ``nvidia-nccl-cu12`` to ``cupy-cuda11x`` and ``nvidia-nccl-cu11``  
+and run the command.
+
 Run tests
 =========
 To ensure that everything has been setup correctly, run tests:
@@ -109,6 +140,12 @@ To ensure that everything has been setup correctly, run tests:
    >> make tests
 
 Make sure no tests fail, this guarantees that the installation has been successful.
+
+If PyLops-MPI is installed with NCCL, also run tests:
+
+.. code-block:: bash
+
+   >> make tests_nccl
 
 Run examples and tutorials
 ==========================
