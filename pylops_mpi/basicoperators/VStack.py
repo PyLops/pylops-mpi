@@ -16,7 +16,6 @@ from pylops_mpi import (
     StackedDistributedArray
 )
 from pylops_mpi.utils.decorators import reshaped
-from pylops_mpi.DistributedArray import NcclCommunicatorType
 from pylops_mpi.utils import deps
 
 cupy_message = pylops_deps.cupy_import("the VStack module")
@@ -40,8 +39,6 @@ class MPIVStack(MPILinearOperator):
         One or more :class:`pylops.LinearOperator` to be vertically stacked.
     base_comm : :obj:`mpi4py.MPI.Comm`, optional
         Base MPI Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.
-    base_comm_nccl : :obj:`cupy.cuda.nccl.NcclCommunicator`, optional
-        NCCL Communicator over which operators and arrays are distributed.
     dtype : :obj:`str`, optional
         Type of elements in input array.
 
@@ -110,10 +107,8 @@ class MPIVStack(MPILinearOperator):
 
     def __init__(self, ops: Sequence[LinearOperator],
                  base_comm: MPI.Comm = MPI.COMM_WORLD,
-                 base_comm_nccl: NcclCommunicatorType = None,
                  dtype: Optional[DTypeLike] = None):
         self.ops = ops
-        self.base_comm_nccl = base_comm_nccl
         nops = np.zeros(len(self.ops), dtype=np.int64)
         for iop, oper in enumerate(self.ops):
             nops[iop] = oper.shape[0]
@@ -152,8 +147,8 @@ class MPIVStack(MPILinearOperator):
         for iop, oper in enumerate(self.ops):
             y1.append(oper.rmatvec(x.local_array[self.nnops[iop]: self.nnops[iop + 1]]))
         y1 = ncp.sum(ncp.vstack(y1), axis=0)
-        if deps.nccl_enabled and self.base_comm_nccl:
-            y[:] = nccl_allreduce(self.base_comm_nccl, y1, op=MPI.SUM)
+        if deps.nccl_enabled and x.base_comm_nccl:
+            y[:] = nccl_allreduce(x.base_comm_nccl, y1, op=MPI.SUM)
         else:
             y[:] = self.base_comm.allreduce(y1, op=MPI.SUM)
         return y

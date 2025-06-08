@@ -5,7 +5,6 @@ from pylops import LinearOperator
 from pylops.utils import DTypeLike
 
 from pylops_mpi import DistributedArray, MPILinearOperator
-from pylops_mpi.DistributedArray import NcclCommunicatorType
 from .VStack import MPIVStack
 
 
@@ -90,7 +89,6 @@ class MPIHStack(MPILinearOperator):
 
     def __init__(self, ops: Sequence[LinearOperator],
                  base_comm: MPI.Comm = MPI.COMM_WORLD,
-                 base_comm_nccl: NcclCommunicatorType = None,
                  dtype: Optional[DTypeLike] = None):
         self.ops = ops
         nops = [oper.shape[0] for oper in self.ops]
@@ -98,7 +96,7 @@ class MPIHStack(MPILinearOperator):
         if len(set(nops)) > 1:
             raise ValueError("Operators have different number of rows")
         hops = [oper.H for oper in self.ops]
-        self.HStack = MPIVStack(ops=hops, base_comm=base_comm, base_comm_nccl=base_comm_nccl, dtype=dtype).H
+        self.HStack = MPIVStack(ops=hops, base_comm=base_comm, dtype=dtype).H
         super().__init__(shape=self.HStack.shape, dtype=self.HStack.dtype, base_comm=base_comm)
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:

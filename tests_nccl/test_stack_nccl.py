@@ -30,7 +30,7 @@ def test_vstack_nccl(par):
     rank = MPI.COMM_WORLD.Get_rank()
     A_gpu = cp.ones(shape=(par['ny'], par['nx'])) + par['imag'] * cp.ones(shape=(par['ny'], par['nx']))
     Op = pylops.MatrixMult(A=((rank + 1) * A_gpu).astype(par['dtype']))
-    VStack_MPI = pylops_mpi.MPIVStack(ops=[Op, ], base_comm_nccl=nccl_comm)
+    VStack_MPI = pylops_mpi.MPIVStack(ops=[Op, ], )
 
     # Broadcasted DistributedArray(global_shape == local_shape)
     x = pylops_mpi.DistributedArray(global_shape=par['nx'],
@@ -80,7 +80,7 @@ def test_stacked_vstack_nccl(par):
     rank = MPI.COMM_WORLD.Get_rank()
     A_gpu = cp.ones(shape=(par['ny'], par['nx'])) + par['imag'] * cp.ones(shape=(par['ny'], par['nx']))
     Op = pylops.MatrixMult(A=((rank + 1) * A_gpu).astype(par['dtype']))
-    VStack_MPI = pylops_mpi.MPIVStack(ops=[Op, ], base_comm_nccl=nccl_comm)
+    VStack_MPI = pylops_mpi.MPIVStack(ops=[Op, ], )
     StackedVStack_MPI = pylops_mpi.MPIStackedVStack([VStack_MPI, VStack_MPI])
 
     # Broadcasted DistributedArray(global_shape == local_shape)
@@ -121,13 +121,13 @@ def test_stacked_vstack_nccl(par):
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par2)])
-def test_hstack(par):
+def test_hstack_nccl(par):
     """Test the MPIHStack operator with NCCL"""
     size = MPI.COMM_WORLD.Get_size()
     rank = MPI.COMM_WORLD.Get_rank()
     A_gpu = cp.ones(shape=(par['ny'], par['nx'])) + par['imag'] * cp.ones(shape=(par['ny'], par['nx']))
     Op = pylops.MatrixMult(A=((rank + 1) * A_gpu).astype(par['dtype']))
-    HStack_MPI = pylops_mpi.MPIHStack(ops=[Op, ], base_comm_nccl=nccl_comm)
+    HStack_MPI = pylops_mpi.MPIHStack(ops=[Op, ], )
 
     # Scattered DistributedArray
     x = pylops_mpi.DistributedArray(global_shape=size * par['nx'],
