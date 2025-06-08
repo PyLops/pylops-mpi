@@ -86,6 +86,7 @@ class MPILinearOperator:
         if self.Op:
             y = DistributedArray(global_shape=self.shape[0],
                                  base_comm=self.base_comm,
+                                 base_comm_nccl=x.base_comm_nccl,
                                  partition=x.partition,
                                  axis=x.axis,
                                  engine=x.engine,
@@ -123,6 +124,7 @@ class MPILinearOperator:
         if self.Op:
             y = DistributedArray(global_shape=self.shape[1],
                                  base_comm=self.base_comm,
+                                 base_comm_nccl=x.base_comm_nccl,
                                  partition=x.partition,
                                  axis=x.axis,
                                  engine=x.engine,
