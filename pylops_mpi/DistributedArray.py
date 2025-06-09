@@ -495,7 +495,7 @@ class DistributedArray:
     def _allgather(self, send_buf, recv_buf=None):
         """Allgather operation
         """
-        if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
+        if deps.nccl_enabled and self.base_comm_nccl:
             return nccl_allgather(self.base_comm_nccl, send_buf, recv_buf)
         else:
             if recv_buf is None:
@@ -518,13 +518,16 @@ class DistributedArray:
         """ Receive operation
         """
         # NCCL must be called with recv_buf. Size cannot be inferred from
-        # other arguments and thus cannot dynamically allocated
+        # other arguments and thus cannot be dynamically allocated
         if deps.nccl_enabled and getattr(self, "base_comm_nccl") and recv_buf is not None:
-            if count is None:
-                # assuming data will take a space of the whole buffer
-                count = recv_buf.size
-            nccl_recv(self.base_comm_nccl, recv_buf, source, count)
-            return recv_buf
+            if recv_buf is not None:
+                if count is None:
+                    # assuming data will take a space of the whole buffer
+                    count = recv_buf.size
+                nccl_recv(self.base_comm_nccl, recv_buf, source, count)
+                return recv_buf
+            else:
+                raise ValueError("Using recv with NCCL must also supply receiver buffer ")
         else:
             # MPI allows a receiver buffer to be optional
             if recv_buf is None:
@@ -773,10 +776,9 @@ class DistributedArray:
         -------
         ghosted_array : :obj:`numpy.ndarray`
             Ghosted Array
-
         """
         ghosted_array = self.local_array.copy()
-        ncp = get_module(getattr(self, "engine"))
+        ncp = get_module(self.engine)
         if cells_front is not None:
             # cells_front is small array of int. Explicitly use MPI
             total_cells_front = self.base_comm.allgather(cells_front) + [0]
@@ -790,7 +792,7 @@ class DistributedArray:
                 recv_shape = list(recv_shapes[self.rank - 1])
                 recv_shape[self.axis] = total_cells_front[self.rank]
                 recv_buf = ncp.zeros(recv_shape, dtype=ghosted_array.dtype)
-                # Some communication can skip if len(recv_buf) = 0
+                # Transfer of ghost cells can be skipped if len(recv_buf) = 0
                 # Additionally, NCCL will hang if the buffer size is 0 so this optimization is somewhat mandatory
                 if len(recv_buf) != 0:
                     ghosted_array = ncp.concatenate([self._recv(recv_buf, source=self.rank - 1, tag=1), ghosted_array], axis=self.axis)

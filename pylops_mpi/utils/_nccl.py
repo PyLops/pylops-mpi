@@ -215,10 +215,6 @@ def nccl_bcast(nccl_comm, local_array, index, value) -> None:
         The index in the array to be broadcasted.
     value : :obj:`scalar`
         The value to broadcast (only used by the root GPU, rank 0).
-
-    Returns
-    -------
-    None
     """
     if nccl_comm.rank_id() == 0:
         local_array[index] = value
@@ -304,10 +300,6 @@ def nccl_send(nccl_comm, send_buf, dest, count):
         The rank of the destination GPU device.
     count : :obj:`int`
         Number of elements to send from `send_buf`.
-
-    Returns
-    -------
-    None
     """
     nccl_comm.send(send_buf.data.ptr,
                    count,
@@ -331,10 +323,6 @@ def nccl_recv(nccl_comm, recv_buf, source, count=None):
         The rank of the source GPU device.
     count : :obj:`int`, optional
         Number of elements to receive.
-
-    Returns
-    -------
-    None
     """
     nccl_comm.recv(recv_buf.data.ptr,
                    count,
