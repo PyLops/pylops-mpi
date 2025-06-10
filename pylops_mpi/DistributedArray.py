@@ -506,7 +506,7 @@ class DistributedArray:
     def _send(self, send_buf, dest, count=None, tag=None):
         """ Send operation
         """
-        if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
+        if deps.nccl_enabled and self.base_comm_nccl:
             if count is None:
                 # assuming sending the whole array
                 count = send_buf.size
@@ -519,7 +519,7 @@ class DistributedArray:
         """
         # NCCL must be called with recv_buf. Size cannot be inferred from
         # other arguments and thus cannot be dynamically allocated
-        if deps.nccl_enabled and getattr(self, "base_comm_nccl") and recv_buf is not None:
+        if deps.nccl_enabled and self.base_comm_nccl and recv_buf is not None:
             if recv_buf is not None:
                 if count is None:
                     # assuming data will take a space of the whole buffer
@@ -572,6 +572,7 @@ class DistributedArray:
         self._check_mask(dist_array)
         SumArray = DistributedArray(global_shape=self.global_shape,
                                     base_comm=self.base_comm,
+                                    base_comm_nccl=self.base_comm_nccl,
                                     dtype=self.dtype,
                                     partition=self.partition,
                                     local_shapes=self.local_shapes,
@@ -598,6 +599,7 @@ class DistributedArray:
 
         ProductArray = DistributedArray(global_shape=self.global_shape,
                                         base_comm=self.base_comm,
+                                        base_comm_nccl=self.base_comm_nccl,
                                         dtype=self.dtype,
                                         partition=self.partition,
                                         local_shapes=self.local_shapes,
@@ -748,6 +750,7 @@ class DistributedArray:
         """
         local_shapes = [(np.prod(local_shape, axis=-1), ) for local_shape in self.local_shapes]
         arr = DistributedArray(global_shape=np.prod(self.global_shape),
+                               base_comm_nccl=self.base_comm_nccl,
                                local_shapes=local_shapes,
                                mask=self.mask,
                                partition=self.partition,
