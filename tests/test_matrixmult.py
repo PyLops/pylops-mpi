@@ -5,7 +5,7 @@ from mpi4py import MPI
 import math
 
 from pylops_mpi import DistributedArray, Partition
-from pylops_mpi.basicoperators.MatrixMultiply import MPISUMMAMatrixMult
+from pylops_mpi.basicoperators.MatrixMult import MPISUMMAMatrixMult
 
 np.random.seed(42)
 
