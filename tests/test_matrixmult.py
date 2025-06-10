@@ -3,10 +3,9 @@ import numpy as np
 from numpy.testing import assert_allclose
 from mpi4py import MPI
 import math
-import sys
 
 from pylops_mpi import DistributedArray, Partition
-from pylops_mpi.basicoperators.MatrixMultiply import SUMMAMatrixMult
+from pylops_mpi.basicoperators.MatrixMultiply import MPISUMMAMatrixMult
 
 np.random.seed(42)
 
@@ -109,7 +108,7 @@ def test_SUMMAMatrixMult(M, K, N, dtype_str):
     comm.Barrier()
 
     # Create SUMMAMatrixMult operator
-    Aop = SUMMAMatrixMult(A_p, N, base_comm=comm, dtype=dtype_str)
+    Aop = MPISUMMAMatrixMult(A_p, N, base_comm=comm, dtype=dtype_str)
 
     # Create DistributedArray for input x (representing B flattened)
     all_my_own_cols_B = comm.allgather(my_own_cols_B)
@@ -166,7 +165,7 @@ def test_SUMMAMatrixMult(M, K, N, dtype_str):
             y_dist.local_array,
             expected_y_slice.ravel(),
             rtol=1e-14,
-            atol=1e-7,
+            atol=1e-14,
             err_msg=f"Rank {rank}: Forward verification failed."
         )
 
@@ -183,7 +182,7 @@ def test_SUMMAMatrixMult(M, K, N, dtype_str):
             z_dist.local_array,
             expected_z_slice.ravel(),
             rtol=1e-14,
-            atol=1e-7,
+            atol=1e-14,
             err_msg=f"Rank {rank}: Adjoint verification failed."
         )
 

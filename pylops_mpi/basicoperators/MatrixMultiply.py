@@ -11,7 +11,7 @@ from pylops_mpi import (
 )
 
 
-class SUMMAMatrixMult(MPILinearOperator):
+class MPISUMMAMatrixMult(MPILinearOperator):
     def __init__(
             self,
             A: NDArray,
@@ -90,7 +90,6 @@ class SUMMAMatrixMult(MPILinearOperator):
         y = DistributedArray(global_shape= (self.M * self.dimsd[1]),
                              local_shapes=[(self.M * c) for c in layer_col_lens],
                              mask=mask,
-                             #axis=1,
                              partition=Partition.SCATTER,
                              dtype=self.dtype)
         y[:] = C_local.flatten()
@@ -134,7 +133,6 @@ class SUMMAMatrixMult(MPILinearOperator):
             global_shape=(self.K * self.dimsd[1]),
             local_shapes=[self.K * c for c in layer_col_lens],
             mask=mask,
-            #axis=1
             partition=Partition.SCATTER,
             dtype=self.dtype,
         )

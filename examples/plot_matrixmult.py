@@ -1,10 +1,17 @@
-import sys
+"""
+Distributed Matrix Multiplication
+=========================
+This example shows how to use the :py:class:`pylops_mpi.basicoperators.MatrixMultiply.SUMMAMatrixMult`.
+This class provides a way to distribute arrays across multiple processes in
+a parallel computing environment.
+"""
+
 import math
 import numpy as np
 from mpi4py import MPI
 
 from pylops_mpi import DistributedArray, Partition
-from pylops_mpi.basicoperators.MatrixMultiply import SUMMAMatrixMult
+from pylops_mpi.basicoperators.MatrixMultiply import MPISUMMAMatrixMult
 
 np.random.seed(42)
 
@@ -15,12 +22,15 @@ nProcs  = comm.Get_size()
 
 P_prime = int(math.ceil(math.sqrt(nProcs)))
 C       = int(math.ceil(nProcs / P_prime))
-assert P_prime * C >= nProcs
+
+if P_prime * C < nProcs:
+    print("No. of procs has to be a square number")
+    exit(-1)
 
 # matrix dims
-M = 32    # any M
-K = 32    # any K
-N = 35    # any N
+M = 32
+K = 32
+N = 35
 
 blk_rows = int(math.ceil(M / P_prime))
 blk_cols = int(math.ceil(N / P_prime))
@@ -66,7 +76,7 @@ else:
 
 comm.Barrier()
 
-Aop        = SUMMAMatrixMult(A_p, N)
+Aop        = MPISUMMAMatrixMult(A_p, N)
 col_lens   = comm.allgather(my_own_cols)
 total_cols = np.add.reduce(col_lens, 0)
 x = DistributedArray(global_shape=K * total_cols,
