@@ -25,7 +25,8 @@ class MPISUMMAMatrixMult(MPILinearOperator):
         # Determine grid dimensions (P_prime × C) such that P_prime * C ≥ size
         self._P_prime = int(math.ceil(math.sqrt(size)))
         self._C = int(math.ceil(size / self._P_prime))
-        assert self._P_prime * self._C >= size
+        if self._P_prime * self._C < size:
+            raise Exception("Number of Procs must be a square number")
 
         # Compute this process's group and layer indices
         self._group_id = rank % self._P_prime
@@ -36,7 +37,6 @@ class MPISUMMAMatrixMult(MPILinearOperator):
         self._layer_comm = base_comm.Split(color=self._layer_id, key=self._group_id)
         self._group_comm = base_comm.Split(color=self._group_id, key=self._layer_id)
 
-        self.dtype = np.dtype(dtype)
         self.A    = np.array(A, dtype=self.dtype, copy=False)
 
         self.M = self._layer_comm.allreduce(self.A.shape[0], op=MPI.SUM)

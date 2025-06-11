@@ -28,7 +28,7 @@ test_params = [
 
 @pytest.mark.mpi(min_size=1)  # SUMMA should also work for 1 process.
 @pytest.mark.parametrize("M, K, N, dtype_str", test_params)
-def test_SUMMAMatrixMult(M, K, N, dtype_str):
+def test_MPIMatrixMult(M, K, N, dtype_str):
     dtype = np.dtype(dtype_str)
 
     cmplx = 1j if np.issubdtype(dtype, np.complexfloating) else 0
@@ -133,56 +133,26 @@ def test_SUMMAMatrixMult(M, K, N, dtype_str):
 
     # Forward operation: y = A @ B (distributed)
     y_dist = Aop @ x_dist
+    y = y_dist.asarray(),
 
     # Adjoint operation: z = A.H @ y (distributed y representing C)
-    z_dist = Aop.H @ y_dist
+    y_adj_dist = Aop.H @ y_dist
+    y_adj = y_adj_dist.asarray()
 
     if rank == 0:
-        if all(dim > 0 for dim in [M, K, N]):
-            C_true = A_glob @ B_glob
-            Z_true = A_glob.conj().T @ C_true
-        else:  # Handle cases with zero dimensions
-            C_true = np.zeros((M, N), dtype=dtype)
-            Z_true = np.zeros((K if K > 0 else 0, N), dtype=dtype) if K > 0 else np.zeros((0, N), dtype=dtype)
-    else:
-        C_true = Z_true = None
-
-    C_true = comm.bcast(C_true, root=0)
-    Z_true = comm.bcast(Z_true, root=0)
-
-    col_start_C_dist   = my_layer * blk_cols_BC
-    col_end_C_dist     = min(N, col_start_C_dist + blk_cols_BC)
-    my_own_cols_C_dist = max(0, col_end_C_dist - col_start_C_dist)
-    expected_y_shape   = (M * my_own_cols_C_dist,)
-
-    assert y_dist.local_array.shape == expected_y_shape, (
-        f"Rank {rank}: y_dist shape {y_dist.local_array.shape} != expected {expected_y_shape}"
-    )
-
-    if y_dist.local_array.size > 0 and C_true is not None and C_true.size > 0:
-        expected_y_slice = C_true[:, col_start_C_dist:col_end_C_dist]
+        y_np = A_glob @ B_glob
+        y_adj_np = A_glob.conj().T @ y_np
         assert_allclose(
-            y_dist.local_array,
-            expected_y_slice.ravel(),
+            y,
+            y_np.ravel(),
             rtol=1e-14,
-            atol=1e-14,
             err_msg=f"Rank {rank}: Forward verification failed."
         )
 
-    # Verify adjoint operation (z = A.H @ y)
-    expected_z_shape = (K * my_own_cols_C_dist,)
-    assert z_dist.local_array.shape == expected_z_shape, (
-        f"Rank {rank}: z_dist shape {z_dist.local_array.shape} != expected {expected_z_shape}"
-    )
-
-    # Verify adjoint result values
-    if z_dist.local_array.size > 0 and Z_true is not None and Z_true.size > 0:
-        expected_z_slice = Z_true[:, col_start_C_dist:col_end_C_dist]
         assert_allclose(
-            z_dist.local_array,
-            expected_z_slice.ravel(),
+            y_adj,
+            y_adj_np.ravel(),
             rtol=1e-14,
-            atol=1e-14,
             err_msg=f"Rank {rank}: Adjoint verification failed."
         )
 

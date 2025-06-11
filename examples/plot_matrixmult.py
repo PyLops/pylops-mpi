@@ -63,7 +63,7 @@ if rank == 0:
         re = min(M, rs + blk_rows)
         cs = pg * blk_cols;
         ce = min(N, cs + blk_cols)
-        a_block, b_block = A[rs:re, :].copy(), B[:, cs:ce].copy()
+        a_block, b_block = A[rs:re, :], B[:, cs:ce]
         if dest == 0:
             A_p, B_p = a_block, b_block
         else:
@@ -79,7 +79,7 @@ comm.Barrier()
 
 Aop = MPISUMMAMatrixMult(A_p, N)
 col_lens = comm.allgather(my_own_cols)
-total_cols = np.add.reduce(col_lens, 0)
+total_cols =  np.sum(col_lens)
 x = DistributedArray(global_shape=K * total_cols,
                      local_shapes=[K * col_len for col_len in col_lens],
                      partition=Partition.SCATTER,
@@ -99,16 +99,17 @@ col_end = min(N, col_start + blk_cols)
 my_own_cols = col_end - col_start
 expected_y = C_true[:, col_start:col_end].flatten()
 
+xadj = Aop.H @ y
+
 if not np.allclose(y.local_array, expected_y, atol=1e-6, rtol=1e-14):
     print(f"RANK {rank}: FORWARD VERIFICATION FAILED")
     print(f'{rank} local: {y.local_array}, expected: {C_true[:, col_start:col_end]}')
 else:
     print(f"RANK {rank}: FORWARD VERIFICATION PASSED")
 
-z = Aop.H @ y
 expected_z = Z_true[:, col_start:col_end].flatten()
-if not np.allclose(z.local_array, expected_z, atol=1e-6, rtol=1e-14):
+if not np.allclose(xadj.local_array, expected_z, atol=1e-6, rtol=1e-14):
     print(f"RANK {rank}: ADJOINT VERIFICATION FAILED")
-    print(f'{rank} local: {z.local_array}, expected: {Z_true[:, col_start:col_end]}')
+    print(f'{rank} local: {xadj.local_array}, expected: {Z_true[:, col_start:col_end]}')
 else:
     print(f"RANK {rank}: ADJOINT VERIFICATION PASSED")
