@@ -12,6 +12,27 @@ from pylops_mpi import (
 
 
 class MPIMatrixMult(MPILinearOperator):
+    r"""
+    Distributed Matrix-Matrix multiplication
+    Implements a distributed matrix-matrix multiplication
+
+    Parameters
+    ----------
+    A : :obj:`numpy.ndarray`
+        Matrix multiplication operator of size
+        :math:`[ \times ]`
+    saveAt : :obj:`bool`, optional
+        Save ``A`` and ``A.H`` to speed up the computation of adjoint
+        (``True``) or create ``A.H`` on-the-fly (``False``)
+        Note that ``saveAt=True`` will double the amount of required memory
+    base_comm : :obj:`mpi4py.MPI.Comm`, optional
+        MPI Base Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.
+    dtype : :obj:`str`, optional
+        Type of elements in input array.
+
+    Notes
+    -----
+    """
     def __init__(
             self,
             A: NDArray,
@@ -102,17 +123,8 @@ class MPIMatrixMult(MPILinearOperator):
 
         x_arr = x.local_array.reshape((self.M, self._local_ncols)).astype(self.dtype)
         X_tile = x_arr[self._row_start:self._row_end, :]
-
         A_local = self.At if hasattr(self, "At") else self.A.T.conj()
-        m, b = A_local.shape
-        pad = (-m) % self._P_prime
-        A_pad = A_local if pad <= 0 else np.pad(A_local, ((0, pad), (0, 0)), mode='constant', constant_values=self.dtype.type(0.0))
-        batch_sz = (m + pad) // self._P_prime
-        A_batch  = A_pad.reshape(self._P_prime, batch_sz, b)
-
-        Y_batch = ncp.matmul(A_batch, X_tile)
-        Y_pad = Y_batch.reshape(batch_sz * self._P_prime, -1)
-        y_local = Y_pad[:A_local.shape[0], :]
-        y_layer = self._layer_comm.allreduce(y_local, op=MPI.SUM)
+        Y_local = ncp.matmul(A_local, X_tile)
+        y_layer = self._layer_comm.allreduce(Y_local, op=MPI.SUM)
         y[:] = y_layer.flatten()
         return y
