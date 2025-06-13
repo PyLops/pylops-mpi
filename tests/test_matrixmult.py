@@ -53,13 +53,10 @@ def test_SUMMAMatrixMult(M, K, N, dtype_str):
     my_own_rows_A = max(0, row_end_A - row_start_A)
 
     blk_cols_BC = int(math.ceil(N / P_prime))
-    col_start_B = my_group * blk_cols_BC
+    col_start_B = my_layer * blk_cols_BC
     col_end_B = min(N, col_start_B + blk_cols_BC)
     my_own_cols_B = max(0, col_end_B - col_start_B)
 
-    # Initialize local matrices
-    A_p = np.empty((my_own_rows_A, K), dtype=dtype)
-    B_p = np.empty((K, my_own_cols_B), dtype=dtype)
 
     A_glob_real = np.arange(M * K, dtype=base_float_dtype).reshape(M, K)
     A_glob_imag = np.arange(M * K, dtype=base_float_dtype).reshape(M, K) * 0.5
@@ -69,53 +66,19 @@ def test_SUMMAMatrixMult(M, K, N, dtype_str):
     B_glob_imag = np.arange(K * N, dtype=base_float_dtype).reshape(K, N) * 0.7
     B_glob = (B_glob_real + cmplx * B_glob_imag).astype(dtype)
 
-    if rank == 0:
-        # Distribute matrix blocks to all ranks
-        for dest_rank in range(size):
-            dest_my_group = dest_rank % P_prime
-
-            # Calculate destination rank's block dimensions
-            dest_row_start_A = dest_my_group * blk_rows_A
-            dest_row_end_A = min(M, dest_row_start_A + blk_rows_A)
-            dest_my_own_rows_A = max(0, dest_row_end_A - dest_row_start_A)
-
-            dest_col_start_B = dest_my_group * blk_cols_BC
-            dest_col_end_B = min(N, dest_col_start_B + blk_cols_BC)
-            dest_my_own_cols_B = max(0, dest_col_end_B - dest_col_start_B)
-
-            A_block_send = A_glob[dest_row_start_A:dest_row_end_A, :].copy()
-            B_block_send = B_glob[:, dest_col_start_B:dest_col_end_B].copy()
-
-            # Validate block shapes
-            assert A_block_send.shape == (dest_my_own_rows_A, K)
-            assert B_block_send.shape == (K, dest_my_own_cols_B)
-
-            if dest_rank == 0:
-                A_p, B_p = A_block_send, B_block_send
-            else:
-                if A_block_send.size > 0:
-                    comm.Send(A_block_send, dest=dest_rank, tag=100 + dest_rank)
-                if B_block_send.size > 0:
-                    comm.Send(B_block_send, dest=dest_rank, tag=200 + dest_rank)
-    else:
-        if A_p.size > 0:
-            comm.Recv(A_p, source=0, tag=100 + rank)
-        if B_p.size > 0:
-            comm.Recv(B_p, source=0, tag=200 + rank)
-
-    comm.Barrier()
+    A_p = A_glob[row_start_A:row_end_A,:]
+    B_p = B_glob[:,col_start_B:col_end_B]
 
     # Create SUMMAMatrixMult operator
     Aop = MPIMatrixMult(A_p, N, base_comm=comm, dtype=dtype_str)
 
     # Create DistributedArray for input x (representing B flattened)
     all_my_own_cols_B = comm.allgather(my_own_cols_B)
-    total_cols = sum(all_my_own_cols_B)
-    local_shapes_x = [(K * cl_b,) for cl_b in all_my_own_cols_B]
+    total_cols = np.sum(all_my_own_cols_B)
 
     x_dist = DistributedArray(
         global_shape=(K * total_cols),
-        local_shapes=local_shapes_x,
+        local_shapes=[K * cl_b for cl_b in all_my_own_cols_B],
         partition=Partition.SCATTER,
         base_comm=comm,
         dtype=dtype

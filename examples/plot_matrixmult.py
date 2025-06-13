@@ -27,9 +27,9 @@ if (P_prime * C) != n_procs:
     exit(-1)
 
 # matrix dims
-M = 32
-K = 35
-N = 37
+M = 5
+K = 4
+N = 3
 
 A = np.random.rand(M * K).astype(dtype=np.float32).reshape(M, K)
 B = np.random.rand(K * N).astype(dtype=np.float32).reshape(K, N)
@@ -47,21 +47,16 @@ group_comm = comm.Split(color=my_group, key=my_layer)  # all procs in same group
 #      - :math:`B_{p} \in \mathbb{R}^{K\times \text{my\_own\_cols}}`
 #    where
 blk_rows = int(math.ceil(M / P_prime))
-row_start = my_group * blk_rows
-row_end = min(M, row_start + blk_rows)
-my_own_rows = row_end - row_start
-
 blk_cols = int(math.ceil(N / P_prime))
-col_start = my_layer * blk_cols
-col_end = min(N, col_start + blk_cols)
-my_own_cols = col_end - col_start
 
-
-rs = (rank % P_prime) * blk_rows
+rs = my_group * blk_rows
 re = min(M, rs + blk_rows)
+my_own_rows = re - rs
 
-cs = (rank // P_prime) * blk_cols
+cs = my_layer * blk_cols
 ce = min(N, cs + blk_cols)
+my_own_cols = ce - cs
+
 A_p, B_p = A[rs:re, :].copy(), B[:, cs:ce].copy()
 
 Aop = MPIMatrixMult(A_p, N, dtype="float32")
@@ -81,19 +76,19 @@ y_loc = A @ B
 xadj_loc = (A.T.dot(y_loc.conj())).conj()
 
 
-expected_y_loc = y_loc[:, col_start:col_end].flatten().astype(np.float32)
-expected_xadj_loc = xadj_loc[:, col_start:col_end].flatten().astype(np.float32)
+expected_y_loc = y_loc[:, cs:ce].flatten().astype(np.float32)
+expected_xadj_loc = xadj_loc[:, cs:ce].flatten().astype(np.float32)
 
 xadj = Aop.H @ y
 if not np.allclose(y.local_array, expected_y_loc, rtol=1e-6):
     print(f"RANK {rank}: FORWARD VERIFICATION FAILED")
-    print(f'{rank} local: {y.local_array}, expected: {y_loc[:, col_start:col_end]}')
+    print(f'{rank} local: {y.local_array}, expected: {y_loc[:, cs:ce]}')
 else:
     print(f"RANK {rank}: FORWARD VERIFICATION PASSED")
 
 if not np.allclose(xadj.local_array, expected_xadj_loc, rtol=1e-6):
     print(f"RANK {rank}: ADJOINT VERIFICATION FAILED")
-    print(f'{rank} local: {xadj.local_array}, expected: {xadj_loc[:, col_start:col_end]}')
+    print(f'{rank} local: {xadj.local_array}, expected: {xadj_loc[:, cs:ce]}')
 else:
     print(f"RANK {rank}: ADJOINT VERIFICATION PASSED")
 
