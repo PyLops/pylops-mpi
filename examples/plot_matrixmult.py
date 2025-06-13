@@ -27,9 +27,9 @@ if (P_prime * C) != n_procs:
     exit(-1)
 
 # matrix dims
-M = 5
-K = 4
-N = 3
+M = 33
+K = 34
+N = 37
 
 A = np.random.rand(M * K).astype(dtype=np.float32).reshape(M, K)
 B = np.random.rand(K * N).astype(dtype=np.float32).reshape(K, N)
