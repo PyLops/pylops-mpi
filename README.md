@@ -38,7 +38,7 @@ and running the following command:
    
    with `X=11,12`.
 
-Alternatively, if the Conda package manager is used to setup the Python environment, steps 1 and 2 can be skipped and install `mpi4py` which comes with its own MPI distribution:
+Alternatively, if the Conda package manager is used to setup the Python environment, steps 1 and 2 can be skipped and `mpi4py` can be installed directly alongside the MPI distribution of choice:
 
 ```
 conda install -c conda-forge mpi4py X
@@ -70,11 +70,11 @@ via the `DistributedArray` object:
 import numpy as np
 from pylops_mpi import DistributedArray, Partition
 
+# Initialize DistributedArray with partition set to Scatter
 nx, ny = 11, 21
 x = np.zeros((nx, ny), dtype=np.float64)
 x[nx // 2, ny // 2] = 1.0
 
-# Initialize  DistributedArray with partition set to Scatter
 x_dist = pylops_mpi.DistributedArray.to_dist(
             x=x.flatten(), 
             partition=Partition.SCATTER)
@@ -83,7 +83,7 @@ x_dist = pylops_mpi.DistributedArray.to_dist(
 D_op = pylops_mpi.MPIFirstDerivative((nx, ny), dtype=np.float64)
 
 # y = Dx
-y_dist = D_op @ x
+y_dist = D_op @ x_dist
 
 # xadj = D^H y
 xadj_dist = D_op.H @ y_dist
