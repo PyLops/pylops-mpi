@@ -91,6 +91,7 @@ class MPIMatrixMult(MPILinearOperator):
         ncp = get_module(x.engine)
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER}. Got {x.partition} instead.")
+
         y = DistributedArray(
             global_shape=(self.K * self.dimsd[1]),
             local_shapes=[self.K * c for c in self._rank_col_lens],
@@ -98,6 +99,7 @@ class MPIMatrixMult(MPILinearOperator):
             partition=Partition.SCATTER,
             dtype=self.dtype,
         )
+
         x_arr = x.local_array.reshape((self.M, self._local_ncols)).astype(self.dtype)
         X_tile = x_arr[self._row_start:self._row_end, :]
 
