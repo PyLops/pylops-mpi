@@ -5,17 +5,25 @@ Installation
 
 Dependencies
 ************
-The PyLops-MPI project strives to create a library that is easy to install in
-any environment and has limited number of dependencies.
-Required dependencies are as follows:
+The minimal set of dependencies for the PyLops-MPI project is:
 
-* MPI(Message Passing Interface)
-* Python 3.8 or greater
+* MPI (Message Passing Interface)
+* Python 3.10 or greater
 * `NumPy <http://www.numpy.org>`_
 * `SciPy <http://www.scipy.org/scipylib/index.html>`_
 * `Matplotlib <https://matplotlib.org/>`_
 * `MPI4py <https://mpi4py.readthedocs.io/en/stable/>`_
 * `PyLops <https://pylops.readthedocs.io/en/stable/>`_
+
+Additionally, to use the NCCL engine, the following additional 
+dependencies are required:
+
+* `CuPy <https://cupy.dev/>`_
+* `NCCL <https://docs.cupy.dev/en/stable/install.html#additional-cuda-libraries>`_
+
+We highly encourage using the `Anaconda Python distribution <https://www.anaconda.com/download>`_
+or its standalone package manager `Conda <https://docs.conda.io/en/latest/index.html>`_. However,
+if this is not possible, some of the dependencies must be installed prior to installing PyLops-MPI.
 
 Download and Install MPI
 ========================
@@ -34,6 +42,41 @@ After installing MPI, verify its installation by opening a terminal and running 
 
    >> mpiexec --version
 
+Install NCCL (optional)
+=======================
+To obtain highly-optimized performance on GPU clusters, PyLops-MPI also supports the Nvidia's collective communication calls
+`(NCCL) <https://developer.nvidia.com/nccl>`_. Two additional dependencies are required, CuPy and NCCL, which can be installed
+using `pip`:
+
+.. code-block:: bash
+
+   >> pip install cupy-cuda12x nvidia-nccl-cu12
+
+.. note::
+
+   Replace `12x` with your CUDA version (e.g., `11x` for CUDA 11.x).
+
+
+.. _UserInstall:
+
+Step-by-step installation for users
+***********************************
+
+Currently PyLops-MPI can only be installed using ``pip``; simply type the following 
+command in your terminal to install the PyPI distribution:
+
+.. code-block:: bash
+
+   >> pip install pylops-mpi
+
+Note that when installing via `pip`, only *required* dependencies are installed.
+
+
+.. _DevInstall:
+
+Step-by-step installation for developers
+****************************************
+
 Fork PyLops-MPI
 ===============
 Fork the `PyLops-MPI repository <https://github.com/PyLops/pylops-mpi>`_ and clone it by executing the following in your terminal:
@@ -45,57 +88,20 @@ Fork the `PyLops-MPI repository <https://github.com/PyLops/pylops-mpi>`_ and clo
 We recommend installing dependencies into a separate environment.
 For that end, we provide a `Makefile` with useful commands for setting up the environment.
 
-Enable Nvidia Collective Communication Library
-=======================================================
-To obtain highly-optimized performance on GPU clusters, PyLops-MPI also supports the Nvidia's collective communication calls
-`(NCCL) <https://developer.nvidia.com/nccl>`_. Two additional dependencies are required: CuPy and NCCL 
-
-* `CuPy with NCCL <https://docs.cupy.dev/en/stable/install.html>`_
-
-
-Step-by-step installation for users
-***********************************
-
-Conda
-=====
-For a ``conda`` environment, run
-
-.. code-block:: bash
-
-   >> make install_conda
-
-This will create and activate an environment called ``pylops_mpi``, with all required dependencies.
-
-Pip
-===
-If you prefer a ``pip`` installation, simply type the following command in your terminal to install the
-PyPI distribution:
-
-.. code-block:: bash
-
-   >> pip install pylops-mpi
-
-When installing via pip, only required dependencies are installed.
-Note that, differently from the  ``conda`` command, the above **will not** create a virtual environment.
-Make sure you create and activate your environment previously.
-
-.. _DevInstall:
-
-Step-by-step installation for developers
-****************************************
-
 Install dependencies
 ====================
 
-Conda
------
+Conda (recommended)
+-------------------
+
 For a ``conda`` environment, run
 
 .. code-block:: bash
 
    >> make dev-install_conda
 
-This will create and activate an environment called ``pylops_mpi``, with all required and optional dependencies.
+This will create and activate an environment called ``pylops_mpi``, with all 
+required and optional dependencies.
 
 If you want to enable `NCCL <https://developer.nvidia.com/nccl>`_ in PyLops-MPI, run this instead
 
@@ -128,8 +134,8 @@ The `Makefile` is pre-configured with CUDA 12.x. If you use this version, run
    >> make dev-install_nccl
 
 Otherwise, you can change the command in `Makefile` to an appropriate CUDA version
-i.e., If you use CUDA 11.x, change ``cupy-cuda12x`` and ``nvidia-nccl-cu12`` to ``cupy-cuda11x`` and ``nvidia-nccl-cu11``  
-and run the command.
+i.e., If you use CUDA 11.x, change ``cupy-cuda12x`` and ``nvidia-nccl-cu12`` to 
+``cupy-cuda11x`` and ``nvidia-nccl-cu11`` and run the command.
 
 Run tests
 =========
