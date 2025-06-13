@@ -19,19 +19,95 @@ class MPIMatrixMult(MPILinearOperator):
     Parameters
     ----------
     A : :obj:`numpy.ndarray`
-        Matrix multiplication operator of size
-        :math:`[ \times ]`
+        Local block of the matrix multiplication operator of shape ``(M_loc, K)``
+        where ``M_loc`` is the number of rows stored on this MPI rank and
+        ``K`` is the global number of columns.
+    N : :obj:`int`
+        Global leading dimension of the operand matrix (number of columns).
     saveAt : :obj:`bool`, optional
         Save ``A`` and ``A.H`` to speed up the computation of adjoint
         (``True``) or create ``A.H`` on-the-fly (``False``)
-        Note that ``saveAt=True`` will double the amount of required memory
+        Note that ``saveAt=True`` will double the amount of required memory.
+        The default is ``False``.
     base_comm : :obj:`mpi4py.MPI.Comm`, optional
         MPI Base Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.
     dtype : :obj:`str`, optional
         Type of elements in input array.
 
+    Attributes
+    ----------
+    shape : :obj:`tuple`
+        Operator shape
+
+    Raises
+    ------
+    Exception
+        If the operator is created without a square number of mpi ranks.
+    ValueError
+        If input vector does not have the correct partition type.
+
     Notes
     -----
+    This implementation uses a 1D block distribution of the operand matrix and
+    operator replicated across the processes math:`P` by a factor equivalent
+    to math:`\sqrt{P}` across a square process grid  ( math:`\sqrt{P}\times\sqrt{P}`).
+
+    The operator implements a distributed matrix-matrix multiplication where:
+
+    - The matrix ``A`` is distributed across MPI processes in a block-row fashion
+    - Each process holds a local block of ``A`` with shape ``(M_loc, K)``
+    - The operand matrix ``X`` is distributed in a block-column fashion
+    - Communication is minimized by using a 2D process grid layout
+
+    The forward operation computes :math:`Y = A \cdot X` where:
+
+    - :math:`A` is the distributed matrix operator of shape ``(M, K)``
+    - :math:`X` is the distributed operand matrix of shape ``(K, N)``
+    - :math:`Y` is the resulting distributed matrix of shape ``(M, N)``
+
+    The adjoint operation computes :math:`Y = A^H \cdot X` where :math:`A^H`
+    is the conjugate transpose of :math:`A`.
+
+    Steps for the Forward Operation (:math:`Y = A \cdot X`)
+    ----------------------------------------
+    1. **Input Preparation**: The input vector ``x`` (flattened from matrix ``X``
+       of shape ``(K, N)``) is reshaped to ``(K, N_local)`` where ``N_local``
+       is the number of columns assigned to the current process.
+
+    2. **Data Broadcasting**: Within each layer (processes with same ``layer_id``),
+       the operand data is broadcast from the process whose ``group_id`` matches
+       the ``layer_id``. This ensures all processes in a layer have access to
+       the same operand columns.
+
+    3. **Local Computation**: Each process computes ``A_local @ X_local`` where:
+       - ``A_local`` is the local block of matrix ``A`` (shape ``M_local × K``)
+       - ``X_local`` is the broadcasted operand (shape ``K × N_local``)
+
+    4. **Layer Gather**: Results from all processes in each layer are gathered
+       using ``allgather`` to reconstruct the full result matrix vertically.
+
+
+    Steps for the Adjoint Operation (:math:`Y = A^H \cdot X`)
+    -------------------------------------------
+    The adjoint operation performs the conjugate transpose multiplication:
+
+    1. **Input Reshaping**: The input vector ``x`` is reshaped to ``(M, N_local)``
+       representing the local columns of the input matrix.
+
+    2. **Local Adjoint Computation**:
+        Each process computes ``A_local.H @ X_tile``
+            where ``A_local.H`` is either:
+                - Pre-computed ``At`` (if ``saveAt=True``)
+                - Computed on-the-fly as ``A.T.conj()`` (if ``saveAt=False``)
+        Each process multiplies its transposed  local ``A`` block ``A_local^H`` (shape ``K × M_block``)
+        with the extracted  ``X_tile`` (shape ``M_block × N_local``),
+        producing a partial result of  shape ``(K, N_local)``.
+        This computes the local contribution of columns of  ``A^H`` to the final result.
+
+    3. **Layer Reduction**: Since the full result ``Y = A^H \cdot X`` is the
+       sum of contributions from all column blocks of ``A^H``, processes in the 
+       same layer perform an ``allreduce`` sum to combine their partial results. 
+       This gives the complete ``(K, N_local)`` result for their assigned columns.
     """
     def __init__(
             self,
@@ -58,6 +134,7 @@ class MPIMatrixMult(MPILinearOperator):
         self.base_comm = base_comm
         self._layer_comm = base_comm.Split(color=self._layer_id, key=self._group_id)
         self._group_comm = base_comm.Split(color=self._group_id, key=self._layer_id)
+
         self.A = A.astype(np.dtype(dtype))
         if saveAt: self.At = A.T.conj()
 
@@ -65,7 +142,6 @@ class MPIMatrixMult(MPILinearOperator):
         self.K = A.shape[1]
         self.N = N
 
-        # Determine how many columns each group holds
         block_cols = int(math.ceil(self.N / self._P_prime))
         blk_rows = int(math.ceil(self.M / self._P_prime))
 
