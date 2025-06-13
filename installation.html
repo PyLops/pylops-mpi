@@ -451,18 +451,25 @@
 <span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
 <section id="dependencies">
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading">#</a></h2>
-<p>The PyLops-MPI project strives to create a library that is easy to install in
-any environment and has limited number of dependencies.
-Required dependencies are as follows:</p>
+<p>The minimal set of dependencies for the PyLops-MPI project is:</p>
 <ul class="simple">
-<li><p>MPI(Message Passing Interface)</p></li>
-<li><p>Python 3.8 or greater</p></li>
+<li><p>MPI (Message Passing Interface)</p></li>
+<li><p>Python 3.10 or greater</p></li>
 <li><p><a class="reference external" href="http://www.numpy.org">NumPy</a></p></li>
 <li><p><a class="reference external" href="http://www.scipy.org/scipylib/index.html">SciPy</a></p></li>
 <li><p><a class="reference external" href="https://matplotlib.org/">Matplotlib</a></p></li>
 <li><p><a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/">MPI4py</a></p></li>
 <li><p><a class="reference external" href="https://pylops.readthedocs.io/en/stable/">PyLops</a></p></li>
 </ul>
+<p>Additionally, to use the NCCL engine, the following additional
+dependencies are required:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://cupy.dev/">CuPy</a></p></li>
+<li><p><a class="reference external" href="https://docs.cupy.dev/en/stable/install.html#additional-cuda-libraries">NCCL</a></p></li>
+</ul>
+<p>We highly encourage using the <a class="reference external" href="https://www.anaconda.com/download">Anaconda Python distribution</a>
+or its standalone package manager <a class="reference external" href="https://docs.conda.io/en/latest/index.html">Conda</a>. However,
+if this is not possible, some of the dependencies must be installed prior to installing PyLops-MPI.</p>
 <section id="download-and-install-mpi">
 <h3>Download and Install MPI<a class="headerlink" href="#download-and-install-mpi" title="Link to this heading">#</a></h3>
 <p>Visit the official MPI website to download an appropriate MPI implementation for your system.
@@ -480,6 +487,31 @@ Follow the installation instructions provided by the MPI vendor.</p>
 </pre></div>
 </div>
 </section>
+<section id="install-nccl-optional">
+<h3>Install NCCL (optional)<a class="headerlink" href="#install-nccl-optional" title="Link to this heading">#</a></h3>
+<p>To obtain highly-optimized performance on GPU clusters, PyLops-MPI also supports the Nvidia’s collective communication calls
+<a class="reference external" href="https://developer.nvidia.com/nccl">(NCCL)</a>. Two additional dependencies are required, CuPy and NCCL, which can be installed
+using <cite>pip</cite>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>cupy-cuda12x<span class="w"> </span>nvidia-nccl-cu12
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Replace <cite>12x</cite> with your CUDA version (e.g., <cite>11x</cite> for CUDA 11.x).</p>
+</div>
+</section>
+</section>
+<section id="step-by-step-installation-for-users">
+<span id="userinstall"></span><h2>Step-by-step installation for users<a class="headerlink" href="#step-by-step-installation-for-users" title="Link to this heading">#</a></h2>
+<p>Currently PyLops-MPI can only be installed using <code class="docutils literal notranslate"><span class="pre">pip</span></code>; simply type the following
+command in your terminal to install the PyPI distribution:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>pylops-mpi
+</pre></div>
+</div>
+<p>Note that when installing via <cite>pip</cite>, only <em>required</em> dependencies are installed.</p>
+</section>
+<section id="step-by-step-installation-for-developers">
+<span id="devinstall"></span><h2>Step-by-step installation for developers<a class="headerlink" href="#step-by-step-installation-for-developers" title="Link to this heading">#</a></h2>
 <section id="fork-pylops-mpi">
 <h3>Fork PyLops-MPI<a class="headerlink" href="#fork-pylops-mpi" title="Link to this heading">#</a></h3>
 <p>Fork the <a class="reference external" href="https://github.com/PyLops/pylops-mpi">PyLops-MPI repository</a> and clone it by executing the following in your terminal:</p>
@@ -489,55 +521,23 @@ Follow the installation instructions provided by the MPI vendor.</p>
 <p>We recommend installing dependencies into a separate environment.
 For that end, we provide a <cite>Makefile</cite> with useful commands for setting up the environment.</p>
 </section>
-<section id="enable-nvidia-collective-communication-library">
-<h3>Enable Nvidia Collective Communication Library<a class="headerlink" href="#enable-nvidia-collective-communication-library" title="Link to this heading">#</a></h3>
-<p>To obtain highly-optimized performance on GPU clusters, PyLops-MPI also supports the Nvidia’s collective communication calls
-<a class="reference external" href="https://developer.nvidia.com/nccl">(NCCL)</a>. Two additional dependencies are required: CuPy and NCCL</p>
-<ul class="simple">
-<li><p><a class="reference external" href="https://docs.cupy.dev/en/stable/install.html">CuPy with NCCL</a></p></li>
-</ul>
-</section>
-</section>
-<section id="step-by-step-installation-for-users">
-<h2>Step-by-step installation for users<a class="headerlink" href="#step-by-step-installation-for-users" title="Link to this heading">#</a></h2>
-<section id="conda">
-<h3>Conda<a class="headerlink" href="#conda" title="Link to this heading">#</a></h3>
-<p>For a <code class="docutils literal notranslate"><span class="pre">conda</span></code> environment, run</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>make<span class="w"> </span>install_conda
-</pre></div>
-</div>
-<p>This will create and activate an environment called <code class="docutils literal notranslate"><span class="pre">pylops_mpi</span></code>, with all required dependencies.</p>
-</section>
-<section id="pip">
-<h3>Pip<a class="headerlink" href="#pip" title="Link to this heading">#</a></h3>
-<p>If you prefer a <code class="docutils literal notranslate"><span class="pre">pip</span></code> installation, simply type the following command in your terminal to install the
-PyPI distribution:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>pylops-mpi
-</pre></div>
-</div>
-<p>When installing via pip, only required dependencies are installed.
-Note that, differently from the  <code class="docutils literal notranslate"><span class="pre">conda</span></code> command, the above <strong>will not</strong> create a virtual environment.
-Make sure you create and activate your environment previously.</p>
-</section>
-</section>
-<section id="step-by-step-installation-for-developers">
-<span id="devinstall"></span><h2>Step-by-step installation for developers<a class="headerlink" href="#step-by-step-installation-for-developers" title="Link to this heading">#</a></h2>
 <section id="install-dependencies">
 <h3>Install dependencies<a class="headerlink" href="#install-dependencies" title="Link to this heading">#</a></h3>
-<section id="id2">
-<h4>Conda<a class="headerlink" href="#id2" title="Link to this heading">#</a></h4>
+<section id="conda-recommended">
+<h4>Conda (recommended)<a class="headerlink" href="#conda-recommended" title="Link to this heading">#</a></h4>
 <p>For a <code class="docutils literal notranslate"><span class="pre">conda</span></code> environment, run</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>make<span class="w"> </span>dev-install_conda
 </pre></div>
 </div>
-<p>This will create and activate an environment called <code class="docutils literal notranslate"><span class="pre">pylops_mpi</span></code>, with all required and optional dependencies.</p>
+<p>This will create and activate an environment called <code class="docutils literal notranslate"><span class="pre">pylops_mpi</span></code>, with all
+required and optional dependencies.</p>
 <p>If you want to enable <a class="reference external" href="https://developer.nvidia.com/nccl">NCCL</a> in PyLops-MPI, run this instead</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>make<span class="w"> </span>dev-install_conda_nccl
 </pre></div>
 </div>
 </section>
-<section id="id4">
-<h4>Pip<a class="headerlink" href="#id4" title="Link to this heading">#</a></h4>
+<section id="pip">
+<h4>Pip<a class="headerlink" href="#pip" title="Link to this heading">#</a></h4>
 <p>If you prefer a <code class="docutils literal notranslate"><span class="pre">pip</span></code> installation, we provide the following command</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>make<span class="w"> </span>dev-install
 </pre></div>
@@ -554,8 +554,8 @@ you must first check the CUDA version of your system:</p>
 </pre></div>
 </div>
 <p>Otherwise, you can change the command in <cite>Makefile</cite> to an appropriate CUDA version
-i.e., If you use CUDA 11.x, change <code class="docutils literal notranslate"><span class="pre">cupy-cuda12x</span></code> and <code class="docutils literal notranslate"><span class="pre">nvidia-nccl-cu12</span></code> to <code class="docutils literal notranslate"><span class="pre">cupy-cuda11x</span></code> and <code class="docutils literal notranslate"><span class="pre">nvidia-nccl-cu11</span></code>
-and run the command.</p>
+i.e., If you use CUDA 11.x, change <code class="docutils literal notranslate"><span class="pre">cupy-cuda12x</span></code> and <code class="docutils literal notranslate"><span class="pre">nvidia-nccl-cu12</span></code> to
+<code class="docutils literal notranslate"><span class="pre">cupy-cuda11x</span></code> and <code class="docutils literal notranslate"><span class="pre">nvidia-nccl-cu11</span></code> and run the command.</p>
 </section>
 </section>
 <section id="run-tests">
@@ -668,19 +668,15 @@ Apart from ensuring that docstrings are properly formatted, they can aid in catc
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#download-and-install-mpi">Download and Install MPI</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#verify-mpi-installation">Verify MPI Installation</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fork-pylops-mpi">Fork PyLops-MPI</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-nvidia-collective-communication-library">Enable Nvidia Collective Communication Library</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#install-nccl-optional">Install NCCL (optional)</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-by-step-installation-for-users">Step-by-step installation for users</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conda">Conda</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pip">Pip</a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-by-step-installation-for-users">Step-by-step installation for users</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-by-step-installation-for-developers">Step-by-step installation for developers</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fork-pylops-mpi">Fork PyLops-MPI</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#install-dependencies">Install dependencies</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Conda</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Pip</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#conda-recommended">Conda (recommended)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pip">Pip</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#run-tests">Run tests</a></li>
