@@ -104,13 +104,13 @@ class MPIMatrixMult(MPILinearOperator):
         A_local = self.At if hasattr(self, "At") else self.A.T.conj()
         m, b = A_local.shape
         pad = (-m) % self._P_prime
-        r = (m + pad) // self._P_prime
-        A_pad = np.pad(A_local, ((0, pad), (0, 0)), mode='constant', constant_values=self.dtype.type(0.0))
-        A_batch = A_pad.reshape(self._P_prime, r, b)
+        A_pad = A_local if pad <= 0 else np.pad(A_local, ((0, pad), (0, 0)), mode='constant', constant_values=self.dtype.type(0.0))
+        batch_sz = (m + pad) // self._P_prime
+        A_batch  = A_pad.reshape(self._P_prime, batch_sz, b)
 
         Y_batch = ncp.matmul(A_batch, X_tile)
-        Y_pad = Y_batch.reshape(r * self._P_prime, -1)
-        y_local = Y_pad[:m, :]
+        Y_pad = Y_batch.reshape(batch_sz * self._P_prime, -1)
+        y_local = Y_pad[:A_local.shape[0], :]
         y_layer = self._layer_comm.allreduce(y_local, op=MPI.SUM)
         y[:] = y_layer.flatten()
         return y
