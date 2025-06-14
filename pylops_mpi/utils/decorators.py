@@ -54,6 +54,7 @@ def reshaped(
                 local_shapes = None
                 global_shape = getattr(self, "dims")
             arr = DistributedArray(global_shape=global_shape,
+                                   base_comm_nccl=x.base_comm_nccl,
                                    local_shapes=local_shapes, axis=0,
                                    engine=x.engine, dtype=x.dtype)
             arr_local_shapes = np.asarray(arr.base_comm.allgather(np.prod(arr.local_shape)))
