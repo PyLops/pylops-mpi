@@ -7,6 +7,7 @@ provided by pylops.basicoperators providing forward and adjoint
 functionalities using MPI.
 
 A list of operators present in pylops_mpi.basicoperators:
+    MPIMatrixMult                     Matrix Multiplication operator
     MPIBlockDiag                      Block Diagonal arrangement of PyLops operators
     MPIStackedBlockDiag               Block Diagonal arrangement of PyLops-MPI operators
     MPIVStack                         Vertical Stacking of PyLops operators
@@ -19,6 +20,7 @@ A list of operators present in pylops_mpi.basicoperators:
 
 """
 
+from .MatrixMult import *
 from .BlockDiag import *
 from .VStack import *
 from .HStack import *
@@ -28,6 +30,7 @@ from .Laplacian import *
 from .Gradient import *
 
 __all__ = [
+    "MPIMatrixMult",
     "MPIBlockDiag",
     "MPIStackedBlockDiag",
     "MPIVStack",
