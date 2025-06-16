@@ -152,7 +152,8 @@ A_p, X_p = A[rs:re, :].copy(), X[:, cs:ce].copy()
 Aop = MPIMatrixMult(A_p, N, dtype="float32")
 
 col_lens = comm.allgather(my_own_cols)
-x = DistributedArray(global_shape=K * N,
+total_cols =  np.sum(col_lens)
+x = DistributedArray(global_shape=K * total_cols,
                      local_shapes=[K * col_len for col_len in col_lens],
                      partition=Partition.SCATTER,
                      mask=[i % p_prime for i in range(comm.Get_size())],
