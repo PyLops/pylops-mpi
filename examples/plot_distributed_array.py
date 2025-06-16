@@ -140,6 +140,11 @@ x = pylops_mpi.DistributedArray(global_shape=global_shape,
                                 mask=mask)
 x[:] = (MPI.COMM_WORLD.Get_rank() % subsize + 1.) * np.ones(local_shape)
 xloc = x.asarray()
+xloc1 = x.asarray(masked=True)
+
+if rank == 0:
+    print('xloc (with repeated portions)', xloc)
+    print('xloc (only effective portions):', xloc1)
 
 # Dot product
 dot = x.dot(x)
