@@ -80,7 +80,7 @@ def test_SUMMAMatrixMult(M, K, N, dtype_str):
         local_shapes=[K * cl_b for cl_b in all_local_col_len],
         partition=Partition.SCATTER,
         base_comm=comm,
-        mask=[i // p_prime for i in range(size)],
+        mask=[i % p_prime for i in range(size)],
         dtype=dtype
     )
 

@@ -182,9 +182,7 @@ class MPIMatrixMult(MPILinearOperator):
 
         my_own_cols = self._rank_col_lens[self.rank]
         x_arr = x.local_array.reshape((self.dims[0], my_own_cols))
-        x_arr = x_arr.astype(self.dtype)
-
-        X_local = self._layer_comm.bcast(x_arr if self._group_id == self._layer_id else None, root=self._layer_id)
+        X_local = x_arr.astype(self.dtype)
         Y_local = ncp.vstack(
             self._layer_comm.allgather(
                 ncp.matmul(self.A, X_local)
