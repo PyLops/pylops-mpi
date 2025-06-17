@@ -4,7 +4,7 @@ import time
 import numpy as np
 
 from pylops.optimization.basesolver import Solver
-from pylops.utils import NDArray
+from pylops.utils import NDArray, get_module
 
 from pylops_mpi import DistributedArray, StackedDistributedArray
 
@@ -98,7 +98,10 @@ class CG(Solver):
 
         if show and self.rank == 0:
             if isinstance(x, StackedDistributedArray):
-                self._print_setup(np.iscomplexobj([x1.local_array for x1 in x.distarrays]))
+                # cupy iscomplexobj fallback to numpy iscomplexobject if passing the list
+                # so it has to be made asarray first
+                ncp = get_module(x.distarrays[0].engine)
+                self._print_setup(ncp.iscomplexobj(ncp.asarray([x1.local_array for x1 in x.distarrays])))
             else:
                 self._print_setup(np.iscomplexobj(x.local_array))
         return x
@@ -354,7 +357,10 @@ class CGLS(Solver):
         # print setup
         if show and self.rank == 0:
             if isinstance(x, StackedDistributedArray):
-                self._print_setup(np.iscomplexobj([x1.local_array for x1 in x.distarrays]))
+                # cupy iscomplexobj fallback to numpy iscomplexobject if passing the list
+                # so it has to be made asarray first
+                ncp = get_module(x.distarrays[0].engine)
+                self._print_setup(ncp.iscomplexobj(ncp.asarray([x1.local_array for x1 in x.distarrays])))
             else:
                 self._print_setup(np.iscomplexobj(x.local_array))
         return x
