@@ -30,14 +30,15 @@ test_params = [
 @pytest.mark.mpi(min_size=1)  # SUMMA should also work for 1 process.
 @pytest.mark.parametrize("M, K, N, dtype_str", test_params)
 def test_SUMMAMatrixMult(N, K, M, dtype_str):
+    p_prime = math.isqrt(size)
+    C = p_prime
+    if  p_prime * C != size:
+        pytest.skip(f"Number of processes must be a square number, provided {size} instead...")
+
     dtype = np.dtype(dtype_str)
 
     cmplx = 1j if np.issubdtype(dtype, np.complexfloating) else 0
     base_float_dtype = np.float32 if dtype == np.complex64 else np.float64
-
-    p_prime = math.isqrt(size)
-    C = p_prime
-    assert p_prime * C == size, f"Number of processes must be a square number, provided {size} instead..."
 
     my_group = rank % p_prime
     my_layer = rank // p_prime
