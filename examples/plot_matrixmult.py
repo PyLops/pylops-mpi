@@ -52,9 +52,9 @@ if (p_prime * repl_factor) != size:
 # We are now ready to create the input matrices :math:`\mathbf{A}` of size
 # :math:`M \times k` :math:`\mathbf{A}` of size and :math:`\mathbf{A}` of size
 # :math:`K \times N`.
-M, K, N = 4, 4, 4
-A = np.random.rand(M * K).astype(dtype=np.float32).reshape(M, K)
-X = np.random.rand(K * N).astype(dtype=np.float32).reshape(K, N)
+N, K, M = 4, 4, 4
+A = np.random.rand(N * K).astype(dtype=np.float32).reshape(N, K)
+X = np.random.rand(K * M).astype(dtype=np.float32).reshape(K, M)
 
 ################################################################################
 # The processes are now arranged in a :math:`\sqrt{P} \times \sqrt{P}` grid, 
@@ -129,19 +129,18 @@ group_comm = comm.Split(color=my_group, key=my_layer)  # all procs in same group
 #   │ b31 b32 │ b33 b34 │
 #   │ b41 b42 │ b43 b44 │
 #   └─────────┴─────────┘
-#
 #   </div>
 #
 
-blk_rows = int(math.ceil(M / p_prime))
-blk_cols = int(math.ceil(N / p_prime))
+blk_rows = int(math.ceil(N / p_prime))
+blk_cols = int(math.ceil(M / p_prime))
 
 rs = my_group * blk_rows
-re = min(M, rs + blk_rows)
+re = min(N, rs + blk_rows)
 my_own_rows = re - rs
 
 cs = my_layer * blk_cols
-ce = min(N, cs + blk_cols)
+ce = min(M, cs + blk_cols)
 my_own_cols = ce - cs
 
 A_p, X_p = A[rs:re, :].copy(), X[:, cs:ce].copy()
@@ -149,7 +148,7 @@ A_p, X_p = A[rs:re, :].copy(), X[:, cs:ce].copy()
 ################################################################################
 # We are now ready to create the :py:class:`pylops_mpi.basicoperators.MPIMatrixMult` 
 # operator and the input matrix math:`\mathbf{X}`
-Aop = MPIMatrixMult(A_p, N, dtype="float32")
+Aop = MPIMatrixMult(A_p, M, dtype="float32")
 
 col_lens = comm.allgather(my_own_cols)
 total_cols =  np.sum(col_lens)
@@ -183,13 +182,13 @@ xadj = Aop.H @ y
 
 # Local benchmarks
 y = y.asarray(masked=True)
-col_counts = [min(blk_cols, N - j * blk_cols) for j in range(p_prime)]
+col_counts = [min(blk_cols, M - j * blk_cols) for j in range(p_prime)]
 y_blocks = []
 offset = 0
 for cnt in col_counts:
-    block_size = M * cnt
+    block_size = N * cnt
     y_blocks.append(
-        y[offset: offset + block_size].reshape(M, cnt)
+        y[offset: offset + block_size].reshape(N, cnt)
     )
     offset += block_size
 y = np.hstack(y_blocks)

@@ -25,7 +25,7 @@ class MPIMatrixMult(MPILinearOperator):
         Local block of the matrix of shape :math:`[M_{loc} \times K]`
         where ``M_loc`` is the number of rows stored on this MPI rank and
         ``K`` is the global number of columns.
-    N : :obj:`int`
+    M : :obj:`int`
         Global leading dimension (i.e., number of columns) of the matrices 
         representing the input model and data vectors.
     saveAt : :obj:`bool`, optional
@@ -55,9 +55,9 @@ class MPIMatrixMult(MPILinearOperator):
     This operator performs a matrix-matrix multiplication, whose forward 
     operation can be described as :math:`Y = A \cdot X` where:
 
-    - :math:`\mathbf{A}` is the distributed matrix operator of shape :math:`[M \times K]`
-    - :math:`\mathbf{X}` is the distributed operand matrix of shape :math:`[K \times N]`
-    - :math:`\mathbf{Y}` is the resulting distributed matrix of shape :math:`[M \times N]`
+    - :math:`\mathbf{A}` is the distributed matrix operator of shape :math:`[N \times K]`
+    - :math:`\mathbf{X}` is the distributed operand matrix of shape :math:`[K \times M]`
+    - :math:`\mathbf{Y}` is the resulting distributed matrix of shape :math:`[N \times M]`
 
     whilst the adjoint operation is represented by 
     :math:`\mathbf{X}_{adj} = \mathbf{A}^H \cdot \mathbf{Y}` where 
@@ -70,16 +70,16 @@ class MPIMatrixMult(MPILinearOperator):
 
     - The matrix ``A`` is distributed across MPI processes in a block-row fashion
       and each process holds a local block of ``A`` with shape 
-      :math:`[M_{loc} \times K]`
+      :math:`[N_{loc} \times K]`
     - The operand matrix ``X`` is distributed in a block-column fashion and
-      and each process holds a local block of ``X`` with shape 
-      :math:`[K \times N_{loc}]`
+    each process holds a local block of ``X`` with shape
+      :math:`[K \times M_{loc}]`
     - Communication is minimized by using a 2D process grid layout
 
     **Forward Operation step-by-step**
 
     1. **Input Preparation**: The input vector ``x`` (flattened from matrix ``X``
-       of shape ``(K, N)``) is reshaped to ``(K, N_local)`` where ``N_local``
+       of shape ``(K, M)``) is reshaped to ``(K, M_local)`` where ``M_local``
        is the number of columns assigned to the current process.
 
     2. **Data Broadcasting**: Within each layer (processes with same ``layer_id``),
@@ -88,8 +88,8 @@ class MPIMatrixMult(MPILinearOperator):
        the same operand columns.
 
     3. **Local Computation**: Each process computes ``A_local @ X_local`` where:
-       - ``A_local`` is the local block of matrix ``A`` (shape ``M_local x K``)
-       - ``X_local`` is the broadcasted operand (shape ``K x N_local``)
+       - ``A_local`` is the local block of matrix ``A`` (shape ``N_local x K``)
+       - ``X_local`` is the broadcasted operand (shape ``K x M_local``)
 
     4. **Layer Gather**: Results from all processes in each layer are gathered
        using ``allgather`` to reconstruct the full result matrix vertically.
@@ -98,7 +98,7 @@ class MPIMatrixMult(MPILinearOperator):
 
     The adjoint operation performs the conjugate transpose multiplication:
 
-    1. **Input Reshaping**: The input vector ``x`` is reshaped to ``(M, N_local)``
+    1. **Input Reshaping**: The input vector ``x`` is reshaped to ``(N, M_local)``
        representing the local columns of the input matrix.
 
     2. **Local Adjoint Computation**:
@@ -107,21 +107,21 @@ class MPIMatrixMult(MPILinearOperator):
                 - Pre-computed ``At`` (if ``saveAt=True``)
                 - Computed on-the-fly as ``A.T.conj()`` (if ``saveAt=False``)
         Each process multiplies its transposed  local ``A`` block ``A_local^H`` 
-        (shape ``K x M_block``)
-        with the extracted  ``X_tile`` (shape ``M_block x N_local``),
-        producing a partial result of  shape ``(K, N_local)``.
+        (shape ``K x N_block``)
+        with the extracted  ``X_tile`` (shape ``N_block x M_local``),
+        producing a partial result of  shape ``(K, M_local)``.
         This computes the local contribution of columns of  ``A^H`` to the final result.
 
     3. **Layer Reduction**: Since the full result ``Y = A^H \cdot X`` is the
        sum of contributions from all column blocks of ``A^H``, processes in the 
        same layer perform an ``allreduce`` sum to combine their partial results. 
-       This gives the complete ``(K, N_local)`` result for their assigned columns.
+       This gives the complete ``(K, M_local)`` result for their assigned columns.
     
     """
     def __init__(
             self,
             A: NDArray,
-            N: int,
+            M: int,
             saveAt: bool = False,
             base_comm: MPI.Comm = MPI.COMM_WORLD,
             dtype: DTypeLike = "float64",
@@ -147,25 +147,25 @@ class MPIMatrixMult(MPILinearOperator):
         self.A = A.astype(np.dtype(dtype))
         if saveAt: self.At = A.T.conj()
 
-        self.M = self._layer_comm.allreduce(self.A.shape[0], op=MPI.SUM)
+        self.N = self._layer_comm.allreduce(self.A.shape[0], op=MPI.SUM)
         self.K = A.shape[1]
-        self.N = N
+        self.M = M
 
-        block_cols = int(math.ceil(self.N / self._P_prime))
-        blk_rows = int(math.ceil(self.M / self._P_prime))
+        block_cols = int(math.ceil(self.M / self._P_prime))
+        blk_rows = int(math.ceil(self.N / self._P_prime))
 
         self._row_start = self._group_id * blk_rows
-        self._row_end = min(self.M, self._row_start + blk_rows)
+        self._row_end = min(self.N, self._row_start + blk_rows)
 
         self._col_start = self._layer_id * block_cols
-        self._col_end = min(self.N, self._col_start + block_cols)
+        self._col_end = min(self.M, self._col_start + block_cols)
 
         self._local_ncols = self._col_end - self._col_start
         self._rank_col_lens = self.base_comm.allgather(self._local_ncols)
         total_ncols = np.sum(self._rank_col_lens)
 
         self.dims = (self.K, total_ncols)
-        self.dimsd = (self.M, total_ncols)
+        self.dimsd = (self.N, total_ncols)
         shape = (int(np.prod(self.dimsd)), int(np.prod(self.dims)))
         super().__init__(shape=shape, dtype=np.dtype(dtype), base_comm=base_comm)
 
@@ -174,8 +174,8 @@ class MPIMatrixMult(MPILinearOperator):
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
 
-        y = DistributedArray(global_shape=(self.M * self.dimsd[1]),
-                             local_shapes=[(self.M * c) for c in self._rank_col_lens],
+        y = DistributedArray(global_shape=(self.N * self.dimsd[1]),
+                             local_shapes=[(self.N * c) for c in self._rank_col_lens],
                              mask=x.mask,
                              partition=Partition.SCATTER,
                              dtype=self.dtype)
@@ -204,7 +204,7 @@ class MPIMatrixMult(MPILinearOperator):
             dtype=self.dtype,
         )
 
-        x_arr = x.local_array.reshape((self.M, self._local_ncols)).astype(self.dtype)
+        x_arr = x.local_array.reshape((self.N, self._local_ncols)).astype(self.dtype)
         X_tile = x_arr[self._row_start:self._row_end, :]
         A_local = self.At if hasattr(self, "At") else self.A.T.conj()
         Y_local = ncp.matmul(A_local, X_tile)

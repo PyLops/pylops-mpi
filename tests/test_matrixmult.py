@@ -14,22 +14,22 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-# Define test cases: (M, K, N, dtype_str)
-# M, K, N are matrix dimensions A(M,K), B(K,N)
+# Define test cases: (N K, M, dtype_str)
+# M, K, N are matrix dimensions A(N,K), B(K,M)
 # P_prime will be ceil(sqrt(size)).
 test_params = [
     pytest.param(37, 37, 37, "float32",   id="f32_37_37_37"),
-    pytest.param(40, 30, 50, "float64",   id="f64_40_30_50"),
-    pytest.param(16, 20, 22, "complex64", id="c64_16_20_22"),
-    pytest.param(5,   4,  3, "float32",   id="f32_5_4_3"),
-    pytest.param(1,   2,  1, "float64",   id="f64_1_2_1",),
-    pytest.param(3,   1,  2, "float32",   id="f32_3_1_2",),
+    pytest.param(50, 30, 40, "float64",   id="f64_50_30_40"),
+    pytest.param(22, 20, 16, "complex64", id="c64_22_20_16"),
+    pytest.param( 3,  4,  5, "float32",   id="f32_3_4_5"),
+    pytest.param( 1,  2,  1, "float64",   id="f64_1_2_1",),
+    pytest.param( 2,  1,  3, "float32",   id="f32_2_1_3",),
 ]
 
 
 @pytest.mark.mpi(min_size=1)  # SUMMA should also work for 1 process.
 @pytest.mark.parametrize("M, K, N, dtype_str", test_params)
-def test_SUMMAMatrixMult(M, K, N, dtype_str):
+def test_SUMMAMatrixMult(N, K, M, dtype_str):
     dtype = np.dtype(dtype_str)
 
     cmplx = 1j if np.issubdtype(dtype, np.complexfloating) else 0
@@ -47,28 +47,28 @@ def test_SUMMAMatrixMult(M, K, N, dtype_str):
     group_comm = comm.Split(color=my_group, key=my_layer)
 
     # Calculate local matrix dimensions
-    blk_rows_A = int(math.ceil(M / p_prime))
+    blk_rows_A = int(math.ceil(N / p_prime))
     row_start_A = my_group * blk_rows_A
-    row_end_A = min(M, row_start_A + blk_rows_A)
+    row_end_A = min(N, row_start_A + blk_rows_A)
 
-    blk_cols_X = int(math.ceil(N / p_prime))
+    blk_cols_X = int(math.ceil(M / p_prime))
     col_start_X = my_layer * blk_cols_X
-    col_end_X = min(N, col_start_X + blk_cols_X)
+    col_end_X = min(M, col_start_X + blk_cols_X)
     local_col_X_len = max(0, col_end_X - col_start_X)
 
-    A_glob_real = np.arange(M * K, dtype=base_float_dtype).reshape(M, K)
-    A_glob_imag = np.arange(M * K, dtype=base_float_dtype).reshape(M, K) * 0.5
+    A_glob_real = np.arange(N * K, dtype=base_float_dtype).reshape(N, K)
+    A_glob_imag = np.arange(N * K, dtype=base_float_dtype).reshape(N, K) * 0.5
     A_glob = (A_glob_real + cmplx * A_glob_imag).astype(dtype)
 
-    X_glob_real = np.arange(K * N, dtype=base_float_dtype).reshape(K, N)
-    X_glob_imag = np.arange(K * N, dtype=base_float_dtype).reshape(K, N) * 0.7
+    X_glob_real = np.arange(K * M, dtype=base_float_dtype).reshape(K, M)
+    X_glob_imag = np.arange(K * M, dtype=base_float_dtype).reshape(K, M) * 0.7
     X_glob = (X_glob_real + cmplx * X_glob_imag).astype(dtype)
 
     A_p = A_glob[row_start_A:row_end_A,:]
     X_p = X_glob[:,col_start_X:col_end_X]
 
     # Create MPIMatrixMult operator
-    Aop = MPIMatrixMult(A_p, N, base_comm=comm, dtype=dtype_str)
+    Aop = MPIMatrixMult(A_p, M, base_comm=comm, dtype=dtype_str)
 
     # Create DistributedArray for input x (representing B flattened)
     all_local_col_len = comm.allgather(local_col_X_len)
@@ -91,13 +91,13 @@ def test_SUMMAMatrixMult(M, K, N, dtype_str):
     xadj_dist = Aop.H @ y_dist
 
     y = y_dist.asarray(masked=True)
-    col_counts = [min(blk_cols_X, N - j * blk_cols_X) for j in range(p_prime)]
+    col_counts = [min(blk_cols_X, M - j * blk_cols_X) for j in range(p_prime)]
     y_blocks = []
     offset = 0
     for cnt in col_counts:
-        block_size = M * cnt
+        block_size = N * cnt
         y_blocks.append(
-            y[offset: offset + block_size].reshape(M, cnt)
+            y[offset: offset + block_size].reshape(N, cnt)
         )
         offset += block_size
     y = np.hstack(y_blocks)
