@@ -130,8 +130,8 @@ class MPIMatrixMult(MPILinearOperator):
         size = base_comm.Get_size()
 
         # Determine grid dimensions (P_prime × C) such that P_prime * C ≥ size
-        self._P_prime = int(math.ceil(math.sqrt(size)))
-        self._C = int(math.ceil(size / self._P_prime))
+        self._P_prime =  math.isqrt(size)
+        self._C = self._P_prime
         if self._P_prime * self._C != size:
             raise Exception(f"Number of processes must be a square number, provided {size} instead...")
 
