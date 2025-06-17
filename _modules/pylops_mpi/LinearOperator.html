@@ -527,6 +527,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="p">:</span>
             <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
                                  <span class="n">base_comm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span>
+                                 <span class="n">base_comm_nccl</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span>
                                  <span class="n">partition</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">partition</span><span class="p">,</span>
                                  <span class="n">axis</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
                                  <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span>
@@ -564,6 +565,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">Op</span><span class="p">:</span>
             <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
                                  <span class="n">base_comm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span>
+                                 <span class="n">base_comm_nccl</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span>
                                  <span class="n">partition</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">partition</span><span class="p">,</span>
                                  <span class="n">axis</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
                                  <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span>

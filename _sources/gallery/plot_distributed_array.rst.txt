@@ -327,7 +327,7 @@ a list of size equal to the number of ranks, whose elements contain the index
 of the subgroup/subcommunicator (with partial arrays in different groups
 are identical to each other).
 
-.. GENERATED FROM PYTHON SOURCE LINES 124-156
+.. GENERATED FROM PYTHON SOURCE LINES 124-161
 
 .. code-block:: Python
 
@@ -350,6 +350,11 @@ are identical to each other).
                                     mask=mask)
     x[:] = (MPI.COMM_WORLD.Get_rank() % subsize + 1.) * np.ones(local_shape)
     xloc = x.asarray()
+    xloc1 = x.asarray(masked=True)
+
+    if rank == 0:
+        print('xloc (with repeated portions)', xloc)
+        print('xloc (only effective portions):', xloc1)
 
     # Dot product
     dot = x.dot(x)
@@ -373,17 +378,19 @@ are identical to each other).
 
     1D masked arrays
     Mask: [0]
+    xloc (with repeated portions) [1. 1. 1. 1. 1.]
+    xloc (only effective portions): [1. 1. 1. 1. 1.]
     Dot check (Rank 0): True
     Norm check (Rank 0): True
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 157-158
+.. GENERATED FROM PYTHON SOURCE LINES 162-163
 
 And with 2d-arrays distributed over axis=1
 
-.. GENERATED FROM PYTHON SOURCE LINES 158-181
+.. GENERATED FROM PYTHON SOURCE LINES 163-186
 
 .. code-block:: Python
 
@@ -425,11 +432,11 @@ And with 2d-arrays distributed over axis=1
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 182-183
+.. GENERATED FROM PYTHON SOURCE LINES 187-188
 
 And finally with 2d-arrays distributed over axis=0
 
-.. GENERATED FROM PYTHON SOURCE LINES 183-204
+.. GENERATED FROM PYTHON SOURCE LINES 188-209
 
 .. code-block:: Python
 
@@ -472,7 +479,7 @@ And finally with 2d-arrays distributed over axis=0
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 1.177 seconds)
+   **Total running time of the script:** (0 minutes 1.215 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_distributed_array.py:
