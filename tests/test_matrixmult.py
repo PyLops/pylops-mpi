@@ -51,28 +51,27 @@ def test_SUMMAMatrixMult(M, K, N, dtype_str):
     row_start_A = my_group * blk_rows_A
     row_end_A = min(M, row_start_A + blk_rows_A)
 
-    blk_cols_BC = int(math.ceil(N / p_prime))
-    col_start_B = my_layer * blk_cols_BC
-    col_end_B = min(N, col_start_B + blk_cols_BC)
-    local_col_B_len = max(0, col_end_B - col_start_B)
-
+    blk_cols_X = int(math.ceil(N / p_prime))
+    col_start_X = my_layer * blk_cols_X
+    col_end_X = min(N, col_start_X + blk_cols_X)
+    local_col_X_len = max(0, col_end_X - col_start_X)
 
     A_glob_real = np.arange(M * K, dtype=base_float_dtype).reshape(M, K)
     A_glob_imag = np.arange(M * K, dtype=base_float_dtype).reshape(M, K) * 0.5
     A_glob = (A_glob_real + cmplx * A_glob_imag).astype(dtype)
 
-    B_glob_real = np.arange(K * N, dtype=base_float_dtype).reshape(K, N)
-    B_glob_imag = np.arange(K * N, dtype=base_float_dtype).reshape(K, N) * 0.7
-    B_glob = (B_glob_real + cmplx * B_glob_imag).astype(dtype)
+    X_glob_real = np.arange(K * N, dtype=base_float_dtype).reshape(K, N)
+    X_glob_imag = np.arange(K * N, dtype=base_float_dtype).reshape(K, N) * 0.7
+    X_glob = (X_glob_real + cmplx * X_glob_imag).astype(dtype)
 
     A_p = A_glob[row_start_A:row_end_A,:]
-    B_p = B_glob[:,col_start_B:col_end_B]
+    X_p = X_glob[:,col_start_X:col_end_X]
 
-    # Create SUMMAMatrixMult operator
+    # Create MPIMatrixMult operator
     Aop = MPIMatrixMult(A_p, N, base_comm=comm, dtype=dtype_str)
 
     # Create DistributedArray for input x (representing B flattened)
-    all_local_col_len = comm.allgather(local_col_B_len)
+    all_local_col_len = comm.allgather(local_col_X_len)
     total_cols = np.sum(all_local_col_len)
 
     x_dist = DistributedArray(
@@ -84,49 +83,34 @@ def test_SUMMAMatrixMult(M, K, N, dtype_str):
         dtype=dtype
     )
 
-    x_dist.local_array[:] = B_p.ravel()
+    x_dist.local_array[:] = X_p.ravel()
 
     # Forward operation: y = A @ B (distributed)
     y_dist = Aop @ x_dist
-
     # Adjoint operation: xadj = A.H @ y (distributed)
     xadj_dist = Aop.H @ y_dist
 
-    y_loc = A_glob @ B_glob
-    xadj_loc = A_glob.conj().T @ y_loc
+    y    = y_dist.asarray(masked=True)
+    y    = y.reshape(p_prime, M, blk_cols_X)
 
-    col_start_C_dist   = my_layer * blk_cols_BC
-    col_end_C_dist     = min(N, col_start_C_dist + blk_cols_BC)
-    my_own_cols_C_dist = max(0, col_end_C_dist - col_start_C_dist)
-    expected_y_shape   = (M * my_own_cols_C_dist,)
+    xadj = xadj_dist.asarray(masked=True)
+    xadj = xadj.reshape(p_prime, K, blk_cols_X)
 
-    assert y_dist.local_array.shape == expected_y_shape, (
-        f"Rank {rank}: y_dist shape {y_dist.local_array.shape} != expected {expected_y_shape}"
-    )
-
-    if y_dist.local_array.size > 0 and y_loc is not None and y_loc.size > 0:
-        expected_y_slice = y_loc[:, col_start_C_dist:col_end_C_dist]
+    if rank == 0:
+        y_loc = (A_glob @ X_glob).squeeze()
         assert_allclose(
-            y_dist.local_array,
-            expected_y_slice.ravel(),
+            y,
+            y_loc,
             rtol=np.finfo(np.dtype(dtype)).resolution,
             err_msg=f"Rank {rank}: Forward verification failed."
         )
 
-    # Verify adjoint operation (xadj = A.H @ y)
-    expected_xadj_shape = (K * my_own_cols_C_dist,)
-    assert xadj_dist.local_array.shape == expected_xadj_shape, (
-        f"Rank {rank}: z_dist shape {xadj_dist.local_array.shape} != expected {expected_xadj_shape}"
-    )
-
-    # Verify adjoint result values
-    if xadj_dist.local_array.size > 0 and xadj_loc  is not None and xadj_loc .size > 0:
-        expected_xadj_slice = xadj_loc [:, col_start_C_dist:col_end_C_dist]
+        xadj_loc = (A_glob.conj().T @ y_loc.conj()).conj().squeeze()
         assert_allclose(
-            xadj_dist.local_array,
-            expected_xadj_slice.ravel(),
+            xadj,
+            xadj_loc,
             rtol=np.finfo(np.dtype(dtype)).resolution,
-            err_msg=f"Rank {rank}: Adjoint verification failed."
+            err_msg=f"Rank {rank}: Ajoint verification failed."
         )
 
     group_comm.Free()

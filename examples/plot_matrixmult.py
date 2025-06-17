@@ -182,9 +182,6 @@ xadj = Aop.H @ y
 # the returned 1D-arrays into 2D-arrays.
 
 # Local benchmarks
-y_loc = A @ X
-xadj_loc = (A.T.dot(y_loc.conj())).conj()
-
 y = y.asarray(masked=True)
 if N > 1:
     y = y.reshape(p_prime, M, blk_cols)
