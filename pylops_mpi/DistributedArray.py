@@ -750,6 +750,7 @@ class DistributedArray:
         """
         local_shapes = [(np.prod(local_shape, axis=-1), ) for local_shape in self.local_shapes]
         arr = DistributedArray(global_shape=np.prod(self.global_shape),
+                               base_comm=self.base_comm,
                                base_comm_nccl=self.base_comm_nccl,
                                local_shapes=local_shapes,
                                mask=self.mask,
