@@ -4,7 +4,9 @@ __all__ = [
     "nccl_allgather",
     "nccl_allreduce",
     "nccl_bcast",
-    "nccl_asarray"
+    "nccl_asarray",
+    "nccl_send",
+    "nccl_recv"
 ]
 
 from enum import IntEnum
@@ -213,10 +215,6 @@ def nccl_bcast(nccl_comm, local_array, index, value) -> None:
         The index in the array to be broadcasted.
     value : :obj:`scalar`
         The value to broadcast (only used by the root GPU, rank 0).
-
-    Returns
-    -------
-    None
     """
     if nccl_comm.rank_id() == 0:
         local_array[index] = value
@@ -286,3 +284,49 @@ def nccl_asarray(nccl_comm, local_array, local_shapes, axis) -> cp.ndarray:
         chunks[i] = chunks[i].reshape(send_shape)[slicing]
     # combine back to single global array
     return cp.concatenate(chunks, axis=axis)
+
+
+def nccl_send(nccl_comm, send_buf, dest, count):
+    """NCCL equivalent of MPI_Send. Sends a specified number of elements
+    from the buffer to a destination GPU device.
+
+    Parameters
+    ----------
+    nccl_comm : :obj:`cupy.cuda.nccl.NcclCommunicator`
+        The NCCL communicator used for point-to-point communication.
+    send_buf : :obj:`cupy.ndarray`
+        The array containing data to send.
+    dest: :obj:`int`
+        The rank of the destination GPU device.
+    count : :obj:`int`
+        Number of elements to send from `send_buf`.
+    """
+    nccl_comm.send(send_buf.data.ptr,
+                   count,
+                   cupy_to_nccl_dtype[str(send_buf.dtype)],
+                   dest,
+                   cp.cuda.Stream.null.ptr
+                   )
+
+
+def nccl_recv(nccl_comm, recv_buf, source, count=None):
+    """NCCL equivalent of MPI_Recv. Receives data from a source GPU device
+    into the given buffer.
+
+    Parameters
+    ----------
+    nccl_comm : :obj:`cupy.cuda.nccl.NcclCommunicator`
+        The NCCL communicator used for point-to-point communication.
+    recv_buf : :obj:`cupy.ndarray`
+        The array to store the received data.
+    source : :obj:`int`
+        The rank of the source GPU device.
+    count : :obj:`int`, optional
+        Number of elements to receive.
+    """
+    nccl_comm.recv(recv_buf.data.ptr,
+                   count,
+                   cupy_to_nccl_dtype[str(recv_buf.dtype)],
+                   source,
+                   cp.cuda.Stream.null.ptr
+                   )
