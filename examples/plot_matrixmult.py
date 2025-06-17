@@ -41,8 +41,8 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank() # rank of current process
 size = comm.Get_size() # number of processes
 
-p_prime = int(math.ceil(math.sqrt(size)))
-repl_factor = int(math.ceil(size / p_prime))
+p_prime     = math.isqrt(size)
+repl_factor = p_prime
 
 if (p_prime * repl_factor) != size:
     print(f"Number of processes must be a square number, provided {size} instead...")
@@ -183,13 +183,27 @@ xadj = Aop.H @ y
 
 # Local benchmarks
 y = y.asarray(masked=True)
-if N > 1:
-    y = y.reshape(p_prime, M, blk_cols)
-y = np.hstack([yblock for yblock in y])
+col_counts = [min(blk_cols, N - j * blk_cols) for j in range(p_prime)]
+y_blocks = []
+offset = 0
+for cnt in col_counts:
+    block_size = M * cnt
+    y_blocks.append(
+        y[offset: offset + block_size].reshape(M, cnt)
+    )
+    offset += block_size
+y = np.hstack(y_blocks)
+
 xadj = xadj.asarray(masked=True)
-if N > 1:
-    xadj = xadj.reshape(p_prime, K, blk_cols)
-xadj = np.hstack([xadjblock for xadjblock in xadj])
+xadj_blocks = []
+offset = 0
+for cnt in col_counts:
+    block_size = K * cnt
+    xadj_blocks.append(
+        xadj[offset: offset + block_size].reshape(K, cnt)
+    )
+    offset += block_size
+xadj = np.hstack(xadj_blocks)
 
 if rank == 0:
     y_loc = (A @ X).squeeze()

@@ -35,9 +35,9 @@ def test_SUMMAMatrixMult(M, K, N, dtype_str):
     cmplx = 1j if np.issubdtype(dtype, np.complexfloating) else 0
     base_float_dtype = np.float32 if dtype == np.complex64 else np.float64
 
-    p_prime = int(math.ceil(math.sqrt(size)))
-    C = int(math.ceil(size / p_prime))
-    assert p_prime * C == size
+    p_prime = math.isqrt(size)
+    C = p_prime
+    assert p_prime * C == size, f"Number of processes must be a square number, provided {size} instead..."
 
     my_group = rank % p_prime
     my_layer = rank // p_prime
@@ -90,25 +90,42 @@ def test_SUMMAMatrixMult(M, K, N, dtype_str):
     # Adjoint operation: xadj = A.H @ y (distributed)
     xadj_dist = Aop.H @ y_dist
 
-    y    = y_dist.asarray(masked=True)
-    y    = y.reshape(p_prime, M, blk_cols_X)
+    y = y_dist.asarray(masked=True)
+    col_counts = [min(blk_cols_X, N - j * blk_cols_X) for j in range(p_prime)]
+    y_blocks = []
+    offset = 0
+    for cnt in col_counts:
+        block_size = M * cnt
+        y_blocks.append(
+            y[offset: offset + block_size].reshape(M, cnt)
+        )
+        offset += block_size
+    y = np.hstack(y_blocks)
 
     xadj = xadj_dist.asarray(masked=True)
-    xadj = xadj.reshape(p_prime, K, blk_cols_X)
+    xadj_blocks = []
+    offset = 0
+    for cnt in col_counts:
+        block_size = K * cnt
+        xadj_blocks.append(
+            xadj[offset: offset + block_size].reshape(K, cnt)
+        )
+        offset += block_size
+    xadj = np.hstack(xadj_blocks)
 
     if rank == 0:
-        y_loc = (A_glob @ X_glob).squeeze()
+        y_loc = A_glob @ X_glob
         assert_allclose(
-            y,
-            y_loc,
+            y.squeeze(),
+            y_loc.squeeze(),
             rtol=np.finfo(np.dtype(dtype)).resolution,
             err_msg=f"Rank {rank}: Forward verification failed."
         )
 
-        xadj_loc = (A_glob.conj().T @ y_loc.conj()).conj().squeeze()
+        xadj_loc = A_glob.conj().T @ y_loc
         assert_allclose(
-            xadj,
-            xadj_loc,
+            xadj.squeeze(),
+            xadj_loc.squeeze(),
             rtol=np.finfo(np.dtype(dtype)).resolution,
             err_msg=f"Rank {rank}: Ajoint verification failed."
         )
