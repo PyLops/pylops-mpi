@@ -14,7 +14,7 @@ cupy_message = pylops_deps.cupy_import("the DistributedArray module")
 nccl_message = deps.nccl_import("the DistributedArray module")
 
 if nccl_message is None and cupy_message is None:
-    from pylops_mpi.utils._nccl import nccl_allgather, nccl_allreduce, nccl_asarray, nccl_bcast, nccl_split
+    from pylops_mpi.utils._nccl import nccl_allgather, nccl_allreduce, nccl_asarray, nccl_bcast, nccl_split, nccl_send, nccl_recv
     from cupy.cuda.nccl import NcclCommunicator
 else:
     NcclCommunicator = Any
@@ -359,10 +359,15 @@ class DistributedArray:
         """
         return self._sub_comm
 
-    def asarray(self):
+    def asarray(self, masked: bool = False):
         """Global view of the array
 
-        Gather all the local arrays
+        Gather all the local arrays from base communicator or subcommunicator
+
+        Parameters
+        ----------
+        masked : :obj:`bool`
+            Return local arrays of the subcommunicator (`True`) or base communicator (`False`).
 
         Returns
         -------
@@ -375,10 +380,14 @@ class DistributedArray:
             return self.local_array
 
         if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
-            return nccl_asarray(self.base_comm_nccl, self.local_array, self.local_shapes, self.axis)
+            return nccl_asarray(self.sub_comm if masked else self.base_comm,
+                                self.local_array, self.local_shapes, self.axis)
         else:
             # Gather all the local arrays and apply concatenation.
-            final_array = self._allgather(self.local_array)
+            if masked:
+                final_array = self._allgather_subcomm(self.local_array)
+            else:
+                final_array = self._allgather(self.local_array)
             return np.concatenate(final_array, axis=self.axis)
 
     @classmethod
@@ -495,12 +504,54 @@ class DistributedArray:
     def _allgather(self, send_buf, recv_buf=None):
         """Allgather operation
         """
-        if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
+        if deps.nccl_enabled and self.base_comm_nccl:
             return nccl_allgather(self.base_comm_nccl, send_buf, recv_buf)
         else:
             if recv_buf is None:
                 return self.base_comm.allgather(send_buf)
             self.base_comm.Allgather(send_buf, recv_buf)
+            return recv_buf
+
+    def _allgather_subcomm(self, send_buf, recv_buf=None):
+        """Allgather operation with subcommunicator
+        """
+        if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
+            return nccl_allgather(self.sub_comm, send_buf, recv_buf)
+        else:
+            if recv_buf is None:
+                return self.sub_comm.allgather(send_buf)
+            self.sub_comm.Allgather(send_buf, recv_buf)
+
+    def _send(self, send_buf, dest, count=None, tag=None):
+        """ Send operation
+        """
+        if deps.nccl_enabled and self.base_comm_nccl:
+            if count is None:
+                # assuming sending the whole array
+                count = send_buf.size
+            nccl_send(self.base_comm_nccl, send_buf, dest, count)
+        else:
+            self.base_comm.Send(send_buf, dest, tag)
+
+    def _recv(self, recv_buf=None, source=0, count=None, tag=None):
+        """ Receive operation
+        """
+        # NCCL must be called with recv_buf. Size cannot be inferred from
+        # other arguments and thus cannot be dynamically allocated
+        if deps.nccl_enabled and self.base_comm_nccl and recv_buf is not None:
+            if recv_buf is not None:
+                if count is None:
+                    # assuming data will take a space of the whole buffer
+                    count = recv_buf.size
+                nccl_recv(self.base_comm_nccl, recv_buf, source, count)
+                return recv_buf
+            else:
+                raise ValueError("Using recv with NCCL must also supply receiver buffer ")
+        else:
+            # MPI allows a receiver buffer to be optional
+            if recv_buf is None:
+                return self.base_comm.recv(source=source, tag=tag)
+            self.base_comm.Recv(buf=recv_buf, source=source, tag=tag)
             return recv_buf
 
     def __neg__(self):
@@ -540,6 +591,7 @@ class DistributedArray:
         self._check_mask(dist_array)
         SumArray = DistributedArray(global_shape=self.global_shape,
                                     base_comm=self.base_comm,
+                                    base_comm_nccl=self.base_comm_nccl,
                                     dtype=self.dtype,
                                     partition=self.partition,
                                     local_shapes=self.local_shapes,
@@ -566,6 +618,7 @@ class DistributedArray:
 
         ProductArray = DistributedArray(global_shape=self.global_shape,
                                         base_comm=self.base_comm,
+                                        base_comm_nccl=self.base_comm_nccl,
                                         dtype=self.dtype,
                                         partition=self.partition,
                                         local_shapes=self.local_shapes,
@@ -716,6 +769,8 @@ class DistributedArray:
         """
         local_shapes = [(np.prod(local_shape, axis=-1), ) for local_shape in self.local_shapes]
         arr = DistributedArray(global_shape=np.prod(self.global_shape),
+                               base_comm=self.base_comm,
+                               base_comm_nccl=self.base_comm_nccl,
                                local_shapes=local_shapes,
                                mask=self.mask,
                                partition=self.partition,
@@ -744,41 +799,57 @@ class DistributedArray:
         -------
         ghosted_array : :obj:`numpy.ndarray`
             Ghosted Array
-
         """
         ghosted_array = self.local_array.copy()
+        ncp = get_module(self.engine)
         if cells_front is not None:
-            total_cells_front = self._allgather(cells_front) + [0]
+            # cells_front is small array of int. Explicitly use MPI
+            total_cells_front = self.base_comm.allgather(cells_front) + [0]
             # Read cells_front which needs to be sent to rank + 1(cells_front for rank + 1)
             cells_front = total_cells_front[self.rank + 1]
+            send_buf = ncp.take(self.local_array, ncp.arange(-cells_front, 0), axis=self.axis)
+            recv_shapes = self.local_shapes
             if self.rank != 0:
-                ghosted_array = np.concatenate([self.base_comm.recv(source=self.rank - 1, tag=1), ghosted_array],
-                                               axis=self.axis)
-            if self.rank != self.size - 1:
+                # from receiver's perspective (rank), the recv buffer have the same shape as the sender's array (rank-1)
+                # in every dimension except the shape at axis=self.axis
+                recv_shape = list(recv_shapes[self.rank - 1])
+                recv_shape[self.axis] = total_cells_front[self.rank]
+                recv_buf = ncp.zeros(recv_shape, dtype=ghosted_array.dtype)
+                # Transfer of ghost cells can be skipped if len(recv_buf) = 0
+                # Additionally, NCCL will hang if the buffer size is 0 so this optimization is somewhat mandatory
+                if len(recv_buf) != 0:
+                    ghosted_array = ncp.concatenate([self._recv(recv_buf, source=self.rank - 1, tag=1), ghosted_array], axis=self.axis)
+            # The skip in sender is to match with what described in receiver
+            if self.rank != self.size - 1 and len(send_buf) != 0:
                 if cells_front > self.local_shape[self.axis]:
                     raise ValueError(f"Local Shape at rank={self.rank} along axis={self.axis} "
                                      f"should be > {cells_front}: dim({self.axis}) "
                                      f"{self.local_shape[self.axis]} < {cells_front}; "
                                      f"to achieve this use NUM_PROCESSES <= "
                                      f"{max(1, self.global_shape[self.axis] // cells_front)}")
-                self.base_comm.send(np.take(self.local_array, np.arange(-cells_front, 0), axis=self.axis),
-                                    dest=self.rank + 1, tag=1)
+                self._send(send_buf, dest=self.rank + 1, tag=1)
         if cells_back is not None:
-            total_cells_back = self._allgather(cells_back) + [0]
+            total_cells_back = self.base_comm.allgather(cells_back) + [0]
             # Read cells_back which needs to be sent to rank - 1(cells_back for rank - 1)
             cells_back = total_cells_back[self.rank - 1]
-            if self.rank != 0:
+            send_buf = ncp.take(self.local_array, ncp.arange(cells_back), axis=self.axis)
+            # Same reasoning as sending cell front applied
+            recv_shapes = self.local_shapes
+            if self.rank != 0 and len(send_buf) != 0:
                 if cells_back > self.local_shape[self.axis]:
                     raise ValueError(f"Local Shape at rank={self.rank} along axis={self.axis} "
                                      f"should be > {cells_back}: dim({self.axis}) "
                                      f"{self.local_shape[self.axis]} < {cells_back}; "
                                      f"to achieve this use NUM_PROCESSES <= "
                                      f"{max(1, self.global_shape[self.axis] // cells_back)}")
-                self.base_comm.send(np.take(self.local_array, np.arange(cells_back), axis=self.axis),
-                                    dest=self.rank - 1, tag=0)
+                self._send(send_buf, dest=self.rank - 1, tag=0)
             if self.rank != self.size - 1:
-                ghosted_array = np.append(ghosted_array, self.base_comm.recv(source=self.rank + 1, tag=0),
-                                          axis=self.axis)
+                recv_shape = list(recv_shapes[self.rank + 1])
+                recv_shape[self.axis] = total_cells_back[self.rank]
+                recv_buf = ncp.zeros(recv_shape, dtype=ghosted_array.dtype)
+                if len(recv_buf) != 0:
+                    ghosted_array = ncp.append(ghosted_array, self._recv(recv_buf, source=self.rank + 1, tag=0),
+                                               axis=self.axis)
         return ghosted_array
 
     def __repr__(self):
