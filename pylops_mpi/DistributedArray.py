@@ -359,10 +359,15 @@ class DistributedArray:
         """
         return self._sub_comm
 
-    def asarray(self):
+    def asarray(self, masked: bool = False):
         """Global view of the array
 
-        Gather all the local arrays
+        Gather all the local arrays from base communicator or subcommunicator
+
+        Parameters
+        ----------
+        masked : :obj:`bool`
+            Return local arrays of the subcommunicator (`True`) or base communicator (`False`).
 
         Returns
         -------
@@ -375,10 +380,14 @@ class DistributedArray:
             return self.local_array
 
         if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
-            return nccl_asarray(self.base_comm_nccl, self.local_array, self.local_shapes, self.axis)
+            return nccl_asarray(self.sub_comm if masked else self.base_comm,
+                                self.local_array, self.local_shapes, self.axis)
         else:
             # Gather all the local arrays and apply concatenation.
-            final_array = self._allgather(self.local_array)
+            if masked:
+                final_array = self._allgather_subcomm(self.local_array)
+            else:
+                final_array = self._allgather(self.local_array)
             return np.concatenate(final_array, axis=self.axis)
 
     @classmethod
@@ -502,6 +511,16 @@ class DistributedArray:
                 return self.base_comm.allgather(send_buf)
             self.base_comm.Allgather(send_buf, recv_buf)
             return recv_buf
+
+    def _allgather_subcomm(self, send_buf, recv_buf=None):
+        """Allgather operation with subcommunicator
+        """
+        if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
+            return nccl_allgather(self.sub_comm, send_buf, recv_buf)
+        else:
+            if recv_buf is None:
+                return self.sub_comm.allgather(send_buf)
+            self.sub_comm.Allgather(send_buf, recv_buf)
 
     def _send(self, send_buf, dest, count=None, tag=None):
         """ Send operation
@@ -753,6 +772,7 @@ class DistributedArray:
         """
         local_shapes = [(np.prod(local_shape, axis=-1), ) for local_shape in self.local_shapes]
         arr = DistributedArray(global_shape=np.prod(self.global_shape),
+                               base_comm=self.base_comm,
                                base_comm_nccl=self.base_comm_nccl,
                                local_shapes=local_shapes,
                                mask=self.mask,

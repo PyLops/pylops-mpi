@@ -112,19 +112,19 @@ class MPISecondDerivative(MPILinearOperator):
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         # If Partition.BROADCAST, then convert to Partition.SCATTER
         if x.partition is Partition.BROADCAST:
-            x = DistributedArray.to_dist(x=x.local_array, base_comm_nccl=x.base_comm_nccl)
+            x = DistributedArray.to_dist(x=x.local_array, base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl)
         return self._hmatvec(x)
 
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         # If Partition.BROADCAST, then convert to Partition.SCATTER
         if x.partition is Partition.BROADCAST:
-            x = DistributedArray.to_dist(x=x.local_array, base_comm_nccl=x.base_comm_nccl)
+            x = DistributedArray.to_dist(x=x.local_array, base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl)
         return self._hrmatvec(x)
 
     @reshaped
     def _matvec_forward(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
-        y = DistributedArray(global_shape=x.global_shape, base_comm_nccl=x.base_comm_nccl,
+        y = DistributedArray(global_shape=x.global_shape, base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl,
                              local_shapes=x.local_shapes, axis=x.axis, engine=x.engine, dtype=self.dtype)
         ghosted_x = x.add_ghost_cells(cells_back=2)
         y_forward = ghosted_x[2:] - 2 * ghosted_x[1:-1] + ghosted_x[:-2]
@@ -136,7 +136,7 @@ class MPISecondDerivative(MPILinearOperator):
     @reshaped
     def _rmatvec_forward(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
-        y = DistributedArray(global_shape=x.global_shape, base_comm_nccl=x.base_comm_nccl,
+        y = DistributedArray(global_shape=x.global_shape, base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl,
                              local_shapes=x.local_shapes, axis=x.axis, engine=x.engine, dtype=self.dtype)
         y[:] = 0
         if self.rank == self.size - 1:
@@ -163,7 +163,7 @@ class MPISecondDerivative(MPILinearOperator):
     @reshaped
     def _matvec_backward(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
-        y = DistributedArray(global_shape=x.global_shape, base_comm_nccl=x.base_comm_nccl,
+        y = DistributedArray(global_shape=x.global_shape, base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl,
                              local_shapes=x.local_shapes, axis=x.axis, engine=x.engine, dtype=self.dtype)
         ghosted_x = x.add_ghost_cells(cells_front=2)
         y_backward = ghosted_x[2:] - 2 * ghosted_x[1:-1] + ghosted_x[:-2]
@@ -175,7 +175,7 @@ class MPISecondDerivative(MPILinearOperator):
     @reshaped
     def _rmatvec_backward(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
-        y = DistributedArray(global_shape=x.global_shape, base_comm_nccl=x.base_comm_nccl,
+        y = DistributedArray(global_shape=x.global_shape, base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl,
                              local_shapes=x.local_shapes, axis=x.axis, engine=x.engine, dtype=self.dtype)
         y[:] = 0
         ghosted_x = x.add_ghost_cells(cells_back=2)
@@ -202,7 +202,7 @@ class MPISecondDerivative(MPILinearOperator):
     @reshaped
     def _matvec_centered(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
-        y = DistributedArray(global_shape=x.global_shape, base_comm_nccl=x.base_comm_nccl,
+        y = DistributedArray(global_shape=x.global_shape, base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl,
                              local_shapes=x.local_shapes, axis=x.axis, engine=x.engine, dtype=self.dtype)
         ghosted_x = x.add_ghost_cells(cells_front=1, cells_back=1)
         y_centered = ghosted_x[2:] - 2 * ghosted_x[1:-1] + ghosted_x[:-2]
@@ -222,7 +222,7 @@ class MPISecondDerivative(MPILinearOperator):
     @reshaped
     def _rmatvec_centered(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
-        y = DistributedArray(global_shape=x.global_shape, base_comm_nccl=x.base_comm_nccl,
+        y = DistributedArray(global_shape=x.global_shape, base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl,
                              local_shapes=x.local_shapes, axis=x.axis, engine=x.engine, dtype=self.dtype)
         y[:] = 0
         ghosted_x = x.add_ghost_cells(cells_back=2)

@@ -195,11 +195,10 @@ def test_distributed_norm(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par1, par2", [(par6, par7), (par6b, par7b),
-                                        (par8, par9), (par8b, par9b)])
-def test_distributed_maskeddot(par1, par2):
-    """Test Distributed Dot product with masked array"""
-    # number of subcommunicators
+@pytest.mark.parametrize("par", [(par6), (par8)])
+def test_distributed_masked(par):
+    """Test Asarray with masked array"""
+    # Number of subcommunicators
     if MPI.COMM_WORLD.Get_size() % 2 == 0:
         nsub = 2
     elif MPI.COMM_WORLD.Get_size() % 3 == 0:
@@ -208,7 +207,44 @@ def test_distributed_maskeddot(par1, par2):
         pass
     subsize = max(1, MPI.COMM_WORLD.Get_size() // nsub)
     mask = np.repeat(np.arange(nsub), subsize)
-    print('subsize, mask', subsize, mask)
+
+    # Replicate x as required in masked arrays
+    x = par['x']
+    if par['axis'] != 0:
+        x = np.swapaxes(x, par['axis'], 0)
+    for isub in range(1, nsub):
+        x[(x.shape[0] // nsub) * isub:(x.shape[0] // nsub) * (isub + 1)] = x[:x.shape[0] // nsub]
+    if par['axis'] != 0:
+        x = np.swapaxes(x, 0, par['axis'])
+
+    arr = DistributedArray.to_dist(x=x, partition=par['partition'], mask=mask, axis=par['axis'])
+
+    # Global view
+    xloc = arr.asarray()
+    assert xloc.shape == x.shape
+
+    # Global masked view
+    xmaskedloc = arr.asarray(masked=True)
+    xmasked_shape = list(x.shape)
+    xmasked_shape[par['axis']] = int(xmasked_shape[par['axis']] // nsub)
+    assert xmaskedloc.shape == tuple(xmasked_shape)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par1, par2", [(par6, par7), (par6b, par7b),
+                                        (par8, par9), (par8b, par9b)])
+def test_distributed_maskeddot(par1, par2):
+    """Test Distributed Dot product with masked array"""
+    # Number of subcommunicators
+    if MPI.COMM_WORLD.Get_size() % 2 == 0:
+        nsub = 2
+    elif MPI.COMM_WORLD.Get_size() % 3 == 0:
+        nsub = 3
+    else:
+        pass
+    subsize = max(1, MPI.COMM_WORLD.Get_size() // nsub)
+    mask = np.repeat(np.arange(nsub), subsize)
+
     # Replicate x1 and x2 as required in masked arrays
     x1, x2 = par1['x'], par2['x']
     if par1['axis'] != 0:
@@ -234,7 +270,7 @@ def test_distributed_maskeddot(par1, par2):
                                  (par8), (par8b), (par9), (par9b)])
 def test_distributed_maskednorm(par):
     """Test Distributed numpy.linalg.norm method with masked array"""
-    # number of subcommunicators
+    # Number of subcommunicators
     if MPI.COMM_WORLD.Get_size() % 2 == 0:
         nsub = 2
     elif MPI.COMM_WORLD.Get_size() % 3 == 0:
