@@ -380,8 +380,14 @@ class DistributedArray:
             return self.local_array
 
         if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
-            return nccl_asarray(self.sub_comm if masked else self.base_comm,
-                                self.local_array, self.local_shapes, self.axis)
+            if masked:
+                all_tuples = self._allgather_subcomm(self.local_shape).get()
+                tuple_len = len(self.local_shape)
+                local_shapes = [tuple(all_tuples[i : i + tuple_len]) for i in range(0, len(all_tuples), tuple_len)]
+            else:
+                local_shapes = self.local_shapes
+            return nccl_asarray(self.sub_comm if masked else self.base_comm_nccl,
+                                self.local_array, local_shapes, self.axis)
         else:
             # Gather all the local arrays and apply concatenation.
             if masked:

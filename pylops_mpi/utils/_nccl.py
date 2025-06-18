@@ -149,7 +149,7 @@ def nccl_allgather(nccl_comm, send_buf, recv_buf=None) -> cp.ndarray:
     )
     if recv_buf is None:
         recv_buf = cp.zeros(
-            MPI.COMM_WORLD.Get_size() * send_buf.size,
+            nccl_comm.size() * send_buf.size,
             dtype=send_buf.dtype,
         )
     nccl_comm.allGather(
