@@ -380,7 +380,7 @@ class DistributedArray:
             return self.local_array
 
         if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
-            return nccl_asarray(self.sub_comm if masked else self.base_comm,
+            return nccl_asarray(self.sub_comm if masked else self.base_comm_nccl,
                                 self.local_array, self.local_shapes, self.axis)
         else:
             # Gather all the local arrays and apply concatenation.
@@ -640,9 +640,9 @@ class DistributedArray:
         self._check_mask(dist_array)
         ncp = get_module(self.engine)
         # Convert to Partition.SCATTER if Partition.BROADCAST
-        x = DistributedArray.to_dist(x=self.local_array, base_comm_nccl=self.base_comm_nccl) \
+        x = DistributedArray.to_dist(x=self.local_array, base_comm=self.base_comm, base_comm_nccl=self.base_comm_nccl) \
             if self.partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST] else self
-        y = DistributedArray.to_dist(x=dist_array.local_array, base_comm_nccl=self.base_comm_nccl) \
+        y = DistributedArray.to_dist(x=dist_array.local_array, base_comm=self.base_comm, base_comm_nccl=self.base_comm_nccl) \
             if self.partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST] else dist_array
         # Flatten the local arrays and calculate dot product
         return self._allreduce_subcomm(ncp.dot(x.local_array.flatten(), y.local_array.flatten()))
@@ -716,7 +716,7 @@ class DistributedArray:
             Axis along which vector norm needs to be computed. Defaults to ``-1``
         """
         # Convert to Partition.SCATTER if Partition.BROADCAST
-        x = DistributedArray.to_dist(x=self.local_array, base_comm_nccl=self.base_comm_nccl) \
+        x = DistributedArray.to_dist(x=self.local_array, base_comm=self.base_comm, base_comm_nccl=self.base_comm_nccl) \
             if self.partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST] else self
         if axis == -1:
             # Flatten the local arrays and calculate norm

@@ -80,7 +80,7 @@ Top = Transpose((ny_i, nx, nz), (2, 0, 1))
 BDiag = pylops_mpi.basicoperators.MPIBlockDiag(ops=[Top.H @ PPop @ Top, ])
 
 # This computation will be done in GPU. The call asarray() trigger the NCCL communication (gather result from each GPU).
-# But array `d` and `d_0` still lives in GPU memory
+# But array `d` and `d_0` still live in GPU memory
 d_dist = BDiag @ m3d_dist
 d_local = d_dist.local_array.reshape((ny_i, nx, nz))
 d = d_dist.asarray().reshape((ny, nx, nz))
@@ -89,8 +89,8 @@ d_0 = d_dist.asarray().reshape((ny, nx, nz))
 
 # ###############################################################################
 
-# Inversion using CGLS solver - There is no code change to have run on NCCL
-# In this particular case, the local computation will be done in GPU. And the collective communication calls
+# Inversion using CGLS solver - There is no code change to have run on NCCL (it handles though MPI operator and DistributedArray)
+# In this particular case, the local computation will be done in GPU. Collective communication calls
 # will be carried through NCCL GPU-to-GPU.
 minv3d_iter_dist = pylops_mpi.optimization.basic.cgls(BDiag, d_dist, x0=mback3d_dist, niter=1, show=True)[0]
 minv3d_iter = minv3d_iter_dist.asarray().reshape((ny, nx, nz))
