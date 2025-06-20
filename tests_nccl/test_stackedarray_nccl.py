@@ -1,6 +1,6 @@
 """Test the StackedDistributedArray class
     Designed to run with n GPUs (with 1 MPI process per GPU)
-    $ mpiexec -n 10 pytest test_stackedarray.py --with-mpi
+    $ mpiexec -n 10 pytest test_stackedarray_nccl.py --with-mpi
 
 This file employs the same test sets as test_stackedarray under NCCL environment
 """

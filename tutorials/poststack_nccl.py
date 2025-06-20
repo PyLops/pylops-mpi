@@ -1,8 +1,7 @@
 r"""
-Post Stack Inversion - 3D with Nvidia's NCCL
-=========================
-This tutorial is similar to poststack.py but it shows how to run PyLops-MPI in multi-GPU environment
-and have those GPUs communicate via NCCL
+Post Stack Inversion - 3D with NCCL
+============================================
+This tutorial is an extension of the :ref:`sphx_glr_tutorials_poststack.py` tutorial where PyLops-MPI is run in multi-GPU setting with GPUs communicating via NCCL.
 """
 
 import numpy as np
@@ -21,11 +20,11 @@ import pylops_mpi.utils._nccl
 
 plt.close("all")
 rank = MPI.COMM_WORLD.Get_rank()
-# size = MPI.COMM_WORLD.Get_size()
 
 ###############################################################################
-# This section is exactly the same as MPI version. We will keep using MPI for
-# transfering meta data i.e., shapes, dims, etc.
+# Let's start by defining all the parameters required by the
+# :py:func:`pylops.avo.poststack.PoststackLinearModelling` operator.
+# Note that this section is exactly the same as the one in the MPI example as we will keep using MPI for transfering metadata (i.e., shapes, dims, etc.)
 
 # Model
 model = np.load("../testdata/avo/poststack_model.npz")
@@ -59,12 +58,14 @@ mback3d = np.concatenate(MPI.COMM_WORLD.allgather(mback3d_i))
 ###############################################################################
 # NCCL communication can be easily initialized with
 # :py:func:`pylops_mpi.utils._nccl.initialize_nccl_comm` operator.
-# One can think of this as GPU-counterpart of MPI.COMM_WORLD
+# One can think of this as GPU-counterpart of :code:`MPI.COMM_WORLD`
+
 nccl_comm = pylops_mpi.utils._nccl.initialize_nccl_comm()
 
+###############################################################################
+# We are now ready to initialize various :py:class:`pylops_mpi.DistributedArray` objects.
+# Compared to the MPI tutorial, we need to make sure that we pass :code:`base_comm_nccl = nccl_comm` and set CuPy as the engine.
 
-# Initialize DistributedArray with `base_comm_nccl = nccl_comm` and CuPy engine
-# This DistributedArray internally have both MPI.COMM_WORLD (by default) and `cupy.cuda.nccl.NcclCommunicator` to operate on
 m3d_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz, base_comm_nccl=nccl_comm, engine="cupy")
 m3d_dist[:] = cp.asarray(m3d_i.flatten())
 
@@ -72,30 +73,35 @@ m3d_dist[:] = cp.asarray(m3d_i.flatten())
 mback3d_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz, base_comm_nccl=nccl_comm, engine="cupy")
 mback3d_dist[:] = cp.asarray(mback3d_i.flatten())
 
+###############################################################################
 # For PostStackLinearModelling, there is no change needed to have it run with NCCL.
 # This PyLops operator has GPU-support (https://pylops.readthedocs.io/en/stable/gpu.html)
 # so it can run with DistributedArray whose engine is Cupy
+
 PPop = PoststackLinearModelling(wav, nt0=nz, spatdims=(ny_i, nx))
 Top = Transpose((ny_i, nx, nz), (2, 0, 1))
 BDiag = pylops_mpi.basicoperators.MPIBlockDiag(ops=[Top.H @ PPop @ Top, ])
 
-# This computation will be done in GPU. The call asarray() trigger the NCCL communication (gather result from each GPU).
-# But array `d` and `d_0` still live in GPU memory
+###############################################################################
+# This computation will be done in GPU. The call :code:`asarray()` triggers the NCCL communication (gather result from each GPU).
+# But array :code:`d` and :code:`d_0` still live in GPU memory
+
 d_dist = BDiag @ m3d_dist
 d_local = d_dist.local_array.reshape((ny_i, nx, nz))
 d = d_dist.asarray().reshape((ny, nx, nz))
 d_0_dist = BDiag @ mback3d_dist
 d_0 = d_dist.asarray().reshape((ny, nx, nz))
 
-# ###############################################################################
-
+###############################################################################
 # Inversion using CGLS solver - There is no code change to have run on NCCL (it handles though MPI operator and DistributedArray)
 # In this particular case, the local computation will be done in GPU. Collective communication calls
 # will be carried through NCCL GPU-to-GPU.
+
+# Inversion using CGLS solver
 minv3d_iter_dist = pylops_mpi.optimization.basic.cgls(BDiag, d_dist, x0=mback3d_dist, niter=1, show=True)[0]
 minv3d_iter = minv3d_iter_dist.asarray().reshape((ny, nx, nz))
 
-# ###############################################################################
+###############################################################################
 
 # Regularized inversion with normal equations
 epsR = 1e2
@@ -106,7 +112,7 @@ dnorm_dist = BDiag.H @ d_dist
 minv3d_ne_dist = pylops_mpi.optimization.basic.cg(NormEqOp, dnorm_dist, x0=mback3d_dist, niter=10, show=True)[0]
 minv3d_ne = minv3d_ne_dist.asarray().reshape((ny, nx, nz))
 
-# ###############################################################################
+###############################################################################
 
 # Regularized inversion with regularized equations
 StackOp = pylops_mpi.MPIStackedVStack([BDiag, np.sqrt(epsR) * LapOp])
@@ -118,8 +124,8 @@ dnorm_dist = BDiag.H @ d_dist
 minv3d_reg_dist = pylops_mpi.optimization.basic.cgls(StackOp, dstack_dist, x0=mback3d_dist, niter=10, show=True)[0]
 minv3d_reg = minv3d_reg_dist.asarray().reshape((ny, nx, nz))
 
-# ###############################################################################
-# To plot the inversion result, the array must be copied back to cpu via `get()`
+###############################################################################
+# To plot the inversion results, the array must be copied back to cpu via :code:`get()`
 
 if rank == 0:
     # Check the distributed implementation gives the same result
