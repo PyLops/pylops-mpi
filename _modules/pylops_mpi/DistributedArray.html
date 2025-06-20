@@ -787,12 +787,7 @@
 <span class="sd">        local_shapes : :obj:`list`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">nccl_enabled</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;base_comm_nccl&quot;</span><span class="p">):</span>
-            <span class="c1"># gather tuple of shapes from every rank and copy from GPU to CPU</span>
-            <span class="n">all_tuples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_allgather</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">local_shape</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
-            <span class="c1"># NCCL returns the flat array that packs every tuple as 1-dimensional array</span>
-            <span class="c1"># unpack each tuple from each rank</span>
-            <span class="n">tuple_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">local_shape</span><span class="p">)</span>
-            <span class="k">return</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">all_tuples</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">tuple_len</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_tuples</span><span class="p">),</span> <span class="n">tuple_len</span><span class="p">)]</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nccl_local_shapes</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_allgather</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">local_shape</span><span class="p">)</span>
 
@@ -827,8 +822,8 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_array</span>
 
         <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">nccl_enabled</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;base_comm_nccl&quot;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">nccl_asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sub_comm</span> <span class="k">if</span> <span class="n">masked</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span>
-                                <span class="bp">self</span><span class="o">.</span><span class="n">local_array</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_shapes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">nccl_asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sub_comm</span> <span class="k">if</span> <span class="n">masked</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">local_array</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nccl_local_shapes</span><span class="p">(</span><span class="n">masked</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Gather all the local arrays and apply concatenation.</span>
             <span class="k">if</span> <span class="n">masked</span><span class="p">:</span>
@@ -1000,6 +995,20 @@
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">tag</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="o">.</span><span class="n">Recv</span><span class="p">(</span><span class="n">buf</span><span class="o">=</span><span class="n">recv_buf</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">tag</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">recv_buf</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_nccl_local_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">masked</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the the list of shapes of every GPU in the communicator</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># gather tuple of shapes from every rank within thee communicator and copy from GPU to CPU</span>
+        <span class="k">if</span> <span class="n">masked</span><span class="p">:</span>
+            <span class="n">all_tuples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_allgather_subcomm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">local_shape</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">all_tuples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_allgather</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">local_shape</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+        <span class="c1"># NCCL returns the flat array that packs every tuple as 1-dimensional array</span>
+        <span class="c1"># unpack each tuple from each rank</span>
+        <span class="n">tuple_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">local_shape</span><span class="p">)</span>
+        <span class="n">local_shapes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">all_tuples</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">tuple_len</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_tuples</span><span class="p">),</span> <span class="n">tuple_len</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">local_shapes</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">arr</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">global_shape</span><span class="p">,</span>
