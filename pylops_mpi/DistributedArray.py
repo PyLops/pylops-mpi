@@ -340,12 +340,7 @@ class DistributedArray:
         local_shapes : :obj:`list`
         """
         if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
-            # gather tuple of shapes from every rank and copy from GPU to CPU
-            all_tuples = self._allgather(self.local_shape).get()
-            # NCCL returns the flat array that packs every tuple as 1-dimensional array
-            # unpack each tuple from each rank
-            tuple_len = len(self.local_shape)
-            return [tuple(all_tuples[i : i + tuple_len]) for i in range(0, len(all_tuples), tuple_len)]
+            return self._nccl_local_shapes(False)
         else:
             return self._allgather(self.local_shape)
 
@@ -381,7 +376,7 @@ class DistributedArray:
 
         if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
             return nccl_asarray(self.sub_comm if masked else self.base_comm_nccl,
-                                self.local_array, self.local_shapes, self.axis)
+                                self.local_array, self._nccl_local_shapes(masked), self.axis)
         else:
             # Gather all the local arrays and apply concatenation.
             if masked:
@@ -553,6 +548,20 @@ class DistributedArray:
                 return self.base_comm.recv(source=source, tag=tag)
             self.base_comm.Recv(buf=recv_buf, source=source, tag=tag)
             return recv_buf
+
+    def _nccl_local_shapes(self, masked: bool):
+        """Get the the list of shapes of every GPU in the communicator
+        """
+        # gather tuple of shapes from every rank within thee communicator and copy from GPU to CPU
+        if masked:
+            all_tuples = self._allgather_subcomm(self.local_shape).get()
+        else:
+            all_tuples = self._allgather(self.local_shape).get()
+        # NCCL returns the flat array that packs every tuple as 1-dimensional array
+        # unpack each tuple from each rank
+        tuple_len = len(self.local_shape)
+        local_shapes = [tuple(all_tuples[i : i + tuple_len]) for i in range(0, len(all_tuples), tuple_len)]
+        return local_shapes
 
     def __neg__(self):
         arr = DistributedArray(global_shape=self.global_shape,

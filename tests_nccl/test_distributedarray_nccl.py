@@ -308,6 +308,42 @@ def test_distributed_norm_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par6), (par8)])
+def test_distributed_masked_nccl(par):
+    """Test Asarray with masked array"""
+    # Number of subcommunicators
+    if MPI.COMM_WORLD.Get_size() % 2 == 0:
+        nsub = 2
+    elif MPI.COMM_WORLD.Get_size() % 3 == 0:
+        nsub = 3
+    else:
+        pass
+    subsize = max(1, MPI.COMM_WORLD.Get_size() // nsub)
+    mask = np.repeat(np.arange(nsub), subsize)
+
+    # Replicate x as required in masked arrays
+    x_gpu = cp.asarray(par['x'])
+    if par['axis'] != 0:
+        x_gpu = cp.swapaxes(x_gpu, par['axis'], 0)
+    for isub in range(1, nsub):
+        x_gpu[(x_gpu.shape[0] // nsub) * isub:(x_gpu.shape[0] // nsub) * (isub + 1)] = x_gpu[:x_gpu.shape[0] // nsub]
+    if par['axis'] != 0:
+        x_gpu = np.swapaxes(x_gpu, 0, par['axis'])
+
+    arr = DistributedArray.to_dist(x=x_gpu, base_comm_nccl=nccl_comm, partition=par['partition'], mask=mask, axis=par['axis'])
+
+    # Global view
+    xloc = arr.asarray()
+    assert xloc.shape == x_gpu.shape
+
+    # Global masked view
+    xmaskedloc = arr.asarray(masked=True)
+    xmasked_shape = list(x_gpu.shape)
+    xmasked_shape[par['axis']] = int(xmasked_shape[par['axis']] // nsub)
+    assert xmaskedloc.shape == tuple(xmasked_shape)
+
+
+@pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize(
     "par1, par2", [(par6, par7), (par6b, par7b), (par8, par9), (par8b, par9b)]
 )
