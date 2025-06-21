@@ -19,7 +19,7 @@ Additionally, to use the NCCL engine, the following additional
 dependencies are required:
 
 * `CuPy <https://cupy.dev/>`_
-* `NCCL <https://docs.cupy.dev/en/stable/install.html#additional-cuda-libraries>`_
+* `NCCL <https://docs.cupy.dev/en/stable/install.html#additional-cuda-libraries>`__
 
 We highly encourage using the `Anaconda Python distribution <https://www.anaconda.com/download>`_
 or its standalone package manager `Conda <https://docs.conda.io/en/latest/index.html>`_. However,
@@ -120,7 +120,7 @@ If you prefer a ``pip`` installation, we provide the following command
 Note that, differently from the  ``conda`` command, the above **will not** create a virtual environment.
 Make sure you create and activate your environment previously.
 
-Simlarly, if you want to enable `NCCL <https://developer.nvidia.com/nccl>`_ but prefer using pip,
+Similarly, if you want to enable `NCCL <https://developer.nvidia.com/nccl>`_ but prefer using pip,
 you must first check the CUDA version of your system:
 
 .. code-block:: bash
