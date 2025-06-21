@@ -131,26 +131,30 @@ In the following, we provide a list of modules (i.e., operators and solvers) whe
    * - modules
      - NCCL supported
    * - :class:`pylops_mpi.DistributedArray`
-     - / 
+     - ✅ 
    * - :class:`pylops_mpi.basicoperators.MPIVStack`
-     - Ongoing
+     - ✅ 
+   * - :class:`pylops_mpi.basicoperators.MPIVStack`
+     - ✅ 
    * - :class:`pylops_mpi.basicoperators.MPIHStack`
-     - Ongoing
+     - ✅ 
    * - :class:`pylops_mpi.basicoperators.MPIBlockDiag`
-     - Ongoing
+     - ✅ 
    * - :class:`pylops_mpi.basicoperators.MPIGradient`
-     - Ongoing
+     - ✅ 
    * - :class:`pylops_mpi.basicoperators.MPIFirstDerivative`
-     - Ongoing
+     - ✅ 
    * - :class:`pylops_mpi.basicoperators.MPISecondDerivative`
-     - Ongoing
+     - ✅ 
    * - :class:`pylops_mpi.basicoperators.MPILaplacian`
-     - Ongoing
+     - ✅ 
    * - :class:`pylops_mpi.optimization.basic.cg`
-     - Ongoing
+     - ✅ 
    * - :class:`pylops_mpi.optimization.basic.cgls`
-     - Ongoing
+     - ✅ 
+   * - :class:`pylops_mpi.signalprocessing.Fredhoml1`
+     - Planned ⏳
    * - ISTA Solver
-     - Planned 
+     - Planned ⏳
    * - Complex Numeric Data Type for NCCL 
-     - Planned 
+     - Planned ⏳ 

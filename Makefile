@@ -68,3 +68,7 @@ run_examples:
 # Run tutorials using mpi
 run_tutorials:
 	sh mpi_examples.sh tutorials $(NUM_PROCESSES)
+
+# Run tutorials using nccl 
+run_tutorials_nccl:
+	sh mpi_examples.sh tutorials_nccl $(NUM_PROCESSES)
