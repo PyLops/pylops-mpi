@@ -77,7 +77,7 @@ mback3d_dist[:] = cp.asarray(mback3d_i.flatten())
 # This PyLops operator has GPU-support (https://pylops.readthedocs.io/en/stable/gpu.html)
 # so it can run with DistributedArray whose engine is Cupy
 
-PPop = PoststackLinearModelling(wav, nt0=nz, spatdims=(ny_i, nx))
+PPop = PoststackLinearModelling(wav=cp.asarray(wav), nt0=nz, spatdims=(ny_i, nx))
 Top = Transpose((ny_i, nx, nz), (2, 0, 1))
 BDiag = pylops_mpi.basicoperators.MPIBlockDiag(ops=[Top.H @ PPop @ Top, ])
 
@@ -97,7 +97,7 @@ d_0 = d_dist.asarray().reshape((ny, nx, nz))
 # will be carried through NCCL GPU-to-GPU.
 
 # Inversion using CGLS solver
-minv3d_iter_dist = pylops_mpi.optimization.basic.cgls(BDiag, d_dist, x0=mback3d_dist, niter=10, show=True)[0]
+minv3d_iter_dist = pylops_mpi.optimization.basic.cgls(BDiag, d_dist, x0=mback3d_dist, niter=100, show=True)[0]
 minv3d_iter = minv3d_iter_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
@@ -108,7 +108,7 @@ LapOp = pylops_mpi.MPILaplacian(dims=(ny, nx, nz), axes=(0, 1, 2), weights=(1, 1
                                 sampling=(1, 1, 1), dtype=BDiag.dtype)
 NormEqOp = BDiag.H @ BDiag + epsR * LapOp.H @ LapOp
 dnorm_dist = BDiag.H @ d_dist
-minv3d_ne_dist = pylops_mpi.optimization.basic.cg(NormEqOp, dnorm_dist, x0=mback3d_dist, niter=10, show=True)[0]
+minv3d_ne_dist = pylops_mpi.optimization.basic.cg(NormEqOp, dnorm_dist, x0=mback3d_dist, niter=100, show=True)[0]
 minv3d_ne = minv3d_ne_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
@@ -120,7 +120,7 @@ d0_dist[:] = 0.
 dstack_dist = pylops_mpi.StackedDistributedArray([d_dist, d0_dist])
 
 dnorm_dist = BDiag.H @ d_dist
-minv3d_reg_dist = pylops_mpi.optimization.basic.cgls(StackOp, dstack_dist, x0=mback3d_dist, niter=10, show=True)[0]
+minv3d_reg_dist = pylops_mpi.optimization.basic.cgls(StackOp, dstack_dist, x0=mback3d_dist, niter=100, show=True)[0]
 minv3d_reg = minv3d_reg_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
