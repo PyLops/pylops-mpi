@@ -204,7 +204,7 @@ demanding computations can be run in parallel.
 
  .. code-block:: none
 
-    /opt/hostedtoolcache/Python/3.11.12/x64/lib/python3.11/site-packages/pylops/signalprocessing/fft.py:53: UserWarning: numpy backend always returns complex128 dtype. To respect the passed dtype, data will be casted to complex64.
+    /opt/hostedtoolcache/Python/3.11.12/x64/lib/python3.11/site-packages/pylops/signalprocessing/fft.py:54: UserWarning: numpy backend always returns complex128 dtype. To respect the passed dtype, data will be casted to complex64.
       warnings.warn(
 
 
@@ -273,7 +273,7 @@ Finally let's display input model, data and adjoint model
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 0.452 seconds)
+   **Total running time of the script:** (0 minutes 0.455 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_mdc.py:

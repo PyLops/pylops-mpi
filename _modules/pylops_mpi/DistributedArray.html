@@ -973,7 +973,7 @@
                 <span class="n">count</span> <span class="o">=</span> <span class="n">send_buf</span><span class="o">.</span><span class="n">size</span>
             <span class="n">nccl_send</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span> <span class="n">send_buf</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="o">.</span><span class="n">Send</span><span class="p">(</span><span class="n">send_buf</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">tag</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">send_buf</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">tag</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_recv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">recv_buf</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Receive operation</span>
@@ -990,11 +990,8 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Using recv with NCCL must also supply receiver buffer &quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># MPI allows a receiver buffer to be optional</span>
-            <span class="k">if</span> <span class="n">recv_buf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">tag</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="o">.</span><span class="n">Recv</span><span class="p">(</span><span class="n">buf</span><span class="o">=</span><span class="n">recv_buf</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">tag</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">recv_buf</span>
+            <span class="c1"># MPI allows a receiver buffer to be optional and receives as a Python Object</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">tag</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_nccl_local_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">masked</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the the list of shapes of every GPU in the communicator</span>
