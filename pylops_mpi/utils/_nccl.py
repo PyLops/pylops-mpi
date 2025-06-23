@@ -25,6 +25,9 @@ cupy_to_nccl_dtype = {
     "int8": nccl.NCCL_INT8,
     "uint32": nccl.NCCL_UINT32,
     "uint64": nccl.NCCL_UINT64,
+    # sending complex array as float with 2x size
+    "complex64": nccl.NCCL_FLOAT32,
+    "complex128": nccl.NCCL_FLOAT64,
 }
 
 
@@ -33,6 +36,13 @@ class NcclOp(IntEnum):
     PROD = nccl.NCCL_PROD
     MAX = nccl.NCCL_MAX
     MIN = nccl.NCCL_MIN
+
+
+def _nccl_buf_size(buf, count=None):
+    if buf.dtype in ['complex64', 'complex128']:
+        return 2 * count if count else 2 * buf.size
+    else:
+        return count if count else buf.size
 
 
 def mpi_op_to_nccl(mpi_op) -> NcclOp:
@@ -155,7 +165,7 @@ def nccl_allgather(nccl_comm, send_buf, recv_buf=None) -> cp.ndarray:
     nccl_comm.allGather(
         send_buf.data.ptr,
         recv_buf.data.ptr,
-        send_buf.size,
+        _nccl_buf_size(send_buf),
         cupy_to_nccl_dtype[str(send_buf.dtype)],
         cp.cuda.Stream.null.ptr,
     )
@@ -193,7 +203,7 @@ def nccl_allreduce(nccl_comm, send_buf, recv_buf=None, op: MPI.Op = MPI.SUM) -> 
     nccl_comm.allReduce(
         send_buf.data.ptr,
         recv_buf.data.ptr,
-        send_buf.size,
+        _nccl_buf_size(send_buf),
         cupy_to_nccl_dtype[str(send_buf.dtype)],
         mpi_op_to_nccl(op),
         cp.cuda.Stream.null.ptr,
@@ -220,7 +230,7 @@ def nccl_bcast(nccl_comm, local_array, index, value) -> None:
         local_array[index] = value
     nccl_comm.bcast(
         local_array[index].data.ptr,
-        local_array[index].size,
+        _nccl_buf_size(local_array[index]),
         cupy_to_nccl_dtype[str(local_array[index].dtype)],
         0,
         cp.cuda.Stream.null.ptr,
@@ -302,7 +312,7 @@ def nccl_send(nccl_comm, send_buf, dest, count):
         Number of elements to send from `send_buf`.
     """
     nccl_comm.send(send_buf.data.ptr,
-                   count,
+                   _nccl_buf_size(send_buf, count),
                    cupy_to_nccl_dtype[str(send_buf.dtype)],
                    dest,
                    cp.cuda.Stream.null.ptr
@@ -325,7 +335,7 @@ def nccl_recv(nccl_comm, recv_buf, source, count=None):
         Number of elements to receive.
     """
     nccl_comm.recv(recv_buf.data.ptr,
-                   count,
+                   _nccl_buf_size(recv_buf, count),
                    cupy_to_nccl_dtype[str(recv_buf.dtype)],
                    source,
                    cp.cuda.Stream.null.ptr
