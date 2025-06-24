@@ -1,9 +1,9 @@
 r"""
-Post Stack Inversion - 3D with NCCL
-===================================
-This tutorial is an extension of the :ref:`sphx_glr_tutorials_poststack.py`
-tutorial where PyLops-MPI is run in multi-GPU setting with GPUs communicating
-via NCCL.
+Post Stack Inversion - 3D with CUDA-Aware MPI
+=============================================
+This tutorial is an extension of the :ref:`sphx_glr_tutorials_poststack.py` 
+tutorial where PyLops-MPI is run in multi-GPU setting with GPUs communicating via 
+CUDA-Aware MPI.
 """
 
 import numpy as np
@@ -18,14 +18,9 @@ from pylops.avo.poststack import PoststackLinearModelling
 
 import pylops_mpi
 
-###############################################################################
-# NCCL communication can be easily initialized with
-# :py:func:`pylops_mpi.utils._nccl.initialize_nccl_comm` operator.
-# One can think of this as GPU-counterpart of :code:`MPI.COMM_WORLD`
-
 plt.close("all")
-nccl_comm = pylops_mpi.utils._nccl.initialize_nccl_comm()
 rank = MPI.COMM_WORLD.Get_rank()
+cp.cuda.Device(device=rank).use();
 
 ###############################################################################
 # Let's start by defining all the parameters required by the
@@ -63,26 +58,29 @@ mback3d = np.concatenate(MPI.COMM_WORLD.allgather(mback3d_i))
 
 ###############################################################################
 # We are now ready to initialize various :py:class:`pylops_mpi.DistributedArray` objects.
-# Compared to the MPI tutorial, we need to make sure that we pass :code:`base_comm_nccl = nccl_comm` and set CuPy as the engine.
+# Compared to the MPI tutorial, we need to make sure that we set CuPy as the engine and
+# use CuPy arrays
 
-m3d_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz, base_comm_nccl=nccl_comm, engine="cupy")
+m3d_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz, engine="cupy")
 m3d_dist[:] = cp.asarray(m3d_i.flatten())
 
 # Do the same thing for smooth model
-mback3d_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz, base_comm_nccl=nccl_comm, engine="cupy")
+mback3d_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz, engine="cupy")
 mback3d_dist[:] = cp.asarray(mback3d_i.flatten())
 
 ###############################################################################
-# For PostStackLinearModelling, there is no change needed to have it run with NCCL.
+# For PostStackLinearModelling, there is no change needed to have it run with CUDA-Aware MPI.
 # This PyLops operator has GPU-support (https://pylops.readthedocs.io/en/stable/gpu.html)
 # so it can run with DistributedArray whose engine is Cupy
 
-PPop = PoststackLinearModelling(wav=cp.asarray(wav), nt0=nz, spatdims=(ny_i, nx))
+PPop = PoststackLinearModelling(cp.asarray(wav.astype(np.float32)), nt0=nz, 
+                                spatdims=(ny_i, nx))
 Top = Transpose((ny_i, nx, nz), (2, 0, 1))
 BDiag = pylops_mpi.basicoperators.MPIBlockDiag(ops=[Top.H @ PPop @ Top, ])
 
 ###############################################################################
-# This computation will be done in GPU. The call :code:`asarray()` triggers the NCCL communication (gather result from each GPU).
+# This computation will be done in GPU. The call :code:`asarray()` triggers the CUDA-aware 
+# MPI communication (gather result from each GPU).
 # But array :code:`d` and :code:`d_0` still live in GPU memory
 
 d_dist = BDiag @ m3d_dist
@@ -92,9 +90,10 @@ d_0_dist = BDiag @ mback3d_dist
 d_0 = d_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
-# Inversion using CGLS solver - There is no code change to have run on NCCL (it handles though MPI operator and DistributedArray)
-# In this particular case, the local computation will be done in GPU. Collective communication calls
-# will be carried through NCCL GPU-to-GPU.
+# Inversion using CGLS solver - There is no code change to run on CUDA-aware 
+# MPI (this is handled through MPI operator and DistributedArray)
+# In this particular case, the local computation will be done in GPU. 
+# Collective communication calls will be carried through MPI GPU-to-GPU.
 
 # Inversion using CGLS solver
 minv3d_iter_dist = pylops_mpi.optimization.basic.cgls(BDiag, d_dist, x0=mback3d_dist, niter=100, show=True)[0]
@@ -115,7 +114,7 @@ minv3d_ne = minv3d_ne_dist.asarray().reshape((ny, nx, nz))
 
 # Regularized inversion with regularized equations
 StackOp = pylops_mpi.MPIStackedVStack([BDiag, np.sqrt(epsR) * LapOp])
-d0_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz, base_comm_nccl=nccl_comm, engine="cupy")
+d0_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz, engine="cupy")
 d0_dist[:] = 0.
 dstack_dist = pylops_mpi.StackedDistributedArray([d_dist, d0_dist])
 
@@ -134,9 +133,9 @@ if rank == 0:
     d0_0 = (PPop0 @ m3d.transpose(2, 0, 1)).transpose(1, 2, 0)
 
     # Check the two distributed implementations give the same modelling results
-    print('Distr == Local', np.allclose(d, d0))
-    print('Smooth Distr == Local', np.allclose(d_0, d0_0))
-
+    print('Distr == Local', np.allclose(cp.asnumpy(d), d0, atol=1e-6))
+    print('Smooth Distr == Local', np.allclose(cp.asnumpy(d_0), d0_0, atol=1e-6))
+    
     # Visualize
     fig, axs = plt.subplots(nrows=6, ncols=3, figsize=(9, 14), constrained_layout=True)
     axs[0][0].imshow(m3d[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
