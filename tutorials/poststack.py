@@ -277,3 +277,6 @@ if rank == 0:
     axs[5][2].imshow(minv3d_reg[:, :, 220].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
     axs[5][2].set_title('Regularized Inverted Model iter x-y')
     axs[5][2].axis('tight')
+
+###############################################################################
+# To run this tutorial with our NCCL backend, refer to :ref:`sphx_glr_tutorials_poststack_nccl.py`

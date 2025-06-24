@@ -646,9 +646,9 @@ class DistributedArray:
         self._check_mask(dist_array)
         ncp = get_module(self.engine)
         # Convert to Partition.SCATTER if Partition.BROADCAST
-        x = DistributedArray.to_dist(x=self.local_array) \
+        x = DistributedArray.to_dist(x=self.local_array, base_comm=self.base_comm, base_comm_nccl=self.base_comm_nccl) \
             if self.partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST] else self
-        y = DistributedArray.to_dist(x=dist_array.local_array) \
+        y = DistributedArray.to_dist(x=dist_array.local_array, base_comm=self.base_comm, base_comm_nccl=self.base_comm_nccl) \
             if self.partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST] else dist_array
         # Flatten the local arrays and calculate dot product
         return self._allreduce_subcomm(ncp.dot(x.local_array.flatten(), y.local_array.flatten()))
@@ -701,6 +701,7 @@ class DistributedArray:
         """
         arr = DistributedArray(global_shape=self.global_shape,
                                base_comm=self.base_comm,
+                               base_comm_nccl=self.base_comm_nccl,
                                partition=self.partition,
                                axis=self.axis,
                                local_shapes=self.local_shapes,
@@ -721,7 +722,7 @@ class DistributedArray:
             Axis along which vector norm needs to be computed. Defaults to ``-1``
         """
         # Convert to Partition.SCATTER if Partition.BROADCAST
-        x = DistributedArray.to_dist(x=self.local_array) \
+        x = DistributedArray.to_dist(x=self.local_array, base_comm=self.base_comm, base_comm_nccl=self.base_comm_nccl) \
             if self.partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST] else self
         if axis == -1:
             # Flatten the local arrays and calculate norm
@@ -736,6 +737,7 @@ class DistributedArray:
         """
         conj = DistributedArray(global_shape=self.global_shape,
                                 base_comm=self.base_comm,
+                                base_comm_nccl=self.base_comm_nccl,
                                 partition=self.partition,
                                 axis=self.axis,
                                 local_shapes=self.local_shapes,
@@ -750,6 +752,7 @@ class DistributedArray:
         """
         arr = DistributedArray(global_shape=self.global_shape,
                                base_comm=self.base_comm,
+                               base_comm_nccl=self.base_comm_nccl,
                                partition=self.partition,
                                axis=self.axis,
                                local_shapes=self.local_shapes,
@@ -905,7 +908,8 @@ class StackedDistributedArray:
             Global Array gathered at all ranks
 
         """
-        return np.hstack([distarr.asarray().ravel() for distarr in self.distarrays])
+        ncp = get_module(self.distarrays[0].engine)
+        return ncp.hstack([distarr.asarray().ravel() for distarr in self.distarrays])
 
     def _check_stacked_size(self, stacked_array):
         """Check that arrays have consistent size
