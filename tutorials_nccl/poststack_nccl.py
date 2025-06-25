@@ -15,8 +15,6 @@ from pylops.basicoperators import Transpose
 from pylops.avo.poststack import PoststackLinearModelling
 
 import pylops_mpi
-import pylops_mpi.utils
-import pylops_mpi.utils._nccl
 
 ###############################################################################
 # NCCL communication can be easily initialized with
@@ -198,5 +196,3 @@ if rank == 0:
     axs[5][2].imshow(minv3d_reg[:, :, 220].T.get(), cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
     axs[5][2].set_title('Regularized Inverted Model iter x-y')
     axs[5][2].axis('tight')
-
-    plt.savefig("./poststack_inv_nccl.png")

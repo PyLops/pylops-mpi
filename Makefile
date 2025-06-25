@@ -55,6 +55,13 @@ doc:
 	rm -rf source/tutorials && rm -rf build &&\
 	cd .. && sphinx-build -b html docs/source docs/build
 
+doc_nccl:
+	cp tutorials_nccl/* tutorials/
+	cd docs  && rm -rf source/api/generated && rm -rf source/gallery &&\
+	rm -rf source/tutorials && rm -rf source/tutorials && rm -rf build &&\
+	cd .. && sphinx-build -b html docs/source docs/build
+	rm tutorials/*_nccl.py
+
 docupdate:
 	cd docs && make html && cd ..
 
