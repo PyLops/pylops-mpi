@@ -22,8 +22,8 @@ class MPIMatrixMult(MPILinearOperator):
     Parameters
     ----------
     A : :obj:`numpy.ndarray`
-        Local block of the matrix of shape :math:`[M_{loc} \times K]`
-        where ``M_loc`` is the number of rows stored on this MPI rank and
+        Local block of the matrix of shape :math:`[N_{loc} \times K]`
+        where ``N_loc`` is the number of rows stored on this MPI rank and
         ``K`` is the global number of columns.
     M : :obj:`int`
         Global leading dimension (i.e., number of columns) of the matrices 
