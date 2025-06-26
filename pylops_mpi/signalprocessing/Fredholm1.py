@@ -111,7 +111,10 @@ class MPIFredholm1(MPILinearOperator):
         if x.partition not in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
             raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
                              f"Got  {x.partition} instead...")
-        y = DistributedArray(global_shape=self.shape[0], partition=x.partition,
+        y = DistributedArray(global_shape=self.shape[0], 
+                             base_comm=x.base_comm,
+                             base_comm_nccl=x.base_comm_nccl,
+                             partition=x.partition,
                              engine=x.engine, dtype=self.dtype)
         x = x.local_array.reshape(self.dims).squeeze()
         x = x[self.islstart[self.rank]:self.islend[self.rank]]
@@ -125,7 +128,14 @@ class MPIFredholm1(MPILinearOperator):
             for isl in range(self.nsls[self.rank]):
                 y1[isl] = ncp.dot(self.G[isl], x[isl])
         # gather results
-        y[:] = np.vstack(self.base_comm.allgather(y1)).ravel()
+        # TODO: _allgather is supposed to be private to DistributedArray
+        # but so far, we do not take base_comm_nccl as an argument to Op.
+        # For consistency, y._allgather has to be call here.
+        # we can do if else for x.base_comm_nccl, but that means
+        # we have to call function from _nccl.py
+        # y[:] = np.vstack(y._allgather(y1)).ravel()
+        recv = y._allgather(y1)
+        y[:] = recv.ravel()
         return y
 
     def _rmatvec(self, x: NDArray) -> NDArray:
@@ -133,7 +143,10 @@ class MPIFredholm1(MPILinearOperator):
         if x.partition not in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
             raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
                              f"Got  {x.partition} instead...")
-        y = DistributedArray(global_shape=self.shape[1], partition=x.partition,
+        y = DistributedArray(global_shape=self.shape[1], 
+                             base_comm=x.base_comm,
+                             base_comm_nccl=x.base_comm_nccl,
+                             partition=x.partition,
                              engine=x.engine, dtype=self.dtype)
         x = x.local_array.reshape(self.dimsd).squeeze()
         x = x[self.islstart[self.rank]:self.islend[self.rank]]
@@ -159,5 +172,11 @@ class MPIFredholm1(MPILinearOperator):
                     y1[isl] = ncp.dot(x[isl].T.conj(), self.G[isl]).T.conj()
 
         # gather results
-        y[:] = np.vstack(self.base_comm.allgather(y1)).ravel()
+        recv = y._allgather(y1) 
+        if self.usematmul:
+            # unrolling like DistributedArray asarray()
+            chunk_size = self.ny * self.nz
+            recv = ncp.vstack([recv[i*chunk_size: (i+1)*chunk_size].reshape(self.nz, self.ny).T for i in range((len(recv)+chunk_size-1)//chunk_size)])
+
+        y[:] = recv.ravel()
         return y
