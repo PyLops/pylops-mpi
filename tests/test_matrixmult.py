@@ -40,20 +40,20 @@ def test_SUMMAMatrixMult(N, K, M, dtype_str):
     cmplx = 1j if np.issubdtype(dtype, np.complexfloating) else 0
     base_float_dtype = np.float32 if dtype == np.complex64 else np.float64
 
-    my_group = rank % p_prime
-    my_layer = rank // p_prime
+    my_col = rank % p_prime
+    my_row = rank // p_prime
 
     # Create sub-communicators
-    layer_comm = comm.Split(color=my_layer, key=my_group)
-    group_comm = comm.Split(color=my_group, key=my_layer)
+    row_comm = comm.Split(color=my_row, key=my_col)
+    col_comm = comm.Split(color=my_col, key=my_row)
 
     # Calculate local matrix dimensions
     blk_rows_A = int(math.ceil(N / p_prime))
-    row_start_A = my_group * blk_rows_A
+    row_start_A = my_col * blk_rows_A
     row_end_A = min(N, row_start_A + blk_rows_A)
 
     blk_cols_X = int(math.ceil(M / p_prime))
-    col_start_X = my_layer * blk_cols_X
+    col_start_X = my_row * blk_cols_X
     col_end_X = min(M, col_start_X + blk_cols_X)
     local_col_X_len = max(0, col_end_X - col_start_X)
 
@@ -131,5 +131,5 @@ def test_SUMMAMatrixMult(N, K, M, dtype_str):
             err_msg=f"Rank {rank}: Ajoint verification failed."
         )
 
-    group_comm.Free()
-    layer_comm.Free()
+    col_comm.Free()
+    row_comm.Free()

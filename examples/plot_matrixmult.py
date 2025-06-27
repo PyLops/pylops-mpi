@@ -71,12 +71,12 @@ X = np.random.rand(K * M).astype(dtype=np.float32).reshape(K, M)
 #    R = \bigl\lceil \tfrac{P}{P'} \bigr\rceil.
 #
 # Each process is therefore assigned a pair of coordinates 
-# :math:`(g, l)` within this grid:
+# :math:`(r,c)` within this grid:
 #
 # .. math::
-#    g = \mathrm{rank} \bmod P',
+#    r = \left\lfloor \frac{\mathrm{rank}}{P'} \right\rfloor,
 #    \quad
-#    l = \left\lfloor \frac{\mathrm{rank}}{P'} \right\rfloor.
+#    c = \mathrm{rank} \bmod P'.
 #
 #For example, when :math:`P = 4` we have :math:`P' = 2`, giving a 2×2 layout:
 #
@@ -85,19 +85,19 @@ X = np.random.rand(K * M).astype(dtype=np.float32).reshape(K, M)
 #   <div style="text-align: center; font-family: monospace; white-space: pre;">
 #  ┌────────────┬────────────┐
 #  │ Rank 0     │ Rank 1     │
-#  │ (g=0, l=0) │ (g=1, l=0) │
+#  │ (r=0, c=0) │ (r=0, c=1) │
 #  ├────────────┼────────────┤
 #  │ Rank 2     │ Rank 3     │
-#  │ (g=0, l=1) │ (g=1, l=1) │
+#  │ (r=1, c=0) │ (r=1, c=1) │
 #  └────────────┴────────────┘
 #   </div>
 
-my_group = rank % p_prime
-my_layer = rank // p_prime
+my_col = rank % p_prime
+my_row = rank // p_prime
 
 # Create sub‐communicators
-layer_comm = comm.Split(color=my_layer, key=my_group)  # all procs in same layer
-group_comm = comm.Split(color=my_group, key=my_layer)  # all procs in same group
+row_comm = comm.Split(color=my_row, key=my_col)  # all procs in same row
+col_comm = comm.Split(color=my_col, key=my_row)  # all procs in same col
 
 ################################################################################
 # At this point we divide the rows and columns of :math:`\mathbf{A}` and  
@@ -111,10 +111,10 @@ group_comm = comm.Split(color=my_group, key=my_layer)  # all procs in same group
 #   <div style="text-align: left; font-family: monospace; white-space: pre;">
 #   <b>Matrix A (4 x 4):</b>
 #   ┌─────────────────┐
-#   │ a11 a12 a13 a14 │ <- Rows 0–1 (Group 0)
+#   │ a11 a12 a13 a14 │ <- Rows 0–1 (Process Grid Col 0)
 #   │ a21 a22 a23 a24 │
 #   ├─────────────────┤
-#   │ a41 a42 a43 a44 │ <- Rows 2–3 (Group 1)
+#   │ a41 a42 a43 a44 │ <- Rows 2–3 (Process Grid Col 1)
 #   │ a51 a52 a53 a54 │
 #   └─────────────────┘
 #   </div>
@@ -124,7 +124,7 @@ group_comm = comm.Split(color=my_group, key=my_layer)  # all procs in same group
 #   <div style="text-align: left; font-family: monospace; white-space: pre;">
 #   <b>Matrix X (4 x 4):</b>
 #   ┌─────────┬─────────┐
-#   │ b11 b12 │ b13 b14 │ <- Cols 0–1 (Layer 0), Cols 2–3 (Layer 1)
+#   │ b11 b12 │ b13 b14 │ <- Cols 0–1 (Process Grid Row 0), Cols 2–3 (Process Grid Row 1)
 #   │ b21 b22 │ b23 b24 │
 #   │ b31 b32 │ b33 b34 │
 #   │ b41 b42 │ b43 b44 │
@@ -135,11 +135,11 @@ group_comm = comm.Split(color=my_group, key=my_layer)  # all procs in same group
 blk_rows = int(math.ceil(N / p_prime))
 blk_cols = int(math.ceil(M / p_prime))
 
-rs = my_group * blk_rows
+rs = my_col * blk_rows
 re = min(N, rs + blk_rows)
 my_own_rows = re - rs
 
-cs = my_layer * blk_cols
+cs = my_row * blk_cols
 ce = min(M, cs + blk_cols)
 my_own_cols = ce - cs
 

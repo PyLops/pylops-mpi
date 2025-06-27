@@ -82,16 +82,16 @@ class MPIMatrixMult(MPILinearOperator):
        of shape ``(K, M)``) is reshaped to ``(K, M_local)`` where ``M_local``
        is the number of columns assigned to the current process.
 
-    2. **Data Broadcasting**: Within each layer (processes with same ``layer_id``),
-       the operand data is broadcast from the process whose ``group_id`` matches
-       the ``layer_id``. This ensures all processes in a layer have access to
-       the same operand columns.
+    2. **Data Broadcasting**: Within each row (processes with same ``row_id``),
+       the operand data is broadcast from the process whose ``col_id`` matches
+       the ``row_id`` (processes along the diagonal). This ensures all processes
+       in a row have access to the same operand columns.
 
     3. **Local Computation**: Each process computes ``A_local @ X_local`` where:
        - ``A_local`` is the local block of matrix ``A`` (shape ``N_local x K``)
        - ``X_local`` is the broadcasted operand (shape ``K x M_local``)
 
-    4. **Layer Gather**: Results from all processes in each layer are gathered
+    4. **Row-wise Gather**: Results from all processes in each row are gathered
        using ``allgather`` to reconstruct the full result matrix vertically.
 
     **Adjoint Operation step-by-step**
@@ -112,9 +112,9 @@ class MPIMatrixMult(MPILinearOperator):
         producing a partial result of  shape ``(K, M_local)``.
         This computes the local contribution of columns of  ``A^H`` to the final result.
 
-    3. **Layer Reduction**: Since the full result ``Y = A^H \cdot X`` is the
+    3. **Row-wise Reduction**: Since the full result ``Y = A^H \cdot X`` is the
        sum of contributions from all column blocks of ``A^H``, processes in the 
-       same layer perform an ``allreduce`` sum to combine their partial results. 
+       same rows perform an ``allreduce`` sum to combine their partial results.
        This gives the complete ``(K, M_local)`` result for their assigned columns.
     
     """
@@ -135,29 +135,27 @@ class MPIMatrixMult(MPILinearOperator):
         if self._P_prime * self._C != size:
             raise Exception(f"Number of processes must be a square number, provided {size} instead...")
 
-        # Compute this process's group and layer indices
-        self._group_id = rank % self._P_prime
-        self._layer_id = rank // self._P_prime
+        self._col_id = rank % self._P_prime
+        self._row_id = rank // self._P_prime
 
-        # Split communicators by layer (rows) and by group (columns)
         self.base_comm = base_comm
-        self._layer_comm = base_comm.Split(color=self._layer_id, key=self._group_id)
-        self._group_comm = base_comm.Split(color=self._group_id, key=self._layer_id)
+        self._row_comm = base_comm.Split(color=self._row_id, key=self._col_id)
+        self._col_comm = base_comm.Split(color=self._col_id, key=self._row_id)
 
         self.A = A.astype(np.dtype(dtype))
         if saveAt: self.At = A.T.conj()
 
-        self.N = self._layer_comm.allreduce(self.A.shape[0], op=MPI.SUM)
+        self.N = self._row_comm.allreduce(self.A.shape[0], op=MPI.SUM)
         self.K = A.shape[1]
         self.M = M
 
         block_cols = int(math.ceil(self.M / self._P_prime))
         blk_rows = int(math.ceil(self.N / self._P_prime))
 
-        self._row_start = self._group_id * blk_rows
+        self._row_start = self._col_id * blk_rows
         self._row_end = min(self.N, self._row_start + blk_rows)
 
-        self._col_start = self._layer_id * block_cols
+        self._col_start = self._row_id * block_cols
         self._col_end = min(self.M, self._col_start + block_cols)
 
         self._local_ncols = self._col_end - self._col_start
@@ -184,7 +182,7 @@ class MPIMatrixMult(MPILinearOperator):
         x_arr = x.local_array.reshape((self.dims[0], my_own_cols))
         X_local = x_arr.astype(self.dtype)
         Y_local = ncp.vstack(
-            self._layer_comm.allgather(
+            self._row_comm.allgather(
                 ncp.matmul(self.A, X_local)
             )
         )
@@ -208,6 +206,6 @@ class MPIMatrixMult(MPILinearOperator):
         X_tile = x_arr[self._row_start:self._row_end, :]
         A_local = self.At if hasattr(self, "At") else self.A.T.conj()
         Y_local = ncp.matmul(A_local, X_tile)
-        y_layer = self._layer_comm.allreduce(Y_local, op=MPI.SUM)
+        y_layer = self._row_comm.allreduce(Y_local, op=MPI.SUM)
         y[:] = y_layer.flatten()
         return y
