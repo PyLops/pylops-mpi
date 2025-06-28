@@ -23,7 +23,8 @@ np.random.seed(42)
 plt.close("all")
 rank = MPI.COMM_WORLD.Get_rank()
 size = MPI.COMM_WORLD.Get_size()
-cp.cuda.Device(device=rank).use();
+device_count = cp.cuda.runtime.getDeviceCount()
+cp.cuda.Device(rank % device_count).use()
 
 ###############################################################################
 # Let's start with a simple model with two interfaces, where sources are 
