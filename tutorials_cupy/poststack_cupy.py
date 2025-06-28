@@ -20,7 +20,8 @@ import pylops_mpi
 
 plt.close("all")
 rank = MPI.COMM_WORLD.Get_rank()
-cp.cuda.Device(device=rank).use();
+device_count = cp.cuda.runtime.getDeviceCount()
+cp.cuda.Device(rank % device_count).use()
 
 ###############################################################################
 # Let's start by defining all the parameters required by the
