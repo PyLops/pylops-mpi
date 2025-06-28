@@ -23,7 +23,8 @@ rank = MPI.COMM_WORLD.Get_rank()
 size = MPI.COMM_WORLD.Get_size()
 dtype = np.float32
 cdtype = np.complex64
-cp.cuda.Device(device=rank).use();
+device_count = cp.cuda.runtime.getDeviceCount()
+cp.cuda.Device(rank % device_count).use()
 
 ###############################################################################
 # Let's start by creating a set of hyperbolic events to be used as
