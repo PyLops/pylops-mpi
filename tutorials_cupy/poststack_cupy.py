@@ -2,8 +2,8 @@ r"""
 Post Stack Inversion - 3D with CUDA-Aware MPI
 =============================================
 This tutorial is an extension of the :ref:`sphx_glr_tutorials_poststack.py` 
-tutorial where PyLops-MPI is run in multi-GPU setting with GPUs communicating via 
-CUDA-Aware MPI.
+tutorial where PyLops-MPI is run in multi-GPU setting with GPUs communicating 
+via MPI.
 """
 
 import numpy as np
@@ -18,15 +18,25 @@ from pylops.avo.poststack import PoststackLinearModelling
 
 import pylops_mpi
 
+###############################################################################
+# The standard MPI communicator is used in this example, so there is no need
+# for any initalization. However, we need to assign our GPU resources to the 
+# different ranks. Here we decide to assign a unique GPU to each process if 
+# the number of ranks is equal or smaller than that of the GPUs. Otherwise we
+# start assigning more than one GPU to the available ranks. Note that this 
+# approach will work equally well if we have a multi-node multi-GPU setup, where
+# each node has one or more GPUs.
+
 plt.close("all")
 rank = MPI.COMM_WORLD.Get_rank()
 device_count = cp.cuda.runtime.getDeviceCount()
-cp.cuda.Device(rank % device_count).use()
+cp.cuda.Device(rank % device_count).use();
 
 ###############################################################################
 # Let's start by defining all the parameters required by the
 # :py:func:`pylops.avo.poststack.PoststackLinearModelling` operator.
-# Note that this section is exactly the same as the one in the MPI example as we will keep using MPI for transfering metadata (i.e., shapes, dims, etc.)
+# Note that this section is exactly the same as the one in the MPI example as 
+# we will keep using MPI for transfering metadata (i.e., shapes, dims, etc.)
 
 # Model
 model = np.load("../testdata/avo/poststack_model.npz")
@@ -58,21 +68,24 @@ m3d = np.concatenate(MPI.COMM_WORLD.allgather(m3d_i))
 mback3d = np.concatenate(MPI.COMM_WORLD.allgather(mback3d_i))
 
 ###############################################################################
-# We are now ready to initialize various :py:class:`pylops_mpi.DistributedArray` objects.
-# Compared to the MPI tutorial, we need to make sure that we set CuPy as the engine and
-# use CuPy arrays
+# We are now ready to initialize various :py:class:`pylops_mpi.DistributedArray` 
+# objects. Compared to the MPI tutorial, we need to make sure that we set ``cupy`` 
+# as the engine and fill the distributed arrays with CuPy arrays.
 
-m3d_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz, engine="cupy")
+m3d_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz, 
+                                       engine="cupy")
 m3d_dist[:] = cp.asarray(m3d_i.flatten())
 
 # Do the same thing for smooth model
-mback3d_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz, engine="cupy")
+mback3d_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz, 
+                                           engine="cupy")
 mback3d_dist[:] = cp.asarray(mback3d_i.flatten())
 
 ###############################################################################
-# For PostStackLinearModelling, there is no change needed to have it run with CUDA-Aware MPI.
-# This PyLops operator has GPU-support (https://pylops.readthedocs.io/en/stable/gpu.html)
-# so it can run with DistributedArray whose engine is Cupy
+# For PostStackLinearModelling, there is no change needed to have it run with 
+# MPI. This PyLops operator has GPU-support 
+# (https://pylops.readthedocs.io/en/stable/gpu.html) so it can operate on a 
+# distributed arrays with engine set to CuPy.
 
 PPop = PoststackLinearModelling(cp.asarray(wav.astype(np.float32)), nt0=nz, 
                                 spatdims=(ny_i, nx))
@@ -80,9 +93,9 @@ Top = Transpose((ny_i, nx, nz), (2, 0, 1))
 BDiag = pylops_mpi.basicoperators.MPIBlockDiag(ops=[Top.H @ PPop @ Top, ])
 
 ###############################################################################
-# This computation will be done in GPU. The call :code:`asarray()` triggers the CUDA-aware 
-# MPI communication (gather result from each GPU).
-# But array :code:`d` and :code:`d_0` still live in GPU memory
+# This computation will be done on the GPU(s). The call :code:`asarray()` 
+# triggers the MPI communication (gather results from each GPU).
+# Note that the array :code:`d` and :code:`d_0` still live in GPU memory.
 
 d_dist = BDiag @ m3d_dist
 d_local = d_dist.local_array.reshape((ny_i, nx, nz))
@@ -91,24 +104,30 @@ d_0_dist = BDiag @ mback3d_dist
 d_0 = d_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
-# Inversion using CGLS solver - There is no code change to run on CUDA-aware 
-# MPI (this is handled through MPI operator and DistributedArray)
+# Inversion using CGLS solver - no code change is required to run the solver
+# with CUDA-aware MPI (this is handled by the MPI operator and DistributedArray)
 # In this particular case, the local computation will be done in GPU. 
 # Collective communication calls will be carried through MPI GPU-to-GPU.
 
 # Inversion using CGLS solver
-minv3d_iter_dist = pylops_mpi.optimization.basic.cgls(BDiag, d_dist, x0=mback3d_dist, niter=100, show=True)[0]
+minv3d_iter_dist = pylops_mpi.optimization.basic.cgls(BDiag, d_dist, 
+                                                      x0=mback3d_dist,
+                                                      niter=100, show=True)[0]
 minv3d_iter = minv3d_iter_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
 
 # Regularized inversion with normal equations
 epsR = 1e2
-LapOp = pylops_mpi.MPILaplacian(dims=(ny, nx, nz), axes=(0, 1, 2), weights=(1, 1, 1),
-                                sampling=(1, 1, 1), dtype=BDiag.dtype)
+LapOp = pylops_mpi.MPILaplacian(dims=(ny, nx, nz), axes=(0, 1, 2), 
+                                weights=(1, 1, 1),
+                                sampling=(1, 1, 1), 
+                                dtype=BDiag.dtype)
 NormEqOp = BDiag.H @ BDiag + epsR * LapOp.H @ LapOp
 dnorm_dist = BDiag.H @ d_dist
-minv3d_ne_dist = pylops_mpi.optimization.basic.cg(NormEqOp, dnorm_dist, x0=mback3d_dist, niter=100, show=True)[0]
+minv3d_ne_dist = pylops_mpi.optimization.basic.cg(NormEqOp, dnorm_dist, 
+                                                  x0=mback3d_dist, 
+                                                  niter=100, show=True)[0]
 minv3d_ne = minv3d_ne_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
@@ -120,11 +139,14 @@ d0_dist[:] = 0.
 dstack_dist = pylops_mpi.StackedDistributedArray([d_dist, d0_dist])
 
 dnorm_dist = BDiag.H @ d_dist
-minv3d_reg_dist = pylops_mpi.optimization.basic.cgls(StackOp, dstack_dist, x0=mback3d_dist, niter=100, show=True)[0]
+minv3d_reg_dist = pylops_mpi.optimization.basic.cgls(StackOp, dstack_dist, 
+                                                     x0=mback3d_dist, 
+                                                     niter=100, show=True)[0]
 minv3d_reg = minv3d_reg_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
-# To plot the inversion results, the array must be copied back to cpu via :code:`get()`
+# Finally we visualize the results. Note that the array must be copied back 
+# to the CPU by calling the :code:`get()` method on the CuPy arrays.
 
 if rank == 0:
     # Check the distributed implementation gives the same result

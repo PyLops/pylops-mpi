@@ -2,8 +2,8 @@
 Multi-Dimensional Deconvolution with CUDA-Aware MPI
 ===================================================
 This tutorial is an extension of the :ref:`sphx_glr_tutorials_mdd.py` 
-tutorial where PyLops-MPI is run in multi-GPU setting with GPUs communicating via 
-CUDA-Aware MPI.
+tutorial where PyLops-MPI is run in multi-GPU setting with GPUs communicating 
+via MPI.
 """
 
 import numpy as np
@@ -18,17 +18,28 @@ from pylops.utils.wavelets import ricker
 import pylops_mpi
 from pylops_mpi.DistributedArray import local_split, Partition
 
+###############################################################################
+# The standard MPI communicator is used in this example, so there is no need
+# for any initalization. However, we need to assign our GPU resources to the 
+# different ranks. Here we decide to assign a unique GPU to each process if 
+# the number of ranks is equal or smaller than that of the GPUs. Otherwise we
+# start assigning more than one GPU to the available ranks. Note that this 
+# approach will work equally well if we have a multi-node multi-GPU setup, where
+# each node has one or more GPUs.
+
 plt.close("all")
 rank = MPI.COMM_WORLD.Get_rank()
 size = MPI.COMM_WORLD.Get_size()
 dtype = np.float32
 cdtype = np.complex64
 device_count = cp.cuda.runtime.getDeviceCount()
-cp.cuda.Device(rank % device_count).use()
+cp.cuda.Device(rank % device_count).use();
 
 ###############################################################################
-# Let's start by creating a set of hyperbolic events to be used as
-# our MDC kernel as well as the model
+# Let's start by defining all the parameters required by the
+# :py:func:`pylops.waveeqprocessing.MPIMDC` operator.
+# Note that this section is exactly the same as the one in the MPI example as 
+# we will keep using MPI for transfering metadata (i.e., shapes, dims, etc.)
 
 # Input parameters
 par = {
@@ -93,13 +104,15 @@ nf_ranks = np.concatenate(MPI.COMM_WORLD.allgather(nf_rank))
 ifin_rank = np.insert(np.cumsum(nf_ranks)[:-1], 0, 0)[rank]
 ifend_rank = np.cumsum(nf_ranks)[rank]
 
-# Extract batch of frequency slices (in practice, this will be directly read from input file)
+# Extract batch of frequency slices (in practice, this will be directly 
+# read from input file)
 G = Gwav_fft[ifin_rank:ifend_rank].astype(cdtype)
 
 ###############################################################################
-# Let's now define the distributed operator and model as well as compute the
-# data. Compared to the MPI tutorial, we need to make sure that we set CuPy 
-# as the engine and use CuPy arrays
+# For MPIMDCOperator, there is no change needed to have it run with 
+# MPI. This PyLops operator has GPU-support 
+# (https://pylops.readthedocs.io/en/stable/gpu.html) so it can operate on a 
+# distributed arrays with engine set to CuPy.
 
 # Move operator kernel to GPU
 G = cp.asarray(G)
@@ -182,7 +195,9 @@ if rank == 0:
 # We are now ready to compute the adjoint (i.e., cross-correlation) and invert
 # back for our input model. This computation will be done in GPU. The call 
 # :code:`asarray()` triggers CUDA-aware MPI communication (gather result 
-# from each GPU). But array :code:`madjloc` still live in GPU memory
+# from each GPU). Note that the array :code:`madjloc` and :code:`minvloc`
+# still live in GPU memory.
+
 
 # Adjoint
 madj = MDCop.H @ d
@@ -195,6 +210,10 @@ m0 = pylops_mpi.DistributedArray(global_shape=(2 * par["nt"] - 1) * par["nx"] * 
 m0[:] = 0
 minv = pylops_mpi.cgls(MDCop, d, x0=m0, niter=50, show=True if rank == 0 else False)[0]
 minvloc = minv.asarray().real.reshape(2 * par["nt"] - 1, par["nx"])
+
+###############################################################################
+# Finally we visualize the results. Note that the array must be copied back 
+# to the CPU by calling the :code:`get()` method on the CuPy arrays.
 
 if rank == 0:
     fig = plt.figure(figsize=(8, 6))
