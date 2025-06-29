@@ -131,12 +131,10 @@ class MPIMatrixMult(MPILinearOperator):
 
         # Determine grid dimensions (P_prime × C) such that P_prime * C ≥ size
         self._P_prime =  math.isqrt(size)
-        self._C = self._P_prime
-        if self._P_prime * self._C != size:
+        if self._P_prime * self._P_prime != size:
             raise Exception(f"Number of processes must be a square number, provided {size} instead...")
 
-        self._col_id = rank % self._P_prime
-        self._row_id = rank // self._P_prime
+        self._row_id, self._col_id =  divmod(rank, self._P_prime)
 
         self.base_comm = base_comm
         self._row_comm = base_comm.Split(color=self._row_id, key=self._col_id)
@@ -145,67 +143,85 @@ class MPIMatrixMult(MPILinearOperator):
         self.A = A.astype(np.dtype(dtype))
         if saveAt: self.At = A.T.conj()
 
-        self.N = self._row_comm.allreduce(self.A.shape[0], op=MPI.SUM)
-        self.K = A.shape[1]
+        self.N = self._col_comm.allreduce(A.shape[0])
+        self.K = self._row_comm.allreduce(A.shape[1])
         self.M = M
 
-        block_cols = int(math.ceil(self.M / self._P_prime))
-        blk_rows = int(math.ceil(self.N / self._P_prime))
-
-        self._row_start = self._col_id * blk_rows
-        self._row_end = min(self.N, self._row_start + blk_rows)
-
-        self._col_start = self._row_id * block_cols
-        self._col_end = min(self.M, self._col_start + block_cols)
-
-        self._local_ncols = self._col_end - self._col_start
-        self._rank_col_lens = self.base_comm.allgather(self._local_ncols)
-        total_ncols = np.sum(self._rank_col_lens)
-
-        self.dims = (self.K, total_ncols)
-        self.dimsd = (self.N, total_ncols)
+        self.dims  = (self.K, self.M)
+        self.dimsd = (self.N, self.M)
         shape = (int(np.prod(self.dimsd)), int(np.prod(self.dims)))
         super().__init__(shape=shape, dtype=np.dtype(dtype), base_comm=base_comm)
+
+    @staticmethod
+    def block_distribute(array, proc_i, proc_j, comm):
+        p_prime = math.isqrt(comm.Get_size())
+        orig_r, orig_c = array.shape
+
+        new_r = math.ceil(orig_r / p_prime) * p_prime
+        new_c = math.ceil(orig_c / p_prime) * p_prime
+
+        br, bc = new_r // p_prime, new_c // p_prime
+        i0, j0 = proc_i * br, proc_j * bc
+        i1, j1 = min(i0 + br, orig_r), min(j0 + bc, orig_c)
+
+        block = array[i0:i1, j0:j1]
+        pr = (new_r - orig_r) if proc_i == p_prime - 1 else 0
+        pc = (new_c - orig_c) if proc_j == p_prime - 1 else 0
+        if pr or pc:
+            block = np.pad(block, [(0, pr), (0, pc)], mode='constant')
+
+        return block, (new_r, new_c)
+
+    @staticmethod
+    def block_gather(x, new_shape, orig_shape, comm):
+        ncp = get_module(x.engine)
+        p_prime = math.isqrt(comm.Get_size())
+        all_blks = comm.allgather(x.local_array)
+        nr, nc   = new_shape
+        orr, orc = orig_shape
+        br, bc = nr // p_prime, nc // p_prime
+        C = ncp.array(all_blks).reshape(p_prime, p_prime, br, bc).transpose(0, 2, 1, 3).reshape(nr, nc)
+        return C[:orr, :orc]
+
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
-
-        y = DistributedArray(global_shape=(self.N * self.dimsd[1]),
-                             local_shapes=[(self.N * c) for c in self._rank_col_lens],
+        y = DistributedArray(global_shape=(self.N // self._P_prime, self.M * self._P_prime),
                              mask=x.mask,
                              partition=Partition.SCATTER,
-                             dtype=self.dtype)
+                             dtype=self.dtype,
+                             axis=1)
 
-        my_own_cols = self._rank_col_lens[self.rank]
-        x_arr = x.local_array.reshape((self.dims[0], my_own_cols))
-        X_local = x_arr.astype(self.dtype)
-        Y_local = ncp.vstack(
-            self._row_comm.allgather(
-                ncp.matmul(self.A, X_local)
-            )
-        )
-        y[:] = Y_local.flatten()
+        x = x.local_array.reshape((self.A.shape[1], -1))
+        c_local = np.zeros((self.A.shape[0], x.shape[1]))
+        for k in range(self._P_prime):
+            Atemp = self.A.copy() if self._col_id == k else np.empty_like(self.A)
+            Xtemp = x.copy() if self._row_id == k else np.empty_like(x)
+            self._row_comm.Bcast(Atemp, root=k)
+            self._col_comm.Bcast(Xtemp, root=k)
+            c_local += ncp.dot(Atemp, Xtemp)
+        y[:] = c_local
         return y
 
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER}. Got {x.partition} instead.")
-
-        y = DistributedArray(
-            global_shape=(self.K * self.dimsd[1]),
-            local_shapes=[self.K * c for c in self._rank_col_lens],
-            mask=x.mask,
-            partition=Partition.SCATTER,
-            dtype=self.dtype,
-        )
-
-        x_arr = x.local_array.reshape((self.N, self._local_ncols)).astype(self.dtype)
-        X_tile = x_arr[self._row_start:self._row_end, :]
-        A_local = self.At if hasattr(self, "At") else self.A.T.conj()
-        Y_local = ncp.matmul(A_local, X_tile)
-        y_layer = self._row_comm.allreduce(Y_local, op=MPI.SUM)
-        y[:] = y_layer.flatten()
-        return y
+        return None
+        # y = DistributedArray(
+        #     global_shape=(self.K * self.dimsd[1]),
+        #     local_shapes=[self.K * c for c in self._rank_col_lens],
+        #     mask=x.mask,
+        #     partition=Partition.SCATTER,
+        #     dtype=self.dtype,
+        # )
+        #
+        # x_arr = x.local_array.reshape((self.N, self._local_ncols)).astype(self.dtype)
+        # X_tile = x_arr[self._row_start:self._row_end, :]
+        # A_local = self.At if hasattr(self, "At") else self.A.T.conj()
+        # Y_local = ncp.matmul(A_local, X_tile)
+        # y_layer = self._row_comm.allreduce(Y_local, op=MPI.SUM)
+        # y[:] = y_layer.flatten()
+        # return y
