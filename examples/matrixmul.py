@@ -1,61 +1,48 @@
-import numpy as np
 from mpi4py import MPI
 import math
 import pylops_mpi
+from pylops_mpi.basicoperators.MatrixMult import MPIMatrixMult
+import numpy as np
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-M = 8 #512
-N = 8 #512
-K = 8 #512
+N = 8
+M = 8
+K = 8
 
-A_shape  = (M,K)
-B_shape  = (K,N)
-C_shape  = (M,N)
+A_shape = (N, K)
+B_shape = (K, M)
+C_shape = (N, M)
 
 p_prime = math.isqrt(size)
-assert p_prime*p_prime == size, "Number of processes must be a perfect square"
+assert p_prime * p_prime == size, "Number of processes must be a perfect square"
 
-# Create A with 2D block-cyclic structure
-A_data = np.arange(int(A_shape[0]*A_shape[1])).reshape(A_shape)
-A = A_data.reshape(p_prime, M//p_prime, p_prime, K//p_prime).transpose(1, 0, 2, 3).reshape(M//p_prime, -1)
+A_data = np.arange(int(A_shape[0] * A_shape[1])).reshape(A_shape)
+B_data = np.arange(int(B_shape[0] * B_shape[1])).reshape(B_shape)
 
-# Create B with 2D block-cyclic structure
-B_data = np.arange(int(B_shape[0]*B_shape[1])).reshape(B_shape)
-B = B_data.reshape(p_prime, K//p_prime, p_prime, N//p_prime).transpose(1, 0, 2, 3).reshape(K//p_prime, -1)
-
-A_dist = pylops_mpi.DistributedArray.to_dist(A,
-                                          partition=pylops_mpi.Partition.SCATTER,
-                                          axis=1)
-B_dist = pylops_mpi.DistributedArray.to_dist(B,
-                                          partition=pylops_mpi.Partition.SCATTER,
-                                          axis=1)
-
-C_dist = pylops_mpi.DistributedArray(global_shape=(M // p_prime, N * p_prime),
-                                    partition=pylops_mpi.Partition.SCATTER,
-                                     axis=1)
-if rank == 0: print(A_dist.local_array)
+N_starts, N_ends = MPIMatrixMult.block_distribute(N, p_prime)
+M_starts, M_ends = MPIMatrixMult.block_distribute(M, p_prime)
+K_starts, K_ends = MPIMatrixMult.block_distribute(K, p_prime)
 
 i, j = divmod(rank, p_prime)
-row_comm = comm.Split(color=i, key=j)
-col_comm = comm.Split(color=j, key=i)
+A_local = A_data[N_starts[i]:N_ends[i], K_starts[j]:K_ends[j]]
+B_local = B_data[K_starts[i]:K_ends[i], M_starts[j]:M_ends[j]]
 
-c_local = np.zeros((M//p_prime, N//p_prime))
-for k in range(p_prime):
-    Atemp=A_dist.local_array.copy() if j==k else np.empty_like(A_dist.local_array)
-    Btemp=B_dist.local_array.copy() if i==k else np.empty_like(B_dist.local_array)
-    rootA=i*p_prime+k; rootB=k*p_prime+j
-    row_comm.Bcast([Atemp,MPI.FLOAT],root=k)
-    col_comm.Bcast([Btemp,MPI.FLOAT],root=k)
-    # print(f"[Rank {rank}] iter{k} after : received A from {rootA}, B from {rootB}, A0={Atemp.flat[0]},B0={Btemp.flat[0]}")
-    c_local += Atemp @ Btemp
+B_dist = pylops_mpi.DistributedArray(global_shape=(K*M),
+                                     local_shapes=comm.allgather(B_local.shape[0] * B_local.shape[1]),
+                                     base_comm=comm,
+                                     partition=pylops_mpi.Partition.SCATTER)
+B_dist.local_array[:] = B_local.flatten()
 
-C_dist.local_array[:] = c_local
-C_temp = C_dist.asarray().reshape((M,N))
-C      = C_temp.reshape(M//p_prime, p_prime, p_prime, N//p_prime).transpose(1, 0, 2, 3).reshape(M, N)
+print(rank, A_local.shape)
+Aop = MPIMatrixMult(A_local, M, base_comm=comm)
+C_dist = Aop @ B_dist
+C_temp = C_dist.asarray().reshape((N, M))
+C      = C_temp.reshape(N // p_prime, p_prime, p_prime, M // p_prime).transpose(1, 0, 2, 3).reshape(N, M)
 
 if rank == 0 :
-    print("expected:\n",A_data @ B_data)
+    # print("expected:\n",np.allclose(A_data @ B_data, C))
+    print("expected:\n", A_data @ B_data)
     print("calculated:\n",C)
