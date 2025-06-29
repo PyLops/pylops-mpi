@@ -13,8 +13,8 @@ from pylops_mpi import (
 
 class MPIMatrixMult(MPILinearOperator):
     r"""MPI Matrix multiplication
-    
-    Implement distributed matrix-matrix multiplication between a matrix 
+
+    Implement distributed matrix-matrix multiplication between a matrix
     :math:`\mathbf{A}` blocked over rows (i.e., blocks of rows are stored
     over different ranks) and the input model and data vector, which are both to
     be interpreted as matrices blocked over columns.
@@ -26,7 +26,7 @@ class MPIMatrixMult(MPILinearOperator):
         where :math:`N_{loc}` is the number of rows stored on this MPI rank and
         ``K`` is the global number of columns.
     M : :obj:`int`
-        Global leading dimension (i.e., number of columns) of the matrices 
+        Global leading dimension (i.e., number of columns) of the matrices
         representing the input model and data vectors.
     saveAt : :obj:`bool`, optional
         Save ``A`` and ``A.H`` to speed up the computation of adjoint
@@ -52,24 +52,24 @@ class MPIMatrixMult(MPILinearOperator):
 
     Notes
     -----
-    This operator performs a matrix-matrix multiplication, whose forward 
+    This operator performs a matrix-matrix multiplication, whose forward
     operation can be described as :math:`Y = A \cdot X` where:
 
     - :math:`\mathbf{A}` is the distributed matrix operator of shape :math:`[N \times K]`
     - :math:`\mathbf{X}` is the distributed operand matrix of shape :math:`[K \times M]`
     - :math:`\mathbf{Y}` is the resulting distributed matrix of shape :math:`[N \times M]`
 
-    whilst the adjoint operation is represented by 
-    :math:`\mathbf{X}_{adj} = \mathbf{A}^H \cdot \mathbf{Y}` where 
+    whilst the adjoint operation is represented by
+    :math:`\mathbf{X}_{adj} = \mathbf{A}^H \cdot \mathbf{Y}` where
     :math:`\mathbf{A}^H` is the complex conjugate and transpose of :math:`\mathbf{A}`.
-    
-    This implementation is based on a 1D block distribution of the operator 
+
+    This implementation is based on a 1D block distribution of the operator
     matrix and reshaped model and data vectors replicated across :math:`P`
-    processes by a factor equivalent to :math:`\sqrt{P}` across a square process 
+    processes by a factor equivalent to :math:`\sqrt{P}` across a square process
     grid (:math:`\sqrt{P}\times\sqrt{P}`). More specifically:
 
     - The matrix ``A`` is distributed across MPI processes in a block-row fashion
-      and each process holds a local block of ``A`` with shape 
+      and each process holds a local block of ``A`` with shape
       :math:`[N_{loc} \times K]`
     - The operand matrix ``X`` is distributed in a block-column fashion and
       each process holds a local block of ``X`` with shape
@@ -111,7 +111,7 @@ class MPIMatrixMult(MPILinearOperator):
        sum of the contributions from all column blocks of ``A^H``, processes in
        the same row perform an ``allreduce`` sum to combine their partial results.
        This gives the complete ``(K, M_local)`` result for their assigned column.
-    
+
     """
     def __init__(
             self,
@@ -125,7 +125,7 @@ class MPIMatrixMult(MPILinearOperator):
         size = base_comm.Get_size()
 
         # Determine grid dimensions (P_prime × C) such that P_prime * C ≥ size
-        self._P_prime =  math.isqrt(size)
+        self._P_prime = math.isqrt(size)
         self._C = self._P_prime
         if self._P_prime * self._C != size:
             raise Exception(f"Number of processes must be a square number, provided {size} instead...")
@@ -138,7 +138,8 @@ class MPIMatrixMult(MPILinearOperator):
         self._col_comm = base_comm.Split(color=self._col_id, key=self._row_id)
 
         self.A = A.astype(np.dtype(dtype))
-        if saveAt: self.At = A.T.conj()
+        if saveAt:
+            self.At = A.T.conj()
 
         self.N = self._row_comm.allreduce(self.A.shape[0], op=MPI.SUM)
         self.K = A.shape[1]

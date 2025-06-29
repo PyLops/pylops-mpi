@@ -23,9 +23,9 @@ test_params = [
     pytest.param(37, 37, 37, "float32", id="f32_37_37_37"),
     pytest.param(50, 30, 40, "float64", id="f64_50_30_40"),
     pytest.param(22, 20, 16, "complex64", id="c64_22_20_16"),
-    pytest.param( 3,  4,  5, "float32", id="f32_3_4_5"),
-    pytest.param( 1,  2,  1, "float64", id="f64_1_2_1",),
-    pytest.param( 2,  1,  3, "float32", id="f32_2_1_3",),
+    pytest.param(3, 4, 5, "float32", id="f32_3_4_5"),
+    pytest.param(1, 2, 1, "float64", id="f64_1_2_1",),
+    pytest.param(2, 1, 3, "float32", id="f32_2_1_3",),
 ]
 
 
@@ -34,8 +34,8 @@ test_params = [
 def test_SUMMAMatrixMult(N, K, M, dtype_str):
     p_prime = math.isqrt(size)
     C = p_prime
-    if  p_prime * C != size:
-        pytest.skip(f"Number of processes must be a square number, "
+    if p_prime * C != size:
+        pytest.skip("Number of processes must be a square number, "
                     "provided {size} instead...")
 
     dtype = np.dtype(dtype_str)
@@ -68,8 +68,8 @@ def test_SUMMAMatrixMult(N, K, M, dtype_str):
     X_glob_imag = np.arange(K * M, dtype=base_float_dtype).reshape(K, M) * 0.7
     X_glob = (X_glob_real + cmplx * X_glob_imag).astype(dtype)
 
-    A_p = A_glob[row_start_A:row_end_A,:]
-    X_p = X_glob[:,col_start_X:col_end_X]
+    A_p = A_glob[row_start_A:row_end_A, :]
+    X_p = X_glob[:, col_start_X:col_end_X]
 
     # Create MPIMatrixMult operator
     Aop = MPIMatrixMult(A_p, M, base_comm=comm, dtype=dtype_str)
