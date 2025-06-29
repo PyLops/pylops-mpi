@@ -39,6 +39,20 @@ class NcclOp(IntEnum):
 
 
 def _nccl_buf_size(buf, count=None):
+    """ Get an appropriate buffer size according to the dtype of buf
+
+    Parameters
+    ----------
+    buf : :obj:`cupy.ndarray` or array-like
+        The data buffer from the local GPU to be sent.
+
+    count : :obj:`int`, optional
+        Number of elements to send from `buf`, if not sending the every element in `buf`.
+    Returns:
+    -------
+    :obj:`int`
+        An appropriate number of elements to send from `send_buf` for NCCL communication.
+    """
     if buf.dtype in ['complex64', 'complex128']:
         return 2 * count if count else 2 * buf.size
     else:

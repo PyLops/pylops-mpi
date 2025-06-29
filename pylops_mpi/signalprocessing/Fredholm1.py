@@ -111,7 +111,7 @@ class MPIFredholm1(MPILinearOperator):
         if x.partition not in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
             raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
                              f"Got  {x.partition} instead...")
-        y = DistributedArray(global_shape=self.shape[0], 
+        y = DistributedArray(global_shape=self.shape[0],
                              base_comm=x.base_comm,
                              base_comm_nccl=x.base_comm_nccl,
                              partition=x.partition,
@@ -128,11 +128,6 @@ class MPIFredholm1(MPILinearOperator):
             for isl in range(self.nsls[self.rank]):
                 y1[isl] = ncp.dot(self.G[isl], x[isl])
         # gather results
-        # TODO: _allgather is supposed to be private to DistributedArray
-        # but so far, we do not take base_comm_nccl as an argument to Op.
-        # For consistency, y._allgather has to be called here.
-        # Alternatively, we can also do if-else checking x.base_comm_nccl, but that means
-        # we have to call function from _nccl.py
         y[:] = ncp.vstack(y._allgather(y1)).ravel()
         return y
 
@@ -141,7 +136,7 @@ class MPIFredholm1(MPILinearOperator):
         if x.partition not in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
             raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
                              f"Got  {x.partition} instead...")
-        y = DistributedArray(global_shape=self.shape[1], 
+        y = DistributedArray(global_shape=self.shape[1],
                              base_comm=x.base_comm,
                              base_comm_nccl=x.base_comm_nccl,
                              partition=x.partition,
@@ -176,8 +171,8 @@ class MPIFredholm1(MPILinearOperator):
         if self.usematmul and isinstance(recv, ncp.ndarray) :
             # unrolling
             chunk_size = self.ny * self.nz
-            num_partition = (len(recv)+chunk_size-1)//chunk_size
-            recv = ncp.vstack([recv[i*chunk_size: (i+1)*chunk_size].reshape(self.nz, self.ny).T for i in range(num_partition)])
+            num_partition = (len(recv) + chunk_size - 1) // chunk_size
+            recv = ncp.vstack([recv[i * chunk_size: (i + 1) * chunk_size].reshape(self.nz, self.ny).T for i in range(num_partition)])
         else:
             recv = ncp.vstack(recv)
         y[:] = recv.ravel()
