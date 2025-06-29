@@ -37,16 +37,16 @@ cdtype = np.complex64
 # Input parameters
 par = {
     "ox": -300,
-    "dx": 10,
-    "nx": 61,
+    "dx": 5,
+    "nx": 121,
     "oy": -500,
-    "dy": 10,
-    "ny": 101,
+    "dy": 5,
+    "ny": 201,
     "ot": 0,
-    "dt": 0.004,
-    "nt": 400,
+    "dt": 0.002,
+    "nt": 800,
     "f0": 20,
-    "nfmax": 200,
+    "nfmax": 400,
 }
 
 t0_m = 0.2

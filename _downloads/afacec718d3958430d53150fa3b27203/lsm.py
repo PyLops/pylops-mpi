@@ -152,8 +152,8 @@ d_dist = VStack @ refl_dist
 d = d_dist.asarray().reshape((nstot, nr, nt))
 
 ###############################################################################
-
-# Adjoint
+# We calculate now the adjoint and model the data using the adjoint reflectivity
+# as input.
 madj_dist = VStack.H @ d_dist
 madj = madj_dist.asarray().reshape((nx, nz))
 d_adj_dist = VStack @ madj_dist

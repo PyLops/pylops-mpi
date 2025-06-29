@@ -489,16 +489,16 @@ our MDC kernel as well as the model</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Input parameters</span>
 <a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;ox&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">300</span><span class="p">,</span>
-    <span class="s2">&quot;dx&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
-    <span class="s2">&quot;nx&quot;</span><span class="p">:</span> <span class="mi">61</span><span class="p">,</span>
+    <span class="s2">&quot;dx&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="s2">&quot;nx&quot;</span><span class="p">:</span> <span class="mi">121</span><span class="p">,</span>
     <span class="s2">&quot;oy&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">500</span><span class="p">,</span>
-    <span class="s2">&quot;dy&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
-    <span class="s2">&quot;ny&quot;</span><span class="p">:</span> <span class="mi">101</span><span class="p">,</span>
+    <span class="s2">&quot;dy&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="s2">&quot;ny&quot;</span><span class="p">:</span> <span class="mi">201</span><span class="p">,</span>
     <span class="s2">&quot;ot&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-    <span class="s2">&quot;dt&quot;</span><span class="p">:</span> <span class="mf">0.004</span><span class="p">,</span>
-    <span class="s2">&quot;nt&quot;</span><span class="p">:</span> <span class="mi">400</span><span class="p">,</span>
+    <span class="s2">&quot;dt&quot;</span><span class="p">:</span> <span class="mf">0.002</span><span class="p">,</span>
+    <span class="s2">&quot;nt&quot;</span><span class="p">:</span> <span class="mi">800</span><span class="p">,</span>
     <span class="s2">&quot;f0&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
-    <span class="s2">&quot;nfmax&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+    <span class="s2">&quot;nfmax&quot;</span><span class="p">:</span> <span class="mi">400</span><span class="p">,</span>
 <span class="p">}</span>
 
 <a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">t0_m</span></a> <span class="o">=</span> <span class="mf">0.2</span>
@@ -688,40 +688,40 @@ back for our input model</p>
 </div>
 <img src="../_images/sphx_glr_mdd_003.png" srcset="../_images/sphx_glr_mdd_003.png" alt="Adjoint m, Inverted m" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>CGLS
 -----------------------------------------------------------------
-The Operator Op has 80699 rows and 48739 cols
+The Operator Op has 321399 rows and 193479 cols
 damp = 0.000000e+00     tol = 1.000000e-04      niter = 50
 -----------------------------------------------------------------
 
     Itn             x[0]             r1norm         r2norm
-     1       0.00e+00+0.00e+00j    1.3019e+01     1.3019e+01
-     2       0.00e+00+0.00e+00j    8.9626e+00     8.9626e+00
-     3       0.00e+00+0.00e+00j    6.8432e+00     6.8432e+00
-     4       0.00e+00+0.00e+00j    5.5101e+00     5.5101e+00
-     5       0.00e+00+0.00e+00j    4.5016e+00     4.5016e+00
-     6       0.00e+00+0.00e+00j    3.8550e+00     3.8550e+00
-     7       0.00e+00+0.00e+00j    3.3216e+00     3.3216e+00
-     8       0.00e+00+0.00e+00j    2.8576e+00     2.8576e+00
-     9       0.00e+00+0.00e+00j    2.5243e+00     2.5243e+00
-    10       0.00e+00+0.00e+00j    2.2643e+00     2.2643e+00
-    11       0.00e+00+0.00e+00j    2.0280e+00     2.0280e+00
-    21       0.00e+00+0.00e+00j    9.8985e-01     9.8985e-01
-    31       0.00e+00+0.00e+00j    6.3535e-01     6.3535e-01
-    41       0.00e+00+0.00e+00j    4.5604e-01     4.5604e-01
-    42       0.00e+00+0.00e+00j    4.4221e-01     4.4221e-01
-    43       0.00e+00+0.00e+00j    4.3058e-01     4.3058e-01
-    44       0.00e+00+0.00e+00j    4.1922e-01     4.1922e-01
-    45       0.00e+00+0.00e+00j    4.0882e-01     4.0882e-01
-    46       0.00e+00+0.00e+00j    3.9821e-01     3.9821e-01
-    47       0.00e+00+0.00e+00j    3.8944e-01     3.8944e-01
-    48       0.00e+00+0.00e+00j    3.8138e-01     3.8138e-01
-    49       0.00e+00+0.00e+00j    3.7578e-01     3.7578e-01
-    50       0.00e+00+0.00e+00j    3.6788e-01     3.6788e-01
+     1       0.00e+00+0.00e+00j    3.8528e+01     3.8528e+01
+     2       0.00e+00+0.00e+00j    2.6623e+01     2.6623e+01
+     3       0.00e+00+0.00e+00j    2.0382e+01     2.0382e+01
+     4       0.00e+00+0.00e+00j    1.6471e+01     1.6471e+01
+     5       0.00e+00+0.00e+00j    1.3499e+01     1.3499e+01
+     6       0.00e+00+0.00e+00j    1.1528e+01     1.1528e+01
+     7       0.00e+00+0.00e+00j    9.8815e+00     9.8815e+00
+     8       0.00e+00+0.00e+00j    8.4153e+00     8.4153e+00
+     9       0.00e+00+0.00e+00j    7.4486e+00     7.4486e+00
+    10       0.00e+00+0.00e+00j    6.6674e+00     6.6674e+00
+    11       0.00e+00+0.00e+00j    5.9781e+00     5.9781e+00
+    21       0.00e+00+0.00e+00j    2.9884e+00     2.9884e+00
+    31       0.00e+00+0.00e+00j    1.9261e+00     1.9261e+00
+    41       0.00e+00+0.00e+00j    1.3943e+00     1.3943e+00
+    42       0.00e+00+0.00e+00j    1.3501e+00     1.3501e+00
+    43       0.00e+00+0.00e+00j    1.3106e+00     1.3106e+00
+    44       0.00e+00+0.00e+00j    1.2716e+00     1.2716e+00
+    45       0.00e+00+0.00e+00j    1.2368e+00     1.2368e+00
+    46       0.00e+00+0.00e+00j    1.2034e+00     1.2034e+00
+    47       0.00e+00+0.00e+00j    1.1720e+00     1.1720e+00
+    48       0.00e+00+0.00e+00j    1.1520e+00     1.1520e+00
+    49       0.00e+00+0.00e+00j    1.1306e+00     1.1306e+00
+    50       0.00e+00+0.00e+00j    1.1048e+00     1.1048e+00
 
-Iterations = 50        Total time (s) = 1.02
+Iterations = 50        Total time (s) = 6.35
 -----------------------------------------------------------------
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 1.806 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 8.155 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-mdd-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/08957b6282c8e5ab465f2f63e869b6d8/mdd.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">mdd.ipynb</span></code></a></p>
