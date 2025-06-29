@@ -1,39 +1,42 @@
-import pytest
+"""Test the MPIMatrixMult class
+    Designed to run with n processes
+    $ mpiexec -n 10 pytest test_matrixmult.py --with-mpi
+"""
+import math
 import numpy as np
 from numpy.testing import assert_allclose
 from mpi4py import MPI
-import math
-import sys
+import pytest
 
 from pylops_mpi import DistributedArray, Partition
 from pylops_mpi.basicoperators.MatrixMult import MPIMatrixMult
 
 np.random.seed(42)
-
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-# Define test cases: (N K, M, dtype_str)
+# Define test cases: (N, K, M, dtype_str)
 # M, K, N are matrix dimensions A(N,K), B(K,M)
 # P_prime will be ceil(sqrt(size)).
 test_params = [
-    pytest.param(37, 37, 37, "float32",   id="f32_37_37_37"),
-    pytest.param(50, 30, 40, "float64",   id="f64_50_30_40"),
+    pytest.param(37, 37, 37, "float32", id="f32_37_37_37"),
+    pytest.param(50, 30, 40, "float64", id="f64_50_30_40"),
     pytest.param(22, 20, 16, "complex64", id="c64_22_20_16"),
-    pytest.param( 3,  4,  5, "float32",   id="f32_3_4_5"),
-    pytest.param( 1,  2,  1, "float64",   id="f64_1_2_1",),
-    pytest.param( 2,  1,  3, "float32",   id="f32_2_1_3",),
+    pytest.param( 3,  4,  5, "float32", id="f32_3_4_5"),
+    pytest.param( 1,  2,  1, "float64", id="f64_1_2_1",),
+    pytest.param( 2,  1,  3, "float32", id="f32_2_1_3",),
 ]
 
 
-@pytest.mark.mpi(min_size=1)  # SUMMA should also work for 1 process.
+@pytest.mark.mpi(min_size=1)
 @pytest.mark.parametrize("M, K, N, dtype_str", test_params)
 def test_SUMMAMatrixMult(N, K, M, dtype_str):
     p_prime = math.isqrt(size)
     C = p_prime
     if  p_prime * C != size:
-        pytest.skip(f"Number of processes must be a square number, provided {size} instead...")
+        pytest.skip(f"Number of processes must be a square number, "
+                    "provided {size} instead...")
 
     dtype = np.dtype(dtype_str)
 
@@ -86,11 +89,13 @@ def test_SUMMAMatrixMult(N, K, M, dtype_str):
 
     x_dist.local_array[:] = X_p.ravel()
 
-    # Forward operation: y = A @ B (distributed)
+    # Forward operation: y = A @ x (distributed)
     y_dist = Aop @ x_dist
+
     # Adjoint operation: xadj = A.H @ y (distributed)
     xadj_dist = Aop.H @ y_dist
 
+    # Re-organize in local matrix
     y = y_dist.asarray(masked=True)
     col_counts = [min(blk_cols_X, M - j * blk_cols_X) for j in range(p_prime)]
     y_blocks = []

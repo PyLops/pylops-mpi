@@ -7,7 +7,7 @@ blocked over rows (i.e., blocks of rows are stored over different ranks) and a
 matrix :math:`\mathbf{X}` blocked over columns (i.e., blocks of columns are 
 stored over different ranks), with equal number of row and column blocks. 
 Similarly, the adjoint operation can be peformed with a matrix :math:`\mathbf{Y}` 
-blocked in the same fashion of matrix :math:`\mathbf{X}.
+blocked in the same fashion of matrix :math:`\mathbf{X}`.
 
 Note that whilst the different blocks of the matrix :math:`\mathbf{A}` are directly 
 stored in the operator on different ranks, the matrix :math:`\mathbf{X}` is 
@@ -18,6 +18,7 @@ row blocks of :math:`\mathbf{A}` and column blocks of :math:`\mathbf{X}` are
 replicated across different ranks - see below for details.  
 
 """
+
 from matplotlib import pyplot as plt
 import math
 import numpy as np
@@ -41,7 +42,7 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank() # rank of current process
 size = comm.Get_size() # number of processes
 
-p_prime     = math.isqrt(size)
+p_prime = math.isqrt(size)
 repl_factor = p_prime
 
 if (p_prime * repl_factor) != size:
@@ -78,19 +79,19 @@ X = np.random.rand(K * M).astype(dtype=np.float32).reshape(K, M)
 #    \quad
 #    c = \mathrm{rank} \bmod P'.
 #
-#For example, when :math:`P = 4` we have :math:`P' = 2`, giving a 2×2 layout:
+# For example, when :math:`P = 4` we have :math:`P' = 2`, giving a 2×2 layout:
 #
-#.. raw:: html
+# .. raw:: html
 #
-#   <div style="text-align: center; font-family: monospace; white-space: pre;">
-#  ┌────────────┬────────────┐
-#  │ Rank 0     │ Rank 1     │
-#  │ (r=0, c=0) │ (r=0, c=1) │
-#  ├────────────┼────────────┤
-#  │ Rank 2     │ Rank 3     │
-#  │ (r=1, c=0) │ (r=1, c=1) │
-#  └────────────┴────────────┘
-#   </div>
+#    <div style="text-align: center; font-family: monospace; white-space: pre;">
+#   ┌────────────┬────────────┐
+#   │ Rank 0     │ Rank 1     │
+#   │ (r=0, c=0) │ (r=0, c=1) │
+#   ├────────────┼────────────┤
+#   │ Rank 2     │ Rank 3     │
+#   │ (r=1, c=0) │ (r=1, c=1) │
+#   └────────────┴────────────┘
+#    </div>
 
 my_col = rank % p_prime
 my_row = rank // p_prime
@@ -111,10 +112,10 @@ col_comm = comm.Split(color=my_col, key=my_row)  # all procs in same col
 #   <div style="text-align: left; font-family: monospace; white-space: pre;">
 #   <b>Matrix A (4 x 4):</b>
 #   ┌─────────────────┐
-#   │ a11 a12 a13 a14 │ <- Rows 0–1 (Process Grid Col 0)
+#   │ a11 a12 a13 a14 │ <- Rows 0–1 (Process Grid Row 0)
 #   │ a21 a22 a23 a24 │
 #   ├─────────────────┤
-#   │ a41 a42 a43 a44 │ <- Rows 2–3 (Process Grid Col 1)
+#   │ a41 a42 a43 a44 │ <- Rows 2–3 (Process Grid Row 1)
 #   │ a51 a52 a53 a54 │
 #   └─────────────────┘
 #   </div>
@@ -124,7 +125,7 @@ col_comm = comm.Split(color=my_col, key=my_row)  # all procs in same col
 #   <div style="text-align: left; font-family: monospace; white-space: pre;">
 #   <b>Matrix X (4 x 4):</b>
 #   ┌─────────┬─────────┐
-#   │ b11 b12 │ b13 b14 │ <- Cols 0–1 (Process Grid Row 0), Cols 2–3 (Process Grid Row 1)
+#   │ b11 b12 │ b13 b14 │ <- Cols 0–1 (Process Grid Col 0), Cols 2–3 (Process Grid Col 1)
 #   │ b21 b22 │ b23 b24 │
 #   │ b31 b32 │ b33 b34 │
 #   │ b41 b42 │ b43 b44 │
@@ -147,7 +148,7 @@ A_p, X_p = A[rs:re, :].copy(), X[:, cs:ce].copy()
 
 ################################################################################
 # We are now ready to create the :py:class:`pylops_mpi.basicoperators.MPIMatrixMult` 
-# operator and the input matrix math:`\mathbf{X}`
+# operator and the input matrix :math:`\mathbf{X}`
 Aop = MPIMatrixMult(A_p, M, dtype="float32")
 
 col_lens = comm.allgather(my_own_cols)
