@@ -98,7 +98,8 @@ class CG(Solver):
 
         if show and self.rank == 0:
             if isinstance(x, StackedDistributedArray):
-                self._print_setup(np.iscomplexobj([x1.local_array for x1 in x.distarrays]))
+                is_complex = any(np.iscomplexobj(x1.local_array) for x1 in x.distarrays)
+                self._print_setup(is_complex)
             else:
                 self._print_setup(np.iscomplexobj(x.local_array))
         return x
@@ -354,7 +355,8 @@ class CGLS(Solver):
         # print setup
         if show and self.rank == 0:
             if isinstance(x, StackedDistributedArray):
-                self._print_setup(np.iscomplexobj([x1.local_array for x1 in x.distarrays]))
+                is_complex = any(np.iscomplexobj(x1.local_array) for x1 in x.distarrays)
+                self._print_setup(is_complex)
             else:
                 self._print_setup(np.iscomplexobj(x.local_array))
         return x
