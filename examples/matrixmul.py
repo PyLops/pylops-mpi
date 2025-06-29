@@ -16,7 +16,7 @@ B_shape  = (K,N)
 C_shape  = (M,N)
 
 p_prime = math.isqrt(size)
-assert p_prime*p_prime == size
+assert p_prime*p_prime == size, "Number of processes must be a perfect square"
 
 # Create A with 2D block-cyclic structure
 A_data = np.arange(int(A_shape[0]*A_shape[1])).reshape(A_shape)
@@ -53,9 +53,9 @@ for k in range(p_prime):
     c_local += Atemp @ Btemp
 
 C_dist.local_array[:] = c_local
-C = C_dist.asarray().reshape((M,N))
-A_ = A_dist.asarray().reshape((M,K))
-B_ = B_dist.asarray().reshape((K,N))
+C_temp = C_dist.asarray().reshape((M,N))
+C      = C_temp.reshape(M//p_prime, p_prime, p_prime, N//p_prime).transpose(1, 0, 2, 3).reshape(M, N)
+
 if rank == 0 :
-    print(A_data @ B_data)
-    print(C)
+    print("expected:\n",A_data @ B_data)
+    print("calculated:\n",C)
