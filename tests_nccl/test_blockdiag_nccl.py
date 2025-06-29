@@ -18,15 +18,15 @@ from pylops_mpi.utils._nccl import initialize_nccl_comm
 nccl_comm = initialize_nccl_comm()
 
 par1 = {'ny': 101, 'nx': 101, 'dtype': np.float64}
-# par1j = {'ny': 101, 'nx': 101, 'dtype': np.complex128}
+par1j = {'ny': 101, 'nx': 101, 'dtype': np.complex128}
 par2 = {'ny': 301, 'nx': 101, 'dtype': np.float64}
-# par2j = {'ny': 301, 'nx': 101, 'dtype': np.complex128}
+par2j = {'ny': 301, 'nx': 101, 'dtype': np.complex128}
 
 np.random.seed(42)
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2)])
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
 def test_blockdiag_nccl(par):
     """Test the MPIBlockDiag with NCCL"""
     size = MPI.COMM_WORLD.Get_size()
@@ -71,7 +71,7 @@ def test_blockdiag_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2)])
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
 def test_stacked_blockdiag_nccl(par):
     """Tests for MPIStackedBlogDiag with NCCL"""
     size = MPI.COMM_WORLD.Get_size()

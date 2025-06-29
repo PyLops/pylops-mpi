@@ -65,40 +65,39 @@ par4 = {
     "x0": True,
     "dtype": "float64",
 }  # overdetermined real, non-zero initial guess
-
-# par1j = {
-#     "ny": 11,
-#     "nx": 11,
-#     "imag": 1j,
-#     "x0": False,
-#     "dtype": "complex128",
-# }  # square complex, zero initial guess
-# par2j = {
-#     "ny": 11,
-#     "nx": 11,
-#     "imag": 1j,
-#     "x0": True,
-#     "dtype": "complex128",
-# }  # square complex, non-zero initial guess
-# par3j = {
-#     "ny": 31,
-#     "nx": 11,
-#     "imag": 1j,
-#     "x0": False,
-#     "dtype": "complex128",
-# }  # overdetermined complex, zero initial guess
-# par4j = {
-#     "ny": 31,
-#     "nx": 11,
-#     "imag": 1j,
-#     "x0": True,
-#     "dtype": "complex128",
-# }  # overdetermined complex, non-zero initial guess
+par1j = {
+    "ny": 11,
+    "nx": 11,
+    "imag": 1j,
+    "x0": False,
+    "dtype": "complex128",
+}  # square complex, zero initial guess
+par2j = {
+    "ny": 11,
+    "nx": 11,
+    "imag": 1j,
+    "x0": True,
+    "dtype": "complex128",
+}  # square complex, non-zero initial guess
+par3j = {
+    "ny": 31,
+    "nx": 11,
+    "imag": 1j,
+    "x0": False,
+    "dtype": "complex128",
+}  # overdetermined complex, zero initial guess
+par4j = {
+    "ny": 31,
+    "nx": 11,
+    "imag": 1j,
+    "x0": True,
+    "dtype": "complex128",
+}  # overdetermined complex, non-zero initial guess
 
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize(
-    "par", [(par1), (par2), (par3), (par4)]
+    "par", [(par1), (par1j), (par2), (par2j), (par3), (par3j), (par4), (par4j)]
 )
 def test_cg_nccl(par):
     """CG with MPIBlockDiag"""
@@ -143,7 +142,7 @@ def test_cg_nccl(par):
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize(
-    "par", [(par1), (par2), (par3), (par4)]
+    "par", [(par1), (par1j), (par2), (par2j), (par3), (par3j), (par4), (par4j)]
 )
 def test_cgls_nccl(par):
     """CGLS with MPIBlockDiag"""
@@ -190,7 +189,7 @@ def test_cgls_nccl(par):
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize(
-    "par", [(par1), (par2), (par3), (par4)]
+    "par", [(par1), (par1j), (par2), (par2j), (par3), (par3j), (par4), (par4j)]
 )
 def test_cgls_broadcastdata_nccl(par):
     """CGLS with broadcasted data vector"""
@@ -236,7 +235,7 @@ def test_cgls_broadcastdata_nccl(par):
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize(
-    "par", [(par1), (par2), (par3), (par4)]
+    "par", [(par1), (par1j), (par2), (par2j), (par3), (par3j), (par4), (par4j)]
 )
 def test_cgls_broadcastmodel_nccl(par):
     """CGLS with broadcasted model vector"""
@@ -285,7 +284,7 @@ def test_cgls_broadcastmodel_nccl(par):
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize(
-    "par", [(par1), (par2), (par3), (par4)]
+    "par", [(par1), (par1j), (par2), (par2j), (par3), (par3j), (par4), (par4j)]
 )
 def test_cg_stacked_nccl(par):
     """CG with MPIStackedBlockDiag"""
@@ -348,7 +347,7 @@ def test_cg_stacked_nccl(par):
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize(
-    "par", [(par1), (par2), (par3), (par4)]
+    "par", [(par1), (par1j), (par2), (par2j), (par3), (par3j), (par4), (par4j)]
 )
 def test_cgls_stacked_nccl(par):
     """CGLS with MPIStackedBlockDiag"""

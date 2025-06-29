@@ -29,13 +29,13 @@ rank = MPI.COMM_WORLD.Get_rank()
 size = MPI.COMM_WORLD.Get_size()
 
 par1 = {'ny': 101, 'nx': 101, 'dtype': np.float64}
-# par1j = {'ny': 101, 'nx': 101, 'dtype': np.complex128}
+par1j = {'ny': 101, 'nx': 101, 'dtype': np.complex128}
 par2 = {'ny': 301, 'nx': 101, 'dtype': np.float64}
-# par2j = {'ny': 301, 'nx': 101, 'dtype': np.complex128}
+par2j = {'ny': 301, 'nx': 101, 'dtype': np.complex128}
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2)])
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
 def test_linearop_nccl(par):
     """Apply various overloaded operators (.H, .T, +, *, conj()) and ensure that the
     returned operator is still of `pylops_mpi.MPILinearOperator` type
@@ -51,7 +51,7 @@ def test_linearop_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1)])
+@pytest.mark.parametrize("par", [(par1), (par1j)])
 def test_square_linearop_nccl(par):
     """Apply overloaded operators (**, *) to square operators and
     ensure that the returned operator is still of `pylops_mpi.MPILinearOperator` type
@@ -63,7 +63,7 @@ def test_square_linearop_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2)])
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
 def test_transpose_nccl(par):
     """Test the TransposeLinearOperator"""
     Op = pylops.MatrixMult(A=((rank + 1) * cp.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
@@ -98,7 +98,7 @@ def test_transpose_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2)])
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
 def test_scaled_nccl(par):
     """Test the ScaledLinearOperator"""
     Op = pylops.MatrixMult(A=((rank + 1) * cp.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
@@ -132,8 +132,8 @@ def test_scaled_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1)])
-def test_power(par):
+@pytest.mark.parametrize("par", [(par1), (par1j)])
+def test_power_nccl(par):
     """Test the PowerLinearOperator"""
     Op = pylops.MatrixMult(A=((rank + 1) * cp.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
     BDiag_MPI = MPIBlockDiag(ops=[Op, ])
@@ -166,8 +166,8 @@ def test_power(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2)])
-def test_sum(par):
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
+def test_sum_nccl(par):
     """Test the SumLinearOperator"""
     Op1 = pylops.MatrixMult(A=((rank + 1) * cp.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
     BDiag_MPI_1 = MPIBlockDiag(ops=[Op1, ])
@@ -206,8 +206,8 @@ def test_sum(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2)])
-def test_product(par):
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
+def test_product_nccl(par):
     """Test ProductLinearOperator"""
     Op1 = pylops.MatrixMult(A=((rank + 1) * cp.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
     BDiag_MPI_1 = MPIBlockDiag(ops=[Op1, ])
@@ -246,8 +246,8 @@ def test_product(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2)])
-def test_conj(par):
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
+def test_conj_nccl(par):
     """Test the ConjLinearOperator"""
     Op = pylops.MatrixMult(A=((rank + 1) * cp.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
     BDiag_MPI = MPIBlockDiag(ops=[Op, ])
@@ -280,8 +280,8 @@ def test_conj(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2)])
-def test_mpilinop(par):
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
+def test_mpilinop_nccl(par):
     """Wrapping the Pylops Linear Operator"""
     Fop = pylops.FirstDerivative(dims=(par['ny'], par['nx']), axis=0, dtype=par['dtype'])
     Mop = asmpilinearoperator(Op=Fop)
@@ -310,8 +310,8 @@ def test_mpilinop(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2)])
-def test_fwd_mpilinop(par):
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
+def test_fwd_mpilinop_nccl(par):
     """Test MPILinearOperator with other basic operators
         Matrix-Vector Product
     """
@@ -339,8 +339,8 @@ def test_fwd_mpilinop(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2)])
-def test_adj_mpilinop(par):
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
+def test_adj_mpilinop_nccl(par):
     """Test MPILinearOperator with other basic operators
         Adjoint Matrix-Vector Product
     """
