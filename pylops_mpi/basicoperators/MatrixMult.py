@@ -154,7 +154,7 @@ class MPIMatrixMult(MPILinearOperator):
         self._col_start = self._row_id * block_cols
         self._col_end = min(self.M, self._col_start + block_cols)
 
-        self._local_ncols = self._col_end - self._col_start
+        self._local_ncols = max(0, self._col_end - self._col_start)
         self._rank_col_lens = self.base_comm.allgather(self._local_ncols)
         total_ncols = np.sum(self._rank_col_lens)
 
@@ -168,11 +168,14 @@ class MPIMatrixMult(MPILinearOperator):
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
 
-        y = DistributedArray(global_shape=(self.N * self.dimsd[1]),
-                             local_shapes=[(self.N * c) for c in self._rank_col_lens],
-                             mask=x.mask,
-                             partition=Partition.SCATTER,
-                             dtype=self.dtype)
+        y = DistributedArray(
+            global_shape=(self.N * self.dimsd[1]),
+            local_shapes=[(self.N * c) for c in self._rank_col_lens],
+            mask=x.mask,
+            partition=Partition.SCATTER,
+            dtype=self.dtype,
+            base_comm=self.base_comm
+        )
 
         my_own_cols = self._rank_col_lens[self.rank]
         x_arr = x.local_array.reshape((self.dims[0], my_own_cols))
@@ -185,6 +188,53 @@ class MPIMatrixMult(MPILinearOperator):
         y[:] = Y_local.flatten()
         return y
 
+    @staticmethod
+    def active_grid_comm(base_comm:MPI.Comm, N:int, M:int):
+        """
+        Configure a square process grid from a parent MPI communicator and select the subset of "active" processes.
+
+        Each process in base_comm is assigned to a logical 2D grid of size p_prime x p_prime,
+        where p_prime = floor(sqrt(total_ranks)). Only the first `active_dim x active_dim` processes
+        (by row-major order) are considered "active". Inactive ranks return immediately with no new communicator.
+
+        Parameters:
+        -----------
+        base_comm : MPI.Comm
+            The parent communicator (e.g., MPI.COMM_WORLD).
+        N : int
+            Number of rows of your global data domain.
+        M : int
+            Number of columns of your global data domain.
+
+        Returns:
+        --------
+        tuple:
+            comm (MPI.Comm or None) : Sub-communicator including only active ranks.
+            rank (int)              : Rank within the new sub-communicator (or original rank if inactive).
+            row (int)               : Grid row index of this process in the active grid (or original rank if inactive).
+            col (int)               : Grid column index of this process in the active grid (or original rank if inactive).
+            is_active (bool)        : Flag indicating whether this rank is in the active sub-grid.
+        """
+        rank = base_comm.Get_rank()
+        size = base_comm.Get_size()
+        p_prime = math.isqrt(size)
+        row, col = divmod(rank, p_prime)
+        active_dim = min(N, M, p_prime)
+        is_active = (row < active_dim and col < active_dim)
+
+        if not is_active:
+            return None, rank, row, col, False
+
+        active_ranks = [r for r in range(size)
+                        if (r // p_prime) < active_dim and (r % p_prime) < active_dim]
+        new_group = base_comm.Get_group().Incl(active_ranks)
+        new_comm = base_comm.Create_group(new_group)
+
+        p_prime_new = math.isqrt(len(active_ranks))
+        new_rank = new_comm.Get_rank()
+        new_row, new_col = divmod(new_rank, p_prime_new)
+        return new_comm, new_rank, new_row, new_col, True
+
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
         if x.partition != Partition.SCATTER:
@@ -196,6 +246,7 @@ class MPIMatrixMult(MPILinearOperator):
             mask=x.mask,
             partition=Partition.SCATTER,
             dtype=self.dtype,
+            base_comm=self.base_comm
         )
 
         x_arr = x.local_array.reshape((self.N, self._local_ncols)).astype(self.dtype)

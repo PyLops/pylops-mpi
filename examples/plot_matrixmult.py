@@ -36,20 +36,6 @@ plt.close("all")
 np.random.seed(42)
 
 ###############################################################################
-# Next we obtain the MPI parameters for each rank and check that the number
-# of processes (``size``) is a square number
-comm = MPI.COMM_WORLD
-rank = comm.Get_rank()  # rank of current process
-size = comm.Get_size()  # number of processes
-
-p_prime = math.isqrt(size)
-repl_factor = p_prime
-
-if (p_prime * repl_factor) != size:
-    print(f"Number of processes must be a square number, provided {size} instead...")
-    exit(-1)
-
-###############################################################################
 # We are now ready to create the input matrices :math:`\mathbf{A}` of size
 # :math:`M \times k` :math:`\mathbf{A}` of size and :math:`\mathbf{A}` of size
 # :math:`K \times N`.
@@ -93,12 +79,15 @@ X = np.random.rand(K * M).astype(dtype=np.float32).reshape(K, M)
 #   └────────────┴────────────┘
 #    </div>
 
-my_col = rank % p_prime
-my_row = rank // p_prime
+base_comm = MPI.COMM_WORLD
+comm, rank, row_id, col_id, is_active = MPIMatrixMult.active_grid_comm(base_comm, N, M)
+print(f"Process {base_comm.Get_rank()}  is {"active" if is_active else "inactive"}")
+if not is_active: exit(0)
+p_prime = math.isqrt(comm.Get_size())
 
 # Create sub‐communicators
-row_comm = comm.Split(color=my_row, key=my_col)  # all procs in same row
-col_comm = comm.Split(color=my_col, key=my_row)  # all procs in same col
+row_comm = comm.Split(color=row_id, key=col_id)  # all procs in same row
+col_comm = comm.Split(color=col_id, key=row_id)  # all procs in same col
 
 ################################################################################
 # At this point we divide the rows and columns of :math:`\mathbf{A}` and
@@ -136,20 +125,20 @@ col_comm = comm.Split(color=my_col, key=my_row)  # all procs in same col
 blk_rows = int(math.ceil(N / p_prime))
 blk_cols = int(math.ceil(M / p_prime))
 
-rs = my_col * blk_rows
+rs = col_id * blk_rows
 re = min(N, rs + blk_rows)
-my_own_rows = re - rs
+my_own_rows = max(0,re - rs)
 
-cs = my_row * blk_cols
+cs = row_id * blk_cols
 ce = min(M, cs + blk_cols)
-my_own_cols = ce - cs
+my_own_cols = max(0,ce - cs)
 
 A_p, X_p = A[rs:re, :].copy(), X[:, cs:ce].copy()
 
 ################################################################################
 # We are now ready to create the :py:class:`pylops_mpi.basicoperators.MPIMatrixMult`
 # operator and the input matrix :math:`\mathbf{X}`
-Aop = MPIMatrixMult(A_p, M, dtype="float32")
+Aop = MPIMatrixMult(A_p, M, base_comm=comm, dtype="float32")
 
 col_lens = comm.allgather(my_own_cols)
 total_cols = np.sum(col_lens)
@@ -188,9 +177,11 @@ y_blocks = []
 offset = 0
 for cnt in col_counts:
     block_size = N * cnt
-    y_blocks.append(
-        y[offset: offset + block_size].reshape(N, cnt)
-    )
+    y_block = y[offset: offset + block_size]
+    if len(y_block) != 0:
+        y_blocks.append(
+            y_block.reshape(N, cnt)
+        )
     offset += block_size
 y = np.hstack(y_blocks)
 
@@ -199,13 +190,15 @@ xadj_blocks = []
 offset = 0
 for cnt in col_counts:
     block_size = K * cnt
-    xadj_blocks.append(
-        xadj[offset: offset + block_size].reshape(K, cnt)
-    )
+    xadj_blk = xadj[offset: offset + block_size]
+    if len(xadj_blk)!= 0:
+        xadj_blocks.append(
+            xadj_blk.reshape(K, cnt)
+        )
     offset += block_size
 xadj = np.hstack(xadj_blocks)
 
-if rank == 0:
+if comm.Get_rank() == 0:
     y_loc = (A @ X).squeeze()
     xadj_loc = (A.T.dot(y_loc.conj())).conj().squeeze()
 

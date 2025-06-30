@@ -12,9 +12,7 @@ from pylops_mpi import DistributedArray, Partition
 from pylops_mpi.basicoperators.MatrixMult import MPIMatrixMult
 
 np.random.seed(42)
-comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-size = comm.Get_size()
+base_comm = MPI.COMM_WORLD
 
 # Define test cases: (N, K, M, dtype_str)
 # M, K, N are matrix dimensions A(N,K), B(K,M)
@@ -32,31 +30,25 @@ test_params = [
 @pytest.mark.mpi(min_size=1)
 @pytest.mark.parametrize("M, K, N, dtype_str", test_params)
 def test_SUMMAMatrixMult(N, K, M, dtype_str):
-    p_prime = math.isqrt(size)
-    C = p_prime
-    if p_prime * C != size:
-        pytest.skip("Number of processes must be a square number, "
-                    "provided {size} instead...")
-
     dtype = np.dtype(dtype_str)
 
     cmplx = 1j if np.issubdtype(dtype, np.complexfloating) else 0
     base_float_dtype = np.float32 if dtype == np.complex64 else np.float64
 
-    my_col = rank % p_prime
-    my_row = rank // p_prime
+    comm, rank, row_id, col_id, is_active = MPIMatrixMult.active_grid_comm(base_comm, N, M)
+    print(f"Process {base_comm.Get_rank()}  is {"active" if is_active else "inactive"}")
+    if not is_active: return
 
-    # Create sub-communicators
-    row_comm = comm.Split(color=my_row, key=my_col)
-    col_comm = comm.Split(color=my_col, key=my_row)
+    size = comm.Get_size()
+    p_prime = math.isqrt(size)
 
     # Calculate local matrix dimensions
     blk_rows_A = int(math.ceil(N / p_prime))
-    row_start_A = my_col * blk_rows_A
+    row_start_A = col_id * blk_rows_A
     row_end_A = min(N, row_start_A + blk_rows_A)
 
     blk_cols_X = int(math.ceil(M / p_prime))
-    col_start_X = my_row * blk_cols_X
+    col_start_X = row_id * blk_cols_X
     col_end_X = min(M, col_start_X + blk_cols_X)
     local_col_X_len = max(0, col_end_X - col_start_X)
 
@@ -102,9 +94,11 @@ def test_SUMMAMatrixMult(N, K, M, dtype_str):
     offset = 0
     for cnt in col_counts:
         block_size = N * cnt
-        y_blocks.append(
-            y[offset: offset + block_size].reshape(N, cnt)
-        )
+        y_block = y[offset: offset + block_size]
+        if len(y_block) != 0:
+            y_blocks.append(
+                y_block.reshape(N, cnt)
+            )
         offset += block_size
     y = np.hstack(y_blocks)
 
@@ -113,9 +107,11 @@ def test_SUMMAMatrixMult(N, K, M, dtype_str):
     offset = 0
     for cnt in col_counts:
         block_size = K * cnt
-        xadj_blocks.append(
-            xadj[offset: offset + block_size].reshape(K, cnt)
-        )
+        xadj_blk = xadj[offset: offset + block_size]
+        if len(xadj_blk) != 0:
+            xadj_blocks.append(
+                xadj_blk.reshape(K, cnt)
+            )
         offset += block_size
     xadj = np.hstack(xadj_blocks)
 
@@ -135,6 +131,3 @@ def test_SUMMAMatrixMult(N, K, M, dtype_str):
             rtol=np.finfo(np.dtype(dtype)).resolution,
             err_msg=f"Rank {rank}: Ajoint verification failed."
         )
-
-    col_comm.Free()
-    row_comm.Free()
