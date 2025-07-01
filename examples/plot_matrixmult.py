@@ -44,7 +44,7 @@ A = np.random.rand(N * K).astype(dtype=np.float32).reshape(N, K)
 X = np.random.rand(K * M).astype(dtype=np.float32).reshape(K, M)
 
 ################################################################################
-# The processes are now arranged in a :math:`\sqrt{P} \times \sqrt{P}` grid,
+# The processes are now arranged in a :math:`P' \times P'` grid,
 # where :math:`P` is the total number of processes.
 #
 # We define
@@ -78,14 +78,20 @@ X = np.random.rand(K * M).astype(dtype=np.float32).reshape(K, M)
 #   │ (r=1, c=0) │ (r=1, c=1) │
 #   └────────────┴────────────┘
 #    </div>
+#
+# This is obtained by invoking the
+# `:func:pylops_mpi.MPIMatrixMult.active_grid_comm` method, which is also
+# responsible to identify any rank that should be deactivated (if the number
+# of rows of the operator or columns of the input/output matrices are smaller
+# than the row or columm ranks.
 
 base_comm = MPI.COMM_WORLD
 comm, rank, row_id, col_id, is_active = MPIMatrixMult.active_grid_comm(base_comm, N, M)
 print(f"Process {base_comm.Get_rank()}  is {"active" if is_active else "inactive"}")
 if not is_active: exit(0)
-p_prime = math.isqrt(comm.Get_size())
 
 # Create sub‐communicators
+p_prime = math.isqrt(comm.Get_size())
 row_comm = comm.Split(color=row_id, key=col_id)  # all procs in same row
 col_comm = comm.Split(color=col_id, key=row_id)  # all procs in same col
 
@@ -127,11 +133,11 @@ blk_cols = int(math.ceil(M / p_prime))
 
 rs = col_id * blk_rows
 re = min(N, rs + blk_rows)
-my_own_rows = max(0,re - rs)
+my_own_rows = max(0, re - rs)
 
 cs = row_id * blk_cols
 ce = min(M, cs + blk_cols)
-my_own_cols = max(0,ce - cs)
+my_own_cols = max(0, ce - cs)
 
 A_p, X_p = A[rs:re, :].copy(), X[:, cs:ce].copy()
 
@@ -191,14 +197,14 @@ offset = 0
 for cnt in col_counts:
     block_size = K * cnt
     xadj_blk = xadj[offset: offset + block_size]
-    if len(xadj_blk)!= 0:
+    if len(xadj_blk) != 0:
         xadj_blocks.append(
             xadj_blk.reshape(K, cnt)
         )
     offset += block_size
 xadj = np.hstack(xadj_blocks)
 
-if comm.Get_rank() == 0:
+if rank == 0:
     y_loc = (A @ X).squeeze()
     xadj_loc = (A.T.dot(y_loc.conj())).conj().squeeze()
 

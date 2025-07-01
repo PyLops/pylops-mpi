@@ -190,30 +190,41 @@ class MPIMatrixMult(MPILinearOperator):
 
     @staticmethod
     def active_grid_comm(base_comm:MPI.Comm, N:int, M:int):
-        """
-        Configure a square process grid from a parent MPI communicator and select the subset of "active" processes.
+        r"""Configure active grid
 
-        Each process in base_comm is assigned to a logical 2D grid of size p_prime x p_prime,
-        where p_prime = floor(sqrt(total_ranks)). Only the first `active_dim x active_dim` processes
-        (by row-major order) are considered "active". Inactive ranks return immediately with no new communicator.
+        Configure a square process grid from a parent MPI communicator and
+        select the subset of "active" processes. Each process in ``base_comm``
+        is assigned to a logical 2D grid of size :math:`P' \times P'`,
+        where :math:`P' = \bigl \lceil \sqrt{P} \bigr \rceil`. Only the first
+        :math:`active_dim x active_dim` processes
+        (by row-major order) are considered "active". Inactive ranks return
+        immediately with no new communicator.
 
         Parameters:
         -----------
-        base_comm : MPI.Comm
-            The parent communicator (e.g., MPI.COMM_WORLD).
-        N : int
-            Number of rows of your global data domain.
-        M : int
-            Number of columns of your global data domain.
+        base_comm : :obj:`mpi4py.MPI.Comm`
+            MPI Parent Communicator. (e.g., ``mpi4py.MPI.COMM_WORLD``).
+        N : :obj:`int`
+            Number of rows of the global data domain.
+        M : :obj:`int`
+            Number of columns of the global data domain.
 
         Returns:
         --------
-        tuple:
-            comm (MPI.Comm or None) : Sub-communicator including only active ranks.
-            rank (int)              : Rank within the new sub-communicator (or original rank if inactive).
-            row (int)               : Grid row index of this process in the active grid (or original rank if inactive).
-            col (int)               : Grid column index of this process in the active grid (or original rank if inactive).
-            is_active (bool)        : Flag indicating whether this rank is in the active sub-grid.
+        comm : :obj:`mpi4py.MPI.Comm`
+            Sub-communicator including only active ranks.
+        rank : :obj:`int`
+            Rank within the new sub-communicator (or original rank
+            if inactive).
+        row : :obj:`int`
+            Grid row index of this process in the active grid (or original rank
+              if inactive).
+        col : :obj:`int`
+            Grid column index of this process in the active grid
+            (or original rank if inactive).
+        is_active : :obj:`bool`
+            Flag indicating whether this rank is in the active sub-grid.
+
         """
         rank = base_comm.Get_rank()
         size = base_comm.Get_size()
@@ -229,10 +240,10 @@ class MPIMatrixMult(MPILinearOperator):
                         if (r // p_prime) < active_dim and (r % p_prime) < active_dim]
         new_group = base_comm.Get_group().Incl(active_ranks)
         new_comm = base_comm.Create_group(new_group)
-
         p_prime_new = math.isqrt(len(active_ranks))
         new_rank = new_comm.Get_rank()
         new_row, new_col = divmod(new_rank, p_prime_new)
+
         return new_comm, new_rank, new_row, new_col, True
 
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:

@@ -13,6 +13,7 @@ from pylops_mpi.basicoperators.MatrixMult import MPIMatrixMult
 
 np.random.seed(42)
 base_comm = MPI.COMM_WORLD
+size = base_comm.Get_size()
 
 # Define test cases: (N, K, M, dtype_str)
 # M, K, N are matrix dimensions A(N,K), B(K,M)
@@ -29,14 +30,13 @@ test_params = [
 
 @pytest.mark.mpi(min_size=1)
 @pytest.mark.parametrize("M, K, N, dtype_str", test_params)
-def test_SUMMAMatrixMult(N, K, M, dtype_str):
+def test_MPIMatrixMult(N, K, M, dtype_str):
     dtype = np.dtype(dtype_str)
 
     cmplx = 1j if np.issubdtype(dtype, np.complexfloating) else 0
     base_float_dtype = np.float32 if dtype == np.complex64 else np.float64
 
     comm, rank, row_id, col_id, is_active = MPIMatrixMult.active_grid_comm(base_comm, N, M)
-    print(f"Process {base_comm.Get_rank()}  is {"active" if is_active else "inactive"}")
     if not is_active: return
 
     size = comm.Get_size()
