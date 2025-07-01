@@ -189,7 +189,7 @@ class MPIMatrixMult(MPILinearOperator):
         return y
 
     @staticmethod
-    def active_grid_comm(base_comm:MPI.Comm, N:int, M:int):
+    def active_grid_comm(base_comm: MPI.Comm, N: int, M: int):
         r"""Configure active grid
 
         Configure a square process grid from a parent MPI communicator and
