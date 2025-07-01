@@ -79,24 +79,22 @@ def test_allgather_samesize_withrecbuf(par):
 #     rank = MPI.COMM_WORLD.Get_rank()
 
 #     # Local array
-#     n = par['n'] # + (1 if rank == size - 1 else 0)
-#     print(f'rank {rank}, n {n}')
+#     n = par['n'] + (1 if rank == size - 1 else 0)
 #     local_array = rank * cp.ones(n, dtype=par['dtype'])
     
 #     # Gathered array
-#     #gathered_array = cp.zeros(par['n'] * size + 1, dtype=par['dtype'])
-#     gathered_array = cp.zeros(par['n'] * size, dtype=par['dtype'])
+#     gathered_array = cp.zeros(par['n'] * size + 1, dtype=par['dtype'])
 #     nccl_allgather(nccl_comm, local_array, recv_buf=gathered_array)
 
 #     # Compare with global array created in rank0
-#     # if rank == 0:
-#     #     global_array = np.ones(par['n'] * size + 1, dtype=par['dtype'])
-#     #     for irank in range(size - 1):
-#     #         global_array[irank * par["n"]: (irank + 1) * par["n"]] = irank
-#     #     global_array[(size - 1) * par["n"]:] = size - 1
+#     if rank == 0:
+#         global_array = np.ones(par['n'] * size + 1, dtype=par['dtype'])
+#         for irank in range(size - 1):
+#             global_array[irank * par["n"]: (irank + 1) * par["n"]] = irank
+#         global_array[(size - 1) * par["n"]:] = size - 1
         
-#     #     assert_allclose(
-#     #         gathered_array.get(),
-#     #         global_array,
-#     #         rtol=1e-14,
-#     #     )
+#         assert_allclose(
+#             gathered_array.get(),
+#             global_array,
+#             rtol=1e-14,
+#         )
