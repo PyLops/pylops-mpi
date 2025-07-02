@@ -165,15 +165,5 @@ class MPIFredholm1(MPILinearOperator):
                     y1[isl] = ncp.dot(x[isl].T.conj(), self.G[isl]).T.conj()
 
         # gather results
-        recv = y._allgather(y1)
-        # TODO: current of _allgather will call non-buffered MPI-AllGather (sub-optimal for CuPy+MPI)
-        # which returns a list (not flatten) and does not require unrolling
-        if self.usematmul and isinstance(recv, ncp.ndarray) :
-            # unrolling
-            chunk_size = self.ny * self.nz
-            num_partition = (len(recv) + chunk_size - 1) // chunk_size
-            recv = ncp.vstack([recv[i * chunk_size: (i + 1) * chunk_size].reshape(self.nz, self.ny).T for i in range(num_partition)])
-        else:
-            recv = ncp.vstack(recv)
-        y[:] = recv.ravel()
+        y[:] = ncp.vstack(y._allgather(y1)).ravel()
         return y
