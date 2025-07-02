@@ -42,6 +42,7 @@ Basic Operators
 .. autosummary::
    :toctree: generated/
 
+    MPIMatrixMult
     MPIBlockDiag
     MPIStackedBlockDiag
     MPIVStack

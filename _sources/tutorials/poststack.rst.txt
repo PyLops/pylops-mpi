@@ -349,7 +349,7 @@ normal equations, and :math:`\mathbf{d}^{Norm}` is the data of the normal equati
         99         6.3033e-01         1.9903e+02
        100         6.3026e-01         1.9777e+02
 
-    Iterations = 100        Total time (s) = 44.50
+    Iterations = 100        Total time (s) = 42.82
     -------------------------------------------------------
 
 
@@ -486,7 +486,7 @@ To run this tutorial with our NCCL backend, refer to :ref:`sphx_glr_tutorials_po
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (2 minutes 16.779 seconds)
+   **Total running time of the script:** (2 minutes 13.750 seconds)
 
 
 .. _sphx_glr_download_tutorials_poststack.py:

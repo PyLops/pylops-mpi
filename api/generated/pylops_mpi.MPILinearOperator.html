@@ -402,6 +402,7 @@
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.MPIStackedLinearOperator.html">pylops_mpi.MPIStackedLinearOperator</a></li>
 </ul>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MPIMatrixMult.html">pylops_mpi.basicoperators.MPIMatrixMult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MPIBlockDiag.html">pylops_mpi.basicoperators.MPIBlockDiag</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MPIStackedBlockDiag.html">pylops_mpi.basicoperators.MPIStackedBlockDiag</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MPIVStack.html">pylops_mpi.basicoperators.MPIVStack</a></li>
@@ -562,6 +563,9 @@ instead as this can also handle distributed arrays with subcommunicators.</p>
 </div><div class="sphx-glr-thumbcontainer" tooltip="We will be focusing here on the case where the input array x is assumed to be an n-dimensional :pypylops_mpi.DistributedArray and the derivative is applied over the first axis (``axis=0``). Since the array is distributed over multiple processes, the derivative operators must take care of applying the derivatives across the edges using the information from the previous/next processes, using the so-called ghost cells."><img alt="" src="../../_images/sphx_glr_plot_derivative_thumb.png" />
 <p><a class="reference internal" href="../../gallery/plot_derivative.html#sphx-glr-gallery-plot-derivative-py"><span class="std std-ref">Derivatives</span></a></p>
   <div class="sphx-glr-thumbnail-title">Derivatives</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Note that whilst the different blocks of the matrix \mathbf{A} are directly stored in the operator on different ranks, the matrix \mathbf{X} is effectively represented by a 1-D :pypylops_mpi.DistributedArray where the different blocks are flattened and stored on different ranks. Note that to optimize communications, the ranks are organized in a 2D grid and some of the row blocks of \mathbf{A} and column blocks of \mathbf{X} are replicated across different ranks - see below for details."><img alt="" src="../../_images/sphx_glr_plot_matrixmult_thumb.png" />
+<p><a class="reference internal" href="../../gallery/plot_matrixmult.html#sphx-glr-gallery-plot-matrixmult-py"><span class="std std-ref">Distributed Matrix Multiplication</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Distributed Matrix Multiplication</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the use of the :pypylops_mpi.MPILinearOperator to wrap PyLops Operators. PyLops operators can be converted into :pypylops_mpi.MPILinearOperator using the :pypylops_mpi.asmpilinearoperator method. Additionally, the example showcases how to use these wrapped PyLops operators with other operators provided by PyLops-MPI."><img alt="" src="../../_images/sphx_glr_plot_mpilinop_thumb.png" />
 <p><a class="reference internal" href="../../gallery/plot_mpilinop.html#sphx-glr-gallery-plot-mpilinop-py"><span class="std std-ref">MPILinearOperator</span></a></p>
   <div class="sphx-glr-thumbnail-title">MPILinearOperator</div>

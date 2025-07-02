@@ -1,0 +1,48 @@
+﻿pylops\_mpi.basicoperators.MPIMatrixMult
+========================================
+
+.. currentmodule:: pylops_mpi.basicoperators
+
+.. autoclass:: MPIMatrixMult
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~MPIMatrixMult.__init__
+        ~MPIMatrixMult.active_grid_comm
+        ~MPIMatrixMult.adjoint
+        ~MPIMatrixMult.conj
+        ~MPIMatrixMult.dot
+        ~MPIMatrixMult.matvec
+        ~MPIMatrixMult.rmatvec
+        ~MPIMatrixMult.transpose
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.basicoperators.MPIMatrixMult.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+

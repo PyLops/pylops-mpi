@@ -404,6 +404,7 @@
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.MPIStackedLinearOperator.html">pylops_mpi.MPIStackedLinearOperator</a></li>
 </ul>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIMatrixMult.html">pylops_mpi.basicoperators.MPIMatrixMult</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIBlockDiag.html">pylops_mpi.basicoperators.MPIBlockDiag</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIStackedBlockDiag.html">pylops_mpi.basicoperators.MPIStackedBlockDiag</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIVStack.html">pylops_mpi.basicoperators.MPIVStack</a></li>
@@ -536,19 +537,22 @@ large-scale linear algebra operations, inversions and computations.</p>
 <h3>Basic Operators<a class="headerlink" href="#basic-operators" title="Link to this heading">#</a></h3>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIBlockDiag.html#pylops_mpi.basicoperators.MPIBlockDiag" title="pylops_mpi.basicoperators.MPIBlockDiag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIBlockDiag</span></code></a>(ops[, base_comm, mask, dtype])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIMatrixMult.html#pylops_mpi.basicoperators.MPIMatrixMult" title="pylops_mpi.basicoperators.MPIMatrixMult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIMatrixMult</span></code></a>(A, M[, saveAt, base_comm, dtype])</p></td>
+<td><p>MPI Matrix multiplication</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIBlockDiag.html#pylops_mpi.basicoperators.MPIBlockDiag" title="pylops_mpi.basicoperators.MPIBlockDiag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIBlockDiag</span></code></a>(ops[, base_comm, mask, dtype])</p></td>
 <td><p>MPI Block-diagonal operator.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIStackedBlockDiag.html#pylops_mpi.basicoperators.MPIStackedBlockDiag" title="pylops_mpi.basicoperators.MPIStackedBlockDiag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIStackedBlockDiag</span></code></a>(ops[, base_comm, dtype])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIStackedBlockDiag.html#pylops_mpi.basicoperators.MPIStackedBlockDiag" title="pylops_mpi.basicoperators.MPIStackedBlockDiag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIStackedBlockDiag</span></code></a>(ops[, base_comm, dtype])</p></td>
 <td><p>MPI Stacked BlockDiag Operator</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIVStack.html#pylops_mpi.basicoperators.MPIVStack" title="pylops_mpi.basicoperators.MPIVStack"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIVStack</span></code></a>(ops[, base_comm, dtype])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIVStack.html#pylops_mpi.basicoperators.MPIVStack" title="pylops_mpi.basicoperators.MPIVStack"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIVStack</span></code></a>(ops[, base_comm, dtype])</p></td>
 <td><p>MPI VStack Operator</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIStackedVStack.html#pylops_mpi.basicoperators.MPIStackedVStack" title="pylops_mpi.basicoperators.MPIStackedVStack"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIStackedVStack</span></code></a>(ops[, base_comm, dtype])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIStackedVStack.html#pylops_mpi.basicoperators.MPIStackedVStack" title="pylops_mpi.basicoperators.MPIStackedVStack"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIStackedVStack</span></code></a>(ops[, base_comm, dtype])</p></td>
 <td><p>MPI Stacked VStack Operator</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIHStack.html#pylops_mpi.basicoperators.MPIHStack" title="pylops_mpi.basicoperators.MPIHStack"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIHStack</span></code></a>(ops[, base_comm, dtype])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIHStack.html#pylops_mpi.basicoperators.MPIHStack" title="pylops_mpi.basicoperators.MPIHStack"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIHStack</span></code></a>(ops[, base_comm, dtype])</p></td>
 <td><p>MPI HStack Operator</p></td>
 </tr>
 </tbody>
