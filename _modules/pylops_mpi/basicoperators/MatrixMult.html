@@ -604,37 +604,12 @@
         <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimsd</span><span class="p">)),</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dims</span><span class="p">)))</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">),</span> <span class="n">base_comm</span><span class="o">=</span><span class="n">base_comm</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
-        <span class="n">ncp</span> <span class="o">=</span> <span class="n">get_module</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">partition</span> <span class="o">!=</span> <span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;x should have partition=</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="si">}</span><span class="s2"> Got </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">partition</span><span class="si">}</span><span class="s2"> instead...&quot;</span><span class="p">)</span>
-
-        <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span>
-            <span class="n">global_shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimsd</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
-            <span class="n">local_shapes</span><span class="o">=</span><span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">*</span> <span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank_col_lens</span><span class="p">],</span>
-            <span class="n">mask</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span>
-            <span class="n">partition</span><span class="o">=</span><span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="p">,</span>
-            <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
-            <span class="n">base_comm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span>
-        <span class="p">)</span>
-
-        <span class="n">my_own_cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank_col_lens</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">]</span>
-        <span class="n">x_arr</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">dims</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">my_own_cols</span><span class="p">))</span>
-        <span class="n">X_local</span> <span class="o">=</span> <span class="n">x_arr</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-        <span class="n">Y_local</span> <span class="o">=</span> <span class="n">ncp</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_row_comm</span><span class="o">.</span><span class="n">allgather</span><span class="p">(</span>
-                <span class="n">ncp</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">,</span> <span class="n">X_local</span><span class="p">)</span>
-            <span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">y</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">Y_local</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">y</span>
-
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">active_grid_comm</span><span class="p">(</span><span class="n">base_comm</span><span class="p">:</span> <span class="n">MPI</span><span class="o">.</span><span class="n">Comm</span><span class="p">,</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">M</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Configure active grid</span>
 
 <span class="sd">        Configure a square process grid from a parent MPI communicator and</span>
-<span class="sd">        select the subset of &quot;active&quot; processes. Each process in ``base_comm``</span>
+<span class="sd">        select a subset of &quot;active&quot; processes. Each process in ``base_comm``</span>
 <span class="sd">        is assigned to a logical 2D grid of size :math:`P&#39; \times P&#39;`,</span>
 <span class="sd">        where :math:`P&#39; = \bigl \lceil \sqrt{P} \bigr \rceil`. Only the first</span>
 <span class="sd">        :math:`active_dim x active_dim` processes</span>
@@ -659,7 +634,7 @@
 <span class="sd">            if inactive).</span>
 <span class="sd">        row : :obj:`int`</span>
 <span class="sd">            Grid row index of this process in the active grid (or original rank</span>
-<span class="sd">              if inactive).</span>
+<span class="sd">            if inactive).</span>
 <span class="sd">        col : :obj:`int`</span>
 <span class="sd">            Grid column index of this process in the active grid</span>
 <span class="sd">            (or original rank if inactive).</span>
@@ -686,6 +661,31 @@
         <span class="n">new_row</span><span class="p">,</span> <span class="n">new_col</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">new_rank</span><span class="p">,</span> <span class="n">p_prime_new</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">new_comm</span><span class="p">,</span> <span class="n">new_rank</span><span class="p">,</span> <span class="n">new_row</span><span class="p">,</span> <span class="n">new_col</span><span class="p">,</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+        <span class="n">ncp</span> <span class="o">=</span> <span class="n">get_module</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">partition</span> <span class="o">!=</span> <span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;x should have partition=</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="si">}</span><span class="s2"> Got </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">partition</span><span class="si">}</span><span class="s2"> instead...&quot;</span><span class="p">)</span>
+
+        <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span>
+            <span class="n">global_shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimsd</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+            <span class="n">local_shapes</span><span class="o">=</span><span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">*</span> <span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank_col_lens</span><span class="p">],</span>
+            <span class="n">mask</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span>
+            <span class="n">partition</span><span class="o">=</span><span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">base_comm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span>
+        <span class="p">)</span>
+
+        <span class="n">my_own_cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank_col_lens</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">]</span>
+        <span class="n">x_arr</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">dims</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">my_own_cols</span><span class="p">))</span>
+        <span class="n">X_local</span> <span class="o">=</span> <span class="n">x_arr</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">Y_local</span> <span class="o">=</span> <span class="n">ncp</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_row_comm</span><span class="o">.</span><span class="n">allgather</span><span class="p">(</span>
+                <span class="n">ncp</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">,</span> <span class="n">X_local</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">y</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">Y_local</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">y</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="n">ncp</span> <span class="o">=</span> <span class="n">get_module</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
