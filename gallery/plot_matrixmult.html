@@ -528,7 +528,7 @@ c = \mathrm{rank} \bmod P'.\]</div>
 │ (r=1, c=0) │ (r=1, c=1) │
 └────────────┴────────────┘
  </div><p>This is obtained by invoking the
-<cite>:func:pylops_mpi.MPIMatrixMult.active_grid_comm</cite> method, which is also
+<code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIMatrixMult.active_grid_comm</span></code> method, which is also
 responsible to identify any rank that should be deactivated (if the number
 of rows of the operator or columns of the input/output matrices are smaller
 than the row or columm ranks.</p>

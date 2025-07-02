@@ -80,7 +80,7 @@ X = np.random.rand(K * M).astype(dtype=np.float32).reshape(K, M)
 #    </div>
 #
 # This is obtained by invoking the
-# `:func:pylops_mpi.MPIMatrixMult.active_grid_comm` method, which is also
+# :func:`pylops_mpi.basicoperators.MPIMatrixMult.active_grid_comm` method, which is also
 # responsible to identify any rank that should be deactivated (if the number
 # of rows of the operator or columns of the input/output matrices are smaller
 # than the row or columm ranks.
