@@ -163,37 +163,12 @@ class MPIMatrixMult(MPILinearOperator):
         shape = (int(np.prod(self.dimsd)), int(np.prod(self.dims)))
         super().__init__(shape=shape, dtype=np.dtype(dtype), base_comm=base_comm)
 
-    def _matvec(self, x: DistributedArray) -> DistributedArray:
-        ncp = get_module(x.engine)
-        if x.partition != Partition.SCATTER:
-            raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
-
-        y = DistributedArray(
-            global_shape=(self.N * self.dimsd[1]),
-            local_shapes=[(self.N * c) for c in self._rank_col_lens],
-            mask=x.mask,
-            partition=Partition.SCATTER,
-            dtype=self.dtype,
-            base_comm=self.base_comm
-        )
-
-        my_own_cols = self._rank_col_lens[self.rank]
-        x_arr = x.local_array.reshape((self.dims[0], my_own_cols))
-        X_local = x_arr.astype(self.dtype)
-        Y_local = ncp.vstack(
-            self._row_comm.allgather(
-                ncp.matmul(self.A, X_local)
-            )
-        )
-        y[:] = Y_local.flatten()
-        return y
-
     @staticmethod
     def active_grid_comm(base_comm: MPI.Comm, N: int, M: int):
         r"""Configure active grid
 
         Configure a square process grid from a parent MPI communicator and
-        select the subset of "active" processes. Each process in ``base_comm``
+        select a subset of "active" processes. Each process in ``base_comm``
         is assigned to a logical 2D grid of size :math:`P' \times P'`,
         where :math:`P' = \bigl \lceil \sqrt{P} \bigr \rceil`. Only the first
         :math:`active_dim x active_dim` processes
@@ -218,7 +193,7 @@ class MPIMatrixMult(MPILinearOperator):
             if inactive).
         row : :obj:`int`
             Grid row index of this process in the active grid (or original rank
-              if inactive).
+            if inactive).
         col : :obj:`int`
             Grid column index of this process in the active grid
             (or original rank if inactive).
@@ -245,6 +220,31 @@ class MPIMatrixMult(MPILinearOperator):
         new_row, new_col = divmod(new_rank, p_prime_new)
 
         return new_comm, new_rank, new_row, new_col, True
+
+    def _matvec(self, x: DistributedArray) -> DistributedArray:
+        ncp = get_module(x.engine)
+        if x.partition != Partition.SCATTER:
+            raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
+
+        y = DistributedArray(
+            global_shape=(self.N * self.dimsd[1]),
+            local_shapes=[(self.N * c) for c in self._rank_col_lens],
+            mask=x.mask,
+            partition=Partition.SCATTER,
+            dtype=self.dtype,
+            base_comm=self.base_comm
+        )
+
+        my_own_cols = self._rank_col_lens[self.rank]
+        x_arr = x.local_array.reshape((self.dims[0], my_own_cols))
+        X_local = x_arr.astype(self.dtype)
+        Y_local = ncp.vstack(
+            self._row_comm.allgather(
+                ncp.matmul(self.A, X_local)
+            )
+        )
+        y[:] = Y_local.flatten()
+        return y
 
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
