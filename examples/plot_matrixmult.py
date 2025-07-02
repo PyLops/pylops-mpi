@@ -87,7 +87,7 @@ X = np.random.rand(K * M).astype(dtype=np.float32).reshape(K, M)
 
 base_comm = MPI.COMM_WORLD
 comm, rank, row_id, col_id, is_active = MPIMatrixMult.active_grid_comm(base_comm, N, M)
-print(f"Process {base_comm.Get_rank()}  is {"active" if is_active else "inactive"}")
+print(f"Process {base_comm.Get_rank()} is {'active' if is_active else 'inactive'}")
 if not is_active: exit(0)
 
 # Create sub‐communicators
