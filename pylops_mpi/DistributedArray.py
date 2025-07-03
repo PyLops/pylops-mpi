@@ -500,15 +500,13 @@ class DistributedArray:
         """Allgather operation
         """
         if deps.nccl_enabled and self.base_comm_nccl:
-            if hasattr(send_buf, "shape"):
+            if isinstance(send_buf, (tuple, list, int)):
+                return nccl_allgather(self.base_comm_nccl, send_buf, recv_buf)
+            else:
                 send_shapes = self.base_comm.allgather(send_buf.shape)
                 (padded_send, padded_recv) = _prepare_nccl_allgather_inputs(send_buf, send_shapes)
-                # TODO: Should we ignore recv_buf completely in this case ?
                 raw_recv = nccl_allgather(self.base_comm_nccl, padded_send, recv_buf if recv_buf else padded_recv)
                 return _unroll_nccl_allgather_recv(raw_recv, padded_send.shape, send_shapes)
-            else:
-                # still works for a send_buf whose type is a tuple for _nccl_local_shapes
-                return nccl_allgather(self.base_comm_nccl, send_buf, recv_buf)
         else:
             if recv_buf is None:
                 return self.base_comm.allgather(send_buf)
@@ -519,13 +517,13 @@ class DistributedArray:
         """Allgather operation with subcommunicator
         """
         if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
-            if hasattr(send_buf, "shape"):
-                send_shapes = self.base_comm.allgather(send_buf.shape)
+            if isinstance(send_buf, (tuple, list, int)):
+                return nccl_allgather(self.sub_comm, send_buf, recv_buf)
+            else:
+                send_shapes = self._allgather_subcomm(send_buf.shape)
                 (padded_send, padded_recv) = _prepare_nccl_allgather_inputs(send_buf, send_shapes)
                 raw_recv = nccl_allgather(self.sub_comm, padded_send, recv_buf if recv_buf else padded_recv)
                 return _unroll_nccl_allgather_recv(raw_recv, padded_send.shape, send_shapes)
-            else:
-                return nccl_allgather(self.sub_comm, send_buf, recv_buf)
         else:
             if recv_buf is None:
                 return self.sub_comm.allgather(send_buf)
