@@ -149,7 +149,7 @@ def test_MPIMatrixMult(N, K, M, dtype_str):
         assert_allclose(
             y1.squeeze(),
             y1_loc.squeeze(),
-            rtol=1e1 * np.finfo(np.dtype(dtype)).resolution,
+            rtol=np.finfo(np.dtype(dtype)).resolution,
             err_msg=f"Rank {rank}: Forward verification failed."
         )
 
