@@ -153,8 +153,8 @@ In the following, we provide a list of modules (i.e., operators and solvers) whe
    * - :class:`pylops_mpi.optimization.basic.cgls`
      - ✅ 
    * - :class:`pylops_mpi.signalprocessing.Fredhoml1`
-     - Planned ⏳
+     - ✅ 
+   * - Complex Numeric Data Type for NCCL 
+     - ✅ 
    * - ISTA Solver
      - Planned ⏳
-   * - Complex Numeric Data Type for NCCL 
-     - Planned ⏳ 
