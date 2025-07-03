@@ -111,7 +111,10 @@ class MPIFredholm1(MPILinearOperator):
         if x.partition not in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
             raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
                              f"Got  {x.partition} instead...")
-        y = DistributedArray(global_shape=self.shape[0], partition=x.partition,
+        y = DistributedArray(global_shape=self.shape[0],
+                             base_comm=x.base_comm,
+                             base_comm_nccl=x.base_comm_nccl,
+                             partition=x.partition,
                              engine=x.engine, dtype=self.dtype)
         x = x.local_array.reshape(self.dims).squeeze()
         x = x[self.islstart[self.rank]:self.islend[self.rank]]
@@ -125,7 +128,7 @@ class MPIFredholm1(MPILinearOperator):
             for isl in range(self.nsls[self.rank]):
                 y1[isl] = ncp.dot(self.G[isl], x[isl])
         # gather results
-        y[:] = np.vstack(self.base_comm.allgather(y1)).ravel()
+        y[:] = ncp.vstack(y._allgather(y1)).ravel()
         return y
 
     def _rmatvec(self, x: NDArray) -> NDArray:
@@ -133,7 +136,10 @@ class MPIFredholm1(MPILinearOperator):
         if x.partition not in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
             raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
                              f"Got  {x.partition} instead...")
-        y = DistributedArray(global_shape=self.shape[1], partition=x.partition,
+        y = DistributedArray(global_shape=self.shape[1],
+                             base_comm=x.base_comm,
+                             base_comm_nccl=x.base_comm_nccl,
+                             partition=x.partition,
                              engine=x.engine, dtype=self.dtype)
         x = x.local_array.reshape(self.dimsd).squeeze()
         x = x[self.islstart[self.rank]:self.islend[self.rank]]
@@ -159,5 +165,5 @@ class MPIFredholm1(MPILinearOperator):
                     y1[isl] = ncp.dot(x[isl].T.conj(), self.G[isl]).T.conj()
 
         # gather results
-        y[:] = np.vstack(self.base_comm.allgather(y1)).ravel()
+        y[:] = ncp.vstack(y._allgather(y1)).ravel()
         return y

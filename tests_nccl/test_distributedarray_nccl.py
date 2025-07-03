@@ -19,90 +19,67 @@ np.random.seed(42)
 
 nccl_comm = initialize_nccl_comm()
 
-par1 = {
-    "global_shape": (500, 501),
-    "partition": Partition.SCATTER,
-    "dtype": np.float64,
-    "axis": 1,
-}
+par1 = {'global_shape': (500, 501),
+        'partition': Partition.SCATTER, 'dtype': np.float64,
+        'axis': 1}
+par1j = {'global_shape': (501, 500),
+         'partition': Partition.SCATTER, 'dtype': np.complex128,
+         'axis': 0}
+par2 = {'global_shape': (500, 501),
+        'partition': Partition.BROADCAST, 'dtype': np.float64,
+        'axis': 1}
+par2j = {'global_shape': (501, 500),
+         'partition': Partition.BROADCAST, 'dtype': np.complex128,
+         'axis': 0}
 
-par2 = {
-    "global_shape": (500, 501),
-    "partition": Partition.BROADCAST,
-    "dtype": np.float64,
-    "axis": 1,
-}
+par3 = {'global_shape': (200, 201, 101),
+        'partition': Partition.SCATTER,
+        'dtype': np.float64, 'axis': 1}
 
-par3 = {
-    "global_shape": (200, 201, 101),
-    "partition": Partition.SCATTER,
-    "dtype": np.float64,
-    "axis": 1,
-}
+par3j = {'global_shape': (200, 201, 101),
+         'partition': Partition.SCATTER,
+         'dtype': np.complex128, 'axis': 2}
 
-par4 = {
-    "x": np.random.normal(100, 100, (500, 501)),
-    "partition": Partition.SCATTER,
-    "axis": 1,
-}
+par4 = {'x': np.random.normal(100, 100, (500, 501)),
+        'partition': Partition.SCATTER, 'axis': 1}
 
-par5 = {
-    "x": np.random.normal(300, 300, (500, 501)),
-    "partition": Partition.SCATTER,
-    "axis": 1,
-}
+par4j = {'x': np.random.normal(100, 100, (500, 501)) + 1.0j * np.random.normal(50, 50, (500, 501)),
+         'partition': Partition.SCATTER, 'axis': 1}
 
-par6 = {
-    "x": np.random.normal(100, 100, (600, 600)),
-    "partition": Partition.SCATTER,
-    "axis": 0,
-}
+par5 = {'x': np.random.normal(300, 300, (500, 501)),
+        'partition': Partition.SCATTER, 'axis': 1}
 
-par6b = {
-    "x": np.random.normal(100, 100, (600, 600)),
-    "partition": Partition.BROADCAST,
-    "axis": 0,
-}
+par5j = {'x': np.random.normal(300, 300, (500, 501)) + 1.0j * np.random.normal(50, 50, (500, 501)),
+         'partition': Partition.SCATTER, 'axis': 1}
 
-par7 = {
-    "x": np.random.normal(300, 300, (600, 600)),
-    "partition": Partition.SCATTER,
-    "axis": 0,
-}
+par6 = {'x': np.random.normal(100, 100, (600, 600)),
+        'partition': Partition.SCATTER, 'axis': 0}
 
-par7b = {
-    "x": np.random.normal(300, 300, (600, 600)),
-    "partition": Partition.BROADCAST,
-    "axis": 0,
-}
+par6b = {'x': np.random.normal(100, 100, (600, 600)),
+         'partition': Partition.BROADCAST, 'axis': 0}
 
-par8 = {
-    "x": np.random.normal(100, 100, (1200,)),
-    "partition": Partition.SCATTER,
-    "axis": 0,
-}
+par7 = {'x': np.random.normal(300, 300, (600, 600)),
+        'partition': Partition.SCATTER, 'axis': 0}
 
-par8b = {
-    "x": np.random.normal(100, 100, (1200,)),
-    "partition": Partition.BROADCAST,
-    "axis": 0,
-}
+par7b = {'x': np.random.normal(300, 300, (600, 600)),
+         'partition': Partition.BROADCAST, 'axis': 0}
 
-par9 = {
-    "x": np.random.normal(300, 300, (1200,)),
-    "partition": Partition.SCATTER,
-    "axis": 0,
-}
+par8 = {'x': np.random.normal(100, 100, (1200,)),
+        'partition': Partition.SCATTER, 'axis': 0}
 
-par9b = {
-    "x": np.random.normal(300, 300, (1200,)),
-    "partition": Partition.BROADCAST,
-    "axis": 0,
-}
+par8b = {'x': np.random.normal(100, 100, (1200,)),
+         'partition': Partition.BROADCAST, 'axis': 0}
+
+par9 = {'x': np.random.normal(300, 300, (1200,)),
+        'partition': Partition.SCATTER, 'axis': 0}
+
+par9b = {'x': np.random.normal(300, 300, (1200,)),
+         'partition': Partition.BROADCAST, 'axis': 0}
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2), (par3)])
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2),
+                                 (par2j), (par3), (par3j)])
 def test_creation_nccl(par):
     """Test creation of local arrays"""
     distributed_array = DistributedArray(
@@ -169,7 +146,7 @@ def test_creation_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par4), (par5)])
+@pytest.mark.parametrize("par", [(par4), (par4j), (par5), (par5j)])
 def test_to_dist_nccl(par):
     """Test the ``to_dist`` method"""
     x_gpu = cp.asarray(par["x"])
@@ -185,7 +162,8 @@ def test_to_dist_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2), (par3)])
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2),
+                                 (par2j), (par3), (par3j)])
 def test_local_shapes_nccl(par):
     """Test the `local_shapes` parameter in DistributedArray"""
     # Reverse the local_shapes to test the local_shapes parameter
@@ -219,7 +197,7 @@ def test_local_shapes_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par1, par2", [(par4, par5)])
+@pytest.mark.parametrize("par1, par2", [(par4, par5), (par4j, par5j)])
 def test_distributed_math_nccl(par1, par2):
     """Test the Element-Wise Addition, Subtraction and Multiplication"""
     x1_gpu = cp.asarray(par1["x"])
@@ -254,9 +232,8 @@ def test_distributed_math_nccl(par1, par2):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize(
-    "par1, par2", [(par6, par7), (par6b, par7b), (par8, par9), (par8b, par9b)]
-)
+@pytest.mark.parametrize("par1, par2", [(par6, par7), (par6b, par7b),
+                                        (par8, par9), (par8b, par9b)])
 def test_distributed_dot_nccl(par1, par2):
     """Test Distributed Dot product"""
     x1_gpu = cp.asarray(par1["x"])
@@ -275,21 +252,9 @@ def test_distributed_dot_nccl(par1, par2):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize(
-    "par",
-    [
-        (par4),
-        (par5),
-        (par6),
-        (par6b),
-        (par7),
-        (par7b),
-        (par8),
-        (par8b),
-        (par9),
-        (par9b),
-    ],
-)
+@pytest.mark.parametrize("par", [(par4), (par4j), (par5), (par5j),
+                                 (par6), (par6b), (par7), (par7b),
+                                 (par8), (par8b), (par9), (par9b)])
 def test_distributed_norm_nccl(par):
     """Test Distributed numpy.linalg.norm method"""
     x_gpu = cp.asarray(par["x"])
@@ -344,9 +309,8 @@ def test_distributed_masked_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize(
-    "par1, par2", [(par6, par7), (par6b, par7b), (par8, par9), (par8b, par9b)]
-)
+@pytest.mark.parametrize("par1, par2", [(par6, par7), (par6b, par7b),
+                                        (par8, par9), (par8b, par9b)])
 def test_distributed_maskeddot_nccl(par1, par2):
     """Test Distributed Dot product with masked array"""
     # number of subcommunicators
@@ -398,9 +362,8 @@ def test_distributed_maskeddot_nccl(par1, par2):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize(
-    "par", [(par6), (par6b), (par7), (par7b), (par8), (par8b), (par9), (par9b)]
-)
+@pytest.mark.parametrize("par", [(par6), (par6b), (par7), (par7b),
+                                 (par8), (par8b), (par9), (par9b)])
 def test_distributed_maskednorm_nccl(par):
     """Test Distributed numpy.linalg.norm method with masked array"""
     # number of subcommunicators
