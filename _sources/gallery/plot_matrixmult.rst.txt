@@ -36,7 +36,7 @@ optimize communications, the ranks are organized in a 2D grid and some of the
 row blocks of :math:`\mathbf{A}` and column blocks of :math:`\mathbf{X}` are
 replicated across different ranks - see below for details.
 
-.. GENERATED FROM PYTHON SOURCE LINES 21-32
+.. GENERATED FROM PYTHON SOURCE LINES 21-34
 
 .. code-block:: Python
 
@@ -46,8 +46,10 @@ replicated across different ranks - see below for details.
     import numpy as np
     from mpi4py import MPI
 
-    from pylops_mpi import DistributedArray, Partition
-    from pylops_mpi.basicoperators.MatrixMult import MPIMatrixMult
+    import pylops
+
+    import pylops_mpi
+    from pylops_mpi import Partition
 
     plt.close("all")
 
@@ -58,13 +60,13 @@ replicated across different ranks - see below for details.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 33-36
+.. GENERATED FROM PYTHON SOURCE LINES 35-38
 
 We set the seed such that all processes can create the input matrices filled
 with the same random number. In practical application, such matrices will be
 filled with data that is appropriate that is appropriate the use-case.
 
-.. GENERATED FROM PYTHON SOURCE LINES 36-38
+.. GENERATED FROM PYTHON SOURCE LINES 38-40
 
 .. code-block:: Python
 
@@ -77,13 +79,13 @@ filled with data that is appropriate that is appropriate the use-case.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 39-42
+.. GENERATED FROM PYTHON SOURCE LINES 41-44
 
 We are now ready to create the input matrices :math:`\mathbf{A}` of size
 :math:`M \times k` :math:`\mathbf{A}` of size and :math:`\mathbf{A}` of size
 :math:`K \times N`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 42-46
+.. GENERATED FROM PYTHON SOURCE LINES 44-48
 
 .. code-block:: Python
 
@@ -98,7 +100,7 @@ We are now ready to create the input matrices :math:`\mathbf{A}` of size
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 47-87
+.. GENERATED FROM PYTHON SOURCE LINES 49-89
 
 The processes are now arranged in a :math:`P' \times P'` grid,
 where :math:`P` is the total number of processes.
@@ -141,13 +143,14 @@ responsible to identify any rank that should be deactivated (if the number
 of rows of the operator or columns of the input/output matrices are smaller
 than the row or columm ranks.
 
-.. GENERATED FROM PYTHON SOURCE LINES 87-98
+.. GENERATED FROM PYTHON SOURCE LINES 89-101
 
 .. code-block:: Python
 
 
     base_comm = MPI.COMM_WORLD
-    comm, rank, row_id, col_id, is_active = MPIMatrixMult.active_grid_comm(base_comm, N, M)
+    comm, rank, row_id, col_id, is_active = \
+        pylops_mpi.MPIMatrixMult.active_grid_comm(base_comm, N, M)
     print(f"Process {base_comm.Get_rank()} is {'active' if is_active else 'inactive'}")
     if not is_active: exit(0)
 
@@ -169,7 +172,7 @@ than the row or columm ranks.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 99-130
+.. GENERATED FROM PYTHON SOURCE LINES 102-133
 
 At this point we divide the rows and columns of :math:`\mathbf{A}` and
 :math:`\mathbf{X}`, respectively, such that each rank ends up with:
@@ -203,7 +206,7 @@ At this point we divide the rows and columns of :math:`\mathbf{A}` and
   </div>
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 130-144
+.. GENERATED FROM PYTHON SOURCE LINES 133-147
 
 .. code-block:: Python
 
@@ -228,25 +231,26 @@ At this point we divide the rows and columns of :math:`\mathbf{A}` and
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 145-147
+.. GENERATED FROM PYTHON SOURCE LINES 148-150
 
 We are now ready to create the :py:class:`pylops_mpi.basicoperators.MPIMatrixMult`
 operator and the input matrix :math:`\mathbf{X}`
 
-.. GENERATED FROM PYTHON SOURCE LINES 147-159
+.. GENERATED FROM PYTHON SOURCE LINES 150-163
 
 .. code-block:: Python
 
-    Aop = MPIMatrixMult(A_p, M, base_comm=comm, dtype="float32")
+    Aop = pylops_mpi.MPIMatrixMult(A_p, M, base_comm=comm, dtype="float32")
 
     col_lens = comm.allgather(my_own_cols)
     total_cols = np.sum(col_lens)
-    x = DistributedArray(global_shape=K * total_cols,
-                         local_shapes=[K * col_len for col_len in col_lens],
-                         partition=Partition.SCATTER,
-                         mask=[i % p_prime for i in range(comm.Get_size())],
-                         base_comm=comm,
-                         dtype="float32")
+    x = pylops_mpi.DistributedArray(
+        global_shape=K * total_cols,
+        local_shapes=[K * col_len for col_len in col_lens],
+        partition=Partition.SCATTER,
+        mask=[i % p_prime for i in range(comm.Get_size())],
+        base_comm=comm,
+        dtype="float32")
     x[:] = X_p.flatten()
 
 
@@ -256,14 +260,14 @@ operator and the input matrix :math:`\mathbf{X}`
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 160-164
+.. GENERATED FROM PYTHON SOURCE LINES 164-168
 
-We can now apply the forward pass :math:`\mathbf{y} = \mathbf{Ax}` (which effectively
-implements a distributed matrix-matrix multiplication :math:`Y = \mathbf{AX}`)
-Note :math:`\mathbf{Y}` is distributed in the same way as the input
-:math:`\mathbf{X}`.
+We can now apply the forward pass :math:`\mathbf{y} = \mathbf{Ax}` (which
+effectively implements a distributed matrix-matrix multiplication
+:math:`Y = \mathbf{AX}`). Note :math:`\mathbf{Y}` is distributed in the same
+way as the input :math:`\mathbf{X}`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 164-166
+.. GENERATED FROM PYTHON SOURCE LINES 168-170
 
 .. code-block:: Python
 
@@ -276,7 +280,7 @@ Note :math:`\mathbf{Y}` is distributed in the same way as the input
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 167-172
+.. GENERATED FROM PYTHON SOURCE LINES 171-176
 
 Next we apply the adjoint pass :math:`\mathbf{x}_{adj} = \mathbf{A}^H \mathbf{x}`
 (which effectively implements a distributed matrix-matrix multiplication
@@ -284,7 +288,7 @@ Next we apply the adjoint pass :math:`\mathbf{x}_{adj} = \mathbf{A}^H \mathbf{x}
 :math:`\mathbf{X}_{adj}` is again distributed in the same way as the input
 :math:`\mathbf{X}`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 172-174
+.. GENERATED FROM PYTHON SOURCE LINES 176-178
 
 .. code-block:: Python
 
@@ -297,72 +301,27 @@ Next we apply the adjoint pass :math:`\mathbf{x}_{adj} = \mathbf{A}^H \mathbf{x}
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 175-178
+.. GENERATED FROM PYTHON SOURCE LINES 179-185
 
-To conclude we verify our result against the equivalent serial version of
-the operation by gathering the resulting matrices in rank0 and reorganizing
-the returned 1D-arrays into 2D-arrays.
+Finally, we show the :py:class:`pylops_mpi.basicoperators.MPIMatrixMult`
+operator can be combined with any other PyLops-MPI operator. We are going to
+apply here a first derivative along the first axis to the output of the matrix
+multiplication. The only gotcha here is that one needs to be aware of the
+ad-hoc distribution of the arrays that are fed to this operator and make
+sure it is matched in the other operators involved in the chain.
 
-.. GENERATED FROM PYTHON SOURCE LINES 178-224
+.. GENERATED FROM PYTHON SOURCE LINES 185-190
 
 .. code-block:: Python
 
+    Dop = pylops.FirstDerivative(dims=(N, my_own_cols), axis=0, 
+                                 dtype=np.float32)
+    DBop = pylops_mpi.MPIBlockDiag(ops=[Dop, ])
+    Op = DBop @ Aop
 
-    # Local benchmarks
-    y = y.asarray(masked=True)
-    col_counts = [min(blk_cols, M - j * blk_cols) for j in range(p_prime)]
-    y_blocks = []
-    offset = 0
-    for cnt in col_counts:
-        block_size = N * cnt
-        y_block = y[offset: offset + block_size]
-        if len(y_block) != 0:
-            y_blocks.append(
-                y_block.reshape(N, cnt)
-            )
-        offset += block_size
-    y = np.hstack(y_blocks)
-
-    xadj = xadj.asarray(masked=True)
-    xadj_blocks = []
-    offset = 0
-    for cnt in col_counts:
-        block_size = K * cnt
-        xadj_blk = xadj[offset: offset + block_size]
-        if len(xadj_blk) != 0:
-            xadj_blocks.append(
-                xadj_blk.reshape(K, cnt)
-            )
-        offset += block_size
-    xadj = np.hstack(xadj_blocks)
-
-    if rank == 0:
-        y_loc = (A @ X).squeeze()
-        xadj_loc = (A.T.dot(y_loc.conj())).conj().squeeze()
-
-        if not np.allclose(y, y_loc, rtol=1e-6):
-            print("FORWARD VERIFICATION FAILED")
-            print(f'distributed: {y}')
-            print(f'expected: {y_loc}')
-        else:
-            print("FORWARD VERIFICATION PASSED")
-
-        if not np.allclose(xadj, xadj_loc, rtol=1e-6):
-            print("ADJOINT VERIFICATION FAILED")
-            print(f'distributed: {xadj}')
-            print(f'expected: {xadj_loc}')
-        else:
-            print("ADJOINT VERIFICATION PASSED")
+    y1 = Op @ x
 
 
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    FORWARD VERIFICATION PASSED
-    ADJOINT VERIFICATION PASSED
 
 
 
