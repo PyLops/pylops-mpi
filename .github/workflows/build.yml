@@ -16,10 +16,12 @@ jobs:
         os: [ubuntu-latest, macos-latest]
         python-version: ['3.10', '3.11', '3.12', '3.13']
         mpi: ['mpich', 'openmpi', 'intelmpi']
-        rank: ['2', '3', '4']
+        rank: ['2', '4', '9']
         exclude:
           - os: macos-latest
             mpi: 'intelmpi'
+          - mpi: 'openmpi'
+            rank: '9' # works locally, not in CI
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout

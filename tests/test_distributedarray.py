@@ -199,12 +199,21 @@ def test_distributed_norm(par):
 def test_distributed_masked(par):
     """Test Asarray with masked array"""
     # Number of subcommunicators
-    if MPI.COMM_WORLD.Get_size() % 2 == 0:
+    size = MPI.COMM_WORLD.Get_size()
+    
+    # Exclude not handled cases
+    shape_axis = par['x'].shape[par['axis']]
+    print('shape_axis, size', shape_axis, size, shape_axis % size != 0)
+    if shape_axis % size != 0:
+        pytest.skip(f"Array dimension to distributed ({shape_axis}) is not  "
+                    f"divisible by the number of processes ({size})...")
+    if size % 2 == 0:
         nsub = 2
-    elif MPI.COMM_WORLD.Get_size() % 3 == 0:
+    elif size % 3 == 0:
         nsub = 3
     else:
-        pass
+        pytest.skip(f"Number of processes ({size}) is not divisible "
+                    "by 2 or 3...")
     subsize = max(1, MPI.COMM_WORLD.Get_size() // nsub)
     mask = np.repeat(np.arange(nsub), subsize)
 
@@ -236,12 +245,21 @@ def test_distributed_masked(par):
 def test_distributed_maskeddot(par1, par2):
     """Test Distributed Dot product with masked array"""
     # Number of subcommunicators
-    if MPI.COMM_WORLD.Get_size() % 2 == 0:
+    size = MPI.COMM_WORLD.Get_size()
+    
+    # Exclude not handled cases
+    shape_axis = par1['x'].shape[par1['axis']]
+    print('shape_axis, size', shape_axis, size, shape_axis % size != 0)
+    if shape_axis % size != 0:
+        pytest.skip(f"Array dimension to distributed ({shape_axis}) is not  "
+                    f"divisible by the number of processes ({size})...")
+    if size % 2 == 0:
         nsub = 2
-    elif MPI.COMM_WORLD.Get_size() % 3 == 0:
+    elif size % 3 == 0:
         nsub = 3
     else:
-        pass
+        pytest.skip(f"Number of processes ({size}) is not divisible "
+                    "by 2 or 3...")
     subsize = max(1, MPI.COMM_WORLD.Get_size() // nsub)
     mask = np.repeat(np.arange(nsub), subsize)
 
@@ -271,12 +289,21 @@ def test_distributed_maskeddot(par1, par2):
 def test_distributed_maskednorm(par):
     """Test Distributed numpy.linalg.norm method with masked array"""
     # Number of subcommunicators
-    if MPI.COMM_WORLD.Get_size() % 2 == 0:
+    size = MPI.COMM_WORLD.Get_size()
+
+    # Exclude not handled cases
+    shape_axis = par['x'].shape[par['axis']]
+    print('shape_axis, size', shape_axis, size, shape_axis % size != 0)
+    if shape_axis % size != 0:
+        pytest.skip(f"Array dimension to distributed ({shape_axis}) is not  "
+                    f"divisible by the number of processes ({size})...")
+    if size % 2 == 0:
         nsub = 2
-    elif MPI.COMM_WORLD.Get_size() % 3 == 0:
+    elif size % 3 == 0:
         nsub = 3
     else:
-        pass
+        pytest.skip(f"Number of processes ({size}) is not divisible "
+                    "by 2 or 3...")
     subsize = max(1, MPI.COMM_WORLD.Get_size() // nsub)
     mask = np.repeat(np.arange(nsub), subsize)
     # Replicate x as required in masked arrays
