@@ -8,8 +8,9 @@ from numpy.testing import assert_allclose
 from mpi4py import MPI
 import pytest
 
+from pylops.basicoperators import FirstDerivative, Identity
 from pylops_mpi import DistributedArray, Partition
-from pylops_mpi.basicoperators.MatrixMult import MPIMatrixMult
+from pylops_mpi.basicoperators import MPIMatrixMult, MPIBlockDiag
 
 np.random.seed(42)
 base_comm = MPI.COMM_WORLD
@@ -19,7 +20,7 @@ size = base_comm.Get_size()
 # M, K, N are matrix dimensions A(N,K), B(K,M)
 # P_prime will be ceil(sqrt(size)).
 test_params = [
-    pytest.param(37, 37, 37, "float32", id="f32_37_37_37"),
+    pytest.param(37, 37, 37, "float64", id="f32_37_37_37"),
     pytest.param(50, 30, 40, "float64", id="f64_50_30_40"),
     pytest.param(22, 20, 16, "complex64", id="c64_22_20_16"),
     pytest.param(3, 4, 5, "float32", id="f32_3_4_5"),
@@ -27,20 +28,40 @@ test_params = [
     pytest.param(2, 1, 3, "float32", id="f32_2_1_3",),
 ]
 
+def _reorganize_local_matrix(x_dist, N, M, blk_cols, p_prime):
+    """Re-organize distributed array in local matrix
+    """
+    x = x_dist.asarray(masked=True)
+    col_counts = [min(blk_cols, M - j * blk_cols) for j in range(p_prime)]
+    x_blocks = []
+    offset = 0
+    for cnt in col_counts:
+        block_size = N * cnt
+        x_block = x[offset: offset + block_size]
+        if len(x_block) != 0:
+            x_blocks.append(
+                x_block.reshape(N, cnt)
+            )
+        offset += block_size
+    x = np.hstack(x_blocks)
+    return x
+
 
 @pytest.mark.mpi(min_size=1)
-@pytest.mark.parametrize("M, K, N, dtype_str", test_params)
+@pytest.mark.parametrize("N, K, M, dtype_str", test_params)
 def test_MPIMatrixMult(N, K, M, dtype_str):
     dtype = np.dtype(dtype_str)
 
     cmplx = 1j if np.issubdtype(dtype, np.complexfloating) else 0
     base_float_dtype = np.float32 if dtype == np.complex64 else np.float64
 
-    comm, rank, row_id, col_id, is_active = MPIMatrixMult.active_grid_comm(base_comm, N, M)
+    comm, rank, row_id, col_id, is_active = \
+        MPIMatrixMult.active_grid_comm(base_comm, N, M)
     if not is_active: return
 
     size = comm.Get_size()
     p_prime = math.isqrt(size)
+    cols_id = comm.allgather(col_id)
 
     # Calculate local matrix dimensions
     blk_rows_A = int(math.ceil(N / p_prime))
@@ -52,6 +73,7 @@ def test_MPIMatrixMult(N, K, M, dtype_str):
     col_end_X = min(M, col_start_X + blk_cols_X)
     local_col_X_len = max(0, col_end_X - col_start_X)
 
+    # Fill local matrices
     A_glob_real = np.arange(N * K, dtype=base_float_dtype).reshape(N, K)
     A_glob_imag = np.arange(N * K, dtype=base_float_dtype).reshape(N, K) * 0.5
     A_glob = (A_glob_real + cmplx * A_glob_imag).astype(dtype)
@@ -88,32 +110,8 @@ def test_MPIMatrixMult(N, K, M, dtype_str):
     xadj_dist = Aop.H @ y_dist
 
     # Re-organize in local matrix
-    y = y_dist.asarray(masked=True)
-    col_counts = [min(blk_cols_X, M - j * blk_cols_X) for j in range(p_prime)]
-    y_blocks = []
-    offset = 0
-    for cnt in col_counts:
-        block_size = N * cnt
-        y_block = y[offset: offset + block_size]
-        if len(y_block) != 0:
-            y_blocks.append(
-                y_block.reshape(N, cnt)
-            )
-        offset += block_size
-    y = np.hstack(y_blocks)
-
-    xadj = xadj_dist.asarray(masked=True)
-    xadj_blocks = []
-    offset = 0
-    for cnt in col_counts:
-        block_size = K * cnt
-        xadj_blk = xadj[offset: offset + block_size]
-        if len(xadj_blk) != 0:
-            xadj_blocks.append(
-                xadj_blk.reshape(K, cnt)
-            )
-        offset += block_size
-    xadj = np.hstack(xadj_blocks)
+    y = _reorganize_local_matrix(y_dist, N, M, blk_cols_X, p_prime)
+    xadj = _reorganize_local_matrix(xadj_dist, K, M, blk_cols_X, p_prime)
 
     if rank == 0:
         y_loc = A_glob @ X_glob
@@ -129,5 +127,36 @@ def test_MPIMatrixMult(N, K, M, dtype_str):
             xadj.squeeze(),
             xadj_loc.squeeze(),
             rtol=np.finfo(np.dtype(dtype)).resolution,
-            err_msg=f"Rank {rank}: Ajoint verification failed."
+            err_msg=f"Rank {rank}: Adjoint verification failed."
+        )
+
+    # Chain with another operator
+    Dop = FirstDerivative(dims=(N, col_end_X - col_start_X),
+                          axis=0, dtype=dtype)
+    DBop = MPIBlockDiag(ops=[Dop, ], base_comm=comm, mask=cols_id)
+    Op = DBop @ Aop
+
+    y1_dist = Op @ x_dist
+    xadj1_dist = Op.H @ y1_dist
+
+    # Re-organize in local matrix
+    y1 = _reorganize_local_matrix(y1_dist, N, M, blk_cols_X, p_prime)
+    xadj1 = _reorganize_local_matrix(xadj1_dist, K, M, blk_cols_X, p_prime)
+
+    if rank == 0:
+        Dop_glob = FirstDerivative(dims=(N, M), axis=0, dtype=dtype)
+        y1_loc = (Dop_glob @ (A_glob @ X_glob).ravel()).reshape(N, M)
+        assert_allclose(
+            y1.squeeze(),
+            y1_loc.squeeze(),
+            rtol=np.finfo(np.dtype(dtype)).resolution,
+            err_msg=f"Rank {rank}: Forward verification failed."
+        )
+
+        xadj1_loc = A_glob.conj().T @ (Dop_glob.H @ y1_loc.ravel()).reshape(N, M)
+        assert_allclose(
+            xadj1.squeeze(),
+            xadj1_loc.squeeze(),
+            rtol=np.finfo(np.dtype(dtype)).resolution,
+            err_msg=f"Rank {rank}: Adjoint verification failed."
         )
