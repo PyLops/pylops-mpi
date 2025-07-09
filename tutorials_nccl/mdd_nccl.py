@@ -32,7 +32,7 @@ cdtype = np.complex64
 
 ###############################################################################
 # Let's start by defining all the parameters required by the
-# :py:func:`pylops.waveeqprocessing.MPIMDC` operator.
+# :py:class:`pylops.waveeqprocessing.MPIMDC` operator.
 # Note that this section is exactly the same as the one in the MPI example as
 # we will keep using MPI for transfering metadata (i.e., shapes, dims, etc.)
 
@@ -106,7 +106,7 @@ G = Gwav_fft[ifin_rank:ifend_rank].astype(cdtype)
 # And now, we define the distributed operator MPIMDC and model as well as compute the data.
 # Both the model and data have to live in GPU. We also define the DistributedArray `m`
 # with `nccl_comm`` and engine="cupy" to use NCCL for communications (the data `d` will be set the same).
-# Noted that fftengine must be set to "numpy" in MDCop operator when running with CuPy
+# Note that fftengine must be set to "numpy" in MDCop operator when running with CuPy
 
 # Move operator kernel to GPU
 G = cp.asarray(G)
