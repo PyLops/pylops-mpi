@@ -93,11 +93,11 @@ if rank == 0:
 # We create a :py:class:`pylops.waveeqprocessing.LSM` at each rank and then push them
 # into a :py:class:`pylops_mpi.basicoperators.MPIVStack` to perform a matrix-vector
 # product with the broadcasted reflectivity at every location on the subsurface.
-# Note that we must use :code`engine="cuda"` and move the wavelet wav to the GPU prior to creating the operator.
-# Moreover, we allocate the traveltime tables (:code`lsm.Demop.trav_srcs`, and :code`lsm.Demop.trav_recs`)
+# Note that we must use :code:`engine="cuda"` and move the wavelet wav to the GPU prior to creating the operator.
+# Moreover, we allocate the traveltime tables (:code:`lsm.Demop.trav_srcs`, and :code:`lsm.Demop.trav_recs`)
 # to the GPU prior to applying the operator to avoid incurring in the penalty of performing
-# host-to-device memory copies every time the operator is applied. Moreover, we must pass :code`nccl_comm`
-# to the DistributedArray constructor used to create :code`refl_dist` in order to use NCCL for communications.
+# host-to-device memory copies every time the operator is applied. Moreover, we must pass :code:`nccl_comm`
+# to the DistributedArray constructor used to create :code:`refl_dist` in order to use NCCL for communications.
 
 # Wavelet
 nt = 651
