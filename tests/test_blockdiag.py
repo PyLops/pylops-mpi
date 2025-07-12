@@ -11,10 +11,10 @@ import pylops
 import pylops_mpi
 from pylops_mpi.utils.dottest import dottest
 
-par1 = {'ny': 31, 'nx': 31, 'dtype': np.float64}
-par1j = {'ny': 41, 'nx': 41, 'dtype': np.complex128}
-par2 = {'ny': 31, 'nx': 41, 'dtype': np.float64}
-par2j = {'ny': 31, 'nx': 41, 'dtype': np.complex128}
+par1 = {'ny': 101, 'nx': 101, 'dtype': np.float64}
+par1j = {'ny': 101, 'nx': 101, 'dtype': np.complex128}
+par2 = {'ny': 301, 'nx': 101, 'dtype': np.float64}
+par2j = {'ny': 301, 'nx': 101, 'dtype': np.complex128}
 
 np.random.seed(42)
 

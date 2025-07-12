@@ -43,4 +43,4 @@ jobs:
       - name: Install pylops-mpi
         run: pip install .
       - name: Testing using pytest-mpi
-        run: mpiexec -n ${{ matrix.rank }} pytest tests/test_blockdiag.py --with-mpi -v -x
+        run: mpiexec --host localhost:12 -n ${{ matrix.rank }} pytest tests/test_blockdiag.py --with-mpi -v -x
