@@ -43,4 +43,9 @@ jobs:
       - name: Install pylops-mpi
         run: pip install .
       - name: Testing using pytest-mpi
-        run: mpiexec --host localhost:12 -n ${{ matrix.rank }} pytest tests/test_blockdiag.py --with-mpi -v -x
+        run: |
+          if [ "${{ matrix.mpi }}" = "openmpi" ]; then
+            mpiexec --host localhost:12 -n ${{ matrix.rank }} pytest tests/test_blockdiag.py --with-mpi -v -x
+          else
+            mpiexec -n ${{ matrix.rank }} pytest tests/test_blockdiag.py --with-mpi -v -x
+          fi
