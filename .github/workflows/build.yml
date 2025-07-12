@@ -20,8 +20,6 @@ jobs:
         exclude:
           - os: macos-latest
             mpi: 'intelmpi'
-          - mpi: 'openmpi'
-            rank: '9' # works locally, not in CI
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -45,4 +43,9 @@ jobs:
       - name: Install pylops-mpi
         run: pip install .
       - name: Testing using pytest-mpi
-        run: mpiexec -n ${{ matrix.rank }} pytest tests/ --with-mpi
+        run: |
+          if [ "${{ matrix.mpi }}" = "openmpi" ]; then
+            mpiexec --oversubscribe -n ${{ matrix.rank }} pytest tests/ --with-mpi
+          else
+            mpiexec -n ${{ matrix.rank }} pytest tests/ --with-mpi
+          fi
