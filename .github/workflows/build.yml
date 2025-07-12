@@ -45,7 +45,7 @@ jobs:
       - name: Testing using pytest-mpi
         run: |
           if [ "${{ matrix.mpi }}" = "openmpi" ]; then
-            mpiexec --oversubscribe --mca btl ^openib --bind-to none -n ${{ matrix.rank }} pytest tests/test_blockdiag.py --with-mpi -v -x
+            mpiexec --oversubscribe --mca btl ^openib --bind-to none -n ${{ matrix.rank }} pytest tests/ --with-mpi
           else
-            mpiexec -n ${{ matrix.rank }} pytest tests/test_blockdiag.py --with-mpi -v -x
+            mpiexec -n ${{ matrix.rank }} pytest tests/ --with-mpi
           fi
