@@ -45,4 +45,9 @@ jobs:
       - name: Install pylops-mpi
         run: pip install .
       - name: Testing using pytest-mpi
-        run: mpiexec -n ${{ matrix.rank }} pytest tests/ --with-mpi
+        run: |
+          if [ "${{ matrix.mpi }}" = "openmpi" ]; then
+            mpiexec --oversubscribe --mca btl ^openib --bind-to none -n ${{ matrix.rank }} pytest tests/ --with-mpi
+          else
+            mpiexec -n ${{ matrix.rank }} pytest tests/ --with-mpi
+          fi
