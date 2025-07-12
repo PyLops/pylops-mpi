@@ -45,7 +45,7 @@ jobs:
       - name: Testing using pytest-mpi
         run: |
           if [ "${{ matrix.mpi }}" = "openmpi" ]; then
-            mpiexec --oversubscribe -n ${{ matrix.rank }} pytest tests/ --with-mpi
+            mpiexec --oversubscribe -n ${{ matrix.rank }} --host localhost:${{ matrix.rank }} pytest tests/ --with-mpi
           else
             mpiexec -n ${{ matrix.rank }} pytest tests/ --with-mpi
           fi
