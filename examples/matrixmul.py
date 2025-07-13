@@ -24,28 +24,30 @@ A_data = np.arange(int(A_shape[0] * A_shape[1])).reshape(A_shape)
 B_data = np.arange(int(B_shape[0] * B_shape[1])).reshape(B_shape)
 
 i, j = divmod(rank, p_prime)
-
 A_local, (N_new, K_new) = MPIMatrixMult.block_distribute(A_data, i, j,comm)
 B_local, (K_new, M_new) = MPIMatrixMult.block_distribute(B_data, i, j,comm)
 
-B_dist = pylops_mpi.DistributedArray(global_shape=(K_new*M_new),
+B_dist = pylops_mpi.DistributedArray(global_shape=(K * M),
                                      local_shapes=comm.allgather(B_local.shape[0] * B_local.shape[1]),
                                      base_comm=comm,
                                      partition=pylops_mpi.Partition.SCATTER)
 B_dist.local_array[:] = B_local.flatten()
 
-Aop = MPIMatrixMult(A_local, M_new, base_comm=comm)
+Aop = MPIMatrixMult(A_local, M, base_comm=comm)
 C_dist = Aop @ B_dist
 Z_dist = Aop.H @ C_dist
 
-C = MPIMatrixMult.block_gather(C_dist, (N_new,M_new), (N,M), comm)
-Z = MPIMatrixMult.block_gather(Z_dist, (K_new,M_new), (K,M), comm)
+C = MPIMatrixMult.block_gather(C_dist, (N,M), (N,M), comm)
+Z = MPIMatrixMult.block_gather(Z_dist, (K,M), (K,M), comm)
 if rank == 0 :
-    print("expected:\n", np.allclose((A_data.T.dot((A_data @ B_data).conj())).conj(), Z.astype(np.int32)))
-    # print("expected:\n", (A_data.T.dot((A_data @ B_data).conj())).conj())
-    # print("calculated:\n",Z.astype(np.int32))
-    # print("calculated:\n", (A_data.T.dot((A_data @ B_data).conj())).conj() == Z.astype(np.int32))
+    C_correct = np.allclose(A_data @ B_data, C)
+    print("C expected: ", C_correct)
+    if not C_correct:
+        print("expected:\n", A_data @ B_data)
+        print("calculated:\n",C)
 
-    # print("expected:\n",np.allclose(A_data @ B_data, C))
-    # print("expected:\n", A_data @ B_data)
-    # print("calculated:\n",C)
+    Z_correct = np.allclose((A_data.T.dot((A_data @ B_data).conj())).conj(), Z.astype(np.int32))
+    print("Z expected: ", Z_correct)
+    if not Z_correct:
+        print("expected:\n", (A_data.T.dot((A_data @ B_data).conj())).conj())
+        print("calculated:\n", Z.astype(np.int32))
