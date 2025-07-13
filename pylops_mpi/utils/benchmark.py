@@ -1,36 +1,49 @@
 import functools
 import time
+from typing import Callable, Optional
+from mpi4py import MPI
+
 
 # TODO (tharitt): later move to env file or something
 ENABLE_BENCHMARK = True
 
 
-# This function is to be instrumented throughout the targeted function
+# This function allows users to measure time arbitary lines of the function
 def mark(label):
-    if _current_mark_func is not None:
-        _current_mark_func(label)
+    if not _mark_func_stack:
+        raise RuntimeError("mark() called outside of a benchmarked region")
+    _mark_func_stack[-1](label)
 
 
-# Global hook - this will be re-assigned (points to)
-# the function defined in benchmark wrapper
-_current_mark_func = None
+# Stack of active mark functions for nested support
+_mark_func_stack = []
 
 
-def benchmark(func):
+def benchmark(func: Optional[Callable] = None,
+              description="",
+              save_file=False,
+              file_path='benchmark.log'
+              ):
     """A wrapper for code injection for time measurement.
 
-    This wrapper allows users to put a call to mark()
-    anywhere inside the wrapped function. The function mark()
-    is defined in the global scope to be a placeholder for the targeted
-    function to import. This wrapper will make it points to local_mark() defined
-    in this function. Therefore, the wrapped function will be able call
-    local_mark(). All the context for local_mark() like mark list can be
-    hidden from users and thus provide clean interface.
+    This wrapper measure the start-to-end time of the wrapped function when
+    decorated without any argument.
+    It also allows users to put a call to mark() anywhere inside the wrapped function 
+    for fine-grain time benchmark. This wrapper defines the local_mark() and push it
+    the the _mark_func_stack for isolation in case of nested call. 
+    The user-facing mark() will always call the function at the top of the _mark_func_stack.
 
     Parameters
     ----------
     func : :obj:`callable`, optional
-        Function to be decorated.
+        Function to be decorated. Defaults to ``None``.
+    description : :obj:`str`, optional
+        Description for the output text. Defaults to ``''``.
+    save_file : :obj:`bool`, optional
+        Flag for saving file to a disk. Otherwise, the result will output to stdout. Defaults to ``False``
+    file_path : :obj:`str`, optional
+        File path for saving the output. Defaults to ``benchmark.log``
+
     """
 
     # Zero-overhead
@@ -38,28 +51,49 @@ def benchmark(func):
         return func
 
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        marks = []
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            rank = MPI.COMM_WORLD.Get_rank()
 
-        # currently this simply record the user-define label and record time
-        def local_mark(label):
-            marks.append((label, time.perf_counter()))
+            # Here we rely on the closure property of Python.
+            # This marks will isolate from (shadow) the marks previously
+            # defined in the function currently on top of the _mark_func_stack.
+            marks = []
 
-        global _current_mark_func
-        _current_mark_func = local_mark
+            def local_mark(label):
+                marks.append((label, time.perf_counter()))
+            _mark_func_stack.append(local_mark)
 
-        # the mark() called in wrapped function will now call local_mark
-        result = func(*args, **kwargs)
-        # clean up to original state
-        _current_mark_func = None
+            start_time = time.perf_counter()
+            # the mark() called in wrapped function will now call local_mark
+            result = func(*args, **kwargs)
+            end_time = time.perf_counter()
 
-        # TODO (tharitt): maybe changing to saving results to file instead
-        if marks:
-            prev_label, prev_t = marks[0]
-            print(f"[BENCH] {prev_label}: 0.000000s")
-            for label, t in marks[1:]:
-                print(f"[BENCH] {label}: {t - prev_t:.6f}s since '{prev_label}'")
-                prev_label, prev_t = label, t
-        return result
+            _mark_func_stack.pop()
 
-    return wrapper
+            output = []
+            # start-to-end time
+            elapsed = end_time - start_time
+
+            # TODO (tharitt): Both MPI + NCCL collective calls have implicit synchronization inside the stream
+            # So, output only from rank=0 should suffice. We can add per-rank output later on if makes sense.
+            if rank == 0:
+                level = len(_mark_func_stack)
+                output.append(f"{'---' * level}{description or func.__name__} {elapsed:6f} seconds (rank = {rank})\n")
+                if marks:
+                    prev_label, prev_t = marks[0]
+                    for label, t in marks[1:]:
+                        output.append(f"{'---' * level}[{prev_label} ---> {label}]: {t - prev_t:.6f}s \n")
+                        prev_label, prev_t = label, t
+
+                if save_file:
+                    with open(file_path, "a") as f:
+                        f.write("".join(output))
+                else:
+                    print("".join(output))
+            return result
+        return wrapper
+    if func is not None:
+        return decorator(func)
+
+    return decorator
