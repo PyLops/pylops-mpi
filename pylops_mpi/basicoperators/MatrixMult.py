@@ -153,6 +153,64 @@ class MPIMatrixMult(MPILinearOperator):
         super().__init__(shape=shape, dtype=np.dtype(dtype), base_comm=base_comm)
 
     @staticmethod
+    def active_grid_comm(base_comm: MPI.Comm, N: int, M: int):
+        r"""Configure active grid
+
+        Configure a square process grid from a parent MPI communicator and
+        select a subset of "active" processes. Each process in ``base_comm``
+        is assigned to a logical 2D grid of size :math:`P' \times P'`,
+        where :math:`P' = \bigl \lceil \sqrt{P} \bigr \rceil`. Only the first
+        :math:`active_dim x active_dim` processes
+        (by row-major order) are considered "active". Inactive ranks return
+        immediately with no new communicator.
+
+        Parameters:
+        -----------
+        base_comm : :obj:`mpi4py.MPI.Comm`
+            MPI Parent Communicator. (e.g., ``mpi4py.MPI.COMM_WORLD``).
+        N : :obj:`int`
+            Number of rows of the global data domain.
+        M : :obj:`int`
+            Number of columns of the global data domain.
+
+        Returns:
+        --------
+        comm : :obj:`mpi4py.MPI.Comm`
+            Sub-communicator including only active ranks.
+        rank : :obj:`int`
+            Rank within the new sub-communicator (or original rank
+            if inactive).
+        row : :obj:`int`
+            Grid row index of this process in the active grid (or original rank
+            if inactive).
+        col : :obj:`int`
+            Grid column index of this process in the active grid
+            (or original rank if inactive).
+        is_active : :obj:`bool`
+            Flag indicating whether this rank is in the active sub-grid.
+
+        """
+        rank = base_comm.Get_rank()
+        size = base_comm.Get_size()
+        p_prime = math.isqrt(size)
+        row, col = divmod(rank, p_prime)
+        active_dim = min(N, M, p_prime)
+        is_active = (row < active_dim and col < active_dim)
+
+        if not is_active:
+            return None, rank, row, col, False
+
+        active_ranks = [r for r in range(size)
+                        if (r // p_prime) < active_dim and (r % p_prime) < active_dim]
+        new_group = base_comm.Get_group().Incl(active_ranks)
+        new_comm = base_comm.Create_group(new_group)
+        p_prime_new = math.isqrt(len(active_ranks))
+        new_rank = new_comm.Get_rank()
+        new_row, new_col = divmod(new_rank, p_prime_new)
+
+        return new_comm, new_rank, new_row, new_col, True
+
+    @staticmethod
     def block_distribute(array, proc_i, proc_j, comm):
         p_prime = math.isqrt(comm.Get_size())
         orig_r, orig_c = array.shape
@@ -188,11 +246,12 @@ class MPIMatrixMult(MPILinearOperator):
         ncp = get_module(x.engine)
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
-        y = DistributedArray(global_shape=(self.N // self._P_prime, self.M * self._P_prime),
+        local_shape = (self.N  // self._P_prime) * ( self.M * self._P_prime // self.size)
+        y = DistributedArray(global_shape=((self.N // self._P_prime) * self.M * self._P_prime),
                              mask=x.mask,
+                             local_shapes=[ local_shape for _ in range(self.size)],
                              partition=Partition.SCATTER,
-                             dtype=self.dtype,
-                             axis=1)
+                             dtype=self.dtype)
 
         x = x.local_array.reshape((self.A.shape[1], -1))
         c_local = np.zeros((self.A.shape[0], x.shape[1]))
@@ -202,26 +261,47 @@ class MPIMatrixMult(MPILinearOperator):
             self._row_comm.Bcast(Atemp, root=k)
             self._col_comm.Bcast(Xtemp, root=k)
             c_local += ncp.dot(Atemp, Xtemp)
-        y[:] = c_local
+        y[:] = c_local.flatten()
         return y
+
 
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER}. Got {x.partition} instead.")
-        return None
-        # y = DistributedArray(
-        #     global_shape=(self.K * self.dimsd[1]),
-        #     local_shapes=[self.K * c for c in self._rank_col_lens],
-        #     mask=x.mask,
-        #     partition=Partition.SCATTER,
-        #     dtype=self.dtype,
-        # )
-        #
-        # x_arr = x.local_array.reshape((self.N, self._local_ncols)).astype(self.dtype)
-        # X_tile = x_arr[self._row_start:self._row_end, :]
-        # A_local = self.At if hasattr(self, "At") else self.A.T.conj()
-        # Y_local = ncp.matmul(A_local, X_tile)
-        # y_layer = self._row_comm.allreduce(Y_local, op=MPI.SUM)
-        # y[:] = y_layer.flatten()
-        # return y
+
+        local_shape = (self.K // self._P_prime) * (self.M * self._P_prime // self.size)
+        y = DistributedArray(
+            global_shape=((self.K // self._P_prime) * self.M * self._P_prime),
+            mask=x.mask,
+            local_shapes=[local_shape for _ in range(self.size)],
+            partition=Partition.SCATTER,
+            dtype=self.dtype,
+        )
+        x_reshaped = x.local_array.reshape((self.A.shape[0], -1))
+        A_local = self.At if hasattr(self, "At") else self.A.T.conj()
+        c_local = np.zeros((self.A.shape[1], x_reshaped.shape[1]))
+        P = self._P_prime
+
+        for k in range(P):
+            temps = {}
+            requests = []
+            for buf, owner, base, name in (
+                    (A_local, self._row_id, 100, 'A'),
+                    (x_reshaped, self._col_id, 200, 'B'),
+            ):
+                tmp = np.empty_like(buf)
+                temps[name] = tmp
+                src, tag = k * P + owner, (base + k) * 1000 + self.rank
+                requests.append(self.base_comm.Irecv(tmp, source=src, tag=tag))
+
+                if self.rank // P == k:
+                    fixed = self.rank % P
+                    for moving in range(P):
+                        dest = (fixed * P + moving) if name == 'A' else moving * P + fixed
+                        tag = (base + k) * 1000 + dest
+                        requests.append(self.base_comm.Isend(buf, dest=dest, tag=tag))
+            MPI.Request.Waitall(requests)
+            c_local += ncp.dot(temps['A'], temps['B'])
+        y[:] = c_local.flatten()
+        return y
