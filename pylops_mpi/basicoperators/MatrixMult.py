@@ -246,22 +246,22 @@ class MPIMatrixMult(MPILinearOperator):
         ncp = get_module(x.engine)
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
-        local_shape = (self.N  // self._P_prime) * ( self.M * self._P_prime // self.size)
-        y = DistributedArray(global_shape=((self.N // self._P_prime) * self.M * self._P_prime),
+        local_shape = ((self.N  *  self.M) // self.size)
+        y = DistributedArray(global_shape=(self.N  * self.M),
                              mask=x.mask,
-                             local_shapes=[ local_shape for _ in range(self.size)],
+                             local_shapes=[local_shape] * self.size,
                              partition=Partition.SCATTER,
                              dtype=self.dtype)
 
         x = x.local_array.reshape((self.A.shape[1], -1))
-        c_local = np.zeros((self.A.shape[0], x.shape[1]))
+        Y_local = np.zeros((self.A.shape[0], x.shape[1]))
         for k in range(self._P_prime):
             Atemp = self.A.copy() if self._col_id == k else np.empty_like(self.A)
             Xtemp = x.copy() if self._row_id == k else np.empty_like(x)
             self._row_comm.Bcast(Atemp, root=k)
             self._col_comm.Bcast(Xtemp, root=k)
-            c_local += ncp.dot(Atemp, Xtemp)
-        y[:] = c_local.flatten()
+            Y_local += ncp.dot(Atemp, Xtemp)
+        y[:] = Y_local.flatten()
         return y
 
 
@@ -270,38 +270,33 @@ class MPIMatrixMult(MPILinearOperator):
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER}. Got {x.partition} instead.")
 
-        local_shape = (self.K // self._P_prime) * (self.M * self._P_prime // self.size)
+        local_shape = ((self.K  * self.M ) // self.size)
         y = DistributedArray(
-            global_shape=((self.K // self._P_prime) * self.M * self._P_prime),
+            global_shape=(self.K * self.M),
             mask=x.mask,
-            local_shapes=[local_shape for _ in range(self.size)],
+            local_shapes=[local_shape] * self.size,
             partition=Partition.SCATTER,
             dtype=self.dtype,
         )
         x_reshaped = x.local_array.reshape((self.A.shape[0], -1))
         A_local = self.At if hasattr(self, "At") else self.A.T.conj()
-        c_local = np.zeros((self.A.shape[1], x_reshaped.shape[1]))
-        P = self._P_prime
+        Y_local = np.zeros((self.A.shape[1], x_reshaped.shape[1]))
 
-        for k in range(P):
-            temps = {}
+        for k in range(self._P_prime):
             requests = []
-            for buf, owner, base, name in (
-                    (A_local, self._row_id, 100, 'A'),
-                    (x_reshaped, self._col_id, 200, 'B'),
-            ):
-                tmp = np.empty_like(buf)
-                temps[name] = tmp
-                src, tag = k * P + owner, (base + k) * 1000 + self.rank
-                requests.append(self.base_comm.Irecv(tmp, source=src, tag=tag))
-
-                if self.rank // P == k:
-                    fixed = self.rank % P
-                    for moving in range(P):
-                        dest = (fixed * P + moving) if name == 'A' else moving * P + fixed
-                        tag = (base + k) * 1000 + dest
-                        requests.append(self.base_comm.Isend(buf, dest=dest, tag=tag))
+            ATtemp = np.empty_like(A_local)
+            srcA = k * self._P_prime + self._row_id
+            tagA = (100 + k) * 1000 + self.rank
+            requests.append(self.base_comm.Irecv(ATtemp, source=srcA, tag=tagA))
+            if self._row_id == k:
+                fixed_col = self._col_id
+                for moving_col in range(self._P_prime):
+                    destA = fixed_col * self._P_prime + moving_col
+                    tagA = (100 + k) * 1000 + destA
+                    requests.append(self.base_comm.Isend(A_local, dest=destA,tag=tagA))
+            Xtemp = x_reshaped.copy() if self._row_id == k else np.empty_like(x_reshaped)
+            requests.append(self._col_comm.Ibcast(Xtemp, root=k))
             MPI.Request.Waitall(requests)
-            c_local += ncp.dot(temps['A'], temps['B'])
-        y[:] = c_local.flatten()
+            Y_local += ncp.dot(ATtemp, Xtemp)
+        y[:] = Y_local.flatten()
         return y
