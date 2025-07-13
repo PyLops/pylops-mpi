@@ -34,7 +34,6 @@ B_dist = pylops_mpi.DistributedArray(global_shape=(K_new*M_new),
                                      partition=pylops_mpi.Partition.SCATTER)
 B_dist.local_array[:] = B_local.flatten()
 
-print(rank, A_local.shape)
 Aop = MPIMatrixMult(A_local, M_new, base_comm=comm)
 C_dist = Aop @ B_dist
 Z_dist = Aop.H @ C_dist

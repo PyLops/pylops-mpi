@@ -21,13 +21,13 @@ rank = MPI.COMM_WORLD.Get_rank()
 size = MPI.COMM_WORLD.Get_size()
 
 par1 = {'ny': 101, 'nx': 101, 'dtype': np.float64}
-# par1j = {'ny': 101, 'nx': 101, 'dtype': np.complex128}
+par1j = {'ny': 101, 'nx': 101, 'dtype': np.complex128}
 par2 = {'ny': 301, 'nx': 101, 'dtype': np.float64}
-# par2j = {'ny': 301, 'nx': 101, 'dtype': np.complex128}
+par2j = {'ny': 301, 'nx': 101, 'dtype': np.complex128}
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2)])
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
 def test_stackedlinearop_nccl(par):
     """Apply various overloaded operators (.H, .T, +, *, conj()) and ensure that the
     returned operator is still of `pylops_mpi.MPIStackedLinearOperator` type
@@ -47,7 +47,7 @@ def test_stackedlinearop_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2)])
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
 def test_transpose_nccl(par):
     """Test the StackedTransposeLinearOperator"""
     Op = pylops.MatrixMult(A=((rank + 1) * cp.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
@@ -90,7 +90,7 @@ def test_transpose_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2)])
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
 def test_scaled_nccl(par):
     """Test the StackedScaledLinearOperator"""
     Op = pylops.MatrixMult(A=((rank + 1) * cp.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
@@ -133,7 +133,7 @@ def test_scaled_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2)])
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
 def test_conj_nccl(par):
     """Test the StackedConjLinearOperator"""
     Op = pylops.MatrixMult(A=((rank + 1) * cp.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
@@ -176,7 +176,7 @@ def test_conj_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2)])
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
 def test_power_nccl(par):
     """Test the StackedPowerLinearOperator"""
     Op = pylops.MatrixMult(A=((rank + 1) * cp.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
@@ -219,7 +219,7 @@ def test_power_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2)])
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
 def test_sum_nccl(par):
     """Test the StackedSumLinearOperator"""
     Op1 = pylops.MatrixMult(A=((rank + 1) * cp.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
@@ -271,7 +271,7 @@ def test_sum_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2)])
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
 def test_product_nccl(par):
     """Test the StackedProductLinearOperator"""
     Op1 = pylops.MatrixMult(A=((rank + 1) * cp.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))

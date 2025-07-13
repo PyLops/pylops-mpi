@@ -19,27 +19,28 @@ np.random.seed(42)
 par1 = {'global_shape': (500, 501),
         'partition': Partition.SCATTER, 'dtype': np.float64,
         'axis': 1}
-# par1j = {'global_shape': (501, 500),
-#          'partition': Partition.SCATTER, 'dtype': np.complex128,
-#          'axis': 0}
+par1j = {'global_shape': (501, 500),
+         'partition': Partition.SCATTER, 'dtype': np.complex128,
+         'axis': 0}
 par2 = {'global_shape': (500, 501),
         'partition': Partition.BROADCAST, 'dtype': np.float64,
         'axis': 1}
-# par2j = {'global_shape': (501, 500),
-#          'partition': Partition.BROADCAST, 'dtype': np.complex128,
-#          'axis': 0}
+par2j = {'global_shape': (501, 500),
+         'partition': Partition.BROADCAST, 'dtype': np.complex128,
+         'axis': 0}
 
 par3 = {'global_shape': (200, 201, 101),
         'partition': Partition.SCATTER,
         'dtype': np.float64, 'axis': 1}
 
-# par3j = {'global_shape': (200, 201, 101),
-#          'partition': Partition.SCATTER,
-#          'dtype': np.complex128, 'axis': 2}
+par3j = {'global_shape': (200, 201, 101),
+         'partition': Partition.SCATTER,
+         'dtype': np.complex128, 'axis': 2}
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2), (par3),])
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2),
+                                 (par2j), (par3), (par3j)])
 def test_creation_nccl(par):
     """Test creation of stacked distributed arrays"""
     # Create stacked array
@@ -73,7 +74,8 @@ def test_creation_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par2), (par3)])
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2),
+                                 (par2j), (par3), (par3j)])
 def test_stacked_math_nccl(par):
     """Test the Element-Wise Addition, Subtraction and Multiplication, Dot-product, Norm"""
     distributed_array0 = DistributedArray(global_shape=par['global_shape'],
