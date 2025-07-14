@@ -200,7 +200,7 @@ def test_distributed_masked(par):
     """Test Asarray with masked array"""
     # Number of subcommunicators
     size = MPI.COMM_WORLD.Get_size()
-    
+
     # Exclude not handled cases
     shape_axis = par['x'].shape[par['axis']]
     print('shape_axis, size', shape_axis, size, shape_axis % size != 0)
@@ -246,7 +246,7 @@ def test_distributed_maskeddot(par1, par2):
     """Test Distributed Dot product with masked array"""
     # Number of subcommunicators
     size = MPI.COMM_WORLD.Get_size()
-    
+
     # Exclude not handled cases
     shape_axis = par1['x'].shape[par1['axis']]
     print('shape_axis, size', shape_axis, size, shape_axis % size != 0)

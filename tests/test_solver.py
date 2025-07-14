@@ -94,7 +94,7 @@ par4j = {
 def test_cg(par):
     """CG with MPIBlockDiag"""
     np.random.seed(42)
-    
+
     A = np.ones((par["ny"], par["nx"])) + par[
         "imag"] * np.ones((par["ny"], par["nx"]))
     Aop = MatrixMult(np.conj(A.T) @ A, dtype=par['dtype'])
