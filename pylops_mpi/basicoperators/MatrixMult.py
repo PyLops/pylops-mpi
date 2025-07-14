@@ -1,6 +1,8 @@
-import numpy as np
 import math
+import numpy as np
+from typing import Tuple
 from mpi4py import MPI
+
 from pylops.utils.backend import get_module
 from pylops.utils.typing import DTypeLike, NDArray
 
@@ -9,6 +11,148 @@ from pylops_mpi import (
     MPILinearOperator,
     Partition
 )
+
+
+def active_grid_comm(base_comm: MPI.Comm, N: int, M: int):
+    r"""Configure active grid
+
+    Configure a square process grid from a parent MPI communicator and
+    select a subset of "active" processes. Each process in ``base_comm``
+    is assigned to a logical 2D grid of size :math:`P' \times P'`,
+    where :math:`P' = \bigl \lceil \sqrt{P} \bigr \rceil`. Only the first
+    :math:`active_dim x active_dim` processes
+    (by row-major order) are considered "active". Inactive ranks return
+    immediately with no new communicator.
+
+    Parameters:
+    -----------
+    base_comm : :obj:`mpi4py.MPI.Comm`
+        MPI Parent Communicator. (e.g., ``mpi4py.MPI.COMM_WORLD``).
+    N : :obj:`int`
+        Number of rows of the global data domain.
+    M : :obj:`int`
+        Number of columns of the global data domain.
+
+    Returns:
+    --------
+    comm : :obj:`mpi4py.MPI.Comm`
+        Sub-communicator including only active ranks.
+    rank : :obj:`int`
+        Rank within the new sub-communicator (or original rank
+        if inactive).
+    row : :obj:`int`
+        Grid row index of this process in the active grid (or original rank
+        if inactive).
+    col : :obj:`int`
+        Grid column index of this process in the active grid
+        (or original rank if inactive).
+    is_active : :obj:`bool`
+        Flag indicating whether this rank is in the active sub-grid.
+
+    """
+    rank = base_comm.Get_rank()
+    size = base_comm.Get_size()
+    p_prime = math.isqrt(size)
+    row, col = divmod(rank, p_prime)
+    active_dim = min(N, M, p_prime)
+    is_active = (row < active_dim and col < active_dim)
+
+    if not is_active:
+        return None, rank, row, col, False
+
+    active_ranks = [r for r in range(size)
+                    if (r // p_prime) < active_dim and (r % p_prime) < active_dim]
+    new_group = base_comm.Get_group().Incl(active_ranks)
+    new_comm = base_comm.Create_group(new_group)
+    p_prime_new = math.isqrt(len(active_ranks))
+    new_rank = new_comm.Get_rank()
+    new_row, new_col = divmod(new_rank, p_prime_new)
+
+    return new_comm, new_rank, new_row, new_col, True
+
+def block_distribute(array:NDArray, rank:int, comm: MPI.Comm, pad:bool=False):
+    size = comm.Get_size()
+    p_prime = math.isqrt(size)
+    if p_prime * p_prime != size:
+        raise Exception(f"Number of processes must be a square number, provided {size} instead...")
+
+    proc_i, proc_j = divmod(rank, p_prime)
+    orig_r, orig_c = array.shape
+
+    new_r = math.ceil(orig_r / p_prime) * p_prime
+    new_c = math.ceil(orig_c / p_prime) * p_prime
+
+    br, bc = new_r // p_prime, new_c // p_prime
+    i0, j0 = proc_i * br, proc_j * bc
+    i1, j1 = min(i0 + br, orig_r), min(j0 + bc, orig_c)
+
+    i_end = None if proc_i == p_prime - 1 else i1
+    j_end = None if proc_j == p_prime - 1 else j1
+    block = array[i0:i_end, j0:j_end]
+
+    pr = (new_r - orig_r) if proc_i == p_prime - 1 else 0
+    pc = (new_c - orig_c) if proc_j == p_prime - 1 else 0
+    if pad and (pr or pc): block = np.pad(block, [(0, pr), (0, pc)], mode='constant')
+    return block, (new_r, new_c)
+
+def local_block_spit(global_shape: Tuple[int, int], rank: int, comm: MPI.Comm) -> Tuple[slice, slice]:
+    size = comm.Get_size()
+    p_prime = math.isqrt(size)
+    if p_prime * p_prime != size:
+        raise Exception(f"Number of processes must be a square number, provided {size} instead...")
+
+    proc_i, proc_j = divmod(rank, p_prime)
+    orig_r, orig_c = global_shape
+    new_r = math.ceil(orig_r / p_prime) * p_prime
+    new_c = math.ceil(orig_c / p_prime) * p_prime
+
+    br, bc = new_r // p_prime, new_c // p_prime
+    i0, j0 = proc_i * br, proc_j * bc
+    i1, j1 = min(i0 + br, orig_r), min(j0 + bc, orig_c)
+
+    i_end = None if proc_i == p_prime - 1 else i1
+    j_end = None if proc_j == p_prime - 1 else j1
+    return slice(i0, i_end), slice(j0, j_end)
+
+def block_gather(x, new_shape, orig_shape, comm):
+    ncp = get_module(x.engine)
+    p_prime = math.isqrt(comm.Get_size())
+    all_blks = comm.allgather(x.local_array)
+
+    nr, nc = new_shape
+    orr, orc = orig_shape
+
+    # Calculate base block sizes
+    br_base = nr // p_prime
+    bc_base = nc // p_prime
+
+    # Calculate remainder rows/cols that need to be distributed
+    r_remainder = nr % p_prime
+    c_remainder = nc % p_prime
+
+    # Create the output matrix
+    C = ncp.zeros((nr, nc), dtype=all_blks[0].dtype)
+
+    # Place each block in the correct position
+    for rank in range(p_prime * p_prime):
+        # Convert linear rank to 2D grid position
+        proc_row = rank // p_prime
+        proc_col = rank % p_prime
+
+        # Calculate this process's block dimensions
+        block_rows = br_base + (1 if proc_row < r_remainder else 0)
+        block_cols = bc_base + (1 if proc_col < c_remainder else 0)
+
+        # Calculate starting position in global matrix
+        start_row = proc_row * br_base + min(proc_row, r_remainder)
+        start_col = proc_col * bc_base + min(proc_col, c_remainder)
+
+        # Place the block
+        block = all_blks[rank]
+        if block.ndim == 1:
+            block = block.reshape(block_rows, block_cols)
+        C[start_row:start_row + block_rows, start_col:start_col + block_cols] = block
+    return C[:orr, :orc]
 
 
 class MPIMatrixMult(MPILinearOperator):
@@ -125,6 +269,222 @@ class MPIMatrixMult(MPILinearOperator):
         size = base_comm.Get_size()
 
         # Determine grid dimensions (P_prime × C) such that P_prime * C ≥ size
+        self._P_prime = math.isqrt(size)
+        self._C = self._P_prime
+        if self._P_prime * self._C != size:
+            raise Exception(f"Number of processes must be a square number, provided {size} instead...")
+
+        self._col_id = rank % self._P_prime
+        self._row_id = rank // self._P_prime
+
+        self.base_comm = base_comm
+        self._row_comm = base_comm.Split(color=self._row_id, key=self._col_id)
+        self._col_comm = base_comm.Split(color=self._col_id, key=self._row_id)
+
+        self.A = A.astype(np.dtype(dtype))
+        if saveAt:
+            self.At = A.T.conj()
+
+        self.N = self._row_comm.allreduce(self.A.shape[0], op=MPI.SUM)
+        self.K = A.shape[1]
+        self.M = M
+
+        block_cols = int(math.ceil(self.M / self._P_prime))
+        blk_rows = int(math.ceil(self.N / self._P_prime))
+
+        self._row_start = self._col_id * blk_rows
+        self._row_end = min(self.N, self._row_start + blk_rows)
+
+        self._col_start = self._row_id * block_cols
+        self._col_end = min(self.M, self._col_start + block_cols)
+
+        self._local_ncols = max(0, self._col_end - self._col_start)
+        self._rank_col_lens = self.base_comm.allgather(self._local_ncols)
+        total_ncols = np.sum(self._rank_col_lens)
+
+        self.dims = (self.K, total_ncols)
+        self.dimsd = (self.N, total_ncols)
+        shape = (int(np.prod(self.dimsd)), int(np.prod(self.dims)))
+        super().__init__(shape=shape, dtype=np.dtype(dtype), base_comm=base_comm)
+
+    def _matvec(self, x: DistributedArray) -> DistributedArray:
+        ncp = get_module(x.engine)
+        if x.partition != Partition.SCATTER:
+            raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
+
+        y = DistributedArray(
+            global_shape=(self.N * self.dimsd[1]),
+            local_shapes=[(self.N * c) for c in self._rank_col_lens],
+            mask=x.mask,
+            partition=Partition.SCATTER,
+            dtype=self.dtype,
+            base_comm=self.base_comm
+        )
+
+        my_own_cols = self._rank_col_lens[self.rank]
+        x_arr = x.local_array.reshape((self.dims[0], my_own_cols))
+        X_local = x_arr.astype(self.dtype)
+        Y_local = ncp.vstack(
+            self._row_comm.allgather(
+                ncp.matmul(self.A, X_local)
+            )
+        )
+        y[:] = Y_local.flatten()
+        return y
+
+    def _rmatvec(self, x: DistributedArray) -> DistributedArray:
+        ncp = get_module(x.engine)
+        if x.partition != Partition.SCATTER:
+            raise ValueError(f"x should have partition={Partition.SCATTER}. Got {x.partition} instead.")
+
+        y = DistributedArray(
+            global_shape=(self.K * self.dimsd[1]),
+            local_shapes=[self.K * c for c in self._rank_col_lens],
+            mask=x.mask,
+            partition=Partition.SCATTER,
+            dtype=self.dtype,
+            base_comm=self.base_comm
+        )
+
+        x_arr = x.local_array.reshape((self.N, self._local_ncols)).astype(self.dtype)
+        X_tile = x_arr[self._row_start:self._row_end, :]
+        A_local = self.At if hasattr(self, "At") else self.A.T.conj()
+        Y_local = ncp.matmul(A_local, X_tile)
+        y_layer = self._row_comm.allreduce(Y_local, op=MPI.SUM)
+        y[:] = y_layer.flatten()
+        return y
+
+class MPISummaMatrixMult(MPILinearOperator):
+    r"""MPI SUMMA Matrix multiplication
+
+    Implements distributed matrix-matrix multiplication using the SUMMA algorithm
+    between a matrix :math:`\mathbf{A}` distributed over a 2D process grid and
+    input model and data vectors, which are both interpreted as matrices
+    distributed in block-column fashion.
+
+    Parameters
+    ----------
+    A : :obj:`numpy.ndarray`
+        Local block of the matrix of shape :math:`[N_{loc} \times K_{loc}]`
+        where :math:`N_{loc}` and :math:`K_{loc}` are the number of rows and
+        columns stored on this MPI rank.
+    M : :obj:`int`
+        Global number of columns of the matrices representing the input model
+        and data vectors.
+    saveAt : :obj:`bool`, optional
+        Save ``A`` and ``A.H`` to speed up the computation of adjoint
+        (``True``) or create ``A.H`` on-the-fly (``False``).
+        Note that ``saveAt=True`` will double the amount of required memory.
+        Default is ``False``.
+    base_comm : :obj:`mpi4py.MPI.Comm`, optional
+        MPI Base Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.
+    dtype : :obj:`str`, optional
+        Type of elements in input array.
+
+    Attributes
+    ----------
+    shape : :obj:`tuple`
+        Operator shape
+
+    Raises
+    ------
+    Exception
+        If the operator is created with a non-square number of MPI ranks.
+    ValueError
+        If input vector does not have the correct partition type.
+
+    Notes
+    -----
+    This operator performs distributed matrix-matrix multiplication using the
+    SUMMA (Scalable Universal Matrix Multiplication Algorithm), whose forward
+    operation can be described as :math:`\mathbf{Y} = \mathbf{A} \cdot \mathbf{X}` where:
+
+    - :math:`\mathbf{A}` is the distributed matrix operator of shape :math:`[N \times K]`
+    - :math:`\mathbf{X}` is the distributed operand matrix of shape :math:`[K \times M]`
+    - :math:`\mathbf{Y}` is the resulting distributed matrix of shape :math:`[N \times M]`
+
+    The adjoint operation is represented by
+    :math:`\mathbf{X}_{adj} = \mathbf{A}^H \cdot \mathbf{Y}` where
+    :math:`\mathbf{A}^H` is the complex conjugate transpose of :math:`\mathbf{A}`.
+
+    This implementation is based on a 2D block distribution across a square process
+    grid (:math:`\sqrt{P}\times\sqrt{P}`). The matrices are distributed as follows:
+
+    - The matrix ``A`` is distributed across MPI processes in 2D blocks where
+      each process holds a local block of ``A`` with shape :math:`[N_{loc} \times K_{loc}]`
+      where :math:`N_{loc} = \frac{N}{\sqrt{P}}` and :math:`K_{loc} = \frac{K}{\sqrt{P}}`.
+
+    - The operand matrix ``X`` is also distributed across MPI processes in 2D blocks where
+      each process holds a local block of ``X`` with shape :math:`[K_{loc} \times M_{loc}]`
+      where :math:`K_{loc} = \frac{K}{\sqrt{P}}` and :math:`M_{loc} = \frac{M}{\sqrt{P}}`.
+
+    - The result matrix ``Y`` is also distributed across MPI processes in 2D blocks where
+      each process holds a local block of ``Y`` with shape :math:`[N_{loc} \times M_{loc}]`
+      where :math:`N_{loc} = \frac{N}{\sqrt{P}}` and :math:`M_{loc} = \frac{M}{\sqrt{P}}`.
+
+
+    **Forward Operation (SUMMA Algorithm)**
+
+    The forward operation implements the SUMMA algorithm:
+
+    1. **Input Preparation**: The input vector ``x``is reshaped to ``(K_{loc}, M_{loc})`` representing
+       the local block assigned to the current process.
+
+    2. **SUMMA Iteration**: For each step ``k`` in the SUMMA algorithm  -- :math:`k \in \[ 0, \sqrt{P} \)}` :
+
+       a. **Broadcast A blocks**: Process in column ``k`` broadcasts its ``A``
+          block to all other processes in the same process row.
+
+       b. **Broadcast X blocks**: Process in row ``k`` broadcasts its ``X``
+          block to all other processes in the same process column.
+
+       c. **Local Computation**: Each process computes the partial matrix
+          product ``A_broadcast @ X_broadcast`` and accumulates it to its
+          local result.
+
+    3. **Result Assembly**: After all k SUMMA iterations, each process has computed
+       its local block of the result matrix ``Y``.
+
+    **Adjoint Operation (SUMMA Algorithm)**
+
+    The adjoint operation performs the conjugate transpose multiplication using
+    a modified SUMMA algorithm:
+
+    1. **Input Reshaping**: The input vector ``x`` is reshaped to ``(N_{loc}, M_{loc})``
+       representing the local block of the input matrix.
+
+    2. **SUMMA Adjoint Iteration**: For each step ``k`` in the adjoint SUMMA algorithm:
+
+       a. **Broadcast A^H blocks**: The conjugate transpose of ``A`` blocks is
+          communicated between processes. If ``saveAt=True``, the pre-computed
+          ``A.H`` is used; otherwise, ``A.T.conj()`` is computed on-the-fly.
+
+       b. **Broadcast Y blocks**: Process in row ``k`` broadcasts its ``Y``
+          block to all other processes in the same process column.
+
+       c. **Local Adjoint Computation**: Each process computes the partial
+          matrix product ``A_H_broadcast @ Y_broadcast`` and accumulates it
+          to the local result.
+
+    3. **Result Assembly**: After all adjoint SUMMA iterations, each process has
+       computed its local block of the result matrix ``X_{adj}``.
+
+    The implementation handles padding automatically to ensure proper block sizes
+    for the square process grid, and unpadding is performed before returning results.
+
+    """
+    def __init__(
+            self,
+            A: NDArray,
+            M: int,
+            saveAt: bool = False,
+            base_comm: MPI.Comm = MPI.COMM_WORLD,
+            dtype: DTypeLike = "float64",
+    ) -> None:
+        rank = base_comm.Get_rank()
+        size = base_comm.Get_size()
+
+        # Determine grid dimensions (P_prime × C) such that P_prime * C ≥ size
         self._P_prime =  math.isqrt(size)
         if self._P_prime * self._P_prime != size:
             raise Exception(f"Number of processes must be a square number, provided {size} instead...")
@@ -167,127 +527,6 @@ class MPIMatrixMult(MPILinearOperator):
         shape = (int(np.prod(self.dimsd)), int(np.prod(self.dims)))
         super().__init__(shape=shape, dtype=np.dtype(dtype), base_comm=base_comm)
 
-    @staticmethod
-    def active_grid_comm(base_comm: MPI.Comm, N: int, M: int):
-        r"""Configure active grid
-
-        Configure a square process grid from a parent MPI communicator and
-        select a subset of "active" processes. Each process in ``base_comm``
-        is assigned to a logical 2D grid of size :math:`P' \times P'`,
-        where :math:`P' = \bigl \lceil \sqrt{P} \bigr \rceil`. Only the first
-        :math:`active_dim x active_dim` processes
-        (by row-major order) are considered "active". Inactive ranks return
-        immediately with no new communicator.
-
-        Parameters:
-        -----------
-        base_comm : :obj:`mpi4py.MPI.Comm`
-            MPI Parent Communicator. (e.g., ``mpi4py.MPI.COMM_WORLD``).
-        N : :obj:`int`
-            Number of rows of the global data domain.
-        M : :obj:`int`
-            Number of columns of the global data domain.
-
-        Returns:
-        --------
-        comm : :obj:`mpi4py.MPI.Comm`
-            Sub-communicator including only active ranks.
-        rank : :obj:`int`
-            Rank within the new sub-communicator (or original rank
-            if inactive).
-        row : :obj:`int`
-            Grid row index of this process in the active grid (or original rank
-            if inactive).
-        col : :obj:`int`
-            Grid column index of this process in the active grid
-            (or original rank if inactive).
-        is_active : :obj:`bool`
-            Flag indicating whether this rank is in the active sub-grid.
-
-        """
-        rank = base_comm.Get_rank()
-        size = base_comm.Get_size()
-        p_prime = math.isqrt(size)
-        row, col = divmod(rank, p_prime)
-        active_dim = min(N, M, p_prime)
-        is_active = (row < active_dim and col < active_dim)
-
-        if not is_active:
-            return None, rank, row, col, False
-
-        active_ranks = [r for r in range(size)
-                        if (r // p_prime) < active_dim and (r % p_prime) < active_dim]
-        new_group = base_comm.Get_group().Incl(active_ranks)
-        new_comm = base_comm.Create_group(new_group)
-        p_prime_new = math.isqrt(len(active_ranks))
-        new_rank = new_comm.Get_rank()
-        new_row, new_col = divmod(new_rank, p_prime_new)
-
-        return new_comm, new_rank, new_row, new_col, True
-
-    @staticmethod
-    def block_distribute(array, proc_i, proc_j, comm):
-        p_prime = math.isqrt(comm.Get_size())
-        orig_r, orig_c = array.shape
-
-        new_r = math.ceil(orig_r / p_prime) * p_prime
-        new_c = math.ceil(orig_c / p_prime) * p_prime
-
-        br, bc = new_r // p_prime, new_c // p_prime
-        i0, j0 = proc_i * br, proc_j * bc
-        i1, j1 = min(i0 + br, orig_r), min(j0 + bc, orig_c)
-
-        i_end = None if proc_i == p_prime - 1 else i1
-        j_end = None if proc_j == p_prime - 1 else j1
-        block = array[i0:i_end, j0:j_end]
-
-        pr = (new_r - orig_r) if proc_i == p_prime - 1 else 0
-        pc = (new_c - orig_c) if proc_j == p_prime - 1 else 0
-        #comment the padding to get the block as unpadded
-        # if pr or pc: block = np.pad(block, [(0, pr), (0, pc)], mode='constant')
-        return block, (new_r, new_c)
-
-    @staticmethod
-    def block_gather(x, new_shape, orig_shape, comm):
-        ncp = get_module(x.engine)
-        p_prime = math.isqrt(comm.Get_size())
-        all_blks = comm.allgather(x.local_array)
-
-        nr, nc = new_shape
-        orr, orc = orig_shape
-
-        # Calculate base block sizes
-        br_base = nr // p_prime
-        bc_base = nc // p_prime
-
-        # Calculate remainder rows/cols that need to be distributed
-        r_remainder = nr % p_prime
-        c_remainder = nc % p_prime
-
-        # Create the output matrix
-        C = ncp.zeros((nr, nc), dtype=all_blks[0].dtype)
-
-        # Place each block in the correct position
-        for rank in range(p_prime * p_prime):
-            # Convert linear rank to 2D grid position
-            proc_row = rank // p_prime
-            proc_col = rank % p_prime
-
-            # Calculate this process's block dimensions
-            block_rows = br_base + (1 if proc_row < r_remainder else 0)
-            block_cols = bc_base + (1 if proc_col < c_remainder else 0)
-
-            # Calculate starting position in global matrix
-            start_row = proc_row * br_base + min(proc_row, r_remainder)
-            start_col = proc_col * bc_base + min(proc_col, c_remainder)
-
-            # Place the block
-            block = all_blks[rank]
-            if block.ndim == 1:
-                block = block.reshape(block_rows, block_cols)
-            C[start_row:start_row + block_rows, start_col:start_col + block_cols] = block
-        return C[:orr, :orc]
-
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
         if x.partition != Partition.SCATTER:
@@ -297,25 +536,10 @@ class MPIMatrixMult(MPILinearOperator):
         bn = self._N_padded // self._P_prime  # block size in N dimension
         bm = self._M_padded // self._P_prime  # block size in M dimension
 
-        # Calculate actual local shape for this process (considering original dimensions)
-        local_n = bn
-        local_m = bm
+        local_n = bn if self._row_id != self._P_prime - 1 else self.N - (self._P_prime - 1) * bn
+        local_m = bm if self._col_id != self._P_prime - 1 else self.M - (self._P_prime - 1) * bm
 
-        # Adjust for edge/corner processes that might have smaller blocks
-        if self._row_id == self._P_prime - 1:
-            local_n = self.N - (self._P_prime - 1) * bn
-        if self._col_id == self._P_prime - 1:
-            local_m = self.M - (self._P_prime - 1) * bm
-
-        local_shape = local_n * local_m
-
-        # Create local_shapes array for all processes
-        local_shapes = []
-        for rank in range(self.size):
-            row_id, col_id = divmod(rank, self._P_prime)
-            proc_n = bn if row_id != self._P_prime - 1 else self.N - (self._P_prime - 1) * bn
-            proc_m = bm if col_id != self._P_prime - 1 else self.M - (self._P_prime - 1) * bm
-            local_shapes.append(proc_n * proc_m)
+        local_shapes = self.base_comm.allgather(local_n * local_m)
 
         y = DistributedArray(global_shape=(self.N * self.M),
                              mask=x.mask,
@@ -330,9 +554,7 @@ class MPIMatrixMult(MPILinearOperator):
 
         # The input x corresponds to blocks from matrix B (K x M)
         # This process should receive a block of size (local_k x local_m)
-        local_k = bk
-        if self._row_id == self._P_prime - 1:
-            local_k = self.K - (self._P_prime - 1) * bk
+        local_k = bk if self._row_id != self._P_prime - 1 else self.K - (self._P_prime - 1) * bk
 
         # Reshape x.local_array to its 2D block form
         x_block = x.local_array.reshape((local_k, local_m))
@@ -367,24 +589,11 @@ class MPIMatrixMult(MPILinearOperator):
         bm = self._M_padded // self._P_prime  # block size in M dimension
 
         # Calculate actual local shape for this process (considering original dimensions)
-        local_k = bk
-        local_m = bm
-
         # Adjust for edge/corner processes that might have smaller blocks
-        if self._row_id == self._P_prime - 1:
-            local_k = self.K - (self._P_prime - 1) * bk
-        if self._col_id == self._P_prime - 1:
-            local_m = self.M - (self._P_prime - 1) * bm
+        local_k = bk if self._row_id != self._P_prime - 1 else self.K - (self._P_prime - 1) * bk
+        local_m = bm if self._col_id != self._P_prime - 1 else self.M - (self._P_prime - 1) * bm
 
-        local_shape = local_k * local_m
-
-        # Create local_shapes array for all processes
-        local_shapes = []
-        for rank in range(self.size):
-            row_id, col_id = divmod(rank, self._P_prime)
-            proc_k = bk if row_id != self._P_prime - 1 else self.K - (self._P_prime - 1) * bk
-            proc_m = bm if col_id != self._P_prime - 1 else self.M - (self._P_prime - 1) * bm
-            local_shapes.append(proc_k * proc_m)
+        local_shapes = self.base_comm.allgather(local_k * local_m)
 
         y = DistributedArray(
             global_shape=(self.K * self.M),
@@ -400,9 +609,7 @@ class MPIMatrixMult(MPILinearOperator):
 
         # The input x corresponds to blocks from the result (N x M)
         # This process should receive a block of size (local_n x local_m)
-        local_n = bn
-        if self._row_id == self._P_prime - 1:
-            local_n = self.N - (self._P_prime - 1) * bn
+        local_n = bn if self._row_id != self._P_prime - 1 else self.N - (self._P_prime - 1) * bn
 
         # Reshape x.local_array to its 2D block form
         x_block = x.local_array.reshape((local_n, local_m))

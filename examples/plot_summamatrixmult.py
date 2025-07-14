@@ -3,7 +3,9 @@ import numpy as np
 from mpi4py import MPI
 
 import pylops_mpi
-from pylops_mpi.basicoperators.MatrixMult import MPIMatrixMult
+from pylops_mpi.basicoperators.MatrixMult import (local_block_spit,
+                                                     block_gather,
+                                                     MPISummaMatrixMult)
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
@@ -23,9 +25,12 @@ assert p_prime * p_prime == size, "Number of processes must be a perfect square"
 A_data = np.arange(int(A_shape[0] * A_shape[1])).reshape(A_shape)
 B_data = np.arange(int(B_shape[0] * B_shape[1])).reshape(B_shape)
 
-i, j = divmod(rank, p_prime)
-A_local, (N_new, K_new) = MPIMatrixMult.block_distribute(A_data, i, j,comm)
-B_local, (K_new, M_new) = MPIMatrixMult.block_distribute(B_data, i, j,comm)
+A_slice = local_block_spit(A_shape, rank, comm)
+B_slice = local_block_spit(B_shape, rank, comm)
+A_local = A_data[A_slice]
+B_local = B_data[B_slice]
+# A_local, (N_new, K_new) = block_distribute(A_data,rank, comm)
+# B_local, (K_new, M_new) = block_distribute(B_data,rank, comm)
 
 B_dist = pylops_mpi.DistributedArray(global_shape=(K * M),
                                      local_shapes=comm.allgather(B_local.shape[0] * B_local.shape[1]),
@@ -33,12 +38,12 @@ B_dist = pylops_mpi.DistributedArray(global_shape=(K * M),
                                      partition=pylops_mpi.Partition.SCATTER)
 B_dist.local_array[:] = B_local.flatten()
 
-Aop = MPIMatrixMult(A_local, M, base_comm=comm)
+Aop = MPISummaMatrixMult(A_local, M, base_comm=comm)
 C_dist = Aop @ B_dist
 Z_dist = Aop.H @ C_dist
 
-C = MPIMatrixMult.block_gather(C_dist, (N,M), (N,M), comm)
-Z = MPIMatrixMult.block_gather(Z_dist, (K,M), (K,M), comm)
+C = block_gather(C_dist, (N,M), (N,M), comm)
+Z = block_gather(Z_dist, (K,M), (K,M), comm)
 if rank == 0 :
     C_correct = np.allclose(A_data @ B_data, C)
     print("C expected: ", C_correct)
