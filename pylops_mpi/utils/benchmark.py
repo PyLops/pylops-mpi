@@ -7,16 +7,47 @@ from mpi4py import MPI
 # TODO (tharitt): later move to env file or something
 ENABLE_BENCHMARK = True
 
+# Stack of active mark functions for nested support
+_mark_func_stack = []
+_markers = []
 
-# This function allows users to measure time arbitary lines of the function
+
+def _parse_output_tree(markers):
+    output = []
+    stack = []
+    i = 0
+    while i < len(markers):
+        label, time, level = markers[i]
+        if label.startswith("[header]"):
+            output.append(f"{"\t" * (level - 1)}{label}: total runtime: {time:6f}\n")
+        else:
+            if stack:
+                prev_label, prev_time, prev_level = stack[-1]
+                if prev_level == level:
+                    output.append(f"{"\t" * level}{prev_label}-->{label}: {time - prev_time: 6f}\n")
+                    stack.pop()
+
+            # Push to the stack only if it is going deeper or the same level
+            if i + 1 < len(markers) - 1:
+                _, _ , next_level = markers[i + 1]
+                if next_level >= level:
+                    stack.append(markers[i])
+        i += 1
+    return output
+
+
 def mark(label):
+    """This function allows users to measure time arbitary lines of the function
+
+    Parameters
+    ----------
+    label: :obj:`str`
+        A label of the mark. This signifies both 1) the end of the
+        previous mark 2) the beginning of the new mark
+    """
     if not _mark_func_stack:
         raise RuntimeError("mark() called outside of a benchmarked region")
     _mark_func_stack[-1](label)
-
-
-# Stack of active mark functions for nested support
-_mark_func_stack = []
 
 
 def benchmark(func: Optional[Callable] = None,
@@ -28,9 +59,9 @@ def benchmark(func: Optional[Callable] = None,
 
     This wrapper measure the start-to-end time of the wrapped function when
     decorated without any argument.
-    It also allows users to put a call to mark() anywhere inside the wrapped function 
+    It also allows users to put a call to mark() anywhere inside the wrapped function
     for fine-grain time benchmark. This wrapper defines the local_mark() and push it
-    the the _mark_func_stack for isolation in case of nested call. 
+    the the _mark_func_stack for isolation in case of nested call.
     The user-facing mark() will always call the function at the top of the _mark_func_stack.
 
     Parameters
@@ -58,10 +89,16 @@ def benchmark(func: Optional[Callable] = None,
             # Here we rely on the closure property of Python.
             # This marks will isolate from (shadow) the marks previously
             # defined in the function currently on top of the _mark_func_stack.
-            marks = []
+
+            level = len(_mark_func_stack) + 1
+            # The header is needed for later tree parsing. Here it is allocating its spot.
+            # the tuple at this index will be replaced after elapsed time is calculated.
+            _markers.append((f"[header]{description or func.__name__}", None, level))
+            header_index = len(_markers) - 1
 
             def local_mark(label):
-                marks.append((label, time.perf_counter()))
+                _markers.append((label, time.perf_counter(), level))
+
             _mark_func_stack.append(local_mark)
 
             start_time = time.perf_counter()
@@ -69,27 +106,18 @@ def benchmark(func: Optional[Callable] = None,
             result = func(*args, **kwargs)
             end_time = time.perf_counter()
 
+            elapsed = end_time - start_time
+            _markers[header_index] = (f"[header]{description or func.__name__}", elapsed, level)
+
+            # In case of nesting, the wrapped callee must pop its closure from stack so that
+            # when the callee returns, the wrapped caller operates on its closure (and its level label), which now becomes
+            # the top of the stack.
             _mark_func_stack.pop()
 
-            output = []
-            # start-to-end time
-            elapsed = end_time - start_time
-
-            # TODO (tharitt): Both MPI + NCCL collective calls have implicit synchronization inside the stream
-            # So, output only from rank=0 should suffice. We can add per-rank output later on if makes sense.
-            if rank == 0:
-                level = len(_mark_func_stack)
-                output.append(f"{'---' * level}{description or func.__name__} {elapsed:6f} seconds (rank = {rank})\n")
-                if marks:
-                    prev_label, prev_t = marks[0]
-                    for label, t in marks[1:]:
-                        output.append(f"{'---' * level}[{prev_label} ---> {label}]: {t - prev_t:.6f}s \n")
-                        prev_label, prev_t = label, t
-
-                if save_file:
-                    with open(file_path, "a") as f:
-                        f.write("".join(output))
-                else:
+            # finish all the calls
+            if not _mark_func_stack:
+                if rank == 0:
+                    output = _parse_output_tree(_markers)
                     print("".join(output))
             return result
         return wrapper
