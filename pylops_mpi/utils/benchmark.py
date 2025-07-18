@@ -9,7 +9,10 @@ from mpi4py import MPI
 # TODO (tharitt): later move to env file or something
 ENABLE_BENCHMARK = True
 
+logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, force=True)
+logger.propagate = False
+
 # Stack of active mark functions for nested support
 _mark_func_stack = []
 _markers = []
@@ -117,18 +120,23 @@ def benchmark(func: Optional[Callable] = None,
             if not _mark_func_stack:
                 if rank == 0:
                     output = _parse_output_tree(_markers)
-                    logger = logging.getLogger()
-                    # remove the stdout
-                    for h in logger.handlers[:]:
-                        logger.removeHandler(h)
-                    handler = logging.FileHandler(file_path, mode='w') if save_file else logging.StreamHandler(sys.stdout)
-                    handler.setLevel(logging.INFO)
-                    logger.addHandler(handler)
-                    logger.info("".join(output))
-                    logger.removeHandler(handler)
-                    if save_file:
-                        handler.close()
+                    for handler in logger.handlers[:]:
+                        logger.removeHandler(handler)
 
+                    if save_file:
+                        handler = logging.FileHandler(file_path, mode='w')
+                    else:
+                        handler = logging.StreamHandler(sys.stdout)
+
+                    handler.setLevel(logging.INFO)
+                    handler.setFormatter(logging.Formatter("%(message)s"))
+                    logger.addHandler(handler)
+
+                    logger.info("".join(output))
+
+                    # Cleanup handler to avoid duplication on future calls
+                    logger.removeHandler(handler)
+                    handler.close()
             return result
         return wrapper
     if func is not None:
