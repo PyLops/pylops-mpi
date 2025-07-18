@@ -1,4 +1,6 @@
 import functools
+import logging
+import sys
 import time
 from typing import Callable, Optional
 from mpi4py import MPI
@@ -7,27 +9,28 @@ from mpi4py import MPI
 # TODO (tharitt): later move to env file or something
 ENABLE_BENCHMARK = True
 
+logging.basicConfig(level=logging.INFO, force=True)
 # Stack of active mark functions for nested support
 _mark_func_stack = []
 _markers = []
 
 
-def _parse_output_tree(markers):
+def _parse_output_tree(markers: list[str]):
     output = []
     stack = []
     i = 0
     while i < len(markers):
         label, time, level = markers[i]
         if label.startswith("[header]"):
-            output.append(f"{"\t" * (level - 1)}{label}: total runtime: {time:6f}\n")
+            output.append(f"{"\t" * (level - 1)}{label}: total runtime: {time:6f} s\n")
         else:
             if stack:
                 prev_label, prev_time, prev_level = stack[-1]
                 if prev_level == level:
-                    output.append(f"{"\t" * level}{prev_label}-->{label}: {time - prev_time: 6f}\n")
+                    output.append(f"{"\t" * level}{prev_label}-->{label}: {time - prev_time:6f} s\n")
                     stack.pop()
 
-            # Push to the stack only if it is going deeper or the same level
+            # Push to the stack only if it is going deeper or still at the same level
             if i + 1 < len(markers) - 1:
                 _, _ , next_level = markers[i + 1]
                 if next_level >= level:
@@ -86,10 +89,6 @@ def benchmark(func: Optional[Callable] = None,
         def wrapper(*args, **kwargs):
             rank = MPI.COMM_WORLD.Get_rank()
 
-            # Here we rely on the closure property of Python.
-            # This marks will isolate from (shadow) the marks previously
-            # defined in the function currently on top of the _mark_func_stack.
-
             level = len(_mark_func_stack) + 1
             # The header is needed for later tree parsing. Here it is allocating its spot.
             # the tuple at this index will be replaced after elapsed time is calculated.
@@ -114,11 +113,22 @@ def benchmark(func: Optional[Callable] = None,
             # the top of the stack.
             _mark_func_stack.pop()
 
-            # finish all the calls
+            # all the calls have fininshed
             if not _mark_func_stack:
                 if rank == 0:
                     output = _parse_output_tree(_markers)
-                    print("".join(output))
+                    logger = logging.getLogger()
+                    # remove the stdout
+                    for h in logger.handlers[:]:
+                        logger.removeHandler(h)
+                    handler = logging.FileHandler(file_path, mode='w') if save_file else logging.StreamHandler(sys.stdout)
+                    handler.setLevel(logging.INFO)
+                    logger.addHandler(handler)
+                    logger.info("".join(output))
+                    logger.removeHandler(handler)
+                    if save_file:
+                        handler.close()
+
             return result
         return wrapper
     if func is not None:
