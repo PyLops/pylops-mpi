@@ -1,24 +1,28 @@
 import functools
 import logging
-import sys
 import time
-from typing import Callable, Optional
+from typing import Callable, Optional, List
 from mpi4py import MPI
 
 
 # TODO (tharitt): later move to env file or something
 ENABLE_BENCHMARK = True
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, force=True)
-logger.propagate = False
-
 # Stack of active mark functions for nested support
 _mark_func_stack = []
 _markers = []
 
 
-def _parse_output_tree(markers: list[str]):
+def _parse_output_tree(markers: List[str]):
+    """This function parses the list of strings gathered during the benchmark call and output them
+    as one properly formatted string. The format of output string follows the hierachy of function calls
+    i.e., the nested funtion calls are indented.
+
+    Parameters
+    ----------
+    markers: :obj:`list`, optional
+        A list of markers/labels generated from the benchmark call
+    """
     output = []
     stack = []
     i = 0
@@ -42,7 +46,7 @@ def _parse_output_tree(markers: list[str]):
     return output
 
 
-def mark(label):
+def mark(label: str):
     """This function allows users to measure time arbitary lines of the function
 
     Parameters
@@ -57,17 +61,17 @@ def mark(label):
 
 
 def benchmark(func: Optional[Callable] = None,
-              description="",
-              save_file=False,
-              file_path='benchmark.log'
+              description: Optional[str] = "",
+              logger: Optional[logging.Logger] = None,
               ):
     """A wrapper for code injection for time measurement.
 
-    This wrapper measure the start-to-end time of the wrapped function when
+    This wrapper measures the start-to-end time of the wrapped function when
     decorated without any argument.
+
     It also allows users to put a call to mark() anywhere inside the wrapped function
-    for fine-grain time benchmark. This wrapper defines the local_mark() and push it
-    the the _mark_func_stack for isolation in case of nested call.
+    for fine-grain time benchmark. This wrapper defines the local_mark() and pushes it
+    to the _mark_func_stack for isolation in case of nested call.
     The user-facing mark() will always call the function at the top of the _mark_func_stack.
 
     Parameters
@@ -76,11 +80,10 @@ def benchmark(func: Optional[Callable] = None,
         Function to be decorated. Defaults to ``None``.
     description : :obj:`str`, optional
         Description for the output text. Defaults to ``''``.
-    save_file : :obj:`bool`, optional
-        Flag for saving file to a disk. Otherwise, the result will output to stdout. Defaults to ``False``
-    file_path : :obj:`str`, optional
-        File path for saving the output. Defaults to ``benchmark.log``
-
+    logger: :obj:`logging.Logger`, optional
+        A `logging.Logger` object for logging the benchmark text output. This logger must be setup before
+        passing to this function to either writing output to a file or log to stdout. If `logger`
+        is not provided, the output is printed to stdout.
     """
 
     # Zero-overhead
@@ -109,7 +112,7 @@ def benchmark(func: Optional[Callable] = None,
             end_time = time.perf_counter()
 
             elapsed = end_time - start_time
-            _markers[header_index] = (f"[header]{description or func.__name__}", elapsed, level)
+            _markers[header_index] = (f"[decorator]{description or func.__name__}", elapsed, level)
 
             # In case of nesting, the wrapped callee must pop its closure from stack so that
             # when the callee returns, the wrapped caller operates on its closure (and its level label), which now becomes
@@ -120,26 +123,12 @@ def benchmark(func: Optional[Callable] = None,
             if not _mark_func_stack:
                 if rank == 0:
                     output = _parse_output_tree(_markers)
-                    for handler in logger.handlers[:]:
-                        logger.removeHandler(handler)
-
-                    if save_file:
-                        handler = logging.FileHandler(file_path, mode='w')
+                    if logger:
+                        logger.info("".join(output))
                     else:
-                        handler = logging.StreamHandler(sys.stdout)
-
-                    handler.setLevel(logging.INFO)
-                    handler.setFormatter(logging.Formatter("%(message)s"))
-                    logger.addHandler(handler)
-
-                    logger.info("".join(output))
-
-                    # Cleanup handler to avoid duplication on future calls
-                    logger.removeHandler(handler)
-                    handler.close()
+                        print("".join(output))
             return result
         return wrapper
     if func is not None:
         return decorator(func)
-
     return decorator
