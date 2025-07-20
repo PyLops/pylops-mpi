@@ -29,12 +29,12 @@ def _parse_output_tree(markers: List[str]):
     while i < len(markers):
         label, time, level = markers[i]
         if label.startswith("[header]"):
-            output.append(f"{"\t" * (level - 1)}{label}: total runtime: {time:6f} s\n")
+            output.append(f"{'\t' * (level - 1)}{label}: total runtime: {time:6f} s\n")
         else:
             if stack:
                 prev_label, prev_time, prev_level = stack[-1]
                 if prev_level == level:
-                    output.append(f"{"\t" * level}{prev_label}-->{label}: {time - prev_time:6f} s\n")
+                    output.append(f"{'\t' * level}{prev_label}-->{label}: {time - prev_time:6f} s\n")
                     stack.pop()
 
             # Push to the stack only if it is going deeper or still at the same level
