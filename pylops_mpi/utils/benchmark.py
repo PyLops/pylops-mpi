@@ -28,17 +28,19 @@ def _parse_output_tree(markers: List[str]):
     i = 0
     while i < len(markers):
         label, time, level = markers[i]
-        if label.startswith("[header]"):
-            output.append(f"{'\t' * (level - 1)}{label}: total runtime: {time:6f} s\n")
+        if label.startswith("[decorator]"):
+            indent = "\t" * (level - 1)
+            output.append(f"{indent}{label}: total runtime: {time:6f} s\n")
         else:
             if stack:
                 prev_label, prev_time, prev_level = stack[-1]
                 if prev_level == level:
-                    output.append(f"{'\t' * level}{prev_label}-->{label}: {time - prev_time:6f} s\n")
+                    indent = "\t" * level
+                    output.append(f"{indent}{prev_label}-->{label}: {time - prev_time:6f} s\n")
                     stack.pop()
 
             # Push to the stack only if it is going deeper or still at the same level
-            if i + 1 < len(markers) - 1:
+            if i + 1 <= len(markers) - 1:
                 _, _ , next_level = markers[i + 1]
                 if next_level >= level:
                     stack.append(markers[i])
@@ -98,7 +100,7 @@ def benchmark(func: Optional[Callable] = None,
             level = len(_mark_func_stack) + 1
             # The header is needed for later tree parsing. Here it is allocating its spot.
             # the tuple at this index will be replaced after elapsed time is calculated.
-            _markers.append((f"[header]{description or func.__name__}", None, level))
+            _markers.append((f"[decorator]{description or func.__name__}", None, level))
             header_index = len(_markers) - 1
 
             def local_mark(label):
@@ -131,4 +133,5 @@ def benchmark(func: Optional[Callable] = None,
         return wrapper
     if func is not None:
         return decorator(func)
+
     return decorator
