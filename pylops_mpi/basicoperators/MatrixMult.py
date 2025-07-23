@@ -95,28 +95,89 @@ def block_distribute(array:NDArray, rank:int, comm: MPI.Comm, pad:bool=False):
     if pad and (pr or pc): block = np.pad(block, [(0, pr), (0, pc)], mode='constant')
     return block, (new_r, new_c)
 
-def local_block_spit(global_shape: Tuple[int, int], rank: int, comm: MPI.Comm) -> Tuple[slice, slice]:
+def local_block_spit(global_shape: Tuple[int, int],
+                     rank: int,
+                     comm: MPI.Comm) -> Tuple[slice, slice]:
+    """
+    Compute the local sub‐block of a 2D global array for a process in a square process grid.
+
+    Parameters
+    ----------
+    global_shape : Tuple[int, int]
+        Dimensions of the global 2D array (n_rows, n_cols).
+    rank : int
+        Rank of the MPI process in `comm` for which to get the owned block partition.
+    comm : MPI.Comm
+        MPI communicator whose total number of processes :math:`\mathbf{P}`
+        must be a perfect square :math:`\mathbf{P} = \sqrt{\mathbf{P'}}`.
+
+    Returns
+    -------
+    Tuple[slice, slice]
+        Two `slice` objects `(row_slice, col_slice)` indicating the sub‐block
+        of the global array owned by this rank.
+
+    Raises
+    ------
+    ValueError
+        if `rank` is out of range.
+    RuntimeError
+        If the number of processes participating in the provided communicator is not a perfect square.
+    """
     size = comm.Get_size()
     p_prime = math.isqrt(size)
     if p_prime * p_prime != size:
-        raise Exception(f"Number of processes must be a square number, provided {size} instead...")
+        raise RuntimeError(f"Number of processes must be a square number, provided {size} instead...")
+    if not ( isinstance(rank, int) and 0 <= rank < size ):
+        raise ValueError(f"rank must be integer in [0, {size}), got {rank!r}")
 
     proc_i, proc_j = divmod(rank, p_prime)
     orig_r, orig_c = global_shape
+
     new_r = math.ceil(orig_r / p_prime) * p_prime
     new_c = math.ceil(orig_c / p_prime) * p_prime
 
-    br, bc = new_r // p_prime, new_c // p_prime
-    i0, j0 = proc_i * br, proc_j * bc
-    i1, j1 = min(i0 + br, orig_r), min(j0 + bc, orig_c)
+    blkr, blkc = new_r // p_prime, new_c // p_prime
 
-    i_end = None if proc_i == p_prime - 1 else i1
-    j_end = None if proc_j == p_prime - 1 else j1
-    return slice(i0, i_end), slice(j0, j_end)
+    i0, j0 = proc_i * blkr, proc_j * blkc
+    i1, j1 = min(i0 + blkr, orig_r), min(j0 + blkc, orig_c)
 
-def block_gather(x, new_shape, orig_shape, comm):
+    return slice(i0, i1), slice(j0, j1)
+
+
+def block_gather(x: DistributedArray, new_shape: Tuple[int, int], orig_shape: Tuple[int, int], comm: MPI.Comm):
+    """
+    Gather distributed local blocks from 2D block distributed matrix distributed
+    amongst a square process grid into the full global array.
+
+    Parameters
+    ----------
+    x : :obj:`pylops_mpi.DistributedArray`
+        The distributed array to gather locally.
+    new_shape : Tuple[int, int]
+        Shape `(N', M')` of the padded global array, where both dimensions
+        are multiples of :math:`\sqrt{\mathbf{P}}`.
+    orig_shape : Tuple[int, int]
+        Original shape `(N, M)` of the global array before padding.
+    comm : MPI.Comm
+        MPI communicator whose size must be a perfect square (P = p_prime**2).
+
+    Returns
+    -------
+    Array
+        The reconstructed 2D array of shape `orig_shape`, assembled from
+        the distributed blocks.
+
+    Raises
+    ------
+    RuntimeError
+        If the number of processes participating in the provided communicator is not a perfect square.
+    """
     ncp = get_module(x.engine)
     p_prime = math.isqrt(comm.Get_size())
+    if p_prime * p_prime != comm.Get_size():
+        raise RuntimeError(f"Communicator size must be a perfect square, got {comm.Get_size()!r}")
+
     all_blks = comm.allgather(x.local_array)
 
     nr, nc = new_shape
@@ -151,8 +212,12 @@ def block_gather(x, new_shape, orig_shape, comm):
         block = all_blks[rank]
         if block.ndim == 1:
             block = block.reshape(block_rows, block_cols)
-        C[start_row:start_row + block_rows, start_col:start_col + block_cols] = block
+        C[start_row:start_row + block_rows,
+          start_col:start_col + block_cols] = block
+
+    # Trim off any padding
     return C[:orr, :orc]
+
 
 
 class MPIMatrixMult(MPILinearOperator):
@@ -360,7 +425,7 @@ class MPISummaMatrixMult(MPILinearOperator):
     Implements distributed matrix-matrix multiplication using the SUMMA algorithm
     between a matrix :math:`\mathbf{A}` distributed over a 2D process grid and
     input model and data vectors, which are both interpreted as matrices
-    distributed in block-column fashion.
+    distributed in block fashion wherein each process owns a tile of the matrix.
 
     Parameters
     ----------
