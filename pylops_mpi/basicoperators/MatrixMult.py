@@ -496,6 +496,7 @@ class MPISummaMatrixMult(MPILinearOperator):
         self._col_comm = base_comm.Split(color=self._col_id, key=self._row_id)
 
         self.A = A.astype(np.dtype(dtype))
+        if saveAt: self.At = A.T.conj()
 
         self.N = self._col_comm.allreduce(A.shape[0])
         self.K = self._row_comm.allreduce(A.shape[1])
@@ -571,8 +572,8 @@ class MPISummaMatrixMult(MPILinearOperator):
         for k in range(self._P_prime):
             Atemp = self.A.copy() if self._col_id == k else np.empty_like(self.A)
             Xtemp = x_block.copy() if self._row_id == k else np.empty_like(x_block)
-            self._row_comm.Bcast(Atemp, root=k)
-            self._col_comm.Bcast(Xtemp, root=k)
+            self._row_comm.bcast(Atemp, root=k)
+            self._col_comm.bcast(Xtemp, root=k)
             Y_local += ncp.dot(Atemp, Xtemp)
 
         Y_local_unpadded = Y_local[:local_n, :local_m]
