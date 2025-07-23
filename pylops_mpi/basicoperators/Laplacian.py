@@ -1,10 +1,10 @@
 from typing import Tuple
 import numpy as np
-from numpy.core.multiarray import normalize_axis_index
 from mpi4py import MPI
 
 from pylops.utils.typing import DTypeLike, InputDimsLike
 from pylops.basicoperators import SecondDerivative
+from pylops.utils.backend import get_normalize_axis_index
 
 from pylops_mpi import DistributedArray, MPILinearOperator, Partition
 from pylops_mpi.DistributedArray import local_split
@@ -75,7 +75,7 @@ class MPILaplacian(MPILinearOperator):
                  base_comm: MPI.Comm = MPI.COMM_WORLD,
                  dtype: DTypeLike = np.float64):
         self.dims = dims
-        axes = tuple(normalize_axis_index(ax, len(dims)) for ax in axes)
+        axes = tuple(get_normalize_axis_index()(ax, len(dims)) for ax in axes)
         if not (len(axes) == len(weights) == len(sampling)):
             raise ValueError("axes, weights, and sampling have different size")
         self.axes = axes
