@@ -70,30 +70,6 @@ def active_grid_comm(base_comm: MPI.Comm, N: int, M: int):
 
     return new_comm, new_rank, new_row, new_col, True
 
-def block_distribute(array:NDArray, rank:int, comm: MPI.Comm, pad:bool=False):
-    size = comm.Get_size()
-    p_prime = math.isqrt(size)
-    if p_prime * p_prime != size:
-        raise Exception(f"Number of processes must be a square number, provided {size} instead...")
-
-    proc_i, proc_j = divmod(rank, p_prime)
-    orig_r, orig_c = array.shape
-
-    new_r = math.ceil(orig_r / p_prime) * p_prime
-    new_c = math.ceil(orig_c / p_prime) * p_prime
-
-    br, bc = new_r // p_prime, new_c // p_prime
-    i0, j0 = proc_i * br, proc_j * bc
-    i1, j1 = min(i0 + br, orig_r), min(j0 + bc, orig_c)
-
-    i_end = None if proc_i == p_prime - 1 else i1
-    j_end = None if proc_j == p_prime - 1 else j1
-    block = array[i0:i_end, j0:j_end]
-
-    pr = (new_r - orig_r) if proc_i == p_prime - 1 else 0
-    pc = (new_c - orig_c) if proc_j == p_prime - 1 else 0
-    if pad and (pr or pc): block = np.pad(block, [(0, pr), (0, pc)], mode='constant')
-    return block, (new_r, new_c)
 
 def local_block_spit(global_shape: Tuple[int, int],
                      rank: int,
