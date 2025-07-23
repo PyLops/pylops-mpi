@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from typing import Tuple
+from typing import Tuple, Union, Literal
 from mpi4py import MPI
 
 from pylops.utils.backend import get_module
@@ -196,8 +196,8 @@ def block_gather(x: DistributedArray, new_shape: Tuple[int, int], orig_shape: Tu
 
 
 
-class MPIMatrixMult(MPILinearOperator):
-    r"""MPI Matrix multiplication
+class _MPIBlockMatrixMult(MPILinearOperator):
+    r"""MPI Blocked Matrix multiplication
 
     Implement distributed matrix-matrix multiplication between a matrix
     :math:`\mathbf{A}` blocked over rows (i.e., blocks of rows are stored
@@ -395,7 +395,7 @@ class MPIMatrixMult(MPILinearOperator):
         y[:] = y_layer.flatten()
         return y
 
-class MPISummaMatrixMult(MPILinearOperator):
+class _MPISummaMatrixMult(MPILinearOperator):
     r"""MPI SUMMA Matrix multiplication
 
     Implements distributed matrix-matrix multiplication using the SUMMA algorithm
@@ -682,3 +682,102 @@ class MPISummaMatrixMult(MPILinearOperator):
         Y_local_unpadded = Y_local[:local_k, :local_m]
         y[:] = Y_local_unpadded.flatten()
         return y
+
+class MPIMatrixMult(MPILinearOperator):
+    r"""
+    MPI Distributed Matrix Multiplication Operator
+
+    This general operator performs distributed matrix-matrix multiplication
+    using either the SUMMA (Scalable Universal Matrix Multiplication Algorithm)
+    or a 1D block-row decomposition algorithm, depending on the specified
+    ``kind`` parameter.
+
+    The forward operation computes::
+
+        Y = A @ X
+
+    where:
+    - ``A`` is the distributed operator matrix of shape ``[N x K]``
+    - ``X`` is the distributed operand matrix of shape ``[K x M]``
+    - ``Y`` is the resulting distributed matrix of shape ``[N x M]``
+
+    The adjoint (conjugate-transpose) operation computes::
+
+        X_adj = A.H @ Y
+
+    where ``A.H`` is the complex-conjugate transpose of ``A``.
+
+    Distribution Layouts
+    --------------------
+    :summa:
+      2D block-grid distribution over a square process grid  :math:`[\sqrt{P} \times \sqrt{P}]`:
+      - ``A`` and ``X`` are partitioned into :math:`[N_loc \times K_loc]` and
+        :math:`[K_loc \times M_loc]` tiles on each rank, respectively.
+      - Each SUMMA iteration broadcasts row- and column-blocks of ``A`` and
+        ``X`` and accumulates local partial products.
+
+    :block:
+      1D block-row distribution over a 1 x P grid:
+      - ``A`` is partitioned into :math:`[N_loc \times K]` blocks across ranks.
+      - ``X`` (and result ``Y``) are partitioned into :math:`[K \times M_loc]` blocks.
+      - Local multiplication is followed by row-wise gather (forward) or
+        allreduce (adjoint) across ranks.
+
+    Parameters
+    ----------
+    A : NDArray
+        Local block of the matrix operator.
+    M : int
+        Global number of columns in the operand and result matrices.
+    saveAt : bool, optional
+        If ``True``, store both ``A`` and its conjugate transpose ``A.H``
+        to accelerate adjoint operations (uses twice the memory).
+        Default is ``False``.
+    base_comm : mpi4py.MPI.Comm, optional
+        MPI communicator to use. Defaults to ``MPI.COMM_WORLD``.
+    kind : {'summa', 'block'}, optional
+        Algorithm to use: ``'summa'`` for the SUMMA 2D algorithm, or
+        ``'block'`` for the block-row-col decomposition. Default is ``'summa'``.
+    dtype : DTypeLike, optional
+        Numeric data type for computations. Default is ``np.float64``.
+
+    Attributes
+    ----------
+    shape : :obj:`tuple`
+        Operator shape
+    comm : mpi4py.MPI.Comm
+        The MPI communicator in use.
+    kind : str
+        Selected distributed matrix multiply algorithm ('summa' or 'block').
+
+    Raises
+    ------
+    NotImplementedError
+        If ``kind`` is not one of ``'summa'`` or ``'block'``.
+    Exception
+        If the MPI communicator does not form a compatible grid for the
+        selected algorithm.
+    """
+    def __init__(
+            self,
+            A: NDArray,
+            M: int,
+            saveAt: bool = False,
+            base_comm: MPI.Comm = MPI.COMM_WORLD,
+            kind:Literal["summa", "block"] = "summa",
+            dtype: DTypeLike = "float64",
+    ):
+        if kind == "summa":
+            self._f = _MPISummaMatrixMult(A,M,saveAt,base_comm,dtype)
+        elif kind == "block":
+            self._f = _MPIBlockMatrixMult(A, M, saveAt, base_comm, dtype)
+        else:
+            raise NotImplementedError("kind must be summa or block")
+        self.kind = kind
+        super().__init__(shape=self._f.shape, dtype=dtype, base_comm=base_comm)
+
+    def _matvec(self, x: DistributedArray) -> DistributedArray:
+        return self._f.matvec(x)
+
+    def _rmatvec(self, x: DistributedArray) -> DistributedArray:
+        return self._f.rmatvec(x)
