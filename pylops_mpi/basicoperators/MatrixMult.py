@@ -554,10 +554,6 @@ class MPISummaMatrixMult(MPILinearOperator):
         pr = (bn - A.shape[0]) if self._row_id == self._P_prime - 1 else 0
         pc = (bk - A.shape[1]) if self._col_id == self._P_prime - 1 else 0
 
-        if pr < 0 or pc < 0:
-            raise Exception(f"Improper distribution of A expected local shape "
-                            f"( ≤ {bn}, ≤ {bk}) but got ({A.shape[0]},{A.shape[1]})")
-
         if pr > 0 or pc > 0:
             self.A = np.pad(self.A, [(0, pr), (0, pc)], mode='constant')
 
