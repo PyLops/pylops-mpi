@@ -8,7 +8,11 @@ from pylops.utils import deps
 cupy_message = deps.cupy_import("benchmark module")
 if cupy_message is None:
     import cupy as cp
-    has_cupy = True
+    if cp.cuda.runtime.getDeviceCount() == 0:
+        has_cupy = False
+        print(UserWarning("CuPy is installed, but no CUDA-capable device is available."))
+    else:
+        has_cupy = True
 else:
     has_cupy = False
 
@@ -31,6 +35,7 @@ def _parse_output_tree(markers: List[str]):
     markers: :obj:`list`, optional
         A list of markers/labels generated from the benchmark call
     """
+    global _markers
     output = []
     stack = []
     i = 0
@@ -53,13 +58,14 @@ def _parse_output_tree(markers: List[str]):
                 if next_level >= level:
                     stack.append(markers[i])
         i += 1
+    # reset markers, allowing other benchmarked function to start fresh
+    _markers = []
     return output
 
 
 def _sync():
     """Synchronize all MPI processes or CUDA Devices"""
     if has_cupy:
-        cp.cuda.get_current_stream().synchronize()
         # this is ok to call even if CUDA runtime is not initialized
         cp.cuda.runtime.deviceSynchronize()
 
