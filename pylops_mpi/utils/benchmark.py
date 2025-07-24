@@ -3,6 +3,14 @@ import logging
 import time
 from typing import Callable, Optional, List
 from mpi4py import MPI
+from pylops.utils import deps
+
+cupy_message = deps.cupy_import("benchmark module")
+if cupy_message is None:
+    import cupy as cp
+    has_cupy = True
+else:
+    has_cupy = False
 
 
 # TODO (tharitt): later move to env file or something
@@ -46,6 +54,16 @@ def _parse_output_tree(markers: List[str]):
                     stack.append(markers[i])
         i += 1
     return output
+
+
+def _sync():
+    """Synchronize all MPI processes or CUDA Devices"""
+    if has_cupy:
+        cp.cuda.get_current_stream().synchronize()
+        # this is ok to call even if CUDA runtime is not initialized
+        cp.cuda.runtime.deviceSynchronize()
+
+    MPI.COMM_WORLD.Barrier()
 
 
 def mark(label: str):
@@ -108,9 +126,11 @@ def benchmark(func: Optional[Callable] = None,
 
             _mark_func_stack.append(local_mark)
 
+            _sync()
             start_time = time.perf_counter()
             # the mark() called in wrapped function will now call local_mark
             result = func(*args, **kwargs)
+            _sync()
             end_time = time.perf_counter()
 
             elapsed = end_time - start_time
