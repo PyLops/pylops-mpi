@@ -195,7 +195,6 @@ def block_gather(x: DistributedArray, new_shape: Tuple[int, int], orig_shape: Tu
     return C[:orr, :orc]
 
 
-
 class _MPIBlockMatrixMult(MPILinearOperator):
     r"""MPI Blocked Matrix multiplication
 
@@ -214,7 +213,7 @@ class _MPIBlockMatrixMult(MPILinearOperator):
         Global leading dimension (i.e., number of columns) of the matrices
         representing the input model and data vectors.
     saveAt : :obj:`bool`, optional
-        Save ``A`` and ``A.H`` to speed up the computation of adjoint
+        Save :math:`\mathbf{A}` and ``A.H`` to speed up the computation of adjoint
         (``True``) or create ``A.H`` on-the-fly (``False``)
         Note that ``saveAt=True`` will double the amount of required memory.
         Default is ``False``.
@@ -253,22 +252,22 @@ class _MPIBlockMatrixMult(MPILinearOperator):
     processes by a factor equivalent to :math:`\sqrt{P}` across a square process
     grid (:math:`\sqrt{P}\times\sqrt{P}`). More specifically:
 
-    - The matrix ``A`` is distributed across MPI processes in a block-row fashion
-      and each process holds a local block of ``A`` with shape
+    - The matrix :math:`\mathbf{A}` is distributed across MPI processes in a block-row fashion
+      and each process holds a local block of :math:`\mathbf{A}` with shape
       :math:`[N_{loc} \times K]`
-    - The operand matrix ``X`` is distributed in a block-column fashion and
-      each process holds a local block of ``X`` with shape
+    - The operand matrix :math:`\mathbf{X}` is distributed in a block-column fashion and
+      each process holds a local block of :math:`\mathbf{X}` with shape
       :math:`[K \times M_{loc}]`
     - Communication is minimized by using a 2D process grid layout
 
     **Forward Operation step-by-step**
 
-    1. **Input Preparation**: The input vector ``x`` (flattened from matrix ``X``
+    1. **Input Preparation**: The input vector ``x`` (flattened from matrix :math:`\mathbf{X}`
        of shape ``(K, M)``) is reshaped to ``(K, M_local)`` where ``M_local``
        is the number of columns assigned to the current process.
 
     2. **Local Computation**: Each process computes ``A_local @ X_local`` where:
-       - ``A_local`` is the local block of matrix ``A`` (shape ``N_local x K``)
+       - ``A_local`` is the local block of matrix :math:`\mathbf{A}` (shape ``N_local x K``)
        - ``X_local`` is the broadcasted operand (shape ``K x M_local``)
 
     3. **Row-wise Gather**: Results from all processes in each row are gathered
@@ -283,10 +282,10 @@ class _MPIBlockMatrixMult(MPILinearOperator):
        representing the local columns of the input matrix.
 
     2. **Local Adjoint Computation**: Each process computes
-       ``A_local.H @ X_tile`` where ``A_local.H`` is either i) Pre-computed
-       and stored in ``At`` (if ``saveAt=True``), ii) computed on-the-fly as
+       ``A_local.H @ X_tile`` where ``A_local.H`` is either pre-computed
+       and stored in ``At`` (if ``saveAt=True``), or computed on-the-fly as
        ``A.T.conj()`` (if ``saveAt=False``). Each process multiplies its
-       transposed  local ``A`` block ``A_local^H`` (shape ``K x N_block``)
+       transposed  local :math:`\mathbf{A}` block ``A_local^H`` (shape ``K x N_block``)
        with the extracted  ``X_tile`` (shape ``N_block x M_local``),
        producing a partial result of  shape ``(K, M_local)``.
        This computes the local contribution of columns of  ``A^H`` to the final
@@ -413,7 +412,7 @@ class _MPISummaMatrixMult(MPILinearOperator):
         Global number of columns of the matrices representing the input model
         and data vectors.
     saveAt : :obj:`bool`, optional
-        Save ``A`` and ``A.H`` to speed up the computation of adjoint
+        Save :math:`\mathbf{A}` and ``A.H`` to speed up the computation of adjoint
         (``True``) or create ``A.H`` on-the-fly (``False``).
         Note that ``saveAt=True`` will double the amount of required memory.
         Default is ``False``.
@@ -451,16 +450,16 @@ class _MPISummaMatrixMult(MPILinearOperator):
     This implementation is based on a 2D block distribution across a square process
     grid (:math:`\sqrt{P}\times\sqrt{P}`). The matrices are distributed as follows:
 
-    - The matrix ``A`` is distributed across MPI processes in 2D blocks where
-      each process holds a local block of ``A`` with shape :math:`[N_{loc} \times K_{loc}]`
+    - The matrix :math:`\mathbf{A}` is distributed across MPI processes in 2D blocks where
+      each process holds a local block of :math:`\mathbf{A}` with shape :math:`[N_{loc} \times K_{loc}]`
       where :math:`N_{loc} = \frac{N}{\sqrt{P}}` and :math:`K_{loc} = \frac{K}{\sqrt{P}}`.
 
-    - The operand matrix ``X`` is also distributed across MPI processes in 2D blocks where
-      each process holds a local block of ``X`` with shape :math:`[K_{loc} \times M_{loc}]`
+    - The operand matrix :math:`\mathbf{X}` is also distributed across MPI processes in 2D blocks where
+      each process holds a local block of :math:`\mathbf{X}` with shape :math:`[K_{loc} \times M_{loc}]`
       where :math:`K_{loc} = \frac{K}{\sqrt{P}}` and :math:`M_{loc} = \frac{M}{\sqrt{P}}`.
 
-    - The result matrix ``Y`` is also distributed across MPI processes in 2D blocks where
-      each process holds a local block of ``Y`` with shape :math:`[N_{loc} \times M_{loc}]`
+    - The result matrix :math:`\mathbf{Y}` is also distributed across MPI processes in 2D blocks where
+      each process holds a local block of :math:`\mathbf{Y}` with shape :math:`[N_{loc} \times M_{loc}]`
       where :math:`N_{loc} = \frac{N}{\sqrt{P}}` and :math:`M_{loc} = \frac{M}{\sqrt{P}}`.
 
 
@@ -473,10 +472,10 @@ class _MPISummaMatrixMult(MPILinearOperator):
 
     2. **SUMMA Iteration**: For each step ``k`` in the SUMMA algorithm  -- :math:`k \in \[ 0, \sqrt{P} \)}` :
 
-       a. **Broadcast A blocks**: Process in column ``k`` broadcasts its ``A``
+       a. **Broadcast A blocks**: Process in column ``k`` broadcasts its :math:`\mathbf{A}`
           block to all other processes in the same process row.
 
-       b. **Broadcast X blocks**: Process in row ``k`` broadcasts its ``X``
+       b. **Broadcast X blocks**: Process in row ``k`` broadcasts its :math:`\mathbf{X}`
           block to all other processes in the same process column.
 
        c. **Local Computation**: Each process computes the partial matrix
@@ -484,7 +483,7 @@ class _MPISummaMatrixMult(MPILinearOperator):
           local result.
 
     3. **Result Assembly**: After all k SUMMA iterations, each process has computed
-       its local block of the result matrix ``Y``.
+       its local block of the result matrix :math:`\mathbf{Y}`.
 
     **Adjoint Operation (SUMMA Algorithm)**
 
@@ -496,11 +495,11 @@ class _MPISummaMatrixMult(MPILinearOperator):
 
     2. **SUMMA Adjoint Iteration**: For each step ``k`` in the adjoint SUMMA algorithm:
 
-       a. **Broadcast A^H blocks**: The conjugate transpose of ``A`` blocks is
+       a. **Broadcast A^H blocks**: The conjugate transpose of :math:`\mathbf{A}` blocks is
           communicated between processes. If ``saveAt=True``, the pre-computed
           ``A.H`` is used; otherwise, ``A.T.conj()`` is computed on-the-fly.
 
-       b. **Broadcast Y blocks**: Process in row ``k`` broadcasts its ``Y``
+       b. **Broadcast Y blocks**: Process in row ``k`` broadcasts its :math:`\mathbf{Y}`
           block to all other processes in the same process column.
 
        c. **Local Adjoint Computation**: Each process computes the partial
@@ -683,7 +682,14 @@ class _MPISummaMatrixMult(MPILinearOperator):
         y[:] = Y_local_unpadded.flatten()
         return y
 
-class MPIMatrixMult(MPILinearOperator):
+def MPIMatrixMult(
+            A: NDArray,
+            M: int,
+            saveAt: bool = False,
+            base_comm: MPI.Comm = MPI.COMM_WORLD,
+            kind: Literal["summa", "block"] = "summa",
+            dtype: DTypeLike = "float64",
+    ):
     r"""
     MPI Distributed Matrix Multiplication Operator
 
@@ -694,32 +700,32 @@ class MPIMatrixMult(MPILinearOperator):
 
     The forward operation computes::
 
-        Y = A @ X
+        :math:`\mathbf{Y} = \mathbf{A} \cdot \mathbf{X}`
 
     where:
-    - ``A`` is the distributed operator matrix of shape ``[N x K]``
-    - ``X`` is the distributed operand matrix of shape ``[K x M]``
-    - ``Y`` is the resulting distributed matrix of shape ``[N x M]``
+    - :math:`\mathbf{A}` is the distributed operator matrix of shape :math:`[N \times K]`
+    - :math:`\mathbf{X}` is the distributed operand matrix of shape :math:`[K \times M]`
+    - :math:`\mathbf{Y}` is the resulting distributed matrix of shape :math:`[N \times M]`
 
     The adjoint (conjugate-transpose) operation computes::
+    
+        :math:`\mathbf{X}_{adj} = \mathbf{A}^H \cdot \mathbf{Y}`
 
-        X_adj = A.H @ Y
-
-    where ``A.H`` is the complex-conjugate transpose of ``A``.
+    where :math:`\mathbf{A}^H` is the complex-conjugate transpose of :math:`\mathbf{A}`.
 
     Distribution Layouts
     --------------------
     :summa:
       2D block-grid distribution over a square process grid  :math:`[\sqrt{P} \times \sqrt{P}]`:
-      - ``A`` and ``X`` are partitioned into :math:`[N_loc \times K_loc]` and
+      - :math:`\mathbf{A}` and :math:`\mathbf{X}` are partitioned into :math:`[N_loc \times K_loc]` and
         :math:`[K_loc \times M_loc]` tiles on each rank, respectively.
-      - Each SUMMA iteration broadcasts row- and column-blocks of ``A`` and
-        ``X`` and accumulates local partial products.
+      - Each SUMMA iteration broadcasts row- and column-blocks of :math:`\mathbf{A}` and
+        :math:`\mathbf{X}` and accumulates local partial products.
 
     :block:
-      1D block-row distribution over a 1 x P grid:
-      - ``A`` is partitioned into :math:`[N_loc \times K]` blocks across ranks.
-      - ``X`` (and result ``Y``) are partitioned into :math:`[K \times M_loc]` blocks.
+      1D block-row distribution over a :math:`[1 \times P]` grid:
+      - :math:`\mathbf{A}` is partitioned into :math:`[N_loc \times K]` blocks across ranks.
+      - :math:`\mathbf{X}` (and result :math:`\mathbf{Y}`) are partitioned into :math:`[K \times M_loc]` blocks.
       - Local multiplication is followed by row-wise gather (forward) or
         allreduce (adjoint) across ranks.
 
@@ -730,7 +736,7 @@ class MPIMatrixMult(MPILinearOperator):
     M : int
         Global number of columns in the operand and result matrices.
     saveAt : bool, optional
-        If ``True``, store both ``A`` and its conjugate transpose ``A.H``
+        If ``True``, store both :math:`\mathbf{A}` and its conjugate transpose :math:`\mathbf{A}^H`
         to accelerate adjoint operations (uses twice the memory).
         Default is ``False``.
     base_comm : mpi4py.MPI.Comm, optional
@@ -758,26 +764,9 @@ class MPIMatrixMult(MPILinearOperator):
         If the MPI communicator does not form a compatible grid for the
         selected algorithm.
     """
-    def __init__(
-            self,
-            A: NDArray,
-            M: int,
-            saveAt: bool = False,
-            base_comm: MPI.Comm = MPI.COMM_WORLD,
-            kind:Literal["summa", "block"] = "summa",
-            dtype: DTypeLike = "float64",
-    ):
-        if kind == "summa":
-            self._f = _MPISummaMatrixMult(A,M,saveAt,base_comm,dtype)
-        elif kind == "block":
-            self._f = _MPIBlockMatrixMult(A, M, saveAt, base_comm, dtype)
-        else:
-            raise NotImplementedError("kind must be summa or block")
-        self.kind = kind
-        super().__init__(shape=self._f.shape, dtype=dtype, base_comm=base_comm)
-
-    def _matvec(self, x: DistributedArray) -> DistributedArray:
-        return self._f.matvec(x)
-
-    def _rmatvec(self, x: DistributedArray) -> DistributedArray:
-        return self._f.rmatvec(x)
+    if kind == "summa":
+        return _MPISummaMatrixMult(A,M,saveAt,base_comm,dtype)
+    elif kind == "block":
+        return _MPIBlockMatrixMult(A, M, saveAt, base_comm, dtype)
+    else:
+        raise NotImplementedError("kind must be summa or block")
