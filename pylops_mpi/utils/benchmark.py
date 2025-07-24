@@ -3,19 +3,18 @@ import logging
 import time
 from typing import Callable, Optional, List
 from mpi4py import MPI
-from pylops.utils import deps
 
-cupy_message = deps.cupy_import("benchmark module")
-if cupy_message is None:
-    import cupy as cp
-    if cp.cuda.runtime.getDeviceCount() == 0:
-        has_cupy = False
-        print(UserWarning("CuPy is installed, but no CUDA-capable device is available."))
-    else:
-        has_cupy = True
+from pylops.utils import deps as pylops_deps  # avoid namespace crashes with pylops_mpi.utils
+from pylops_mpi.utils import deps
+
+cupy_message = pylops_deps.cupy_import("the benchmark module")
+nccl_message = deps.nccl_import("the benchmark module")
+
+if nccl_message is None and cupy_message is None:
+    from pylops_mpi.utils._nccl import _nccl_sync
 else:
-    has_cupy = False
-
+    def _nccl_sync():
+        pass
 
 # TODO (tharitt): later move to env file or something
 ENABLE_BENCHMARK = True
@@ -65,10 +64,7 @@ def _parse_output_tree(markers: List[str]):
 
 def _sync():
     """Synchronize all MPI processes or CUDA Devices"""
-    if has_cupy:
-        # this is ok to call even if CUDA runtime is not initialized
-        cp.cuda.runtime.deviceSynchronize()
-
+    _nccl_sync()
     MPI.COMM_WORLD.Barrier()
 
 
