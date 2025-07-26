@@ -1,6 +1,7 @@
 __all__ = [
     "_prepare_nccl_allgather_inputs",
     "_unroll_nccl_allgather_recv",
+    "_nccl_sync",
     "initialize_nccl_comm",
     "nccl_split",
     "nccl_allgather",
@@ -18,7 +19,6 @@ import os
 import numpy as np
 import cupy as cp
 import cupy.cuda.nccl as nccl
-
 
 cupy_to_nccl_dtype = {
     "float32": nccl.NCCL_FLOAT32,
@@ -61,6 +61,13 @@ def _nccl_buf_size(buf, count=None):
         return 2 * count if count else 2 * buf.size
     else:
         return count if count else buf.size
+
+
+def _nccl_sync():
+    """A thin wrapper of CuPy's synchronization for protected import"""
+    if cp.cuda.runtime.getDeviceCount() == 0:
+        return
+    cp.cuda.runtime.deviceSynchronize()
 
 
 def _prepare_nccl_allgather_inputs(send_buf, send_buf_shapes) -> Tuple[cp.ndarray, cp.ndarray]:
