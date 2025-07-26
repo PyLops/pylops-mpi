@@ -26,7 +26,7 @@ _markers = []
 
 def _parse_output_tree(markers: List[str]):
     """This function parses the list of strings gathered during the benchmark call and output them
-    as one properly formatted string. The format of output string follows the hierachy of function calls
+    as one properly formatted string. The format of output string follows the hierarchy of function calls
     i.e., the nested funtion calls are indented.
 
     Parameters
