@@ -8,9 +8,10 @@ from numpy.testing import assert_allclose
 from mpi4py import MPI
 import pytest
 
-from pylops.basicoperators import FirstDerivative, Identity
+from pylops.basicoperators import Conj, FirstDerivative, Identity
 from pylops_mpi import DistributedArray, Partition
-from pylops_mpi.basicoperators import MPIMatrixMult, MPIBlockDiag
+from pylops_mpi.basicoperators import MPIBlockDiag, MPIMatrixMult, local_block_spit, block_gather, \
+    active_grid_comm
 
 np.random.seed(42)
 base_comm = MPI.COMM_WORLD
@@ -55,8 +56,7 @@ def test_MPIMatrixMult(N, K, M, dtype_str):
     cmplx = 1j if np.issubdtype(dtype, np.complexfloating) else 0
     base_float_dtype = np.float32 if dtype == np.complex64 else np.float64
 
-    comm, rank, row_id, col_id, is_active = \
-        MPIMatrixMult.active_grid_comm(base_comm, N, M)
+    comm, rank, row_id, col_id, is_active = active_grid_comm(base_comm, N, M)
     if not is_active: return
 
     size = comm.Get_size()
@@ -86,7 +86,7 @@ def test_MPIMatrixMult(N, K, M, dtype_str):
     X_p = X_glob[:, col_start_X:col_end_X]
 
     # Create MPIMatrixMult operator
-    Aop = MPIMatrixMult(A_p, M, base_comm=comm, dtype=dtype_str)
+    Aop = MPIMatrixMult(A_p, M, base_comm=comm, dtype=dtype_str, kind="block")
 
     # Create DistributedArray for input x (representing B flattened)
     all_local_col_len = comm.allgather(local_col_X_len)
@@ -158,5 +158,105 @@ def test_MPIMatrixMult(N, K, M, dtype_str):
             xadj1.squeeze(),
             xadj1_loc.squeeze(),
             rtol=np.finfo(np.dtype(dtype)).resolution,
+            err_msg=f"Rank {rank}: Adjoint verification failed."
+        )
+
+@pytest.mark.mpi(min_size=1)
+@pytest.mark.parametrize("N, K, M, dtype_str", test_params)
+def test_MPISummaMatrixMult(N, K, M, dtype_str):
+    dtype = np.dtype(dtype_str)
+
+    cmplx = 1j if np.issubdtype(dtype, np.complexfloating) else 0
+    base_float_dtype = np.float32 if dtype == np.complex64 else np.float64
+
+    comm, rank, row_id, col_id, is_active = \
+        active_grid_comm(base_comm, N, M)
+    if not is_active: return
+
+    size = comm.Get_size()
+
+    # Fill local matrices
+    A_glob_real = np.arange(N * K, dtype=base_float_dtype).reshape(N, K)
+    A_glob_imag = np.arange(N * K, dtype=base_float_dtype).reshape(N, K) * 0.5
+    A_glob = (A_glob_real + cmplx * A_glob_imag).astype(dtype)
+
+    X_glob_real = np.arange(K * M, dtype=base_float_dtype).reshape(K, M)
+    X_glob_imag = np.arange(K * M, dtype=base_float_dtype).reshape(K, M) * 0.7
+    X_glob = (X_glob_real + cmplx * X_glob_imag).astype(dtype)
+
+    A_slice = local_block_spit((N, K), rank, comm)
+    X_slice = local_block_spit((K, M), rank, comm)
+
+    A_p = A_glob[A_slice]
+    X_p = X_glob[X_slice]
+
+    # Create MPIMatrixMult operator
+    Aop = MPIMatrixMult(A_p, M, base_comm=comm, dtype=dtype_str, kind="summa")
+
+    x_dist = DistributedArray(
+        global_shape=(K * M),
+        local_shapes=comm.allgather(X_p.shape[0] * X_p.shape[1]),
+        partition=Partition.SCATTER,
+        base_comm=comm,
+        dtype=dtype
+    )
+
+    x_dist.local_array[:] = X_p.ravel()
+
+    # Forward operation: y = A @ x (distributed)
+    y_dist = Aop @ x_dist
+
+    # Adjoint operation: xadj = A.H @ y (distributed)
+    xadj_dist = Aop.H @ y_dist
+
+    # Re-organize in local matrix
+    y = block_gather(y_dist, (N,M), (N,M), comm)
+    xadj = block_gather(xadj_dist, (K,M), (K,M), comm)
+
+    if rank == 0:
+        y_loc = A_glob @ X_glob
+        assert_allclose(
+            y.squeeze(),
+            y_loc.squeeze(),
+            rtol=np.finfo(np.dtype(dtype)).resolution,
+            err_msg=f"Rank {rank}: Forward verification failed."
+        )
+
+        xadj_loc = A_glob.conj().T @ y_loc
+        assert_allclose(
+            xadj.squeeze(),
+            xadj_loc.squeeze(),
+            rtol=np.finfo(np.dtype(dtype)).resolution,
+            err_msg=f"Rank {rank}: Adjoint verification failed."
+        )
+
+    # Chain with another operator
+    Dop = Conj(dims=(A_p.shape[0], X_p.shape[1]))
+    DBop = MPIBlockDiag(ops=[Dop,], base_comm=comm)
+    Op = DBop @ Aop
+
+    y1_dist = Op @ x_dist
+    xadj1_dist = Op.H @ y1_dist
+
+    # Re-organize in local matrix
+    y1 = block_gather(y1_dist, (N, M), (N, M), comm)
+    xadj1 = block_gather(xadj1_dist, (K,M), (K,M), comm)
+
+    if rank == 0:
+        y1_loc = ((A_glob @ X_glob).conj().ravel()).reshape(N, M) + 1.0j
+        y1_loc = y1_loc - 1.0j
+
+        assert_allclose(
+             y1.squeeze(),
+             y1_loc.squeeze(),
+            rtol=np.finfo(y1_loc.dtype).resolution,
+            err_msg=f"Rank {rank}: Forward verification failed."
+        )
+
+        xadj1_loc = ((A_glob.conj().T @ y1_loc.conj()).ravel()).reshape(K, M)
+        assert_allclose(
+            xadj1.squeeze().ravel(),
+            xadj1_loc.squeeze().ravel(),
+            rtol=np.finfo(xadj1_loc.dtype).resolution,
             err_msg=f"Rank {rank}: Adjoint verification failed."
         )

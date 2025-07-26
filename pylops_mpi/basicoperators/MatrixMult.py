@@ -74,7 +74,7 @@ def active_grid_comm(base_comm: MPI.Comm, N: int, M: int):
 def local_block_spit(global_shape: Tuple[int, int],
                      rank: int,
                      comm: MPI.Comm) -> Tuple[slice, slice]:
-    """
+    r"""
     Compute the local sub‐block of a 2D global array for a process in a square process grid.
 
     Parameters
@@ -122,7 +122,7 @@ def local_block_spit(global_shape: Tuple[int, int],
 
 
 def block_gather(x: DistributedArray, new_shape: Tuple[int, int], orig_shape: Tuple[int, int], comm: MPI.Comm):
-    """
+    r"""
     Gather distributed local blocks from 2D block distributed matrix distributed
     amongst a square process grid into the full global array.
 
@@ -351,19 +351,19 @@ class _MPIBlockMatrixMult(MPILinearOperator):
         ncp = get_module(x.engine)
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
-
+        output_dtype = np.result_type(self.dtype, x.dtype)
         y = DistributedArray(
             global_shape=(self.N * self.dimsd[1]),
             local_shapes=[(self.N * c) for c in self._rank_col_lens],
             mask=x.mask,
             partition=Partition.SCATTER,
-            dtype=self.dtype,
+            dtype=output_dtype,
             base_comm=self.base_comm
         )
 
         my_own_cols = self._rank_col_lens[self.rank]
         x_arr = x.local_array.reshape((self.dims[0], my_own_cols))
-        X_local = x_arr.astype(self.dtype)
+        X_local = x_arr.astype(output_dtype)
         Y_local = ncp.vstack(
             self._row_comm.allgather(
                 ncp.matmul(self.A, X_local)
@@ -377,16 +377,28 @@ class _MPIBlockMatrixMult(MPILinearOperator):
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER}. Got {x.partition} instead.")
 
+        # - If A is real: A^H = A^T,
+        #       so result_type(real_A, x.dtype) = x.dtype (if x is complex) or real (if x is real)
+        # - If A is complex: A^H is complex,
+        #       so result will be complex regardless of x
+        if np.iscomplexobj(self.A):
+            output_dtype = np.result_type(self.dtype, x.dtype)
+        else:
+            # Real matrix: A^T @ x preserves input type complexity
+            output_dtype = x.dtype if np.iscomplexobj(x.local_array) else self.dtype
+            # But still need to check type promotion for precision
+            output_dtype = np.result_type(self.dtype, output_dtype)
+
         y = DistributedArray(
             global_shape=(self.K * self.dimsd[1]),
             local_shapes=[self.K * c for c in self._rank_col_lens],
             mask=x.mask,
             partition=Partition.SCATTER,
-            dtype=self.dtype,
+            dtype=output_dtype,
             base_comm=self.base_comm
         )
 
-        x_arr = x.local_array.reshape((self.N, self._local_ncols)).astype(self.dtype)
+        x_arr = x.local_array.reshape((self.N, self._local_ncols)).astype(output_dtype)
         X_tile = x_arr[self._row_start:self._row_end, :]
         A_local = self.At if hasattr(self, "At") else self.A.T.conj()
         Y_local = ncp.matmul(A_local, X_tile)
@@ -536,7 +548,6 @@ class _MPISummaMatrixMult(MPILinearOperator):
         self._col_comm = base_comm.Split(color=self._col_id, key=self._row_id)
 
         self.A = A.astype(np.dtype(dtype))
-        if saveAt: self.At = A.T.conj()
 
         self.N = self._col_comm.allreduce(A.shape[0])
         self.K = self._row_comm.allreduce(A.shape[1])
@@ -569,6 +580,7 @@ class _MPISummaMatrixMult(MPILinearOperator):
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
 
+        output_dtype = np.result_type(self.dtype, x.dtype)
         # Calculate local shapes for block distribution
         bn = self._N_padded // self._P_prime  # block size in N dimension
         bm = self._M_padded // self._P_prime  # block size in M dimension
@@ -582,9 +594,8 @@ class _MPISummaMatrixMult(MPILinearOperator):
                              mask=x.mask,
                              local_shapes=local_shapes,
                              partition=Partition.SCATTER,
-                             dtype=self.dtype,
-                             base_comm=self.base_comm
-                             )
+                             dtype=output_dtype,
+                             base_comm=self.base_comm)
 
         # Calculate expected padded dimensions for x
         bk = self._K_padded // self._P_prime  # block size in K dimension
@@ -603,13 +614,13 @@ class _MPISummaMatrixMult(MPILinearOperator):
         if pad_k > 0 or pad_m > 0:
             x_block = np.pad(x_block, [(0, pad_k), (0, pad_m)], mode='constant')
 
-        Y_local = np.zeros((self.A.shape[0], bm))
+        Y_local = np.zeros((self.A.shape[0], bm),dtype=output_dtype)
 
         for k in range(self._P_prime):
             Atemp = self.A.copy() if self._col_id == k else np.empty_like(self.A)
             Xtemp = x_block.copy() if self._row_id == k else np.empty_like(x_block)
-            self._row_comm.bcast(Atemp, root=k)
-            self._col_comm.bcast(Xtemp, root=k)
+            self._row_comm.Bcast(Atemp, root=k)
+            self._col_comm.Bcast(Xtemp, root=k)
             Y_local += ncp.dot(Atemp, Xtemp)
 
         Y_local_unpadded = Y_local[:local_n, :local_m]
@@ -631,13 +642,24 @@ class _MPISummaMatrixMult(MPILinearOperator):
         local_m = bm if self._col_id != self._P_prime - 1 else self.M - (self._P_prime - 1) * bm
 
         local_shapes = self.base_comm.allgather(local_k * local_m)
+        # - If A is real: A^H = A^T,
+        #       so result_type(real_A, x.dtype) = x.dtype (if x is complex) or real (if x is real)
+        # - If A is complex: A^H is complex,
+        #       so result will be complex regardless of x
+        if np.iscomplexobj(self.A):
+            output_dtype = np.result_type(self.dtype, x.dtype)
+        else:
+            # Real matrix: A^T @ x preserves input type complexity
+            output_dtype = x.dtype if np.iscomplexobj(x.local_array) else self.dtype
+            # But still need to check type promotion for precision
+            output_dtype = np.result_type(self.dtype, output_dtype)
 
         y = DistributedArray(
             global_shape=(self.K * self.M),
             mask=x.mask,
             local_shapes=local_shapes,
             partition=Partition.SCATTER,
-            dtype=self.dtype,
+            dtype=output_dtype,
             base_comm=self.base_comm
         )
 
@@ -659,7 +681,7 @@ class _MPISummaMatrixMult(MPILinearOperator):
             x_block = np.pad(x_block, [(0, pad_n), (0, pad_m)], mode='constant')
 
         A_local = self.At if hasattr(self, "At") else self.A.T.conj()
-        Y_local = np.zeros((self.A.shape[1], bm))
+        Y_local = np.zeros((self.A.shape[1], bm), dtype=output_dtype)
 
         for k in range(self._P_prime):
             requests = []
