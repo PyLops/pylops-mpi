@@ -243,8 +243,7 @@ def test_MPISummaMatrixMult(N, K, M, dtype_str):
     xadj1 = block_gather(xadj1_dist,  (K,M), comm)
 
     if rank == 0:
-        y1_loc = ((A_glob @ X_glob).conj().ravel()).reshape(N, M) + 1.0j
-        y1_loc = y1_loc - 1.0j
+        y1_loc = ((A_glob @ X_glob).conj().ravel()).reshape(N, M)
 
         assert_allclose(
              y1.squeeze(),

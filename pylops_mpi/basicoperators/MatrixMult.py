@@ -108,18 +108,14 @@ def local_block_spit(global_shape: Tuple[int, int],
     if not ( isinstance(rank, int) and 0 <= rank < size ):
         raise ValueError(f"rank must be integer in [0, {size}), got {rank!r}")
 
-    proc_i, proc_j = divmod(rank, p_prime)
+    pr, pc = divmod(rank, p_prime)
     orig_r, orig_c = global_shape
-
     new_r = math.ceil(orig_r / p_prime) * p_prime
     new_c = math.ceil(orig_c / p_prime) * p_prime
-
     blkr, blkc = new_r // p_prime, new_c // p_prime
-
-    i0, j0 = proc_i * blkr, proc_j * blkc
-    i1, j1 = min(i0 + blkr, orig_r), min(j0 + blkc, orig_c)
-
-    return slice(i0, i1), slice(j0, j1)
+    rs, cs = pr * blkr, pc * blkc
+    re, ce = min(rs + blkr, orig_r), min(cs + blkc, orig_c)
+    return slice(rs, re), slice(cs, ce)
 
 
 def block_gather(x: DistributedArray, orig_shape: Tuple[int, int], comm: MPI.Comm):
