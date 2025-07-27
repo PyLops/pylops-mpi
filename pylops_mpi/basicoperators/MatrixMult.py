@@ -122,7 +122,7 @@ def local_block_spit(global_shape: Tuple[int, int],
     return slice(i0, i1), slice(j0, j1)
 
 
-def block_gather(x: DistributedArray, new_shape: Tuple[int, int], orig_shape: Tuple[int, int], comm: MPI.Comm):
+def block_gather(x: DistributedArray, orig_shape: Tuple[int, int], comm: MPI.Comm):
     r"""
     Gather distributed local blocks from 2D block distributed matrix distributed
     amongst a square process grid into the full global array.
@@ -131,11 +131,8 @@ def block_gather(x: DistributedArray, new_shape: Tuple[int, int], orig_shape: Tu
     ----------
     x : :obj:`pylops_mpi.DistributedArray`
         The distributed array to gather locally.
-    new_shape : Tuple[int, int]
-        Shape `(N', M')` of the padded global array, where both dimensions
-        are multiples of :math:`\sqrt{\mathbf{P}}`.
     orig_shape : Tuple[int, int]
-        Original shape `(N, M)` of the global array before padding.
+        Original shape `(N, M)` of the global array to be gathered.
     comm : MPI.Comm
         MPI communicator whose size must be a perfect square (P = p_prime**2).
 
@@ -156,45 +153,15 @@ def block_gather(x: DistributedArray, new_shape: Tuple[int, int], orig_shape: Tu
         raise RuntimeError(f"Communicator size must be a perfect square, got {comm.Get_size()!r}")
 
     all_blks = comm.allgather(x.local_array)
-
-    nr, nc = new_shape
-    orr, orc = orig_shape
-
-    # Calculate base block sizes
-    br_base = nr // p_prime
-    bc_base = nc // p_prime
-
-    # Calculate remainder rows/cols that need to be distributed
-    r_remainder = nr % p_prime
-    c_remainder = nc % p_prime
-
-    # Create the output matrix
+    nr, nc = orig_shape
+    br, bc = math.ceil(nr / p_prime), math.ceil(nc / p_prime)
     C = ncp.zeros((nr, nc), dtype=all_blks[0].dtype)
-
-    # Place each block in the correct position
     for rank in range(p_prime * p_prime):
-        # Convert linear rank to 2D grid position
-        proc_row = rank // p_prime
-        proc_col = rank % p_prime
-
-        # Calculate this process's block dimensions
-        block_rows = br_base + (1 if proc_row < r_remainder else 0)
-        block_cols = bc_base + (1 if proc_col < c_remainder else 0)
-
-        # Calculate starting position in global matrix
-        start_row = proc_row * br_base + min(proc_row, r_remainder)
-        start_col = proc_col * bc_base + min(proc_col, c_remainder)
-
-        # Place the block
-        block = all_blks[rank]
-        if block.ndim == 1:
-            block = block.reshape(block_rows, block_cols)
-        C[start_row:start_row + block_rows,
-          start_col:start_col + block_cols] = block
-
-    # Trim off any padding
-    return C[:orr, :orc]
-
+        pr, pc = divmod(rank, p_prime)
+        rs, cs = pr * br, pc * bc
+        re, ce = min(rs + br, nr), min(cs + bc, nc)
+        C[rs:re, cs:ce] = all_blks[rank].reshape(re - rs, cs - ce)
+    return C
 
 class _MPIBlockMatrixMult(MPILinearOperator):
     r"""MPI Blocked Matrix multiplication

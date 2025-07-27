@@ -210,8 +210,8 @@ def test_MPISummaMatrixMult(N, K, M, dtype_str):
     xadj_dist = Aop.H @ y_dist
 
     # Re-organize in local matrix
-    y = block_gather(y_dist, (N,M), (N,M), comm)
-    xadj = block_gather(xadj_dist, (K,M), (K,M), comm)
+    y = block_gather(y_dist, (N,M), comm)
+    xadj = block_gather(xadj_dist, (K,M), comm)
 
     if rank == 0:
         y_loc = A_glob @ X_glob
@@ -239,8 +239,8 @@ def test_MPISummaMatrixMult(N, K, M, dtype_str):
     xadj1_dist = Op.H @ y1_dist
 
     # Re-organize in local matrix
-    y1 = block_gather(y1_dist, (N, M), (N, M), comm)
-    xadj1 = block_gather(xadj1_dist, (K,M), (K,M), comm)
+    y1 = block_gather(y1_dist, (N, M), comm)
+    xadj1 = block_gather(xadj1_dist,  (K,M), comm)
 
     if rank == 0:
         y1_loc = ((A_glob @ X_glob).conj().ravel()).reshape(N, M) + 1.0j
