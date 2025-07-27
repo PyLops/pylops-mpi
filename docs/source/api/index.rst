@@ -42,7 +42,7 @@ Basic Operators
 .. autosummary::
    :toctree: generated/
 
-    MPIMatrixMult
+    MatrixMult.MPIMatrixMult
     MPIBlockDiag
     MPIStackedBlockDiag
     MPIVStack
@@ -116,6 +116,16 @@ Utils
    :toctree: generated/
 
     local_split
+
+
+.. currentmodule:: pylops_mpi.basicoperators.MatrixMult
+
+.. autosummary::
+   :toctree: generated/
+
+    block_gather
+    local_block_split
+    active_grid_comm
 
 
 .. currentmodule:: pylops_mpi.utils.dottest

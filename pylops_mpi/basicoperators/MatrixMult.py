@@ -1,3 +1,4 @@
+
 import math
 import numpy as np
 from typing import Tuple, Union, Literal
@@ -14,7 +15,7 @@ from pylops_mpi import (
 
 
 def active_grid_comm(base_comm: MPI.Comm, N: int, M: int):
-    r"""Configure active grid
+    r"""Configure active grid for distributed matrix multiplication.
 
     Configure a square process grid from a parent MPI communicator and
     select a subset of "active" processes. Each process in ``base_comm``
@@ -721,7 +722,6 @@ def MPIMatrixMult(
     ``kind`` parameter.
 
     The forward operation computes::
-
         :math:`\mathbf{Y} = \mathbf{A} \cdot \mathbf{X}`
 
     where:
@@ -730,7 +730,6 @@ def MPIMatrixMult(
     - :math:`\mathbf{Y}` is the resulting distributed matrix of shape :math:`[N \times M]`
 
     The adjoint (conjugate-transpose) operation computes::
-    
         :math:`\mathbf{X}_{adj} = \mathbf{A}^H \cdot \mathbf{Y}`
 
     where :math:`\mathbf{A}^H` is the complex-conjugate transpose of :math:`\mathbf{A}`.
@@ -792,3 +791,5 @@ def MPIMatrixMult(
         return _MPIBlockMatrixMult(A, M, saveAt, base_comm, dtype)
     else:
         raise NotImplementedError("kind must be summa or block")
+
+__all__ = ["active_grid_comm", "block_gather", "local_block_spit", "MPIMatrixMult"]
