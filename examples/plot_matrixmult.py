@@ -28,6 +28,7 @@ import pylops
 
 import pylops_mpi
 from pylops_mpi import Partition
+from pylops_mpi.basicoperators.MatrixMult import active_grid_comm, MPIMatrixMult
 
 plt.close("all")
 
@@ -88,8 +89,7 @@ X = np.random.rand(K * M).astype(dtype=np.float32).reshape(K, M)
 # than the row or columm ranks.
 
 base_comm = MPI.COMM_WORLD
-comm, rank, row_id, col_id, is_active = \
-    pylops_mpi.MPIMatrixMult.active_grid_comm(base_comm, N, M)
+comm, rank, row_id, col_id, is_active = active_grid_comm(base_comm, N, M)
 print(f"Process {base_comm.Get_rank()} is {'active' if is_active else 'inactive'}")
 if not is_active: exit(0)
 
@@ -147,7 +147,7 @@ A_p, X_p = A[rs:re, :].copy(), X[:, cs:ce].copy()
 ################################################################################
 # We are now ready to create the :py:class:`pylops_mpi.basicoperators.MPIMatrixMult`
 # operator and the input matrix :math:`\mathbf{X}`
-Aop = pylops_mpi.MPIMatrixMult(A_p, M, base_comm=comm, dtype="float32")
+Aop = MPIMatrixMult(A_p, M, base_comm=comm, dtype="float32", kind="block")
 
 col_lens = comm.allgather(my_own_cols)
 total_cols = np.sum(col_lens)
