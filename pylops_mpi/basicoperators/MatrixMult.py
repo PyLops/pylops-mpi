@@ -580,13 +580,13 @@ class _MPISummaMatrixMult(MPILinearOperator):
         pad_m = bm - local_m
 
         if pad_k > 0 or pad_m > 0:
-            x_block = np.pad(x_block, [(0, pad_k), (0, pad_m)], mode='constant')
+            x_block = ncp.pad(x_block, [(0, pad_k), (0, pad_m)], mode='constant')
 
-        Y_local = np.zeros((self.A.shape[0], bm),dtype=output_dtype)
+        Y_local = ncp.zeros((self.A.shape[0], bm),dtype=output_dtype)
 
         for k in range(self._P_prime):
-            Atemp = self.A.copy() if self._col_id == k else np.empty_like(self.A)
-            Xtemp = x_block.copy() if self._row_id == k else np.empty_like(x_block)
+            Atemp = self.A.copy() if self._col_id == k else ncp.empty_like(self.A)
+            Xtemp = x_block.copy() if self._row_id == k else ncp.empty_like(x_block)
             self._row_comm.Bcast(Atemp, root=k)
             self._col_comm.Bcast(Xtemp, root=k)
             Y_local += ncp.dot(Atemp, Xtemp)
@@ -646,14 +646,14 @@ class _MPISummaMatrixMult(MPILinearOperator):
         pad_m = bm - local_m
 
         if pad_n > 0 or pad_m > 0:
-            x_block = np.pad(x_block, [(0, pad_n), (0, pad_m)], mode='constant')
+            x_block = ncp.pad(x_block, [(0, pad_n), (0, pad_m)], mode='constant')
 
         A_local = self.At if hasattr(self, "At") else self.A.T.conj()
-        Y_local = np.zeros((self.A.shape[1], bm), dtype=output_dtype)
+        Y_local = ncp.zeros((self.A.shape[1], bm), dtype=output_dtype)
 
         for k in range(self._P_prime):
             requests = []
-            ATtemp = np.empty_like(A_local)
+            ATtemp = ncp.empty_like(A_local)
             srcA = k * self._P_prime + self._row_id
             tagA = (100 + k) * 1000 + self.rank
             requests.append(self.base_comm.Irecv(ATtemp, source=srcA, tag=tagA))
@@ -663,7 +663,7 @@ class _MPISummaMatrixMult(MPILinearOperator):
                     destA = fixed_col * self._P_prime + moving_col
                     tagA = (100 + k) * 1000 + destA
                     requests.append(self.base_comm.Isend(A_local, dest=destA, tag=tagA))
-            Xtemp = x_block.copy() if self._row_id == k else np.empty_like(x_block)
+            Xtemp = x_block.copy() if self._row_id == k else ncp.empty_like(x_block)
             requests.append(self._col_comm.Ibcast(Xtemp, root=k))
             MPI.Request.Waitall(requests)
             Y_local += ncp.dot(ATtemp, Xtemp)
