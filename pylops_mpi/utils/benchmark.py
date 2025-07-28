@@ -1,5 +1,6 @@
 import functools
 import logging
+import os
 import time
 from typing import Callable, Optional, List
 from mpi4py import MPI
@@ -16,8 +17,8 @@ else:
     def _nccl_sync():
         pass
 
-# TODO (tharitt): later move to env file or something
-ENABLE_BENCHMARK = True
+# Benchmark is enabled by default
+ENABLE_BENCHMARK = int(os.getenv("BENCH_PYLOPS_MPI", 1)) == 1
 
 # Stack of active mark functions for nested support
 _mark_func_stack = []
@@ -77,6 +78,8 @@ def mark(label: str):
         A label of the mark. This signifies both 1) the end of the
         previous mark 2) the beginning of the new mark
     """
+    if not ENABLE_BENCHMARK:
+        return
     if not _mark_func_stack:
         raise RuntimeError("mark() called outside of a benchmarked region")
     _mark_func_stack[-1](label)
@@ -108,9 +111,11 @@ def benchmark(func: Optional[Callable] = None,
         is not provided, the output is printed to stdout.
     """
 
-    # Zero-overhead
-    if not ENABLE_BENCHMARK:
-        return func
+    def noop_decorator(func):
+        @functools.wraps(func)
+        def wrapped(*args, **kwargs):
+            return func(*args, **kwargs)
+        return wrapped
 
     @functools.wraps(func)
     def decorator(func):
@@ -153,7 +158,10 @@ def benchmark(func: Optional[Callable] = None,
                         print("".join(output))
             return result
         return wrapper
-    if func is not None:
-        return decorator(func)
 
-    return decorator
+    # The code still has to return decorator so that the in-place decorator with arguments
+    # like @benchmark(logger=logger) does not throw the error and can be kept untouched.
+    if not ENABLE_BENCHMARK:
+        return noop_decorator if func is None else noop_decorator(func)
+
+    return decorator if func is None else decorator(func)
