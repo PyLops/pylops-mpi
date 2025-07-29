@@ -279,4 +279,4 @@ if rank == 0:
     axs[5][2].axis('tight')
 
 ###############################################################################
-# To run this tutorial with our NCCL backend, refer to :ref:`sphx_glr_tutorials_poststack_nccl.py`
+# To run this tutorial with our NCCL backend, refer to `Post Stack Inversion with NCCL tutorial <https://github.com/PyLops/pylops-mpi/blob/main/tutorials_nccl/poststack_nccl.py>`_ in the repository.

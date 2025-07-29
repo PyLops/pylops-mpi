@@ -268,7 +268,7 @@ Let's display what we have so far: operator, input model, and data
 We are now ready to compute the adjoint (i.e., cross-correlation) and invert
 back for our input model
 
-.. GENERATED FROM PYTHON SOURCE LINES 184-234
+.. GENERATED FROM PYTHON SOURCE LINES 184-235
 
 .. code-block:: Python
 
@@ -325,6 +325,7 @@ back for our input model
 
 
 
+
 .. image-sg:: /tutorials/images/sphx_glr_mdd_003.png
    :alt: Adjoint m, Inverted m
    :srcset: /tutorials/images/sphx_glr_mdd_003.png
@@ -366,17 +367,21 @@ back for our input model
         49       0.00e+00+0.00e+00j    1.1306e+00     1.1306e+00
         50       0.00e+00+0.00e+00j    1.1048e+00     1.1048e+00
 
-    Iterations = 50        Total time (s) = 6.05
+    Iterations = 50        Total time (s) = 5.98
     -----------------------------------------------------------------
 
 
 
 
 
+.. GENERATED FROM PYTHON SOURCE LINES 236-237
+
+To run this tutorial with our NCCL backend, refer to `Multi-Dimensional Deconvolution with NCCL tutorial <https://github.com/PyLops/pylops-mpi/blob/main/tutorials_nccl/mdd_nccl.py>`_ in the repository.
+
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 7.818 seconds)
+   **Total running time of the script:** (0 minutes 7.736 seconds)
 
 
 .. _sphx_glr_download_tutorials_mdd.py:

@@ -25,6 +25,23 @@ Tutorials
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip=":pypylops_mpi.utils.benchmark is a decorator used to decorate any function to measure its execution time from start to finish :pypylops_mpi.utils.mark is a function used inside the benchmark-decorated function to provide fine-grain time measurements.">
+
+.. only:: html
+
+  .. image:: /tutorials/images/thumb/sphx_glr_benchmarking_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_tutorials_benchmarking.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Benchmark Utility in PyLops-MPI</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="We solve the inverse of the demigration operator to obtain accurate and detailed sub surface images. Regardless of the choice of the modelling operator (i.e., ray-based or full wavefield-based), the demigration/migration process can be expressed as a linear operator of such kind:">
 
 .. only:: html
@@ -84,6 +101,7 @@ Tutorials
 .. toctree::
    :hidden:
 
+   /tutorials/benchmarking
    /tutorials/lsm
    /tutorials/mdd
    /tutorials/poststack

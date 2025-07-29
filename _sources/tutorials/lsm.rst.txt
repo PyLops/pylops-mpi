@@ -307,14 +307,14 @@ solver.
         99       -1.2546e-02         2.8528e+00     2.8528e+00
        100       -1.2389e-02         2.8342e+00     2.8342e+00
 
-    Iterations = 100        Total time (s) = 1.28
+    Iterations = 100        Total time (s) = 1.29
     -----------------------------------------------------------------
 
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 176-212
+.. GENERATED FROM PYTHON SOURCE LINES 176-213
 
 .. code-block:: Python
 
@@ -357,6 +357,7 @@ solver.
 
 
 
+
 .. rst-class:: sphx-glr-horizontal
 
 
@@ -385,10 +386,14 @@ solver.
 
 
 
+.. GENERATED FROM PYTHON SOURCE LINES 214-215
+
+To run this tutorial with our NCCL backend, refer to `Least-squares Migration with NCCL tutorial <https://github.com/PyLops/pylops-mpi/blob/main/tutorials_nccl/lsm_nccl.py>`_ in the repository.
+
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 2.851 seconds)
+   **Total running time of the script:** (0 minutes 2.930 seconds)
 
 
 .. _sphx_glr_download_tutorials_lsm.py:

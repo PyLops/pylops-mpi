@@ -1,0 +1,703 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    
+        <title>Benchmark Utility in PyLops-MPI &#8212; PyLops-MPI</title>
+    
+
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/style.css?v=e5b2244c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e45f66c9" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/benchmarking';</script>
+    <link rel="icon" href="../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Least-squares Migration" href="lsm.html" />
+    <link rel="prev" title="Tutorials" href="index.html" />
+    
+    <script src="../_static/require.js"></script>
+
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/pylopsmpi_b.png" class="logo__image only-light" alt="PyLops-MPI - Home"/>
+    <img src="../_static/pylopsmpi.png" class="logo__image only-dark pst-js-only" alt="PyLops-MPI - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Overview
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../gpu.html">
+    GPU Support
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    PyLops MPI API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../gallery/index.html">
+    Gallery
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="index.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../adding.html">
+    Implementing new operators
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../contributing.html">
+    Contributing
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../credits.html">
+    Credits
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Overview
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../gpu.html">
+    GPU Support
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    PyLops MPI API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../gallery/index.html">
+    Gallery
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../adding.html">
+    Implementing new operators
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contributing.html">
+    Contributing
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../credits.html">
+    Credits
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Benchmark Utility in PyLops-MPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lsm.html">Least-squares Migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mdd.html">Multi-Dimensional Deconvolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="poststack.html">Post Stack Inversion - 3D</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Tutorials</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Benchmark Utility in PyLops-MPI</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-tutorials-benchmarking-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="benchmark-utility-in-pylops-mpi">
+<span id="sphx-glr-tutorials-benchmarking-py"></span><h1>Benchmark Utility in PyLops-MPI<a class="headerlink" href="#benchmark-utility-in-pylops-mpi" title="Link to this heading">#</a></h1>
+<p>This tutorial demonstrates how to use the <code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.benchmark</span></code> and
+<code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.mark</span></code> utility methods in PyLops-MPI. It contains various
+function calling pattern that may come up during the benchmarking of a distributed code.</p>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.benchmark</span></code> is a decorator used to decorate any
+function to measure its execution time from start to finish
+<code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.mark</span></code> is a function used inside the benchmark-decorated
+function to provide fine-grain time measurements.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi</span><span class="w"> </span><span class="kn">import</span> <span class="n">DistributedArray</span><span class="p">,</span> <span class="n">Partition</span>
+
+<a href="https://numpy.org/doc/stable/reference/random/generated/numpy.random.seed.html#numpy.random.seed" title="numpy.random.seed" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span></a><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rank</span></a> <span class="o">=</span> <a href="https://mpi4py.readthedocs.io/en/stable/reference/mpi4py.MPI.Comm.html#mpi4py.MPI.Comm.Get_rank" title="mpi4py.MPI.Comm.Get_rank" class="sphx-glr-backref-module-mpi4py-MPI sphx-glr-backref-type-py-method"><span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="o">.</span><span class="n">Get_rank</span></a><span class="p">()</span>
+
+<a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;global_shape&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="mi">501</span><span class="p">),</span>
+       <span class="s1">&#39;partition&#39;</span><span class="p">:</span> <span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="p">,</span> <span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.float64" title="numpy.float64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">np</span><span class="o">.</span><span class="n">float64</span></a><span class="p">,</span>
+       <span class="s1">&#39;axis&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Let’s start by import the utility and a simple exampple</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.utils.benchmark</span><span class="w"> </span><span class="kn">import</span> <span class="n">benchmark</span><span class="p">,</span> <span class="n">mark</span>
+
+
+<span class="nd">@benchmark</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">inner_func</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">):</span>
+    <span class="n">dist_arr</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">[</span><span class="s1">&#39;global_shape&#39;</span><span class="p">],</span>
+                                <span class="n">partition</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">[</span><span class="s1">&#39;partition&#39;</span><span class="p">],</span>
+                                <span class="n">dtype</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">[</span><span class="s1">&#39;axis&#39;</span><span class="p">])</span>
+    <span class="c1"># may perform computation here</span>
+    <span class="n">dist_arr</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dist_arr</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When we call <code class="xref py py-func docutils literal notranslate"><span class="pre">inner_func</span></code>, we will see the result
+of the benchmark print to standard output. If we want to customize the
+function name in the printout, we can pass the parameter <cite>description</cite>
+to the <code class="xref py py-func docutils literal notranslate"><span class="pre">benchmark</span></code>
+i.e., <code class="xref py py-func docutils literal notranslate"><span class="pre">&#64;benchmark(description=&quot;printout_name&quot;)</span></code></p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">inner_func</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[decorator]inner_func: total runtime: 0.001964 s
+</pre></div>
+</div>
+<p>We may want to get the fine-grained time measurements by timing the execution
+time of arbitary lines of code. <code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.mark</span></code> provides such utitlity.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nd">@benchmark</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">inner_func_with_mark</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">):</span>
+    <span class="n">mark</span><span class="p">(</span><span class="s2">&quot;Begin array constructor&quot;</span><span class="p">)</span>
+    <span class="n">dist_arr</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">[</span><span class="s1">&#39;global_shape&#39;</span><span class="p">],</span>
+                                <span class="n">partition</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">[</span><span class="s1">&#39;partition&#39;</span><span class="p">],</span>
+                                <span class="n">dtype</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">[</span><span class="s1">&#39;axis&#39;</span><span class="p">])</span>
+    <span class="n">mark</span><span class="p">(</span><span class="s2">&quot;Begin dot&quot;</span><span class="p">)</span>
+    <span class="n">dist_arr</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dist_arr</span><span class="p">)</span>
+    <span class="n">mark</span><span class="p">(</span><span class="s2">&quot;Finish dot&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now when we run, we get the detailed time measurement. Note that there is a tag
+[decorator] next to the function name to distinguish between the start-to-end time
+measurement of the top-level function and those that comes from <code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.mark</span></code></p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">inner_func_with_mark</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[decorator]inner_func_with_mark: total runtime: 0.000350 s
+        Begin array constructor--&gt;Begin dot: 0.000024 s
+        Begin dot--&gt;Finish dot: 0.000322 s
+</pre></div>
+</div>
+<p>This utility benchmarking routines can also be nested. Let’s define
+an outer function that internally calls the decorated <code class="xref py py-func docutils literal notranslate"><span class="pre">inner_func_with_mark</span></code></p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nd">@benchmark</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">outer_func_with_mark</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">):</span>
+    <span class="n">mark</span><span class="p">(</span><span class="s2">&quot;Outer func start&quot;</span><span class="p">)</span>
+    <span class="n">inner_func_with_mark</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">)</span>
+    <span class="n">dist_arr</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">[</span><span class="s1">&#39;global_shape&#39;</span><span class="p">],</span>
+                                <span class="n">partition</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">[</span><span class="s1">&#39;partition&#39;</span><span class="p">],</span>
+                                <span class="n">dtype</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">[</span><span class="s1">&#39;axis&#39;</span><span class="p">])</span>
+    <span class="n">dist_arr</span> <span class="o">+</span> <span class="n">dist_arr</span>
+    <span class="n">mark</span><span class="p">(</span><span class="s2">&quot;Outer func ends&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If we run <code class="xref py py-func docutils literal notranslate"><span class="pre">outer_func_with_mark</span></code>, we get the time measurement nicely
+printed out with the nested indentation to specify that nested calls.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">outer_func_with_mark</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:619: RuntimeWarning: overflow encountered in add
+  SumArray[:] = self.local_array + dist_array.local_array
+/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:619: RuntimeWarning: invalid value encountered in add
+  SumArray[:] = self.local_array + dist_array.local_array
+[decorator]outer_func_with_mark: total runtime: 0.001062 s
+        [decorator]inner_func_with_mark: total runtime: 0.000346 s
+                Begin array constructor--&gt;Begin dot: 0.000022 s
+                Begin dot--&gt;Finish dot: 0.000321 s
+        Outer func start--&gt;Outer func ends: 0.001056 s
+</pre></div>
+</div>
+<p>In some cases, we may want to write benchmark output to a text file.
+<code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.benchmark</span></code> also takes the py:class:<cite>logging.Logger</cite>
+in its argument.
+Here we define a simple <code class="xref py py-func docutils literal notranslate"><span class="pre">make_logger</span></code>. We set the <code class="xref py py-func docutils literal notranslate"><span class="pre">logger.propagate</span> <span class="pre">=</span> <span class="pre">False</span></code>
+to isolate the logging of our benchmark from that of the rest of the code</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://docs.python.org/3/library/functions.html#bool" title="builtins.bool" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">save_file</span></a> <span class="o">=</span> <span class="kc">True</span>
+<a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">file_path</span></a> <span class="o">=</span> <span class="s2">&quot;benchmark.log&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">make_logger</span><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#bool" title="builtins.bool" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">save_file</span></a><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">file_path</span></a><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <a href="https://docs.python.org/3/library/logging.html#logging.Logger" title="logging.Logger" class="sphx-glr-backref-module-logging sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">logger</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/library/logging.html#logging.getLogger" title="logging.getLogger" class="sphx-glr-backref-module-logging sphx-glr-backref-type-py-function"><span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span></a><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+    <a href="https://docs.python.org/3/library/logging.html#logging.basicConfig" title="logging.basicConfig" class="sphx-glr-backref-module-logging sphx-glr-backref-type-py-function"><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span></a><span class="p">(</span><span class="n">filename</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">file_path</span></a> <span class="k">if</span> <a href="https://docs.python.org/3/library/functions.html#bool" title="builtins.bool" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">save_file</span></a> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span> <span class="n">filemode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span></a><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <a href="https://docs.python.org/3/library/functions.html#bool" title="builtins.bool" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">logger</span><span class="o">.</span><span class="n">propagate</span></a> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <a href="https://docs.python.org/3/library/functions.html#bool" title="builtins.bool" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">save_file</span></a><span class="p">:</span>
+        <span class="n">handler</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/logging.handlers.html#logging.FileHandler" title="logging.FileHandler" class="sphx-glr-backref-module-logging sphx-glr-backref-type-py-class"><span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span></a><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">file_path</span></a><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">handler</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/logging.handlers.html#logging.StreamHandler" title="logging.StreamHandler" class="sphx-glr-backref-module-logging sphx-glr-backref-type-py-class"><span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span></a><span class="p">(</span><a href="https://docs.python.org/3/library/io.html#io.TextIOWrapper" title="io.TextIOWrapper" class="sphx-glr-backref-module-io sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span></a><span class="p">)</span>
+    <a href="https://docs.python.org/3/library/logging.html#logging.Logger.addHandler" title="logging.Logger.addHandler" class="sphx-glr-backref-module-logging sphx-glr-backref-type-py-method"><span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span></a><span class="p">(</span><span class="n">handler</span><span class="p">)</span>
+    <span class="k">return</span> <a href="https://docs.python.org/3/library/logging.html#logging.Logger" title="logging.Logger" class="sphx-glr-backref-module-logging sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">logger</span></a>
+
+
+<a href="https://docs.python.org/3/library/logging.html#logging.Logger" title="logging.Logger" class="sphx-glr-backref-module-logging sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">logger</span></a> <span class="o">=</span> <span class="n">make_logger</span><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#bool" title="builtins.bool" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">save_file</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">file_path</span></a><span class="p">)</span>
+</pre></div>
+</div>
+<p>Then we can pass the logger to the <code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.benchmark</span></code></p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nd">@benchmark</span><span class="p">(</span><a href="https://docs.python.org/3/library/logging.html#logging.Logger" title="logging.Logger" class="sphx-glr-backref-module-logging sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">logger</span></a><span class="o">=</span><a href="https://docs.python.org/3/library/logging.html#logging.Logger" title="logging.Logger" class="sphx-glr-backref-module-logging sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">logger</span></a><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">inner_func_with_logger</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">):</span>
+    <span class="n">dist_arr</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">[</span><span class="s1">&#39;global_shape&#39;</span><span class="p">],</span>
+                                <span class="n">partition</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">[</span><span class="s1">&#39;partition&#39;</span><span class="p">],</span>
+                                <span class="n">dtype</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">[</span><span class="s1">&#39;axis&#39;</span><span class="p">])</span>
+    <span class="c1"># may perform computation here</span>
+    <span class="n">dist_arr</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dist_arr</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Run this function and observe that the file <cite>benchmark.log</cite> is written.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">inner_func_with_logger</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">)</span>
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.008 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-benchmarking-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/65850c3b40d96f2a8d2e87ae991d4428/benchmarking.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">benchmarking.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/cd9f65db14f7d64c1b33945402a708fd/benchmarking.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">benchmarking.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/7d7fd6596ae51af66537b140b176864b/benchmarking.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">benchmarking.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tutorials</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="lsm.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Least-squares Migration</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, PyLops Development Team.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
