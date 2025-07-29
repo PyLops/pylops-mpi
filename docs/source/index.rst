@@ -76,6 +76,7 @@ class and implementing the ``_matvec`` and ``_rmatvec``.
     self
     installation.rst
     gpu.rst
+    benchmarking.rst
 
 .. toctree::
    :maxdepth: 2

@@ -1,7 +1,8 @@
 .. _benchmarkutility:
 
-Benchmark Utility in PyLops-MPI
-===============================
+Benchmarking
+============
+
 PyLops-MPI users can convenienly benchmark the performance of their code with a simple decorator.
 :py:func:`pylops_mpi.utils.benchmark` and :py:func:`pylops_mpi.utils.mark` support various
 function calling patterns that may arise when benchmarking distributed code.
