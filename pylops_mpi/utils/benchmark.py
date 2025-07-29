@@ -1,3 +1,7 @@
+__all__ = ["benchmark",
+           "mark",
+           ]
+
 import functools
 import logging
 import os
