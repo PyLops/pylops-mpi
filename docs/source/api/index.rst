@@ -127,10 +127,11 @@ Utils
     local_block_split
     active_grid_comm
 
-
-.. currentmodule:: pylops_mpi.utils.dottest
+.. currentmodule:: pylops_mpi.utils
 
 .. autosummary::
    :toctree: generated/
 
     dottest
+    benchmark
+    mark

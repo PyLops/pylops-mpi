@@ -53,10 +53,11 @@ tests:
 tests_nccl:	
 	mpiexec -n $(NUM_PROCESSES) pytest tests_nccl/ --with-mpi
 
+# sphinx-build does not work well with NCCL
 doc:
 	cd docs  && rm -rf source/api/generated && rm -rf source/gallery &&\
 	rm -rf source/tutorials && rm -rf build &&\
-	cd .. && sphinx-build -b html docs/source docs/build
+	cd .. && NCCL_PYLOPS_MPI=0 sphinx-build -b html docs/source docs/build
 
 doc_cupy:
 	cp tutorials_cupy/* tutorials/
