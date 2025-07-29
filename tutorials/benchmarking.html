@@ -165,15 +165,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api/index.html">
-    PyLops MPI API
+  <a class="nav-link nav-internal" href="../benchmarking.html">
+    Benchmarking
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../gallery/index.html">
-    Gallery
+  <a class="nav-link nav-internal" href="../api/index.html">
+    PyLops MPI API
   </a>
 </li>
 
@@ -185,6 +185,13 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../gallery/index.html">
+    Gallery
+  </a>
+</li>
+
+
 <li class=" current active">
   <a class="nav-link dropdown-item nav-internal" href="index.html">
     Tutorials
@@ -308,6 +315,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../gpu.html">
     GPU Support
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../benchmarking.html">
+    Benchmarking
   </a>
 </li>
 
@@ -459,12 +473,12 @@ to download the full example code.</p>
 </div>
 <section class="sphx-glr-example-title" id="benchmark-utility-in-pylops-mpi">
 <span id="sphx-glr-tutorials-benchmarking-py"></span><h1>Benchmark Utility in PyLops-MPI<a class="headerlink" href="#benchmark-utility-in-pylops-mpi" title="Link to this heading">#</a></h1>
-<p>This tutorial demonstrates how to use the <code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.benchmark</span></code> and
-<code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.mark</span></code> utility methods in PyLops-MPI. It contains various
+<p>This tutorial demonstrates how to use the <a class="reference internal" href="../api/generated/pylops_mpi.utils.benchmark.html#pylops_mpi.utils.benchmark" title="pylops_mpi.utils.benchmark"><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.benchmark</span></code></a> and
+<a class="reference internal" href="../api/generated/pylops_mpi.utils.mark.html#pylops_mpi.utils.mark" title="pylops_mpi.utils.mark"><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.mark</span></code></a> utility methods in PyLops-MPI. It contains various
 function calling pattern that may come up during the benchmarking of a distributed code.</p>
-<p><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.benchmark</span></code> is a decorator used to decorate any
+<p><a class="reference internal" href="../api/generated/pylops_mpi.utils.benchmark.html#pylops_mpi.utils.benchmark" title="pylops_mpi.utils.benchmark"><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.benchmark</span></code></a> is a decorator used to decorate any
 function to measure its execution time from start to finish
-<code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.mark</span></code> is a function used inside the benchmark-decorated
+<a class="reference internal" href="../api/generated/pylops_mpi.utils.mark.html#pylops_mpi.utils.mark" title="pylops_mpi.utils.mark"><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.mark</span></code></a> is a function used inside the benchmark-decorated
 function to provide fine-grain time measurements.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
@@ -501,11 +515,11 @@ i.e., <code class="xref py py-func docutils literal notranslate"><span class="pr
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">inner_func</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[decorator]inner_func: total runtime: 0.001964 s
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[decorator]inner_func: total runtime: 0.001975 s
 </pre></div>
 </div>
 <p>We may want to get the fine-grained time measurements by timing the execution
-time of arbitary lines of code. <code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.mark</span></code> provides such utitlity.</p>
+time of arbitary lines of code. <a class="reference internal" href="../api/generated/pylops_mpi.utils.mark.html#pylops_mpi.utils.mark" title="pylops_mpi.utils.mark"><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.mark</span></code></a> provides such utitlity.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nd">@benchmark</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">inner_func_with_mark</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">):</span>
     <span class="n">mark</span><span class="p">(</span><span class="s2">&quot;Begin array constructor&quot;</span><span class="p">)</span>
@@ -519,13 +533,13 @@ time of arbitary lines of code. <code class="xref py py-func docutils literal no
 </div>
 <p>Now when we run, we get the detailed time measurement. Note that there is a tag
 [decorator] next to the function name to distinguish between the start-to-end time
-measurement of the top-level function and those that comes from <code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.mark</span></code></p>
+measurement of the top-level function and those that comes from <a class="reference internal" href="../api/generated/pylops_mpi.utils.mark.html#pylops_mpi.utils.mark" title="pylops_mpi.utils.mark"><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.mark</span></code></a></p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">inner_func_with_mark</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[decorator]inner_func_with_mark: total runtime: 0.000350 s
-        Begin array constructor--&gt;Begin dot: 0.000024 s
-        Begin dot--&gt;Finish dot: 0.000322 s
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[decorator]inner_func_with_mark: total runtime: 0.000433 s
+        Begin array constructor--&gt;Begin dot: 0.000025 s
+        Begin dot--&gt;Finish dot: 0.000404 s
 </pre></div>
 </div>
 <p>This utility benchmarking routines can also be nested. Let’s define
@@ -550,15 +564,15 @@ printed out with the nested indentation to specify that nested calls.</p>
   SumArray[:] = self.local_array + dist_array.local_array
 /opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:619: RuntimeWarning: invalid value encountered in add
   SumArray[:] = self.local_array + dist_array.local_array
-[decorator]outer_func_with_mark: total runtime: 0.001062 s
-        [decorator]inner_func_with_mark: total runtime: 0.000346 s
-                Begin array constructor--&gt;Begin dot: 0.000022 s
-                Begin dot--&gt;Finish dot: 0.000321 s
-        Outer func start--&gt;Outer func ends: 0.001056 s
+[decorator]outer_func_with_mark: total runtime: 0.001168 s
+        [decorator]inner_func_with_mark: total runtime: 0.000407 s
+                Begin array constructor--&gt;Begin dot: 0.000023 s
+                Begin dot--&gt;Finish dot: 0.000381 s
+        Outer func start--&gt;Outer func ends: 0.001163 s
 </pre></div>
 </div>
 <p>In some cases, we may want to write benchmark output to a text file.
-<code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.benchmark</span></code> also takes the py:class:<cite>logging.Logger</cite>
+<a class="reference internal" href="../api/generated/pylops_mpi.utils.benchmark.html#pylops_mpi.utils.benchmark" title="pylops_mpi.utils.benchmark"><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.benchmark</span></code></a> also takes the py:class:<cite>logging.Logger</cite>
 in its argument.
 Here we define a simple <code class="xref py py-func docutils literal notranslate"><span class="pre">make_logger</span></code>. We set the <code class="xref py py-func docutils literal notranslate"><span class="pre">logger.propagate</span> <span class="pre">=</span> <span class="pre">False</span></code>
 to isolate the logging of our benchmark from that of the rest of the code</p>
@@ -581,7 +595,7 @@ to isolate the logging of our benchmark from that of the rest of the code</p>
 <a href="https://docs.python.org/3/library/logging.html#logging.Logger" title="logging.Logger" class="sphx-glr-backref-module-logging sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">logger</span></a> <span class="o">=</span> <span class="n">make_logger</span><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#bool" title="builtins.bool" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">save_file</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">file_path</span></a><span class="p">)</span>
 </pre></div>
 </div>
-<p>Then we can pass the logger to the <code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.benchmark</span></code></p>
+<p>Then we can pass the logger to the <a class="reference internal" href="../api/generated/pylops_mpi.utils.benchmark.html#pylops_mpi.utils.benchmark" title="pylops_mpi.utils.benchmark"><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.benchmark</span></code></a></p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nd">@benchmark</span><span class="p">(</span><a href="https://docs.python.org/3/library/logging.html#logging.Logger" title="logging.Logger" class="sphx-glr-backref-module-logging sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">logger</span></a><span class="o">=</span><a href="https://docs.python.org/3/library/logging.html#logging.Logger" title="logging.Logger" class="sphx-glr-backref-module-logging sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">logger</span></a><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">inner_func_with_logger</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">):</span>
     <span class="n">dist_arr</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">[</span><span class="s1">&#39;global_shape&#39;</span><span class="p">],</span>
@@ -595,7 +609,7 @@ to isolate the logging of our benchmark from that of the rest of the code</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">inner_func_with_logger</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">)</span>
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.008 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.007 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-benchmarking-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/65850c3b40d96f2a8d2e87ae991d4428/benchmarking.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">benchmarking.ipynb</span></code></a></p>

@@ -1,0 +1,12 @@
+﻿pylops\_mpi.utils.mark
+======================
+
+.. currentmodule:: pylops_mpi.utils
+
+.. autofunction:: mark
+
+.. include:: backreferences/pylops_mpi.utils.mark.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>

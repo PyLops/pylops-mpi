@@ -1,0 +1,12 @@
+﻿pylops\_mpi.utils.dottest
+=========================
+
+.. currentmodule:: pylops_mpi.utils
+
+.. autofunction:: dottest
+
+.. include:: backreferences/pylops_mpi.utils.dottest.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>

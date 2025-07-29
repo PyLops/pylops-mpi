@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     
-        <title>pylops_mpi.utils.dottest.dottest &#8212; PyLops-MPI</title>
+        <title>pylops_mpi.utils.dottest &#8212; PyLops-MPI</title>
     
 
   
@@ -55,11 +55,11 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api/generated/pylops_mpi.utils.dottest.dottest';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/generated/pylops_mpi.utils.dottest';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Gallery" href="../../gallery/index.html" />
+    <link rel="next" title="pylops_mpi.utils.benchmark" href="pylops_mpi.utils.benchmark.html" />
     <link rel="prev" title="pylops_mpi.DistributedArray.local_split" href="pylops_mpi.DistributedArray.local_split.html" />
     
     <script src="../../_static/require.js"></script>
@@ -166,16 +166,16 @@
 </li>
 
 
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="../index.html">
-    PyLops MPI API
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../benchmarking.html">
+    Benchmarking
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../gallery/index.html">
-    Gallery
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    PyLops MPI API
   </a>
 </li>
 
@@ -187,6 +187,13 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../gallery/index.html">
+    Gallery
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../../tutorials/index.html">
     Tutorials
@@ -318,6 +325,13 @@
 </li>
 
 
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../benchmarking.html">
+    Benchmarking
+  </a>
+</li>
+
+
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="../index.html">
     PyLops MPI API
@@ -435,7 +449,9 @@
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.DistributedArray.local_split.html">pylops_mpi.DistributedArray.local_split</a></li>
 </ul>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">pylops_mpi.utils.dottest.dottest</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">pylops_mpi.utils.dottest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.utils.benchmark.html">pylops_mpi.utils.benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.utils.mark.html">pylops_mpi.utils.mark</a></li>
 </ul>
 </div>
 </nav></div>
@@ -479,7 +495,7 @@
     
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">PyLops MPI API</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">pylops_mpi.utils.dottest.dottest</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">pylops_mpi.utils.dottest</span></li>
   </ul>
 </nav>
 </div>
@@ -496,11 +512,11 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="pylops-mpi-utils-dottest-dottest">
-<h1>pylops_mpi.utils.dottest.dottest<a class="headerlink" href="#pylops-mpi-utils-dottest-dottest" title="Link to this heading">#</a></h1>
+  <section id="pylops-mpi-utils-dottest">
+<h1>pylops_mpi.utils.dottest<a class="headerlink" href="#pylops-mpi-utils-dottest" title="Link to this heading">#</a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="pylops_mpi.utils.dottest.dottest">
-<span class="sig-prename descclassname"><span class="pre">pylops_mpi.utils.dottest.</span></span><span class="sig-name descname"><span class="pre">dottest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-21</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raiseerror</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/utils/dottest.html#dottest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.utils.dottest.dottest" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="pylops_mpi.utils.dottest">
+<span class="sig-prename descclassname"><span class="pre">pylops_mpi.utils.</span></span><span class="sig-name descname"><span class="pre">dottest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-21</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raiseerror</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/utils/dottest.html#dottest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.utils.dottest" title="Link to this definition">#</a></dt>
 <dd><p>Dot test.</p>
 <p>Perform dot-test to verify the validity of forward and adjoint
 operators using user-provided random vectors <span class="math notranslate nohighlight">\(\mathbf{u}\)</span>
@@ -577,11 +593,11 @@ within a numerical tolerance:</p>
       </div>
     </a>
     <a class="right-next"
-       href="../../gallery/index.html"
+       href="pylops_mpi.utils.benchmark.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Gallery</p>
+        <p class="prev-next-title">pylops_mpi.utils.benchmark</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -604,7 +620,7 @@ within a numerical tolerance:</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pylops_mpi.utils.dottest.dottest"><code class="docutils literal notranslate"><span class="pre">dottest</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pylops_mpi.utils.dottest"><code class="docutils literal notranslate"><span class="pre">dottest</span></code></a></li>
 </ul>
   </nav></div>
 

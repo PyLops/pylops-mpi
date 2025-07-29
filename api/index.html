@@ -60,7 +60,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="pylops_mpi.Partition" href="generated/pylops_mpi.Partition.html" />
-    <link rel="prev" title="GPU Support" href="../gpu.html" />
+    <link rel="prev" title="Benchmarking" href="../benchmarking.html" />
     
     <script src="../_static/require.js"></script>
 
@@ -166,16 +166,16 @@
 </li>
 
 
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
-    PyLops MPI API
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../benchmarking.html">
+    Benchmarking
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../gallery/index.html">
-    Gallery
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    PyLops MPI API
   </a>
 </li>
 
@@ -187,6 +187,13 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../gallery/index.html">
+    Gallery
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../tutorials/index.html">
     Tutorials
@@ -318,6 +325,13 @@
 </li>
 
 
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../benchmarking.html">
+    Benchmarking
+  </a>
+</li>
+
+
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="#">
     PyLops MPI API
@@ -435,7 +449,9 @@
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.DistributedArray.local_split.html">pylops_mpi.DistributedArray.local_split</a></li>
 </ul>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.utils.dottest.dottest.html">pylops_mpi.utils.dottest.dottest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.utils.dottest.html">pylops_mpi.utils.dottest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.utils.benchmark.html">pylops_mpi.utils.benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.utils.mark.html">pylops_mpi.utils.mark</a></li>
 </ul>
 </div>
 </nav></div>
@@ -642,8 +658,14 @@ large-scale linear algebra operations, inversions and computations.</p>
 </div>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.utils.dottest.dottest.html#pylops_mpi.utils.dottest.dottest" title="pylops_mpi.utils.dottest.dottest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dottest</span></code></a>(Op, u, v[, nr, nc, rtol, atol, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.utils.dottest.html#pylops_mpi.utils.dottest" title="pylops_mpi.utils.dottest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dottest</span></code></a>(Op, u, v[, nr, nc, rtol, atol, ...])</p></td>
 <td><p>Dot test.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/pylops_mpi.utils.benchmark.html#pylops_mpi.utils.benchmark" title="pylops_mpi.utils.benchmark"><code class="xref py py-obj docutils literal notranslate"><span class="pre">benchmark</span></code></a>([func, description, logger])</p></td>
+<td><p>A wrapper for code injection for time measurement.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.utils.mark.html#pylops_mpi.utils.mark" title="pylops_mpi.utils.mark"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mark</span></code></a>(label)</p></td>
+<td><p>This function allows users to measure time arbitary lines of the function</p></td>
 </tr>
 </tbody>
 </table>
@@ -662,12 +684,12 @@ large-scale linear algebra operations, inversions and computations.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../gpu.html"
+       href="../benchmarking.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">GPU Support</p>
+        <p class="prev-next-title">Benchmarking</p>
       </div>
     </a>
     <a class="right-next"

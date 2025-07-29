@@ -1,0 +1,12 @@
+﻿pylops\_mpi.utils.benchmark
+===========================
+
+.. currentmodule:: pylops_mpi.utils
+
+.. autofunction:: benchmark
+
+.. include:: backreferences/pylops_mpi.utils.benchmark.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
