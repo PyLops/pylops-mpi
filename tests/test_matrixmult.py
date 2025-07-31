@@ -8,10 +8,10 @@ from numpy.testing import assert_allclose
 from mpi4py import MPI
 import pytest
 
-from pylops.basicoperators import Conj, FirstDerivative, Identity
+from pylops.basicoperators import Conj, FirstDerivative
 from pylops_mpi import DistributedArray, Partition
-from pylops_mpi.basicoperators import MPIBlockDiag, MPIMatrixMult, local_block_spit, block_gather, \
-    active_grid_comm
+from pylops_mpi.basicoperators import MPIBlockDiag, MPIMatrixMult, \
+    local_block_split, block_gather, active_grid_comm
 
 np.random.seed(42)
 base_comm = MPI.COMM_WORLD
@@ -50,7 +50,8 @@ def _reorganize_local_matrix(x_dist, N, M, blk_cols, p_prime):
 
 @pytest.mark.mpi(min_size=1)
 @pytest.mark.parametrize("N, K, M, dtype_str", test_params)
-def test_MPIMatrixMult(N, K, M, dtype_str):
+def test_MPIMatrixMult_block(N, K, M, dtype_str):
+    """MPIMatrixMult operator with kind=`blocked`"""
     dtype = np.dtype(dtype_str)
 
     cmplx = 1j if np.issubdtype(dtype, np.complexfloating) else 0
@@ -163,7 +164,9 @@ def test_MPIMatrixMult(N, K, M, dtype_str):
 
 @pytest.mark.mpi(min_size=1)
 @pytest.mark.parametrize("N, K, M, dtype_str", test_params)
-def test_MPISummaMatrixMult(N, K, M, dtype_str):
+def test_MPIMatrixMult_summa(N, K, M, dtype_str):
+    """MPIMatrixMult operator with kind=`summa`"""
+
     dtype = np.dtype(dtype_str)
 
     cmplx = 1j if np.issubdtype(dtype, np.complexfloating) else 0
@@ -184,8 +187,8 @@ def test_MPISummaMatrixMult(N, K, M, dtype_str):
     X_glob_imag = np.arange(K * M, dtype=base_float_dtype).reshape(K, M) * 0.7
     X_glob = (X_glob_real + cmplx * X_glob_imag).astype(dtype)
 
-    A_slice = local_block_spit((N, K), rank, comm)
-    X_slice = local_block_spit((K, M), rank, comm)
+    A_slice = local_block_split((N, K), rank, comm)
+    X_slice = local_block_split((K, M), rank, comm)
 
     A_p = A_glob[A_slice]
     X_p = X_glob[X_slice]
@@ -210,8 +213,8 @@ def test_MPISummaMatrixMult(N, K, M, dtype_str):
     xadj_dist = Aop.H @ y_dist
 
     # Re-organize in local matrix
-    y = block_gather(y_dist, (N,M), comm)
-    xadj = block_gather(xadj_dist, (K,M), comm)
+    y = block_gather(y_dist, (N, M), comm)
+    xadj = block_gather(xadj_dist, (K, M), comm)
 
     if rank == 0:
         y_loc = A_glob @ X_glob

@@ -42,7 +42,7 @@ Basic Operators
 .. autosummary::
    :toctree: generated/
 
-    MatrixMult.MPIMatrixMult
+    MPIMatrixMult
     MPIBlockDiag
     MPIStackedBlockDiag
     MPIVStack

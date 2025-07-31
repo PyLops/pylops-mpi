@@ -1,13 +1,13 @@
 r"""
-Distributed Matrix Multiplication
-=================================
+Distributed Matrix Multiplication - Block-row-column decomposition
+==================================================================
 This example shows how to use the :py:class:`pylops_mpi.basicoperators.MPIMatrixMult`
-operator to perform matrix-matrix multiplication between a matrix :math:`\mathbf{A}`
-blocked over rows (i.e., blocks of rows are stored over different ranks) and a
-matrix :math:`\mathbf{X}` blocked over columns (i.e., blocks of columns are
-stored over different ranks), with equal number of row and column blocks.
-Similarly, the adjoint operation can be peformed with a matrix :math:`\mathbf{Y}`
-blocked in the same fashion of matrix :math:`\mathbf{X}`.
+operator with ``kind='blocked'`` to perform matrix-matrix multiplication between 
+a matrix :math:`\mathbf{A}` blocked over rows (i.e., blocks of rows are stored 
+over different ranks) and a matrix :math:`\mathbf{X}` blocked over columns 
+(i.e., blocks of columns are stored over different ranks), with equal number 
+of row and column blocks. Similarly, the adjoint operation can be peformed with 
+a matrix :math:`\mathbf{Y}` blocked in the same fashion of matrix :math:`\mathbf{X}`.
 
 Note that whilst the different blocks of the matrix :math:`\mathbf{A}` are directly
 stored in the operator on different ranks, the matrix :math:`\mathbf{X}` is
@@ -19,10 +19,10 @@ replicated across different ranks - see below for details.
 
 """
 
-from matplotlib import pyplot as plt
 import math
 import numpy as np
 from mpi4py import MPI
+from matplotlib import pyplot as plt
 
 import pylops
 
@@ -40,8 +40,7 @@ np.random.seed(42)
 
 ###############################################################################
 # We are now ready to create the input matrices :math:`\mathbf{A}` of size
-# :math:`M \times k` :math:`\mathbf{A}` of size and :math:`\mathbf{A}` of size
-# :math:`K \times N`.
+# :math:`M \times k` and :math:`\mathbf{A}` of size :math:`K \times N`.
 N, K, M = 4, 4, 4
 A = np.random.rand(N * K).astype(dtype=np.float32).reshape(N, K)
 X = np.random.rand(K * M).astype(dtype=np.float32).reshape(K, M)

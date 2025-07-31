@@ -1,8 +1,14 @@
 
+__all__ = ["active_grid_comm",
+           "block_gather",
+           "local_block_split",
+           "MPIMatrixMult",
+           ]
+
 import math
 import numpy as np
-from typing import Tuple, Union, Literal
 from mpi4py import MPI
+from typing import Tuple, Literal
 
 from pylops.utils.backend import get_module
 from pylops.utils.typing import DTypeLike, NDArray
@@ -15,13 +21,13 @@ from pylops_mpi import (
 
 
 def active_grid_comm(base_comm: MPI.Comm, N: int, M: int):
-    r"""Configure active grid for distributed matrix multiplication.
+    r"""Active grid for distributed matrix multiplication.
 
     Configure a square process grid from a parent MPI communicator and
     select a subset of "active" processes. Each process in ``base_comm``
     is assigned to a logical 2D grid of size :math:`P' \times P'`,
     where :math:`P' = \bigl \lceil \sqrt{P} \bigr \rceil`. Only the first
-    :math:`active_dim x active_dim` processes
+    :math:`active_{dim} \times active_{dim}` processes
     (by row-major order) are considered "active". Inactive ranks return
     immediately with no new communicator.
 
@@ -72,41 +78,46 @@ def active_grid_comm(base_comm: MPI.Comm, N: int, M: int):
     return new_comm, new_rank, new_row, new_col, True
 
 
-def local_block_spit(global_shape: Tuple[int, int],
-                     rank: int,
-                     comm: MPI.Comm) -> Tuple[slice, slice]:
-    r"""
-    Compute the local sub‐block of a 2D global array for a process in a square process grid.
+def local_block_split(global_shape: Tuple[int, int],
+                      rank: int,
+                      comm: MPI.Comm) -> Tuple[slice, slice]:
+    r"""Local sub‐block of a 2D global array
+
+    Compute the local sub‐block of a 2D global array for a process in a square 
+    process grid.
 
     Parameters
     ----------
-    global_shape : Tuple[int, int]
-        Dimensions of the global 2D array (n_rows, n_cols).
-    rank : int
+    global_shape : :obj:`tuple`
+        Dimensions of the global 2D array ``(n_rows, n_cols)``.
+    rank : :obj:`int`
         Rank of the MPI process in `comm` for which to get the owned block partition.
-    comm : MPI.Comm
-        MPI communicator whose total number of processes :math:`\mathbf{P}`
-        must be a perfect square :math:`\mathbf{P} = \sqrt{\mathbf{P'}}`.
+    comm : :obj:`mpi4py.MPI.Comm`
+        MPI communicator whose total number of processes :math:`P`
+        must be a perfect square :math:`P = \sqrt{P'}}`.
 
     Returns
     -------
     Tuple[slice, slice]
-        Two `slice` objects `(row_slice, col_slice)` indicating the sub‐block
+        Two `slice` objects `(row_slice, col_slice)` representing the sub‐block
         of the global array owned by this rank.
 
     Raises
     ------
     ValueError
-        if `rank` is out of range.
+        If `rank` is not an integer value or out of range.
     RuntimeError
-        If the number of processes participating in the provided communicator is not a perfect square.
+        If the number of processes participating in the provided communicator 
+        is not a perfect square.
+    
     """
     size = comm.Get_size()
     p_prime = math.isqrt(size)
     if p_prime * p_prime != size:
-        raise RuntimeError(f"Number of processes must be a square number, provided {size} instead...")
-    if not ( isinstance(rank, int) and 0 <= rank < size ):
-        raise ValueError(f"rank must be integer in [0, {size}), got {rank!r}")
+        raise RuntimeError(f"Number of processes must be a square number, "
+                           f"provided {size} instead...")
+    if not (isinstance(rank, int) and 0 <= rank < size):
+        raise ValueError(f"rank must be an integer in [0, {size}), got {rank!r}")
 
     pr, pc = divmod(rank, p_prime)
     orig_r, orig_c = global_shape
@@ -119,7 +130,8 @@ def local_block_spit(global_shape: Tuple[int, int],
 
 
 def block_gather(x: DistributedArray, orig_shape: Tuple[int, int], comm: MPI.Comm):
-    r"""
+    r"""Local block from 2D block distributed matrix
+    
     Gather distributed local blocks from 2D block distributed matrix distributed
     amongst a square process grid into the full global array.
 
@@ -127,21 +139,23 @@ def block_gather(x: DistributedArray, orig_shape: Tuple[int, int], comm: MPI.Com
     ----------
     x : :obj:`pylops_mpi.DistributedArray`
         The distributed array to gather locally.
-    orig_shape : Tuple[int, int]
-        Original shape `(N, M)` of the global array to be gathered.
-    comm : MPI.Comm
-        MPI communicator whose size must be a perfect square (P = p_prime**2).
+    orig_shape : :obj:`tuple`
+        Global shape ``(N, M)`` of the global array to be gathered.
+    comm : :obj:`mpi4py.MPI.Comm`
+        MPI communicator whose size must be a perfect square (:math:`P = P'^2`).
 
     Returns
     -------
     Array
-        The reconstructed 2D array of shape `orig_shape`, assembled from
+        The reconstructed 2D array of shape ``orig_shape``, assembled from
         the distributed blocks.
 
     Raises
     ------
     RuntimeError
-        If the number of processes participating in the provided communicator is not a perfect square.
+        If the number of processes participating in the provided communicator 
+        is not a perfect square.
+    
     """
     ncp = get_module(x.engine)
     p_prime = math.isqrt(comm.Get_size())
@@ -158,6 +172,7 @@ def block_gather(x: DistributedArray, orig_shape: Tuple[int, int], comm: MPI.Com
         re, ce = min(rs + br, nr), min(cs + bc, nc)
         C[rs:re, cs:ce] = all_blks[rank].reshape(re - rs, cs - ce)
     return C
+
 
 class _MPIBlockMatrixMult(MPILinearOperator):
     r"""MPI Blocked Matrix multiplication
@@ -370,6 +385,7 @@ class _MPIBlockMatrixMult(MPILinearOperator):
         y[:] = y_layer.flatten()
         return y
 
+
 class _MPISummaMatrixMult(MPILinearOperator):
     r"""MPI SUMMA Matrix multiplication
 
@@ -385,8 +401,8 @@ class _MPISummaMatrixMult(MPILinearOperator):
         where :math:`N_{loc}` and :math:`K_{loc}` are the number of rows and
         columns stored on this MPI rank.
     M : :obj:`int`
-        Global number of columns of the matrices representing the input model
-        and data vectors.
+        Global leading dimension (i.e., number of columns) of the matrices
+        representing the input model and data vectors.
     saveAt : :obj:`bool`, optional
         Save :math:`\mathbf{A}` and ``A.H`` to speed up the computation of adjoint
         (``True``) or create ``A.H`` on-the-fly (``False``).
@@ -668,6 +684,7 @@ class _MPISummaMatrixMult(MPILinearOperator):
         y[:] = Y_local_unpadded.flatten()
         return y
 
+
 def MPIMatrixMult(
             A: NDArray,
             M: int,
@@ -679,66 +696,37 @@ def MPIMatrixMult(
     r"""
     MPI Distributed Matrix Multiplication Operator
 
-    This general operator performs distributed matrix-matrix multiplication
-    using either the SUMMA (Scalable Universal Matrix Multiplication Algorithm)
-    or a 1D block-row decomposition algorithm, depending on the specified
-    ``kind`` parameter.
-
-    The forward operation computes::
-        :math:`\mathbf{Y} = \mathbf{A} \cdot \mathbf{X}`
-
-    where:
-    - :math:`\mathbf{A}` is the distributed operator matrix of shape :math:`[N \times K]`
-    - :math:`\mathbf{X}` is the distributed operand matrix of shape :math:`[K \times M]`
-    - :math:`\mathbf{Y}` is the resulting distributed matrix of shape :math:`[N \times M]`
-
-    The adjoint (conjugate-transpose) operation computes::
-        :math:`\mathbf{X}_{adj} = \mathbf{A}^H \cdot \mathbf{Y}`
-
-    where :math:`\mathbf{A}^H` is the complex-conjugate transpose of :math:`\mathbf{A}`.
-
-    Distribution Layouts
-    --------------------
-    :summa:
-      2D block-grid distribution over a square process grid  :math:`[\sqrt{P} \times \sqrt{P}]`:
-      - :math:`\mathbf{A}` and :math:`\mathbf{X}` are partitioned into :math:`[N_loc \times K_loc]` and
-        :math:`[K_loc \times M_loc]` tiles on each rank, respectively.
-      - Each SUMMA iteration broadcasts row- and column-blocks of :math:`\mathbf{A}` and
-        :math:`\mathbf{X}` and accumulates local partial products.
-
-    :block:
-      1D block-row distribution over a :math:`[1 \times P]` grid:
-      - :math:`\mathbf{A}` is partitioned into :math:`[N_loc \times K]` blocks across ranks.
-      - :math:`\mathbf{X}` (and result :math:`\mathbf{Y}`) are partitioned into :math:`[K \times M_loc]` blocks.
-      - Local multiplication is followed by row-wise gather (forward) or
-        allreduce (adjoint) across ranks.
+    This operator performs distributed matrix-matrix multiplication
+    using either the SUMMA (Scalable Universal Matrix Multiplication 
+    Algorithm [1]_) or a 1D block-row decomposition algorithm (based on the 
+    specified ``kind`` parameter).
 
     Parameters
     ----------
-    A : NDArray
+    A : :obj:`numpy.ndarray`
         Local block of the matrix operator.
-    M : int
+    M : :obj:`int`
         Global number of columns in the operand and result matrices.
-    saveAt : bool, optional
-        If ``True``, store both :math:`\mathbf{A}` and its conjugate transpose :math:`\mathbf{A}^H`
-        to accelerate adjoint operations (uses twice the memory).
-        Default is ``False``.
-    base_comm : mpi4py.MPI.Comm, optional
+    saveAt : :obj:`bool`, optional
+        If ``True``, store both :math:`\mathbf{A}` and its conjugate transpose 
+        :math:`\mathbf{A}^H` to accelerate adjoint operations (uses twice the
+        memory). Default is ``False``.
+    base_comm : :obj:`mpi4py.MPI.Comm`, optional
         MPI communicator to use. Defaults to ``MPI.COMM_WORLD``.
-    kind : {'summa', 'block'}, optional
-        Algorithm to use: ``'summa'`` for the SUMMA 2D algorithm, or
-        ``'block'`` for the block-row-col decomposition. Default is ``'summa'``.
-    dtype : DTypeLike, optional
-        Numeric data type for computations. Default is ``np.float64``.
+    kind : :obj:`str`, optional
+        Algorithm used to perform matrix multiplication: ``'block'`` for #
+        block-row-column decomposition, and ``'summa'`` for SUMMA algorithm, or
+        . Default is ``'summa'``.
+    dtype : :obj:`str`, optional
+        Type of elements in input array. Defaults to ``numpy.float64``.
 
     Attributes
     ----------
     shape : :obj:`tuple`
         Operator shape
-    comm : mpi4py.MPI.Comm
-        The MPI communicator in use.
-    kind : str
-        Selected distributed matrix multiply algorithm ('summa' or 'block').
+    kind : :obj:`str`, optional
+        Selected distributed matrix multiply algorithm (``'block'`` or 
+        ``'summa'``).
 
     Raises
     ------
@@ -747,12 +735,57 @@ def MPIMatrixMult(
     Exception
         If the MPI communicator does not form a compatible grid for the
         selected algorithm.
+    
+    Notes
+    -----
+    The forward operator computes:
+
+    .. math::
+        \mathbf{Y} = \mathbf{A} \cdot \mathbf{X}
+
+    where:
+
+    - :math:`\mathbf{A}` is the distributed operator matrix of shape :math:`[N \times K]`
+    - :math:`\mathbf{X}` is the distributed operand matrix of shape :math:`[K \times M]`
+    - :math:`\mathbf{Y}` is the resulting distributed matrix of shape :math:`[N \times M]`
+
+    The adjoint (conjugate-transpose) operation computes:
+
+    .. math::
+        \mathbf{X}_{adj} = \mathbf{A}^H \cdot \mathbf{Y}
+
+    where :math:`\mathbf{A}^H` is the complex-conjugate transpose of :math:`\mathbf{A}`.
+
+    Based on the choice of ``kind``, the distribution layouts of the operator and model and
+    data vectors differ as follows:
+    
+    :summa:
+
+    2D block-grid distribution over a square process grid  :math:`[\sqrt{P} \times \sqrt{P}]`:
+
+    - :math:`\mathbf{A}` and :math:`\mathbf{X}` (and  :math:`\mathbf{Y}`) are partitioned into 
+      :math:`[N_{loc} \times K_{loc}]` and :math:`[K_{loc} \times M_{loc}]` tiles on each 
+      rank, respectively.
+    - Each SUMMA iteration broadcasts row- and column-blocks of :math:`\mathbf{A}` and
+      :math:`\mathbf{X}` (forward) or :math:`\mathbf{Y}` (adjoint) and accumulates local 
+      partial products.
+
+    :block:
+    
+    1D block-row distribution over a :math:`[1 \times P]` grid:
+
+    - :math:`\mathbf{A}` is partitioned into :math:`[N_{loc} \times K]` blocks across ranks.
+    - :math:`\mathbf{X}` (and  :math:`\mathbf{Y}`) are partitioned into :math:`[K \times M_{loc}]` blocks.
+    - Local multiplication is followed by row-wise gather (forward) or
+      allreduce (adjoint) across ranks.
+
+    .. [1] Robert A. van de Geijn, R., and Watts, J. "SUMMA: Scalable Universal 
+       Matrix Multiplication Algorithm", 1995.
+
     """
     if kind == "summa":
-        return _MPISummaMatrixMult(A,M,saveAt,base_comm,dtype)
+        return _MPISummaMatrixMult(A, M, saveAt, base_comm, dtype)
     elif kind == "block":
         return _MPIBlockMatrixMult(A, M, saveAt, base_comm, dtype)
     else:
         raise NotImplementedError("kind must be summa or block")
-
-__all__ = ["active_grid_comm", "block_gather", "local_block_spit", "MPIMatrixMult"]

@@ -1,12 +1,13 @@
 r"""
-Distributed SUMMA Matrix Multiplication
-=======================================
-This example shows how to use the :py:class:`pylops_mpi.basicoperators._MPISummaMatrixMult`
-operator to perform matrix-matrix multiplication between a matrix :math:`\mathbf{A}`
-distributed in 2D blocks across a square process grid and matrices :math:`\mathbf{X}`
-and :math:`\mathbf{Y}` distributed in 2D blocks across the same grid. Similarly,
-the adjoint operation can be performed with a matrix :math:`\mathbf{Y}` distributed
-in the same fashion as matrix :math:`\mathbf{X}`.
+Distributed Matrix Multiplication - SUMMA
+=========================================
+This example shows how to use the :py:class:`pylops_mpi.basicoperators.MPIMatrixMult`
+operator with ``kind='summa'`` to perform matrix-matrix multiplication between 
+a matrix :math:`\mathbf{A}` distributed in 2D blocks across a square process 
+grid and matrices :math:`\mathbf{X}` and :math:`\mathbf{Y}` distributed in 2D 
+blocks across the same grid. Similarly, the adjoint operation can be performed 
+with a matrix :math:`\mathbf{Y}` distributed in the same fashion as matrix 
+:math:`\mathbf{X}`.
 
 Note that whilst the different blocks of matrix :math:`\mathbf{A}` are directly
 stored in the operator on different ranks, the matrices :math:`\mathbf{X}` and
@@ -24,56 +25,64 @@ from matplotlib import pyplot as plt
 
 import pylops_mpi
 from pylops import Conj
-from pylops_mpi.basicoperators.MatrixMult import (local_block_spit, MPIMatrixMult, active_grid_comm)
+from pylops_mpi.basicoperators.MatrixMult import \
+    local_block_split, MPIMatrixMult, active_grid_comm
 
 plt.close("all")
 
 ###############################################################################
 # We set the seed such that all processes can create the input matrices filled
 # with the same random number. In practical application, such matrices will be
-# filled with data that is appropriate that is appropriate the use-case.
+# filled with data that is appropriate to the use-case.
 np.random.seed(42)
-
-
-N, M, K = 6, 6, 6
-A_shape, x_shape, y_shape= (N, K), (K, M), (N, M)
-
-
-base_comm = MPI.COMM_WORLD
-comm, rank, row_id, col_id, is_active = active_grid_comm(base_comm, N, M)
-print(f"Process {base_comm.Get_rank()} is {'active' if is_active else 'inactive'}")
-
 
 ###############################################################################
 # We are now ready to create the input matrices for our distributed matrix
 # multiplication example. We need to set up:
+#
 # - Matrix :math:`\mathbf{A}` of size :math:`N \times K` (the left operand)
 # - Matrix :math:`\mathbf{X}` of size :math:`K \times M` (the right operand)  
-# - The result will be :math:`\mathbf{Y} = \mathbf{A} \mathbf{X}` of size :math:`N \times M`
+# - The result will be :math:`\mathbf{Y} = \mathbf{A} \mathbf{X}` of size 
+# :math:`N \times M`
 #
+# We create here global test matrices with sequential values for easy verification:
+#
+# - Matrix A: Each element :math:`A_{i,j} = i \cdot K + j` (row-major ordering)
+# - Matrix X: Each element :math:`X_{i,j} = i \cdot M + j`
+
+N, M, K = 6, 6, 6
+A_shape, x_shape, y_shape = (N, K), (K, M), (N, M)
+
+A_data = np.arange(int(A_shape[0] * A_shape[1])).reshape(A_shape)
+x_data = np.arange(int(x_shape[0] * x_shape[1])).reshape(x_shape)
+
+################################################################################
 # For distributed computation, we arrange processes in a square grid of size
 # :math:`P' \times P'` where :math:`P' = \sqrt{P}` and :math:`P` is the total 
 # number of MPI processes. Each process will own a block of each matrix 
 # according to this 2D grid layout.
 
+base_comm = MPI.COMM_WORLD
+comm, rank, row_id, col_id, is_active = active_grid_comm(base_comm, N, M)
+print(f"Process {base_comm.Get_rank()} is {'active' if is_active else 'inactive'}")
+
 p_prime = math.isqrt(comm.Get_size())
 print(f"Process grid: {p_prime} x {p_prime} = {comm.Get_size()} processes")
 
-# Create global test matrices with sequential values for easy verification
-# Matrix A: Each element :math:`A_{i,j} = i \cdot K + j` (row-major ordering)
-# Matrix X: Each element :math:`X_{i,j} = i \cdot M + j`  
-A_data = np.arange(int(A_shape[0] * A_shape[1])).reshape(A_shape)
-x_data = np.arange(int(x_shape[0] * x_shape[1])).reshape(x_shape)
-
-print(f"Global matrix A shape: {A_shape} (N={A_shape[0]}, K={A_shape[1]})")
-print(f"Global matrix X shape: {x_shape} (K={x_shape[0]}, M={x_shape[1]})")
-print(f"Expected Global result Y shape: ({A_shape[0]}, {x_shape[1]}) = (N, M)")
+if rank == 0:
+    print(f"Global matrix A shape: {A_shape} (N={A_shape[0]}, K={A_shape[1]})")
+    print(f"Global matrix X shape: {x_shape} (K={x_shape[0]}, M={x_shape[1]})")
+    print(f"Expected Global result Y shape: ({A_shape[0]}, {x_shape[1]}) = (N, M)")
 
 ################################################################################
-# Determine which block of each matrix this process should own
-# The 2D block distribution ensures:
-# - Process at grid position :math:`(i,j)` gets block :math:`\mathbf{A}[i_{start}:i_{end}, j_{start}:j_{end}]`
-# - Block sizes are approximately :math:`\lceil N/P' \rceil \times \lceil K/P' \rceil`  with edge processes handling remainder
+# Next we must determine which block of each matrix each process should own.
+#
+# The 2D block distribution requires:
+#
+# - Process at grid position :math:`(i,j)` gets block 
+#   :math:`\mathbf{A}[i_{start}:i_{end}, j_{start}:j_{end}]`
+# - Block sizes are approximately :math:`\lceil N/P' \rceil \times \lceil K/P' \rceil`
+#   with edge processes handling remainder
 #
 # .. raw:: html
 #
@@ -98,8 +107,9 @@ print(f"Expected Global result Y shape: ({A_shape[0]}, {x_shape[1]}) = (N, M)")
 #   </div>
 #
 
-A_slice = local_block_spit(A_shape, rank, comm)
-x_slice = local_block_spit(x_shape, rank, comm)
+A_slice = local_block_split(A_shape, rank, comm)
+x_slice = local_block_split(x_shape, rank, comm)
+
 ################################################################################
 # Extract the local portion of each matrix for this process
 A_local = A_data[A_slice]
@@ -108,18 +118,21 @@ x_local = x_data[x_slice]
 print(f"Process {rank}: A_local shape {A_local.shape}, X_local shape {x_local.shape}")
 print(f"Process {rank}: A slice {A_slice}, X slice {x_slice}")
 
-x_dist = pylops_mpi.DistributedArray(global_shape=(K * M),
-                                     local_shapes=comm.allgather(x_local.shape[0] * x_local.shape[1]),
-                                     base_comm=comm,
-                                     partition=pylops_mpi.Partition.SCATTER,
-                                     dtype=x_local.dtype)
-x_dist[:] = x_local.flatten()
+################################################################################
 
 ################################################################################
 # We are now ready to create the SUMMA :py:class:`pylops_mpi.basicoperators.MPIMatrixMult`
-# operator and the input matrix :math:`\mathbf{X}`. Given that we chose a block-block distribution
-# of data we shall use SUMMA
+# operator and the input matrix :math:`\mathbf{X}`
+
 Aop = MPIMatrixMult(A_local, M, base_comm=comm, kind="summa", dtype=A_local.dtype)
+
+x_dist = pylops_mpi.DistributedArray(
+    global_shape=(K * M),
+    local_shapes=comm.allgather(x_local.shape[0] * x_local.shape[1]),
+    base_comm=comm,
+    partition=pylops_mpi.Partition.SCATTER,
+    dtype=x_local.dtype)
+x_dist[:] = x_local.flatten()
 
 ################################################################################
 # We can now apply the forward pass :math:`\mathbf{y} = \mathbf{Ax}` (which
