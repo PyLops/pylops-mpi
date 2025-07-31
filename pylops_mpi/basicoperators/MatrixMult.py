@@ -335,6 +335,7 @@ class _MPIBlockMatrixMult(MPILinearOperator):
             local_shapes=[(self.N * c) for c in self._rank_col_lens],
             mask=x.mask,
             partition=Partition.SCATTER,
+            engine=x.engine,
             dtype=output_dtype,
             base_comm=self.base_comm
         )
@@ -372,6 +373,7 @@ class _MPIBlockMatrixMult(MPILinearOperator):
             local_shapes=[self.K * c for c in self._rank_col_lens],
             mask=x.mask,
             partition=Partition.SCATTER,
+            engine=x.engine,
             dtype=output_dtype,
             base_comm=self.base_comm
         )
@@ -573,6 +575,7 @@ class _MPISummaMatrixMult(MPILinearOperator):
                              mask=x.mask,
                              local_shapes=local_shapes,
                              partition=Partition.SCATTER,
+                             engine=x.engine,
                              dtype=output_dtype,
                              base_comm=self.base_comm)
 
@@ -638,6 +641,7 @@ class _MPISummaMatrixMult(MPILinearOperator):
             mask=x.mask,
             local_shapes=local_shapes,
             partition=Partition.SCATTER,
+            engine=x.engine,
             dtype=output_dtype,
             base_comm=self.base_comm
         )
