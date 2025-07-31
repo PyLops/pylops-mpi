@@ -169,7 +169,8 @@ def block_gather(x: DistributedArray, orig_shape: Tuple[int, int], comm: MPI.Com
         pr, pc = divmod(rank, p_prime)
         rs, cs = pr * br, pc * bc
         re, ce = min(rs + br, nr), min(cs + bc, nc)
-        C[rs:re, cs:ce] = all_blks[rank].reshape(re - rs, cs - ce)
+        if len(all_blks[rank]) !=0:
+            C[rs:re, cs:ce] = all_blks[rank].reshape(re - rs, cs - ce)
     return C
 
 
