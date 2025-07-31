@@ -40,7 +40,7 @@ np.random.seed(42)
 
 ###############################################################################
 # We are now ready to create the input matrices :math:`\mathbf{A}` of size
-# :math:`M \times k` and :math:`\mathbf{A}` of size :math:`K \times N`.
+# :math:`M \times k` and :math:`\mathbf{X}` of size :math:`K \times N`.
 N, K, M = 4, 4, 4
 A = np.random.rand(N * K).astype(dtype=np.float32).reshape(N, K)
 X = np.random.rand(K * M).astype(dtype=np.float32).reshape(K, M)

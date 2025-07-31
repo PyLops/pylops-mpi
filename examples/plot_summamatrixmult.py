@@ -32,7 +32,7 @@ plt.close("all")
 
 ###############################################################################
 # We set the seed such that all processes can create the input matrices filled
-# with the same random number. In practical application, such matrices will be
+# with the same random number. In practical applications, such matrices will be
 # filled with data that is appropriate to the use-case.
 np.random.seed(42)
 
