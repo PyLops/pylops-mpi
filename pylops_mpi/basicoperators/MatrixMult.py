@@ -1,4 +1,3 @@
-
 __all__ = ["active_grid_comm",
            "block_gather",
            "local_block_split",
