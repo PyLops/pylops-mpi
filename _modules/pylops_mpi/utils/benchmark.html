@@ -591,6 +591,7 @@
             <span class="n">header_index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">_markers</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
 
             <span class="k">def</span><span class="w"> </span><span class="nf">local_mark</span><span class="p">(</span><span class="n">label</span><span class="p">):</span>
+                <span class="n">_sync</span><span class="p">()</span>
                 <span class="n">_markers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">label</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">(),</span> <span class="n">level</span><span class="p">))</span>
 
             <span class="n">_mark_func_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">local_mark</span><span class="p">)</span>
