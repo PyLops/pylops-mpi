@@ -2,8 +2,19 @@
     Designed to run with n processes
     $ mpiexec -n 10 pytest test_fredholm.py --with-mpi
 """
-import numpy as np
-from numpy.testing import assert_allclose
+import os
+
+if int(os.environ.get("TEST_CUPY_PYLOPS", 0)):
+    import cupy as np
+    from cupy.testing import assert_allclose
+
+    backend = "cupy"
+else:
+    import numpy as np
+    from numpy.testing import assert_allclose
+
+    backend = "numpy"
+import numpy as npp
 from mpi4py import MPI
 import pytest
 
@@ -110,9 +121,9 @@ def test_Fredholm1(par):
 
     # split across ranks
     nsl_rank = local_split((par["nsl"], ), MPI.COMM_WORLD, Partition.SCATTER, 0)
-    nsl_ranks = np.concatenate(MPI.COMM_WORLD.allgather(nsl_rank))
-    islin_rank = np.insert(np.cumsum(nsl_ranks)[:-1] , 0, 0)[rank]
-    islend_rank = np.cumsum(nsl_ranks)[rank]
+    nsl_ranks = npp.concatenate(MPI.COMM_WORLD.allgather(nsl_rank))
+    islin_rank = npp.insert(npp.cumsum(nsl_ranks)[:-1] , 0, 0)[rank]
+    islend_rank = npp.cumsum(nsl_ranks)[rank]
     Frank = F[islin_rank:islend_rank]
 
     Fop_MPI = MPIFredholm1(
@@ -125,7 +136,7 @@ def test_Fredholm1(par):
 
     x = DistributedArray(global_shape=par["nsl"] * par["ny"] * par["nz"],
                          partition=pylops_mpi.Partition.BROADCAST,
-                         dtype=par["dtype"])
+                         dtype=par["dtype"], engine=backend)
     x[:] = 1. + par["imag"] * 1.
     x_global = x.asarray()
     # Forward

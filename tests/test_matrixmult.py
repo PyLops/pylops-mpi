@@ -2,9 +2,20 @@
     Designed to run with n processes
     $ mpiexec -n 10 pytest test_matrixmult.py --with-mpi
 """
+import os
+
+if int(os.environ.get("TEST_CUPY_PYLOPS", 0)):
+    import cupy as np
+    from cupy.testing import assert_allclose
+
+    backend = "cupy"
+else:
+    import numpy as np
+    from numpy.testing import assert_allclose
+
+    backend = "numpy"
+import numpy as npp
 import math
-import numpy as np
-from numpy.testing import assert_allclose
 from mpi4py import MPI
 import pytest
 
@@ -90,7 +101,7 @@ def test_MPIMatrixMult(N, K, M, dtype_str):
 
     # Create DistributedArray for input x (representing B flattened)
     all_local_col_len = comm.allgather(local_col_X_len)
-    total_cols = np.sum(all_local_col_len)
+    total_cols = npp.sum(all_local_col_len)
 
     x_dist = DistributedArray(
         global_shape=(K * total_cols),
@@ -98,7 +109,8 @@ def test_MPIMatrixMult(N, K, M, dtype_str):
         partition=Partition.SCATTER,
         base_comm=comm,
         mask=[i % p_prime for i in range(size)],
-        dtype=dtype
+        dtype=dtype,
+        engine=backend
     )
 
     x_dist.local_array[:] = X_p.ravel()

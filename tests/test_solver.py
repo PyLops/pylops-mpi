@@ -2,8 +2,18 @@
     Designed to run with n processes
     $ mpiexec -n 10 pytest test_solver.py --with-mpi
 """
-import numpy as np
-from numpy.testing import assert_allclose
+import os
+
+if int(os.environ.get("TEST_CUPY_PYLOPS", 0)):
+    import cupy as np
+    from cupy.testing import assert_allclose
+
+    backend = "cupy"
+else:
+    import numpy as np
+    from numpy.testing import assert_allclose
+
+    backend = "numpy"
 from mpi4py import MPI
 import pytest
 import pylops
@@ -101,18 +111,18 @@ def test_cg(par):
     # To make MPIBlockDiag a positive definite matrix
     BDiag_MPI = MPIBlockDiag(ops=[Aop, ])
 
-    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
     x[:] = np.random.normal(1, 10, par["nx"]) + par["imag"] * np.random.normal(10, 10, par["nx"])
     x_global = x.asarray()
     if par["x0"]:
-        x0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+        x0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
         x0[:] = np.random.normal(0, 10, par["nx"]) + par["imag"] * np.random.normal(
             10, 10, par["nx"]
         )
         x0_global = x0.asarray()
     else:
         # Set TO 0s if x0 = False
-        x0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+        x0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
         x0[:] = 0
         x0_global = x0.asarray()
     y = BDiag_MPI * x
@@ -149,18 +159,18 @@ def test_cgls(par):
     # To make MPIBlockDiag a positive definite matrix
     BDiag_MPI = MPIBlockDiag(ops=[Aop, ])
 
-    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
     x[:] = np.random.normal(1, 10, par["nx"]) + par["imag"] * np.random.normal(10, 10, par["nx"])
     x_global = x.asarray()
     if par["x0"]:
-        x0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+        x0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
         x0[:] = np.random.normal(0, 10, par["nx"]) + par["imag"] * np.random.normal(
             10, 10, par["nx"]
         )
         x0_global = x0.asarray()
     else:
         # Set TO 0s if x0 = False
-        x0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+        x0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
         x0[:] = 0
         x0_global = x0.asarray()
     y = BDiag_MPI * x
@@ -197,18 +207,18 @@ def test_cgls_broadcastdata(par):
     Aop = MatrixMult(A, dtype=par["dtype"])
     HStack_MPI = MPIHStack(ops=[Aop, ])
 
-    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
     x[:] = np.random.normal(1, 10, par['nx']) + par["imag"] * np.random.normal(10, 10, par['nx'])
     x_global = x.asarray()
     if par["x0"]:
-        x0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+        x0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
         x0[:] = np.random.normal(0, 10, par["nx"]) + par["imag"] * np.random.normal(
             10, 10, par["nx"]
         )
         x0_global = x0.asarray()
     else:
         # Set TO 0s if x0 = False
-        x0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+        x0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
         x0[:] = 0
         x0_global = x0.asarray()
     y = HStack_MPI @ x
@@ -246,18 +256,18 @@ def test_cgls_broadcastmodel(par):
     # To make MPIVStack a positive definite matrix
     VStack_MPI = MPIVStack(ops=[Aop, ])
 
-    x = DistributedArray(global_shape=par['nx'], dtype=par['dtype'], partition=Partition.BROADCAST)
+    x = DistributedArray(global_shape=par['nx'], dtype=par['dtype'], partition=Partition.BROADCAST, engine=backend)
     x[:] = np.random.normal(1, 10, par['nx']) + par["imag"] * np.random.normal(10, 10, par['nx'])
     x_global = x.asarray()
     if par["x0"]:
-        x0 = DistributedArray(global_shape=par['nx'], dtype=par['dtype'], partition=Partition.BROADCAST)
+        x0 = DistributedArray(global_shape=par['nx'], dtype=par['dtype'], partition=Partition.BROADCAST, engine=backend)
         x0[:] = np.random.normal(0, 10, par["nx"]) + par["imag"] * np.random.normal(
             10, 10, par["nx"]
         )
         x0_global = x0.asarray()
     else:
         # Set TO 0s if x0 = False
-        x0 = DistributedArray(global_shape=par['nx'], dtype=par['dtype'], partition=Partition.BROADCAST)
+        x0 = DistributedArray(global_shape=par['nx'], dtype=par['dtype'], partition=Partition.BROADCAST, engine=backend)
         x0[:] = 0
         x0_global = x0.asarray()
     y = VStack_MPI @ x
@@ -298,19 +308,19 @@ def test_cg_stacked(par):
     BDiag_MPI = MPIBlockDiag(ops=[Aop, ])
     StackedBDiag_MPI = MPIStackedBlockDiag(ops=[BDiag_MPI, BDiag_MPI])
 
-    dist1 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    dist1 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
     dist1[:] = np.random.normal(1, 10, par["nx"]) + par["imag"] * np.random.normal(10, 10, par["nx"])
-    dist2 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    dist2 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
     dist2[:] = np.random.normal(5, 10, par["nx"]) + par["imag"] * np.random.normal(50, 10, par["nx"])
     x = StackedDistributedArray([dist1, dist2])
     x_global = x.asarray()
 
     if par["x0"]:
-        dist1_0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+        dist1_0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
         dist1_0[:] = np.random.normal(0, 10, par["nx"]) + par["imag"] * np.random.normal(
             10, 10, par["nx"]
         )
-        dist2_0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+        dist2_0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
         dist2_0[:] = np.random.normal(10, 10, par["nx"]) + par["imag"] * np.random.normal(
             0, 10, par["nx"]
         )
@@ -318,9 +328,9 @@ def test_cg_stacked(par):
         x0_global = x0.asarray()
     else:
         # Set TO 0s if x0 = False
-        dist1_0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+        dist1_0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
         dist1_0[:] = 0
-        dist2_0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+        dist2_0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
         dist2_0[:] = 0
         x0 = StackedDistributedArray([dist1_0, dist2_0])
         x0_global = x0.asarray()
@@ -364,19 +374,19 @@ def test_cgls_stacked(par):
     VStack_MPI = MPIVStack(ops=[Aop, ])
     StackedBDiag_MPI = MPIStackedBlockDiag(ops=[BDiag_MPI, VStack_MPI])
 
-    dist1 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    dist1 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
     dist1[:] = np.random.normal(1, 10, par["nx"]) + par["imag"] * np.random.normal(10, 10, par["nx"])
-    dist2 = DistributedArray(global_shape=par['nx'], partition=Partition.BROADCAST, dtype=par['dtype'])
+    dist2 = DistributedArray(global_shape=par['nx'], partition=Partition.BROADCAST, dtype=par['dtype'], engine=backend)
     dist2[:] = np.random.normal(5, 10, dist2.local_shape) + par["imag"] * np.random.normal(50, 10, dist2.local_shape)
     x = StackedDistributedArray([dist1, dist2])
     x_global = x.asarray()
 
     if par["x0"]:
-        dist1_0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+        dist1_0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
         dist1_0[:] = np.random.normal(0, 10, par["nx"]) + par["imag"] * np.random.normal(
             10, 10, par["nx"]
         )
-        dist2_0 = DistributedArray(global_shape=par['nx'], partition=Partition.BROADCAST, dtype=par['dtype'])
+        dist2_0 = DistributedArray(global_shape=par['nx'], partition=Partition.BROADCAST, dtype=par['dtype'], engine=backend)
         dist2_0[:] = np.random.normal(10, 10, dist2_0.local_shape) + par["imag"] * np.random.normal(
             0, 10, dist2_0.local_shape
         )
@@ -384,9 +394,9 @@ def test_cgls_stacked(par):
         x0_global = x0.asarray()
     else:
         # Set TO 0s if x0 = False
-        dist1_0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+        dist1_0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
         dist1_0[:] = 0
-        dist2_0 = DistributedArray(global_shape=par['nx'], partition=Partition.BROADCAST, dtype=par['dtype'])
+        dist2_0 = DistributedArray(global_shape=par['nx'], partition=Partition.BROADCAST, dtype=par['dtype'], engine=backend)
         dist2_0[:] = 0
         x0 = StackedDistributedArray([dist1_0, dist2_0])
         x0_global = x0.asarray()

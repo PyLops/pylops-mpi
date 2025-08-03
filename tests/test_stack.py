@@ -2,8 +2,18 @@
     Designed to run with n processes
     $ mpiexec -n 10 pytest test_stack.py --with-mpi
 """
-import numpy as np
-from numpy.testing import assert_allclose
+import os
+
+if int(os.environ.get("TEST_CUPY_PYLOPS", 0)):
+    import cupy as np
+    from cupy.testing import assert_allclose
+
+    backend = "cupy"
+else:
+    import numpy as np
+    from numpy.testing import assert_allclose
+
+    backend = "numpy"
 from mpi4py import MPI
 import pytest
 
@@ -30,14 +40,16 @@ def test_vstack(par):
     # Broadcasted DistributedArray(global_shape == local_shape)
     x = pylops_mpi.DistributedArray(global_shape=par['nx'],
                                     partition=pylops_mpi.Partition.BROADCAST,
-                                    dtype=par['dtype'])
+                                    dtype=par['dtype'],
+                                    engine=backend)
     x[:] = np.ones(shape=par['nx'], dtype=par['dtype'])
     x_global = x.asarray()
 
     # Scattered DistributedArray
     y = pylops_mpi.DistributedArray(global_shape=size * par['ny'],
                                     partition=pylops_mpi.Partition.SCATTER,
-                                    dtype=par['dtype'])
+                                    dtype=par['dtype'],
+                                    engine=backend)
     y[:] = np.ones(shape=par['ny'], dtype=par['dtype'])
     y_global = y.asarray()
 
@@ -76,14 +88,15 @@ def test_stacked_vstack(par):
     # Broadcasted DistributedArray(global_shape == local_shape)
     x = pylops_mpi.DistributedArray(global_shape=par['nx'],
                                     partition=pylops_mpi.Partition.BROADCAST,
-                                    dtype=par['dtype'])
+                                    dtype=par['dtype'],
+                                    engine=backend)
     x[:] = np.ones(shape=par['nx'], dtype=par['dtype'])
     x_global = x.asarray()
 
     # Stacked DistributedArray
-    dist1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    dist1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
     dist1[:] = np.ones(dist1.local_shape, dtype=par['dtype'])
-    dist2 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    dist2 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
     dist2[:] = np.ones(dist1.local_shape, dtype=par['dtype'])
     y = pylops_mpi.StackedDistributedArray(distarrays=[dist1, dist2])
     y_global = y.asarray()
@@ -119,14 +132,16 @@ def test_hstack(par):
     # Scattered DistributedArray
     x = pylops_mpi.DistributedArray(global_shape=size * par['nx'],
                                     partition=pylops_mpi.Partition.SCATTER,
-                                    dtype=par['dtype'])
+                                    dtype=par['dtype'],
+                                    engine=backend)
     x[:] = np.ones(shape=par['nx'], dtype=par['dtype'])
     x_global = x.asarray()
 
     # Broadcasted DistributedArray(global_shape == local_shape)
     y = pylops_mpi.DistributedArray(global_shape=par['ny'],
                                     partition=pylops_mpi.Partition.BROADCAST,
-                                    dtype=par['dtype'])
+                                    dtype=par['dtype'],
+                                    engine=backend)
     y[:] = np.ones(shape=par['ny'], dtype=par['dtype'])
     y_global = y.asarray()
 

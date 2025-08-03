@@ -2,8 +2,18 @@
     Designed to run with n processes
     $ mpiexec -n 10 pytest test_stackedlinearop.py --with-mpi
 """
-import numpy as np
-from numpy.testing import assert_allclose
+import os
+
+if int(os.environ.get("TEST_CUPY_PYLOPS", 0)):
+    import cupy as np
+    from cupy.testing import assert_allclose
+
+    backend = "cupy"
+else:
+    import numpy as np
+    from numpy.testing import assert_allclose
+
+    backend = "numpy"
 from mpi4py import MPI
 import pytest
 
@@ -53,9 +63,9 @@ def test_transpose(par):
     Top_MPI = StackedBlockDiag_MPI.T
 
     # For forward mode
-    dist_1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    dist_1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
     dist_1[:] = np.ones(par['ny'])
-    dist_2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'])
+    dist_2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'], engine=backend)
     dist_2[:] = np.ones(dist_2.local_shape)
     x = pylops_mpi.StackedDistributedArray(distarrays=[dist_1, dist_2])
     x_global = x.asarray()
@@ -64,9 +74,9 @@ def test_transpose(par):
     Top_x_np = Top_x.asarray()
 
     # For adjoint mode
-    dist_1 = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    dist_1 = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
     dist_1[:] = np.ones(par['nx'])
-    dist_2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'])
+    dist_2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'], engine=backend)
     dist_2[:] = np.ones(dist_2.local_shape)
     y = pylops_mpi.StackedDistributedArray(distarrays=[dist_1, dist_2])
     y_global = y.asarray()
@@ -96,9 +106,9 @@ def test_scaled(par):
     Sop_MPI = StackedBlockDiag_MPI * -4
 
     # For forward mode
-    dist_1 = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    dist_1 = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
     dist_1[:] = np.ones(par['nx'])
-    dist_2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'])
+    dist_2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'], engine=backend)
     dist_2[:] = np.ones(dist_2.local_shape)
     x = pylops_mpi.StackedDistributedArray(distarrays=[dist_1, dist_2])
     x_global = x.asarray()
@@ -107,9 +117,9 @@ def test_scaled(par):
     Sop_x_np = Sop_x.asarray()
 
     # For adjoint mode
-    dist_1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    dist_1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
     dist_1[:] = np.ones(par['ny'])
-    dist_2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'])
+    dist_2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'], engine=backend)
     dist_2[:] = np.ones(dist_2.local_shape)
     y = pylops_mpi.StackedDistributedArray(distarrays=[dist_1, dist_2])
     y_global = y.asarray()
@@ -139,9 +149,9 @@ def test_conj(par):
     Cop_MPI = StackedBlockDiag_MPI.conj()
 
     # For forward mode
-    dist_1 = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    dist_1 = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
     dist_1[:] = np.ones(par['nx'])
-    dist_2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'])
+    dist_2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'], engine=backend)
     dist_2[:] = np.ones(dist_2.local_shape)
     x = pylops_mpi.StackedDistributedArray(distarrays=[dist_1, dist_2])
     x_global = x.asarray()
@@ -150,9 +160,9 @@ def test_conj(par):
     Cop_x_np = Cop_x.asarray()
 
     # For adjoint mode
-    dist_1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    dist_1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
     dist_1[:] = np.ones(par['ny'])
-    dist_2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'])
+    dist_2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'], engine=backend)
     dist_2[:] = np.ones(dist_2.local_shape)
     y = pylops_mpi.StackedDistributedArray(distarrays=[dist_1, dist_2])
     y_global = y.asarray()
@@ -182,9 +192,9 @@ def test_power(par):
     Pop_MPI = StackedBlockDiag_MPI.conj()
 
     # For forward mode
-    dist_1 = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    dist_1 = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
     dist_1[:] = np.ones(par['nx'])
-    dist_2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'])
+    dist_2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'], engine=backend)
     dist_2[:] = np.ones(dist_2.local_shape)
     x = pylops_mpi.StackedDistributedArray(distarrays=[dist_1, dist_2])
     x_global = x.asarray()
@@ -193,9 +203,9 @@ def test_power(par):
     Pop_x_np = Pop_x.asarray()
 
     # For adjoint mode
-    dist_1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    dist_1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
     dist_1[:] = np.ones(par['ny'])
-    dist_2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'])
+    dist_2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'], engine=backend)
     dist_2[:] = np.ones(dist_2.local_shape)
     y = pylops_mpi.StackedDistributedArray(distarrays=[dist_1, dist_2])
     y_global = y.asarray()
@@ -230,9 +240,9 @@ def test_sum(par):
     Sop_MPI = StackedBDiag_MPI_1 + StackedBDiag_MPI_2
 
     # Forward Mode
-    dist1 = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    dist1 = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
     dist1[:] = np.ones(dist1.local_shape)
-    dist2 = pylops_mpi.DistributedArray(global_shape=par['ny'] * par['nx'], dtype=par['dtype'])
+    dist2 = pylops_mpi.DistributedArray(global_shape=par['ny'] * par['nx'], dtype=par['dtype'], engine=backend)
     dist2[:] = np.ones(dist2.local_shape)
     x = pylops_mpi.StackedDistributedArray(distarrays=[dist1, dist2])
     x_global = x.asarray()
@@ -240,9 +250,9 @@ def test_sum(par):
     Sop_x_np = Sop_x.asarray()
 
     # Adjoint Mode
-    dist1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    dist1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
     dist1[:] = np.ones(dist1.local_shape)
-    dist2 = pylops_mpi.DistributedArray(global_shape=par['ny'] * par['nx'], dtype=par['dtype'])
+    dist2 = pylops_mpi.DistributedArray(global_shape=par['ny'] * par['nx'], dtype=par['dtype'], engine=backend)
     dist2[:] = np.ones(dist2.local_shape)
     y = pylops_mpi.StackedDistributedArray(distarrays=[dist1, dist2])
     y_global = y.asarray()
@@ -280,9 +290,9 @@ def test_product(par):
     Pop_MPI = StackedBDiag_MPI_1 * StackedBDiag_MPI_2
 
     # Forward Mode
-    dist1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    dist1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
     dist1[:] = np.ones(dist1.local_shape)
-    dist2 = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    dist2 = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
     dist2[:] = np.ones(dist2.local_shape)
     x = pylops_mpi.StackedDistributedArray(distarrays=[dist1, dist2])
     x_global = x.asarray()
@@ -290,9 +300,9 @@ def test_product(par):
     Pop_x_np = Pop_x.asarray()
 
     # Adjoint Mode
-    dist1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    dist1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
     dist1[:] = np.ones(dist1.local_shape)
-    dist2 = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    dist2 = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
     dist2[:] = np.ones(dist2.local_shape)
     y = pylops_mpi.StackedDistributedArray(distarrays=[dist1, dist2])
     y_global = y.asarray()

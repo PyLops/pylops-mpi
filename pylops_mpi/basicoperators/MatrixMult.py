@@ -232,7 +232,8 @@ class MPIMatrixMult(MPILinearOperator):
             mask=x.mask,
             partition=Partition.SCATTER,
             dtype=self.dtype,
-            base_comm=self.base_comm
+            base_comm=self.base_comm,
+            engine=x.engine
         )
 
         my_own_cols = self._rank_col_lens[self.rank]
@@ -257,7 +258,8 @@ class MPIMatrixMult(MPILinearOperator):
             mask=x.mask,
             partition=Partition.SCATTER,
             dtype=self.dtype,
-            base_comm=self.base_comm
+            base_comm=self.base_comm,
+            engine=x.engine
         )
 
         x_arr = x.local_array.reshape((self.N, self._local_ncols)).astype(self.dtype)
