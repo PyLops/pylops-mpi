@@ -135,39 +135,40 @@ def test_scaled(par):
         assert_allclose(Sop_y_np, Sop.H @ y_global, rtol=1e-9)
 
 
-# @pytest.mark.mpi(min_size=2)
-# @pytest.mark.parametrize("par", [(par1), (par1j)])
-# def test_power(par):
-#     """Test the PowerLinearOperator"""
-#     Op = pylops.MatrixMult(A=((rank + 1) * np.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
-#     BDiag_MPI = MPIBlockDiag(ops=[Op, ])
-#     # Power Operator
-#     Pop_MPI = BDiag_MPI ** 3
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par1), (par1j)])
+def test_power(par):
+    """Test the PowerLinearOperator"""
+    Op = pylops.MatrixMult(A=((rank + 1) * np.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']),
+                           dtype=par['dtype'])
+    BDiag_MPI = MPIBlockDiag(ops=[Op, ])
+    
+    # Power Operator
+    Pop_MPI = BDiag_MPI ** 3
 
-#     # Forward Mode
-#     x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
-#     x[:] = np.ones(par['nx'])
-#     x_global = x.asarray()
-#     Pop_x = Pop_MPI @ x
-#     assert isinstance(Pop_x, DistributedArray)
-#     Pop_x_np = Pop_x.asarray()
+    # Forward Mode
+    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
+    x[:] = np.ones(par['nx'])
+    x_global = x.asarray()
+    Pop_x = Pop_MPI @ x
+    assert isinstance(Pop_x, DistributedArray)
+    Pop_x_np = Pop_x.asarray()
 
-#     # Adjoint Mode
-#     y = DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
-#     y[:] = np.ones(par['ny'])
-#     y_global = y.asarray()
-#     Pop_y = Pop_MPI.H @ y
-#     assert isinstance(Pop_y, DistributedArray)
-#     Pop_y_np = Pop_y.asarray()
+    # Adjoint Mode
+    y = DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
+    y[:] = np.ones(par['ny'])
+    y_global = y.asarray()
+    Pop_y = Pop_MPI.H @ y
+    assert isinstance(Pop_y, DistributedArray)
+    Pop_y_np = Pop_y.asarray()
 
-#     if rank == 0:
-#         ops = [pylops.MatrixMult((i + 1) * np.ones(shape=(par['ny'], par['nx'])).astype(par['dtype'])) for i in
-#                range(size)]
-#         BDiag = pylops.BlockDiag(ops=ops)
-#         # TODO (tharitt): Fail PyLops Op ** 3 does not preserve CuPy (it turns to NumPy)
-#         Pop = BDiag ** 3
-#         assert_allclose(Pop_x_np, Pop @ x_global, rtol=1e-9)
-#         assert_allclose(Pop_y_np, Pop.H @ y_global, rtol=1e-9)
+    if rank == 0:
+        ops = [pylops.MatrixMult((i + 1) * np.ones(shape=(par['ny'], par['nx'])).astype(par['dtype'])) for i in
+               range(size)]
+        BDiag = pylops.BlockDiag(ops=ops)
+        Pop = BDiag * BDiag * BDiag  ## temporarely replaced BDiag ** 3 until bug in PyLops is fixed
+        assert_allclose(Pop_x_np, Pop @ x_global, rtol=1e-9)
+        assert_allclose(Pop_y_np, Pop.H @ y_global, rtol=1e-9)
 
 
 @pytest.mark.mpi(min_size=2)
