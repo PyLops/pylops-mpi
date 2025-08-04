@@ -205,8 +205,8 @@ def test_distributed_norm(par):
                     np.linalg.norm(par['x'], ord=1, axis=par['axis']), rtol=1e-14)
 
     # TODO (tharitt): FAIL with CuPy + MPI for inf norm
-    # assert_allclose(arr.norm(ord=np.inf, axis=par['axis']),
-                        # np.linalg.norm(par['x'], ord=np.inf, axis=par['axis']), rtol=1e-14)
+    assert_allclose(arr.norm(ord=np.inf, axis=par['axis']),
+                        np.linalg.norm(par['x'], ord=np.inf, axis=par['axis']), rtol=1e-14)
     assert_allclose(arr.norm(), np.linalg.norm(par['x'].flatten()), rtol=1e-13)
 
 
@@ -335,7 +335,7 @@ def test_distributed_maskednorm(par):
                     np.linalg.norm(par['x'], ord=1, axis=par['axis']) / nsub, rtol=1e-14)
 
     # TODO (tharitt): Fail with CuPy + MPI
-    # assert_allclose(arr.norm(ord=np.inf, axis=par['axis']),
-    #                 np.linalg.norm(par['x'], ord=np.inf, axis=par['axis']), rtol=1e-14)
+    assert_allclose(arr.norm(ord=np.inf, axis=par['axis']),
+                    np.linalg.norm(par['x'], ord=np.inf, axis=par['axis']), rtol=1e-14)
     assert_allclose(arr.norm(ord=2, axis=par['axis']),
                     np.linalg.norm(par['x'], ord=2, axis=par['axis']) / np.sqrt(nsub), rtol=1e-13)

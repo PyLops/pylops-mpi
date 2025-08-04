@@ -694,14 +694,25 @@ class DistributedArray:
             recv_buf = self._allreduce_subcomm(ncp.count_nonzero(local_array, axis=axis).astype(ncp.float64))
         elif ord == ncp.inf:
             # Calculate max followed by max reduction
-            recv_buf = self._allreduce_subcomm(ncp.max(ncp.abs(local_array), axis=axis).astype(ncp.float64),
-                                               recv_buf, op=MPI.MAX)
-            recv_buf = ncp.squeeze(recv_buf, axis=axis)
+            # TODO (tharitt): currently CuPy + MPI does not work well with buffered communication, particularly
+            # with MAX, MIN operator. Here we copy the array back to CPU, transfer, and copy them back to GPUs
+            send_buf = ncp.max(ncp.abs(local_array), axis=axis).astype(ncp.float64)
+            if self.engine=="cupy" and self.base_comm_nccl is None:
+                recv_buf = self._allreduce_subcomm(send_buf.get(), recv_buf.get(), op=MPI.MAX)
+                recv_buf = ncp.asarray(ncp.squeeze(recv_buf, axis=axis))
+            else:
+                recv_buf = self._allreduce_subcomm(send_buf, recv_buf, op=MPI.MAX)
+                recv_buf = ncp.squeeze(recv_buf, axis=axis)
         elif ord == -ncp.inf:
             # Calculate min followed by min reduction
-            recv_buf = self._allreduce_subcomm(ncp.min(ncp.abs(local_array), axis=axis).astype(ncp.float64),
-                                               recv_buf, op=MPI.MIN)
-            recv_buf = ncp.squeeze(recv_buf, axis=axis)
+            # TODO (tharitt): see the comment above in infinity norm
+            send_buf = ncp.min(ncp.abs(local_array), axis=axis).astype(ncp.float64)
+            if self.engine == "cupy" and self.base_comm_nccl is None:
+                recv_buf = self._allreduce_subcomm(send_buf.get(), recv_buf.get(), op=MPI.MIN)
+                recv_buf = ncp.asarray(ncp.squeeze(recv_buf, axis=axis))
+            else:
+                recv_buf = self._allreduce_subcomm(send_buf, recv_buf, op=MPI.MIN)
+                recv_buf = ncp.asarray(ncp.squeeze(recv_buf, axis=axis))
 
         else:
             recv_buf = self._allreduce_subcomm(ncp.sum(ncp.abs(ncp.float_power(local_array, ord)), axis=axis))
