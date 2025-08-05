@@ -31,6 +31,13 @@ from pylops_mpi import (
 np.random.seed(42)
 rank = MPI.COMM_WORLD.Get_rank()
 size = MPI.COMM_WORLD.Get_size()
+if backend == "cupy":
+    device_count = np.cuda.runtime.getDeviceCount()
+    device_id = int(
+        os.environ.get("OMPI_COMM_WORLD_LOCAL_RANK")
+        or rank % np.cuda.runtime.getDeviceCount()
+    )
+    np.cuda.Device(device_id).use()
 
 par1 = {'ny': 101, 'nx': 101, 'dtype': np.float64}
 par1j = {'ny': 101, 'nx': 101, 'dtype': np.complex128}
@@ -142,7 +149,7 @@ def test_power(par):
     Op = pylops.MatrixMult(A=((rank + 1) * np.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']),
                            dtype=par['dtype'])
     BDiag_MPI = MPIBlockDiag(ops=[Op, ])
-    
+
     # Power Operator
     Pop_MPI = BDiag_MPI ** 3
 
@@ -166,7 +173,7 @@ def test_power(par):
         ops = [pylops.MatrixMult((i + 1) * np.ones(shape=(par['ny'], par['nx'])).astype(par['dtype'])) for i in
                range(size)]
         BDiag = pylops.BlockDiag(ops=ops)
-        Pop = BDiag * BDiag * BDiag  ## temporarely replaced BDiag ** 3 until bug in PyLops is fixed
+        Pop = BDiag * BDiag * BDiag  # temporarely replaced BDiag ** 3 until bug in PyLops is fixed
         assert_allclose(Pop_x_np, Pop @ x_global, rtol=1e-9)
         assert_allclose(Pop_y_np, Pop.H @ y_global, rtol=1e-9)
 

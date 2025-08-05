@@ -29,6 +29,13 @@ from pylops_mpi.utils.dottest import dottest
 np.random.seed(42)
 rank = MPI.COMM_WORLD.Get_rank()
 size = MPI.COMM_WORLD.Get_size()
+if backend == "cupy":
+    device_count = np.cuda.runtime.getDeviceCount()
+    device_id = int(
+        os.environ.get("OMPI_COMM_WORLD_LOCAL_RANK")
+        or rank % np.cuda.runtime.getDeviceCount()
+    )
+    np.cuda.Device(device_id).use()
 
 par1 = {
     "nsl": 21,

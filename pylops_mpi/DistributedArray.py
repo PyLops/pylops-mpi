@@ -697,7 +697,7 @@ class DistributedArray:
             # TODO (tharitt): currently CuPy + MPI does not work well with buffered communication, particularly
             # with MAX, MIN operator. Here we copy the array back to CPU, transfer, and copy them back to GPUs
             send_buf = ncp.max(ncp.abs(local_array), axis=axis).astype(ncp.float64)
-            if self.engine=="cupy" and self.base_comm_nccl is None:
+            if self.engine == "cupy" and self.base_comm_nccl is None:
                 recv_buf = self._allreduce_subcomm(send_buf.get(), recv_buf.get(), op=MPI.MAX)
                 recv_buf = ncp.asarray(ncp.squeeze(recv_buf, axis=axis))
             else:

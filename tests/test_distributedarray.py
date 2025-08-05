@@ -21,6 +21,14 @@ from pylops_mpi import DistributedArray, Partition
 from pylops_mpi.DistributedArray import local_split
 
 np.random.seed(42)
+rank = MPI.COMM_WORLD.Get_rank()
+if backend == "cupy":
+    device_count = np.cuda.runtime.getDeviceCount()
+    device_id = int(
+        os.environ.get("OMPI_COMM_WORLD_LOCAL_RANK")
+        or rank % np.cuda.runtime.getDeviceCount()
+    )
+    np.cuda.Device(device_id).use()
 
 par1 = {'global_shape': (500, 501),
         'partition': Partition.SCATTER, 'dtype': np.float64,
@@ -206,7 +214,7 @@ def test_distributed_norm(par):
 
     # TODO (tharitt): FAIL with CuPy + MPI for inf norm
     assert_allclose(arr.norm(ord=np.inf, axis=par['axis']),
-                        np.linalg.norm(par['x'], ord=np.inf, axis=par['axis']), rtol=1e-14)
+                    np.linalg.norm(par['x'], ord=np.inf, axis=par['axis']), rtol=1e-14)
     assert_allclose(arr.norm(), np.linalg.norm(par['x'].flatten()), rtol=1e-13)
 
 

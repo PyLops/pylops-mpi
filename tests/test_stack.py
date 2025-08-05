@@ -21,6 +21,15 @@ import pylops
 import pylops_mpi
 from pylops_mpi.utils.dottest import dottest
 
+rank = MPI.COMM_WORLD.Get_rank()
+if backend == "cupy":
+    device_count = np.cuda.runtime.getDeviceCount()
+    device_id = int(
+        os.environ.get("OMPI_COMM_WORLD_LOCAL_RANK")
+        or rank % np.cuda.runtime.getDeviceCount()
+    )
+    np.cuda.Device(device_id).use()
+
 par1 = {'ny': 101, 'nx': 101, 'imag': 0, 'dtype': np.float64}
 par1j = {'ny': 101, 'nx': 101, 'imag': 1j, 'dtype': np.complex128}
 par2 = {'ny': 301, 'nx': 101, 'imag': 0, 'dtype': np.float64}

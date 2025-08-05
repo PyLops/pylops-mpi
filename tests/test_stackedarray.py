@@ -17,9 +17,19 @@ else:
 import numpy as npp
 import pytest
 
+from mpi4py import MPI
 from pylops_mpi import DistributedArray, Partition, StackedDistributedArray
 
 np.random.seed(42)
+rank = MPI.COMM_WORLD.Get_rank()
+if backend == "cupy":
+    device_count = np.cuda.runtime.getDeviceCount()
+    device_id = int(
+        os.environ.get("OMPI_COMM_WORLD_LOCAL_RANK")
+        or rank % np.cuda.runtime.getDeviceCount()
+    )
+    np.cuda.Device(device_id).use()
+
 
 par1 = {'global_shape': (500, 501),
         'partition': Partition.SCATTER, 'dtype': np.float64,
