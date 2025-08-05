@@ -463,6 +463,25 @@
                   
   <section id="changelog">
 <span id="id1"></span><h1>Changelog<a class="headerlink" href="#changelog" title="Link to this heading">#</a></h1>
+<section id="version-0-3-0">
+<h2>Version 0.3.0<a class="headerlink" href="#version-0-3-0" title="Link to this heading">#</a></h2>
+<p><em>Released on: 05/08/2025</em></p>
+<ul class="simple">
+<li><p>Added <a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPIMatrixMult.html#pylops_mpi.basicoperators.MPIMatrixMult" title="pylops_mpi.basicoperators.MPIMatrixMult"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIMatrixMult</span></code></a> operator.</p></li>
+<li><p>Added NCCL support to all operators in <code class="xref py py-mod docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators</span></code>,
+and  <code class="xref py py-mod docutils literal notranslate"><span class="pre">pylops_mpi.signalprocessing</span></code>.</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">base_comm_nccl</span></code> in constructor of <a class="reference internal" href="api/generated/pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>,
+to enable NCCL communication backend.</p></li>
+<li><p>Added <a class="reference internal" href="api/generated/pylops_mpi.utils.benchmark.html#pylops_mpi.utils.benchmark" title="pylops_mpi.utils.benchmark"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.utils.benchmark</span></code></a> subpackage providing methods
+to decorate and mark functions / class methods to measure their execution
+time.</p></li>
+<li><p>Added <code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.utils._nccl</span></code> subpackage implementing methods
+for NCCL communication backend.</p></li>
+<li><p>Added <code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.utils.deps</span></code> subpackage to safely import <code class="docutils literal notranslate"><span class="pre">nccl</span></code></p></li>
+<li><p>Fixed partition in the creation of the output distributed array in
+<a class="reference internal" href="api/generated/pylops_mpi.signalprocessing.MPIFredholm1.html#pylops_mpi.signalprocessing.MPIFredholm1" title="pylops_mpi.signalprocessing.MPIFredholm1"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.signalprocessing.MPIFredholm1</span></code></a>.</p></li>
+</ul>
+</section>
 <section id="version-0-2-0">
 <h2>Version 0.2.0<a class="headerlink" href="#version-0-2-0" title="Link to this heading">#</a></h2>
 <p><em>Released on: 16/12/2024</em></p>
@@ -540,6 +559,7 @@
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#version-0-3-0">Version 0.3.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#version-0-2-0">Version 0.2.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#version-0-1-0">Version 0.1.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#version-0-0-1">Version 0.0.1</a></li>
