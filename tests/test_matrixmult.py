@@ -28,12 +28,9 @@ base_comm = MPI.COMM_WORLD
 size = base_comm.Get_size()
 rank = MPI.COMM_WORLD.Get_rank()
 if backend == "cupy":
-    device_count = np.cuda.runtime.getDeviceCount()
-    device_id = int(
-        os.environ.get("OMPI_COMM_WORLD_LOCAL_RANK")
-        or rank % np.cuda.runtime.getDeviceCount()
-    )
+    device_id = rank % np.cuda.runtime.getDeviceCount()
     np.cuda.Device(device_id).use()
+
 # Define test cases: (N, K, M, dtype_str)
 # M, K, N are matrix dimensions A(N,K), B(K,M)
 # P_prime will be ceil(sqrt(size)).

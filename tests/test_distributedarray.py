@@ -23,11 +23,7 @@ from pylops_mpi.DistributedArray import local_split
 np.random.seed(42)
 rank = MPI.COMM_WORLD.Get_rank()
 if backend == "cupy":
-    device_count = np.cuda.runtime.getDeviceCount()
-    device_id = int(
-        os.environ.get("OMPI_COMM_WORLD_LOCAL_RANK")
-        or rank % np.cuda.runtime.getDeviceCount()
-    )
+    device_id = rank % np.cuda.runtime.getDeviceCount()
     np.cuda.Device(device_id).use()
 
 par1 = {'global_shape': (500, 501),
