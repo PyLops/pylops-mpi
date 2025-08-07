@@ -69,6 +69,18 @@ that the both old and new tests pass successfully:
 
    >> make tests
 
+If you run PyLops-MPI with GPUs you may also do:
+
+.. code-block:: bash
+
+   >> make tests_gpu
+
+Additionally, if you have a NCCL-enabled environment, you may also check:
+
+.. code-block:: bash
+
+   >> make tests_nccl
+
 4. Make sure the ``examples`` python scripts are executed using 3 processes without any errors:
 
 .. code-block:: bash
@@ -123,8 +135,11 @@ Project structure
 This repository is organized as follows:
 
 * **pylops_mpi**: Python library containing various mpi linear operators.
-* **tests**:      Set of tests using pytest-mpi.
+* **tests**:      Set of tests using pytest-mpi for both CPU and GPU.
+* **tests_nccl**  Set of tests for NCCL-enabled environment using pytest-mpi
 * **testdata**:   Sample datasets used in tests and documentation.
 * **docs**:       Sphinx documentation.
 * **examples**:   Set of python script examples for each mpi linear operator to be embedded in documentation using sphinx-gallery.
-* **tutorials**:  Set of python script tutorials to be embedded in documentation using sphinx-gallery.
+* **tutorials**:  Set of python script tutorials (NumPy & MPI) to be embedded in documentation using sphinx-gallery.
+* **tutorials_cupy**:  Same set of scripts as above but with CuPy & MPI 
+* **tutorials_nccl**:  Same set of scripts as above but with CuPy & NCCL
