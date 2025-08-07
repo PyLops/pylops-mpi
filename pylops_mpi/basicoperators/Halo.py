@@ -166,6 +166,9 @@ class MPIHalo(MPILinearOperator):
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
 
+        y = DistributedArray(global_shape=self.shape[0],
+                               partition=Partition.SCATTER)
+
         core = x.local_array.reshape(self.local_dims)
         halo_arr = ncp.zeros(self.local_extent, dtype=self.dtype)
         # insert core
@@ -181,18 +184,18 @@ class MPIHalo(MPILinearOperator):
         for ax in range(self.ndim):
             self._apply_bc_along_axis(ncp, halo_arr, axis=ax)
         # pack result
-        res = DistributedArray(global_shape=self.shape[0],
-                                partition=Partition.SCATTER)
-        res[:] = halo_arr.ravel()
-        return res
+        y[:] = halo_arr.ravel()
+        return y
 
     def _rmatvec(self, x):
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
-        res = DistributedArray(global_shape=self.shape[1],
+
+        y = DistributedArray(global_shape=self.shape[1],
                                partition=Partition.SCATTER)
+
         arr = x.local_array.reshape(self.local_extent)
         core_slices = [slice(left, left + ldim) for left, ldim in zip(self.halo[::2], self.local_dims)]
         core = arr[tuple(core_slices)]
-        res[:] = core.ravel()
-        return res
+        y[:] = core.ravel()
+        return y
