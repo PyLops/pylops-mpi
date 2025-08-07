@@ -3,6 +3,27 @@
 Changelog
 =========
 
+
+Version 0.3.0
+-------------
+
+*Released on: 05/08/2025*
+
+* Added :class:`pylops_mpi.basicoperators.MPIMatrixMult` operator.
+* Added NCCL support to all operators in :mod:`pylops_mpi.basicoperators`,
+  and  :mod:`pylops_mpi.signalprocessing`.
+* Added ``base_comm_nccl`` in constructor of :class:`pylops_mpi.DistributedArray`,
+  to enable NCCL communication backend.
+* Added :class:`pylops_mpi.utils.benchmark` subpackage providing methods
+  to decorate and mark functions / class methods to measure their execution 
+  time.
+* Added :class:`pylops_mpi.utils._nccl` subpackage implementing methods
+  for NCCL communication backend.
+* Added :class:`pylops_mpi.utils.deps` subpackage to safely import ``nccl``
+* Fixed partition in the creation of the output distributed array in 
+  :class:`pylops_mpi.signalprocessing.MPIFredholm1`.
+  
+
 Version 0.2.0
 -------------
 
@@ -13,6 +34,7 @@ Version 0.2.0
 * Allowed the ``UNSAFE_BROADCAST`` partition to give users an option to handle overflow in broadcast scenarios.
 * Added a dottest function to perform dot tests on PyLops-MPI operators.
 * Created a tutorial for Multi-Dimensional Deconvolution (MDD).
+
 
 Version 0.1.0
 -------------

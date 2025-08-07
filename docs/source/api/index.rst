@@ -118,9 +118,11 @@ Utils
     local_split
 
 
-.. currentmodule:: pylops_mpi.utils.dottest
+.. currentmodule:: pylops_mpi.utils
 
 .. autosummary::
    :toctree: generated/
 
     dottest
+    benchmark
+    mark

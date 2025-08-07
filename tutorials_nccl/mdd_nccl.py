@@ -1,19 +1,13 @@
 """
-Multi-Dimensional Deconvolution
-===============================
-This example shows how to set-up and run a Multi-Dimensional Deconvolution
-problem in a distributed fashion, leveraging the :py:class:`pylops_mpi.waveeqprocessing.MDC`
-class.
-
-More precisely, compared to its counterpart in the PyLops documentation, this example distributes
-the frequency slices of the kernel of the MDC operator across multiple processes. Whilst both the
-entire model and data sit on all processes, within the MDC operator, and more precisely when the
-:py:class:`pylops_mpi.signalprocessing.Fredholm1` is called, different groups of frequencies are
-processed by the different ranks.
-
+Multi-Dimensional Deconvolution with NCCL
+=========================================
+This tutorial is an extension of the :ref:`sphx_glr_tutorials_mdd.py`
+tutorial where PyLops-MPI is run in multi-GPU setting with GPUs communicating
+via NCCL.
 """
 
 import numpy as np
+import cupy as cp
 from matplotlib import pyplot as plt
 from mpi4py import MPI
 
@@ -24,15 +18,23 @@ from pylops.utils.wavelets import ricker
 import pylops_mpi
 from pylops_mpi.DistributedArray import local_split, Partition
 
+###############################################################################
+# NCCL communication can be easily initialized with
+# :py:func:`pylops_mpi.utils._nccl.initialize_nccl_comm` operator.
+# One can think of this as GPU-counterpart of :code:`MPI.COMM_WORLD`
+
 plt.close("all")
+nccl_comm = pylops_mpi.utils._nccl.initialize_nccl_comm()
 rank = MPI.COMM_WORLD.Get_rank()
-size = MPI.COMM_WORLD.Get_size()
+
 dtype = np.float32
 cdtype = np.complex64
 
 ###############################################################################
-# Let's start by creating a set of hyperbolic events to be used as
-# our MDC kernel as well as the model
+# Let's start by defining all the parameters required by the
+# :py:class:`pylops.waveeqprocessing.MPIMDC` operator.
+# Note that this section is exactly the same as the one in the MPI example as
+# we will keep using MPI for transfering metadata (i.e., shapes, dims, etc.)
 
 # Input parameters
 par = {
@@ -101,20 +103,25 @@ ifend_rank = np.cumsum(nf_ranks)[rank]
 G = Gwav_fft[ifin_rank:ifend_rank].astype(cdtype)
 
 ###############################################################################
-# Let's now define the distributed operator and model as well as compute the
-# data
+# And now, we define the distributed operator MPIMDC and model as well as compute the data.
+# Both the model and data have to live in GPU. We also define the DistributedArray `m`
+# with `nccl_comm`` and engine="cupy" to use NCCL for communications (the data `d` will be set the same).
+# Note that fftengine must be set to "numpy" in MDCop operator when running with CuPy
+
+# Move operator kernel to GPU
+G = cp.asarray(G)
 
 # Define operator
 MDCop = pylops_mpi.waveeqprocessing.MPIMDC((1.0 * par["dt"] * np.sqrt(par["nt"])) * G,
                                            nt=2 * par["nt"] - 1, nv=1, nfreq=nf,
                                            dt=par["dt"], dr=1.0, twosided=True,
-                                           fftengine="scipy", prescaled=True)
+                                           fftengine="numpy", prescaled=True)
 
 # Create model
 m = pylops_mpi.DistributedArray(global_shape=(2 * par["nt"] - 1) * par["nx"] * 1,
-                                partition=Partition.BROADCAST,
-                                dtype=dtype)
-m[:] = mrefl.astype(dtype).ravel()
+                                partition=Partition.BROADCAST, base_comm_nccl=nccl_comm,
+                                dtype=dtype, engine="cupy")
+m[:] = cp.asarray(mrefl.astype(dtype).ravel())
 
 # Create data
 d = MDCop @ m
@@ -165,7 +172,7 @@ if rank == 0:
     axs[0].set_xlabel(r"$x_R$")
     axs[0].set_ylabel(r"$t$")
     axs[1].imshow(
-        dloc,
+        dloc.get(),
         aspect="auto",
         interpolation="nearest",
         cmap="gray",
@@ -180,7 +187,8 @@ if rank == 0:
 
 ###############################################################################
 # We are now ready to compute the adjoint (i.e., cross-correlation) and invert
-# back for our input model
+# back for our input model. Same as before, we pass the `nccl_comm`
+# and engine="cupy" to `m0` to use NCCL as a communicator during the inversion.
 
 # Adjoint
 madj = MDCop.H @ d
@@ -188,11 +196,15 @@ madjloc = madj.asarray().real.reshape(2 * par["nt"] - 1, par["nx"])
 
 # Inverse
 m0 = pylops_mpi.DistributedArray(global_shape=(2 * par["nt"] - 1) * par["nx"] * 1,
-                                 partition=Partition.BROADCAST,
-                                 dtype=cdtype)
+                                 partition=Partition.BROADCAST, base_comm_nccl=nccl_comm,
+                                 dtype=cdtype, engine="cupy")
 m0[:] = 0
 minv = pylops_mpi.cgls(MDCop, d, x0=m0, niter=50, show=True if rank == 0 else False)[0]
 minvloc = minv.asarray().real.reshape(2 * par["nt"] - 1, par["nx"])
+
+###############################################################################
+# Finally we visualize the results. Note that the array must be copied back
+# to the CPU by calling the :code:`get()` method on the CuPy arrays.
 
 if rank == 0:
     fig = plt.figure(figsize=(8, 6))
@@ -200,7 +212,7 @@ if rank == 0:
     ax2 = plt.subplot2grid((1, 5), (0, 2), colspan=2)
     ax3 = plt.subplot2grid((1, 5), (0, 4))
     ax1.imshow(
-        madjloc,
+        madjloc.get(),
         aspect="auto",
         interpolation="nearest",
         cmap="gray",
@@ -212,7 +224,7 @@ if rank == 0:
     ax1.set_xlabel(r"$x_V$")
     ax1.set_ylabel(r"$t$")
     ax2.imshow(
-        minvloc,
+        minvloc.get(),
         aspect="auto",
         interpolation="nearest",
         cmap="gray",
@@ -224,13 +236,10 @@ if rank == 0:
     ax2.set_xlabel(r"$x_V$")
     ax2.set_ylabel(r"$t$")
     ax3.plot(
-        madjloc[:, int(par["nx"] / 2)] / np.abs(madjloc[:, int(par["nx"] / 2)]).max(), t2, "r", lw=5
+        madjloc[:, int(par["nx"] / 2)].get() / np.abs(madjloc[:, int(par["nx"] / 2)].get()).max(), t2, "r", lw=5
     )
     ax3.plot(
-        minvloc[:, int(par["nx"] / 2)] / np.abs(minvloc[:, int(par["nx"] / 2)]).max(), t2, "k", lw=3
+        minvloc[:, int(par["nx"] / 2)].get() / np.abs(minvloc[:, int(par["nx"] / 2)].get()).max(), t2, "k", lw=3
     )
     ax3.set_ylim([t2[-1], t2[0]])
     fig.tight_layout()
-
-###############################################################################
-# To run this tutorial with our NCCL backend, refer to `Multi-Dimensional Deconvolution with NCCL tutorial <https://github.com/PyLops/pylops-mpi/blob/main/tutorials_nccl/mdd_nccl.py>`_ in the repository.

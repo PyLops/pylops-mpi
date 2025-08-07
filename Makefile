@@ -1,6 +1,6 @@
 PIP := $(shell command -v pip3 2> /dev/null || command which pip 2> /dev/null)
 PYTHON := $(shell command -v python3 2> /dev/null || command which python 2> /dev/null)
-NUM_PROCESSES = 3
+NUM_PROCESSES = 4
 
 .PHONY: install dev-install dev-install_nccl install_ \
 	conda install_conda_nccl dev-install_conda dev-install_conda_nccl  \
@@ -53,10 +53,11 @@ tests:
 tests_nccl:	
 	mpiexec -n $(NUM_PROCESSES) pytest tests_nccl/ --with-mpi
 
+# sphinx-build does not work well with NCCL
 doc:
 	cd docs  && rm -rf source/api/generated && rm -rf source/gallery &&\
 	rm -rf source/tutorials && rm -rf build &&\
-	cd .. && sphinx-build -b html docs/source docs/build
+	cd .. && NCCL_PYLOPS_MPI=0 sphinx-build -b html docs/source docs/build
 
 doc_cupy:
 	cp tutorials_cupy/* tutorials/
