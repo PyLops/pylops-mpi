@@ -687,7 +687,8 @@
             <span class="n">mask</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span>
             <span class="n">partition</span><span class="o">=</span><span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="p">,</span>
             <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
-            <span class="n">base_comm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span>
+            <span class="n">base_comm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span>
+            <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span>
         <span class="p">)</span>
 
         <span class="n">my_own_cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank_col_lens</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">]</span>
@@ -712,7 +713,8 @@
             <span class="n">mask</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span>
             <span class="n">partition</span><span class="o">=</span><span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="p">,</span>
             <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
-            <span class="n">base_comm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span>
+            <span class="n">base_comm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span>
+            <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span>
         <span class="p">)</span>
 
         <span class="n">x_arr</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_ncols</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>

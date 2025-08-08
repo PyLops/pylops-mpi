@@ -104,7 +104,7 @@ i.e., :py:func:`@benchmark(description="printout_name")`
 
  .. code-block:: none
 
-    [decorator]inner_func: total runtime: 0.001997 s
+    [decorator]inner_func: total runtime: 0.002119 s
 
 
 
@@ -159,9 +159,9 @@ measurement of the top-level function and those that comes from :py:func:`pylops
 
  .. code-block:: none
 
-    [decorator]inner_func_with_mark: total runtime: 0.000366 s
-            Begin array constructor-->Begin dot: 0.000026 s
-            Begin dot-->Finish dot: 0.000337 s
+    [decorator]inner_func_with_mark: total runtime: 0.000443 s
+            Begin array constructor-->Begin dot: 0.000061 s
+            Begin dot-->Finish dot: 0.000378 s
 
 
 
@@ -220,11 +220,11 @@ printed out with the nested indentation to specify that nested calls.
       SumArray[:] = self.local_array + dist_array.local_array
     /opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:619: RuntimeWarning: invalid value encountered in add
       SumArray[:] = self.local_array + dist_array.local_array
-    [decorator]outer_func_with_mark: total runtime: 0.001078 s
-            [decorator]inner_func_with_mark: total runtime: 0.000342 s
-                    Begin array constructor-->Begin dot: 0.000022 s
-                    Begin dot-->Finish dot: 0.000317 s
-            Outer func start-->Outer func ends: 0.001075 s
+    [decorator]outer_func_with_mark: total runtime: 0.001206 s
+            [decorator]inner_func_with_mark: total runtime: 0.000351 s
+                    Begin array constructor-->Begin dot: 0.000026 s
+                    Begin dot-->Finish dot: 0.000322 s
+            Outer func start-->Outer func ends: 0.001202 s
 
 
 
@@ -313,7 +313,7 @@ Run this function and observe that the file `benchmark.log` is written.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 0.007 seconds)
+   **Total running time of the script:** (0 minutes 0.008 seconds)
 
 
 .. _sphx_glr_download_tutorials_benchmarking.py:

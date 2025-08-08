@@ -516,6 +516,14 @@ that the both old and new tests pass successfully:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>make<span class="w"> </span>tests
 </pre></div>
 </div>
+<p>If you run PyLops-MPI with GPUs you may also do:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>make<span class="w"> </span>tests_gpu
+</pre></div>
+</div>
+<p>Additionally, if you have a NCCL-enabled environment, you may also check:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>make<span class="w"> </span>tests_nccl
+</pre></div>
+</div>
 <ol class="arabic simple" start="4">
 <li><p>Make sure the <code class="docutils literal notranslate"><span class="pre">examples</span></code> python scripts are executed using 3 processes without any errors:</p></li>
 </ol>
@@ -571,11 +579,14 @@ Make sure to limit to a minimum flake8 warnings before making a PR.</p>
 <p>This repository is organized as follows:</p>
 <ul class="simple">
 <li><p><strong>pylops_mpi</strong>: Python library containing various mpi linear operators.</p></li>
-<li><p><strong>tests</strong>:      Set of tests using pytest-mpi.</p></li>
+<li><p><strong>tests</strong>:      Set of tests using pytest-mpi for both CPU and GPU.</p></li>
+<li><p><strong>tests_nccl</strong>  Set of tests for NCCL-enabled environment using pytest-mpi</p></li>
 <li><p><strong>testdata</strong>:   Sample datasets used in tests and documentation.</p></li>
 <li><p><strong>docs</strong>:       Sphinx documentation.</p></li>
 <li><p><strong>examples</strong>:   Set of python script examples for each mpi linear operator to be embedded in documentation using sphinx-gallery.</p></li>
-<li><p><strong>tutorials</strong>:  Set of python script tutorials to be embedded in documentation using sphinx-gallery.</p></li>
+<li><p><strong>tutorials</strong>:  Set of python script tutorials (NumPy &amp; MPI) to be embedded in documentation using sphinx-gallery.</p></li>
+<li><p><strong>tutorials_cupy</strong>:  Same set of scripts as above but with CuPy &amp; MPI</p></li>
+<li><p><strong>tutorials_nccl</strong>:  Same set of scripts as above but with CuPy &amp; NCCL</p></li>
 </ul>
 </section>
 
