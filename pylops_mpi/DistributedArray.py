@@ -3,6 +3,7 @@ from numbers import Integral
 from typing import Any, List, Optional, Tuple, Union, NewType
 
 import numpy as np
+import os
 from mpi4py import MPI
 from pylops.utils import DTypeLike, NDArray
 from pylops.utils import deps as pylops_deps  # avoid namespace crashes with pylops_mpi.utils
@@ -21,6 +22,10 @@ else:
 
 NcclCommunicatorType = NewType("NcclCommunicator", NcclCommunicator)
 
+if int(os.environ.get("PYLOPS_MPI_CUDA_AWARE", 0)):
+    is_cuda_aware_mpi = True
+else:
+    is_cuda_aware_mpi = False
 
 class Partition(Enum):
     r"""Enum class
@@ -529,34 +534,52 @@ class DistributedArray:
                 return self.sub_comm.allgather(send_buf)
             self.sub_comm.Allgather(send_buf, recv_buf)
 
-    def _send(self, send_buf, dest, count=None, tag=None):
-        """ Send operation
+    def _send(self, send_buf, dest, count=None, tag=0):
+        """Send operation
         """
         if deps.nccl_enabled and self.base_comm_nccl:
             if count is None:
-                # assuming sending the whole array
                 count = send_buf.size
             nccl_send(self.base_comm_nccl, send_buf, dest, count)
         else:
-            self.base_comm.send(send_buf, dest, tag)
-
-    def _recv(self, recv_buf=None, source=0, count=None, tag=None):
-        """ Receive operation
-        """
-        # NCCL must be called with recv_buf. Size cannot be inferred from
-        # other arguments and thus cannot be dynamically allocated
-        if deps.nccl_enabled and self.base_comm_nccl and recv_buf is not None:
-            if recv_buf is not None:
+            if is_cuda_aware_mpi or self.engine == "numpy":
+                # Determine MPI type based on array dtype
+                mpi_type = MPI._typedict[send_buf.dtype.char]
                 if count is None:
-                    # assuming data will take a space of the whole buffer
-                    count = recv_buf.size
-                nccl_recv(self.base_comm_nccl, recv_buf, source, count)
-                return recv_buf
+                    count = send_buf.size
+                self.base_comm.Send([send_buf, count, mpi_type], dest=dest, tag=tag)
             else:
-                raise ValueError("Using recv with NCCL must also supply receiver buffer ")
+                # Uses CuPy without CUDA-aware MPI
+                self.base_comm.send(send_buf, dest, tag)
+
+
+    def _recv(self, recv_buf=None, source=0, count=None, tag=0):
+        """Receive operation
+        """
+        if deps.nccl_enabled and self.base_comm_nccl:
+            if recv_buf is None:
+                raise ValueError("recv_buf must be supplied when using NCCL")
+            if count is None:
+                count = recv_buf.size
+            nccl_recv(self.base_comm_nccl, recv_buf, source, count)
+            return recv_buf
         else:
-            # MPI allows a receiver buffer to be optional and receives as a Python Object
-            return self.base_comm.recv(source=source, tag=tag)
+            # NumPy + MPI will benefit from buffered communication regardless of MPI installation
+            if is_cuda_aware_mpi or self.engine == "numpy":
+                ncp = get_module(self.engine)
+                if recv_buf is None:
+                    if count is None:
+                        raise ValueError("Must provide either recv_buf or count for MPI receive")
+                    # Default to int32 works currently because add_ghost_cells() is called
+                    # with recv_buf and is not affected by this branch. The int32 is for when
+                    # dimension or shape-related integers are send/recv
+                    recv_buf = ncp.zeros(count, dtype=ncp.int32)
+                mpi_type = MPI._typedict[recv_buf.dtype.char]
+                self.base_comm.Recv([recv_buf, recv_buf.size, mpi_type], source=source, tag=tag)
+            else:
+                # Uses CuPy without CUDA-aware MPI
+                recv_buf = self.base_comm.recv(source=source, tag=tag)
+            return recv_buf
 
     def _nccl_local_shapes(self, masked: bool):
         """Get the the list of shapes of every GPU in the communicator
