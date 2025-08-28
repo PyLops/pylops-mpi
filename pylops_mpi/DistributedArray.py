@@ -485,7 +485,6 @@ class DistributedArray:
         else:
             if is_cuda_aware_mpi or self.engine == "numpy":
                 ncp = get_module(self.engine)
-                # mpi_type = MPI._typedict[send_buf.dtype.char]
                 recv_buf = ncp.zeros(send_buf.size, dtype=send_buf.dtype)
                 self.base_comm.Allreduce(send_buf, recv_buf, op)
                 return recv_buf
@@ -505,7 +504,6 @@ class DistributedArray:
         else:
             if is_cuda_aware_mpi or self.engine == "numpy":
                 ncp = get_module(self.engine)
-                # mpi_type = MPI._typedict[send_buf.dtype.char]
                 recv_buf = ncp.zeros(send_buf.size, dtype=send_buf.dtype)
                 self.sub_comm.Allreduce(send_buf, recv_buf, op)
                 return recv_buf
@@ -743,6 +741,9 @@ class DistributedArray:
                 recv_buf = ncp.asarray(ncp.squeeze(recv_buf, axis=axis))
             else:
                 recv_buf = self._allreduce_subcomm(send_buf, recv_buf, op=MPI.MAX)
+                # TODO (tharitt): In current implementation, there seems to be a semantic difference between Buffered MPI and NCCL
+                # the (1, size) is collapsed to (size, ) with buffered MPI while NCCL retains it. 
+                # There may be a way to unify it - may be something to do with how we allocate the recv_buf.
                 if self.base_comm_nccl:
                     recv_buf = ncp.squeeze(recv_buf, axis=axis)
         elif ord == -ncp.inf:
