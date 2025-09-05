@@ -2,9 +2,20 @@
     Designed to run with n processes
     $ mpiexec -n 10 pytest test_derivative.py --with-mpi
 """
-import numpy as np
+import os
+
+if int(os.environ.get("TEST_CUPY_PYLOPS", 0)):
+    import cupy as np
+    from cupy.testing import assert_allclose
+
+    backend = "cupy"
+else:
+    import numpy as np
+    from numpy.testing import assert_allclose
+
+    backend = "numpy"
+import numpy as npp
 from mpi4py import MPI
-from numpy.testing import assert_allclose
 import pytest
 
 import pylops
@@ -14,6 +25,10 @@ from pylops_mpi.utils.dottest import dottest
 np.random.seed(42)
 rank = MPI.COMM_WORLD.Get_rank()
 size = MPI.COMM_WORLD.Get_size()
+if backend == "cupy":
+    device_id = rank % np.cuda.runtime.getDeviceCount()
+    np.cuda.Device(device_id).use()
+
 
 par1 = {
     "nz": 600,
@@ -189,8 +204,8 @@ def test_first_derivative_forward(par):
     Fop_MPI = pylops_mpi.MPIFirstDerivative(dims=par['nz'], sampling=par['dz'],
                                             kind="forward", edge=par['edge'],
                                             dtype=par['dtype'])
-    x = pylops_mpi.DistributedArray(global_shape=np.prod(par['nz']), dtype=par['dtype'],
-                                    partition=par['partition'])
+    x = pylops_mpi.DistributedArray(global_shape=npp.prod(par['nz']), dtype=par['dtype'],
+                                    partition=par['partition'], engine=backend)
     x[:] = np.random.normal(rank, 10, x.local_shape)
     x_global = x.asarray()
     # Forward
@@ -200,7 +215,7 @@ def test_first_derivative_forward(par):
     y_adj_dist = Fop_MPI.H @ x
     y_adj = y_adj_dist.asarray()
     # Dot test
-    dottest(Fop_MPI, x, y_dist, np.prod(par['nz']), np.prod(par['nz']))
+    dottest(Fop_MPI, x, y_dist, npp.prod(par['nz']), npp.prod(par['nz']))
 
     if rank == 0:
         Fop = pylops.FirstDerivative(dims=par['nz'], axis=0,
@@ -223,8 +238,8 @@ def test_first_derivative_backward(par):
     Fop_MPI = pylops_mpi.MPIFirstDerivative(dims=par['nz'], sampling=par['dz'],
                                             kind="backward", edge=par['edge'],
                                             dtype=par['dtype'])
-    x = pylops_mpi.DistributedArray(global_shape=np.prod(par['nz']), dtype=par['dtype'],
-                                    partition=par['partition'])
+    x = pylops_mpi.DistributedArray(global_shape=npp.prod(par['nz']), dtype=par['dtype'],
+                                    partition=par['partition'], engine=backend)
     x[:] = np.random.normal(rank, 10, x.local_shape)
     x_global = x.asarray()
     # Forward
@@ -234,7 +249,7 @@ def test_first_derivative_backward(par):
     y_adj_dist = Fop_MPI.H @ x
     y_adj = y_adj_dist.asarray()
     # Dot test
-    dottest(Fop_MPI, x, y_dist, np.prod(par['nz']), np.prod(par['nz']))
+    dottest(Fop_MPI, x, y_dist, npp.prod(par['nz']), npp.prod(par['nz']))
 
     if rank == 0:
         Fop = pylops.FirstDerivative(dims=par['nz'], axis=0,
@@ -258,8 +273,8 @@ def test_first_derivative_centered(par):
         Fop_MPI = pylops_mpi.MPIFirstDerivative(dims=par['nz'], sampling=par['dz'],
                                                 kind="centered", edge=par['edge'],
                                                 order=order, dtype=par['dtype'])
-        x = pylops_mpi.DistributedArray(global_shape=np.prod(par['nz']), dtype=par['dtype'],
-                                        partition=par['partition'])
+        x = pylops_mpi.DistributedArray(global_shape=npp.prod(par['nz']), dtype=par['dtype'],
+                                        partition=par['partition'], engine=backend)
         x[:] = np.random.normal(rank, 10, x.local_shape)
         x_global = x.asarray()
         # Forward
@@ -269,7 +284,7 @@ def test_first_derivative_centered(par):
         y_adj_dist = Fop_MPI.H @ x
         y_adj = y_adj_dist.asarray()
         # Dot test
-        dottest(Fop_MPI, x, y_dist, np.prod(par['nz']), np.prod(par['nz']))
+        dottest(Fop_MPI, x, y_dist, npp.prod(par['nz']), npp.prod(par['nz']))
 
         if rank == 0:
             Fop = pylops.FirstDerivative(dims=par['nz'], axis=0,
@@ -292,8 +307,8 @@ def test_second_derivative_forward(par):
     Sop_MPI = pylops_mpi.basicoperators.MPISecondDerivative(dims=par['nz'], sampling=par['dz'],
                                                             kind="forward", edge=par['edge'],
                                                             dtype=par['dtype'])
-    x = pylops_mpi.DistributedArray(global_shape=np.prod(par['nz']), dtype=par['dtype'],
-                                    partition=par['partition'])
+    x = pylops_mpi.DistributedArray(global_shape=npp.prod(par['nz']), dtype=par['dtype'],
+                                    partition=par['partition'], engine=backend)
     x[:] = np.random.normal(rank, 10, x.local_shape)
     x_global = x.asarray()
     # Forward
@@ -303,7 +318,7 @@ def test_second_derivative_forward(par):
     y_adj_dist = Sop_MPI.H @ x
     y_adj = y_adj_dist.asarray()
     # Dot test
-    dottest(Sop_MPI, x, y_dist, np.prod(par['nz']), np.prod(par['nz']))
+    dottest(Sop_MPI, x, y_dist, npp.prod(par['nz']), npp.prod(par['nz']))
 
     if rank == 0:
         Sop = pylops.SecondDerivative(dims=par['nz'], axis=0,
@@ -326,8 +341,8 @@ def test_second_derivative_backward(par):
     Sop_MPI = pylops_mpi.basicoperators.MPISecondDerivative(dims=par['nz'], sampling=par['dz'],
                                                             kind="backward", edge=par['edge'],
                                                             dtype=par['dtype'])
-    x = pylops_mpi.DistributedArray(global_shape=np.prod(par['nz']), dtype=par['dtype'],
-                                    partition=par['partition'])
+    x = pylops_mpi.DistributedArray(global_shape=npp.prod(par['nz']), dtype=par['dtype'],
+                                    partition=par['partition'], engine=backend)
     x[:] = np.random.normal(rank, 10, x.local_shape)
     x_global = x.asarray()
     # Forward
@@ -337,7 +352,7 @@ def test_second_derivative_backward(par):
     y_adj_dist = Sop_MPI.H @ x
     y_adj = y_adj_dist.asarray()
     # Dot test
-    dottest(Sop_MPI, x, y_dist, np.prod(par['nz']), np.prod(par['nz']))
+    dottest(Sop_MPI, x, y_dist, npp.prod(par['nz']), npp.prod(par['nz']))
 
     if rank == 0:
         Sop = pylops.SecondDerivative(dims=par['nz'], axis=0,
@@ -360,8 +375,8 @@ def test_second_derivative_centered(par):
     Sop_MPI = pylops_mpi.basicoperators.MPISecondDerivative(dims=par['nz'], sampling=par['dz'],
                                                             kind="centered", edge=par['edge'],
                                                             dtype=par['dtype'])
-    x = pylops_mpi.DistributedArray(global_shape=np.prod(par['nz']), dtype=par['dtype'],
-                                    partition=par['partition'])
+    x = pylops_mpi.DistributedArray(global_shape=npp.prod(par['nz']), dtype=par['dtype'],
+                                    partition=par['partition'], engine=backend)
     x[:] = np.random.normal(rank, 10, x.local_shape)
     x_global = x.asarray()
     # Forward
@@ -371,7 +386,7 @@ def test_second_derivative_centered(par):
     y_adj_dist = Sop_MPI.H @ x
     y_adj = y_adj_dist.asarray()
     # Dot test
-    dottest(Sop_MPI, x, y_dist, np.prod(par['nz']), np.prod(par['nz']))
+    dottest(Sop_MPI, x, y_dist, npp.prod(par['nz']), npp.prod(par['nz']))
 
     if rank == 0:
         Sop = pylops.SecondDerivative(dims=par['nz'], axis=0,
@@ -394,7 +409,7 @@ def test_laplacian(par):
                                                          weights=par['weights'], sampling=par['sampling'],
                                                          kind=kind, edge=par['edge'],
                                                          dtype=par['dtype'])
-        x = pylops_mpi.DistributedArray(global_shape=np.prod(par['n']), dtype=par['dtype'])
+        x = pylops_mpi.DistributedArray(global_shape=npp.prod(par['n']), dtype=par['dtype'], engine=backend)
         x[:] = np.random.normal(rank, 10, x.local_shape)
         x_global = x.asarray()
         # Forward
@@ -404,7 +419,7 @@ def test_laplacian(par):
         y_adj_dist = Lop_MPI.H @ x
         y_adj = y_adj_dist.asarray()
         # Dot test
-        dottest(Lop_MPI, x, y_dist, np.prod(par['n']), np.prod(par['n']))
+        dottest(Lop_MPI, x, y_dist, npp.prod(par['n']), npp.prod(par['n']))
 
         if rank == 0:
             Lop = pylops.Laplacian(dims=par['n'], axes=par['axes'],
@@ -426,7 +441,7 @@ def test_gradient(par):
         Gop_MPI = pylops_mpi.basicoperators.MPIGradient(dims=par['n'], sampling=par['sampling'],
                                                         kind=kind, edge=par['edge'],
                                                         dtype=par['dtype'])
-        x_fwd = pylops_mpi.DistributedArray(global_shape=np.prod(par['n']), dtype=par['dtype'])
+        x_fwd = pylops_mpi.DistributedArray(global_shape=npp.prod(par['n']), dtype=par['dtype'], engine=backend)
         x_fwd[:] = np.random.normal(rank, 10, x_fwd.local_shape)
         x_global = x_fwd.asarray()
 
@@ -436,11 +451,11 @@ def test_gradient(par):
         y = y_dist.asarray()
 
         # Adjoint
-        x_adj_dist1 = pylops_mpi.DistributedArray(global_shape=int(np.prod(par['n'])), dtype=par['dtype'])
+        x_adj_dist1 = pylops_mpi.DistributedArray(global_shape=int(npp.prod(par['n'])), dtype=par['dtype'], engine=backend)
         x_adj_dist1[:] = np.random.normal(rank, 10, x_adj_dist1.local_shape)
-        x_adj_dist2 = pylops_mpi.DistributedArray(global_shape=int(np.prod(par['n'])), dtype=par['dtype'])
+        x_adj_dist2 = pylops_mpi.DistributedArray(global_shape=int(npp.prod(par['n'])), dtype=par['dtype'], engine=backend)
         x_adj_dist2[:] = np.random.normal(rank, 20, x_adj_dist2.local_shape)
-        x_adj_dist3 = pylops_mpi.DistributedArray(global_shape=int(np.prod(par['n'])), dtype=par['dtype'])
+        x_adj_dist3 = pylops_mpi.DistributedArray(global_shape=int(npp.prod(par['n'])), dtype=par['dtype'], engine=backend)
         x_adj_dist3[:] = np.random.normal(rank, 30, x_adj_dist3.local_shape)
         x_adj = pylops_mpi.StackedDistributedArray(distarrays=[x_adj_dist1, x_adj_dist2, x_adj_dist3])
         x_adj_global = x_adj.asarray()
@@ -449,7 +464,7 @@ def test_gradient(par):
         y_adj = y_adj_dist.asarray()
 
         # Dot test
-        dottest(Gop_MPI, x_fwd, y_dist, len(par['n']) * np.prod(par['n']), np.prod(par['n']))
+        dottest(Gop_MPI, x_fwd, y_dist, len(par['n']) * npp.prod(par['n']), npp.prod(par['n']))
 
         if rank == 0:
             Gop = pylops.Gradient(dims=par['n'], sampling=par['sampling'],

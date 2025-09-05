@@ -2,9 +2,19 @@
     Designed to run with n processes
     $ mpiexec -n 10 pytest test_blockdiag.py --with-mpi
 """
+import os
+
+if int(os.environ.get("TEST_CUPY_PYLOPS", 0)):
+    import cupy as np
+    from cupy.testing import assert_allclose
+
+    backend = "cupy"
+else:
+    import numpy as np
+    from numpy.testing import assert_allclose
+
+    backend = "numpy"
 from mpi4py import MPI
-import numpy as np
-from numpy.testing import assert_allclose
 import pytest
 
 import pylops
@@ -17,6 +27,10 @@ par2 = {'ny': 301, 'nx': 101, 'dtype': np.float64}
 par2j = {'ny': 301, 'nx': 101, 'dtype': np.complex128}
 
 np.random.seed(42)
+rank = MPI.COMM_WORLD.Get_rank()
+if backend == "cupy":
+    device_id = rank % np.cuda.runtime.getDeviceCount()
+    np.cuda.Device(device_id).use()
 
 
 @pytest.mark.mpi(min_size=2)
@@ -27,11 +41,11 @@ def test_blockdiag(par):
     Op = pylops.MatrixMult(A=((rank + 1) * np.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
     BDiag_MPI = pylops_mpi.MPIBlockDiag(ops=[Op, ])
 
-    x = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    x = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
     x[:] = np.ones(shape=par['nx'], dtype=par['dtype'])
     x_global = x.asarray()
 
-    y = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    y = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
     y[:] = np.ones(shape=par['ny'], dtype=par['dtype'])
     y_global = y.asarray()
 
@@ -68,16 +82,16 @@ def test_stacked_blockdiag(par):
     FirstDeriv_MPI = pylops_mpi.MPIFirstDerivative(dims=(par['ny'], par['nx']), dtype=par['dtype'])
     StackedBDiag_MPI = pylops_mpi.MPIStackedBlockDiag(ops=[BDiag_MPI, FirstDeriv_MPI])
 
-    dist1 = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    dist1 = pylops_mpi.DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
     dist1[:] = np.ones(dist1.local_shape, dtype=par['dtype'])
-    dist2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'])
+    dist2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'], engine=backend)
     dist2[:] = np.ones(dist2.local_shape, dtype=par['dtype'])
     x = pylops_mpi.StackedDistributedArray(distarrays=[dist1, dist2])
     x_global = x.asarray()
 
-    dist1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    dist1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
     dist1[:] = np.ones(dist1.local_shape, dtype=par['dtype'])
-    dist2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'])
+    dist2 = pylops_mpi.DistributedArray(global_shape=par['nx'] * par['ny'], dtype=par['dtype'], engine=backend)
     dist2[:] = np.ones(dist2.local_shape, dtype=par['dtype'])
     y = pylops_mpi.StackedDistributedArray(distarrays=[dist1, dist2])
     y_global = y.asarray()

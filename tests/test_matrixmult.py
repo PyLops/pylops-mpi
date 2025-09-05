@@ -2,13 +2,25 @@
     Designed to run with n processes
     $ mpiexec -n 10 pytest test_matrixmult.py --with-mpi
 """
+import os
+
+if int(os.environ.get("TEST_CUPY_PYLOPS", 0)):
+    import cupy as np
+    from cupy.testing import assert_allclose
+
+    backend = "cupy"
+else:
+    import numpy as np
+    from numpy.testing import assert_allclose
+
+    backend = "numpy"
+import numpy as npp
 import math
-import numpy as np
-from numpy.testing import assert_allclose
 from mpi4py import MPI
 import pytest
 
 from pylops.basicoperators import Conj, FirstDerivative
+from pylops.basicoperators import FirstDerivative
 from pylops_mpi import DistributedArray, Partition
 from pylops_mpi.basicoperators import MPIBlockDiag, MPIMatrixMult, \
     local_block_split, block_gather, active_grid_comm
@@ -16,6 +28,10 @@ from pylops_mpi.basicoperators import MPIBlockDiag, MPIMatrixMult, \
 np.random.seed(42)
 base_comm = MPI.COMM_WORLD
 size = base_comm.Get_size()
+rank = MPI.COMM_WORLD.Get_rank()
+if backend == "cupy":
+    device_id = rank % np.cuda.runtime.getDeviceCount()
+    np.cuda.Device(device_id).use()
 
 # Define test cases: (N, K, M, dtype_str)
 # M, K, N are matrix dimensions A(N,K), B(K,M)
@@ -28,6 +44,7 @@ test_params = [
     pytest.param(1, 2, 1, "float64", id="f64_1_2_1",),
     pytest.param(2, 1, 3, "float32", id="f32_2_1_3",),
 ]
+
 
 def _reorganize_local_matrix(x_dist, N, M, blk_cols, p_prime):
     """Re-organize distributed array in local matrix
@@ -91,7 +108,7 @@ def test_MPIMatrixMult_block(N, K, M, dtype_str):
 
     # Create DistributedArray for input x (representing B flattened)
     all_local_col_len = comm.allgather(local_col_X_len)
-    total_cols = np.sum(all_local_col_len)
+    total_cols = npp.sum(all_local_col_len)
 
     x_dist = DistributedArray(
         global_shape=(K * total_cols),
@@ -99,7 +116,8 @@ def test_MPIMatrixMult_block(N, K, M, dtype_str):
         partition=Partition.SCATTER,
         base_comm=comm,
         mask=[i % p_prime for i in range(size)],
-        dtype=dtype
+        dtype=dtype,
+        engine=backend
     )
 
     x_dist.local_array[:] = X_p.ravel()

@@ -133,6 +133,7 @@ def benchmark(func: Optional[Callable] = None,
             header_index = len(_markers) - 1
 
             def local_mark(label):
+                _sync()
                 _markers.append((label, time.perf_counter(), level))
 
             _mark_func_stack.append(local_mark)
