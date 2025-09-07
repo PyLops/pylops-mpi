@@ -15,6 +15,7 @@ from pylops_mpi import (
     Partition,
     StackedDistributedArray
 )
+from pylops_mpi.Distributed import DistributedMixIn
 from pylops_mpi.utils.decorators import reshaped
 from pylops_mpi.utils import deps
 
@@ -25,7 +26,7 @@ if nccl_message is None and cupy_message is None:
     from pylops_mpi.utils._nccl import nccl_allreduce
 
 
-class MPIVStack(MPILinearOperator):
+class MPIVStack(DistributedMixIn, MPILinearOperator):
     r"""MPI VStack Operator
 
     Create a vertical stack of a set of linear operators using MPI. Each rank must
@@ -141,16 +142,19 @@ class MPIVStack(MPILinearOperator):
     @reshaped(forward=False, stacking=True)
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
-        y = DistributedArray(global_shape=self.shape[1], base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl, partition=Partition.BROADCAST,
+        # TODO: consider adding base_comm, base_comm_nccl, engine to the
+        # input parameters of _allreduce instead of relying on self
+        self.base_comm, self.base_comm_nccl, self.engine = \
+            x.base_comm, x.base_comm_nccl, x.engine
+        y = DistributedArray(global_shape=self.shape[1], base_comm=x.base_comm, 
+                             base_comm_nccl=x.base_comm_nccl, 
+                             partition=Partition.BROADCAST,
                              engine=x.engine, dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
             y1.append(oper.rmatvec(x.local_array[self.nnops[iop]: self.nnops[iop + 1]]))
         y1 = ncp.sum(ncp.vstack(y1), axis=0)
-        if deps.nccl_enabled and x.base_comm_nccl:
-            y[:] = nccl_allreduce(x.base_comm_nccl, y1, op=MPI.SUM)
-        else:
-            y[:] = self.base_comm.allreduce(y1, op=MPI.SUM)
+        y[:] = self._allreduce(y1, op=MPI.SUM) 
         return y
 
 

@@ -3,12 +3,13 @@ from numbers import Integral
 from typing import Any, List, Optional, Tuple, Union, NewType
 
 import numpy as np
-import os
 from mpi4py import MPI
+from pylops_mpi.Distributed import DistributedMixIn
 from pylops.utils import DTypeLike, NDArray
 from pylops.utils import deps as pylops_deps  # avoid namespace crashes with pylops_mpi.utils
 from pylops.utils._internal import _value_or_sized_to_tuple
 from pylops.utils.backend import get_array_module, get_module, get_module_name
+from pylops_mpi.utils._mpi import mpi_allreduce, mpi_send
 from pylops_mpi.utils import deps
 
 cupy_message = pylops_deps.cupy_import("the DistributedArray module")
@@ -22,10 +23,6 @@ else:
 
 NcclCommunicatorType = NewType("NcclCommunicator", NcclCommunicator)
 
-if int(os.environ.get("PYLOPS_MPI_CUDA_AWARE", 0)):
-    is_cuda_aware_mpi = True
-else:
-    is_cuda_aware_mpi = False
 
 class Partition(Enum):
     r"""Enum class
@@ -104,7 +101,7 @@ def subcomm_split(mask, comm: Optional[Union[MPI.Comm, NcclCommunicatorType]] = 
     return sub_comm
 
 
-class DistributedArray:
+class DistributedArray(DistributedMixIn):
     r"""Distributed Numpy Arrays
 
     Multidimensional NumPy-like distributed arrays.
@@ -477,44 +474,6 @@ class DistributedArray:
         if not np.array_equal(self.mask, dist_array.mask):
             raise ValueError("Mask of both the arrays must be same")
 
-    def _allreduce(self, send_buf, recv_buf=None, op: MPI.Op = MPI.SUM):
-        """Allreduce operation
-        """
-        if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
-            return nccl_allreduce(self.base_comm_nccl, send_buf, recv_buf, op)
-        else:
-            if is_cuda_aware_mpi or self.engine == "numpy":
-                ncp = get_module(self.engine)
-                recv_buf = ncp.zeros(send_buf.size, dtype=send_buf.dtype)
-                self.base_comm.Allreduce(send_buf, recv_buf, op)
-                return recv_buf
-            else:
-                # CuPy with non-CUDA-aware MPI
-                if recv_buf is None:
-                    return self.base_comm.allreduce(send_buf, op)
-                # For MIN and MAX which require recv_buf
-                self.base_comm.Allreduce(send_buf, recv_buf, op)
-                return recv_buf
-
-    def _allreduce_subcomm(self, send_buf, recv_buf=None, op: MPI.Op = MPI.SUM):
-        """Allreduce operation with subcommunicator
-        """
-        if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
-            return nccl_allreduce(self.sub_comm, send_buf, recv_buf, op)
-        else:
-            if is_cuda_aware_mpi or self.engine == "numpy":
-                ncp = get_module(self.engine)
-                recv_buf = ncp.zeros(send_buf.size, dtype=send_buf.dtype)
-                self.sub_comm.Allreduce(send_buf, recv_buf, op)
-                return recv_buf
-            else:
-                # CuPy with non-CUDA-aware MPI
-                if recv_buf is None:
-                    return self.sub_comm.allreduce(send_buf, op)
-                # For MIN and MAX which require recv_buf
-                self.sub_comm.Allreduce(send_buf, recv_buf, op)
-                return recv_buf
-
     def _allgather(self, send_buf, recv_buf=None):
         """Allgather operation
         """
@@ -556,16 +515,9 @@ class DistributedArray:
                 count = send_buf.size
             nccl_send(self.base_comm_nccl, send_buf, dest, count)
         else:
-            if is_cuda_aware_mpi or self.engine == "numpy":
-                # Determine MPI type based on array dtype
-                mpi_type = MPI._typedict[send_buf.dtype.char]
-                if count is None:
-                    count = send_buf.size
-                self.base_comm.Send([send_buf, count, mpi_type], dest=dest, tag=tag)
-            else:
-                # Uses CuPy without CUDA-aware MPI
-                self.base_comm.send(send_buf, dest, tag)
-
+            mpi_send(self.base_comm,
+                     send_buf, dest, count, tag=tag,
+                     engine=self.engine)
 
     def _recv(self, recv_buf=None, source=0, count=None, tag=0):
         """Receive operation
@@ -579,7 +531,7 @@ class DistributedArray:
             return recv_buf
         else:
             # NumPy + MPI will benefit from buffered communication regardless of MPI installation
-            if is_cuda_aware_mpi or self.engine == "numpy":
+            if deps.cuda_aware_mpi_enabled or self.engine == "numpy":
                 ncp = get_module(self.engine)
                 if recv_buf is None:
                     if count is None:
@@ -734,7 +686,7 @@ class DistributedArray:
             # CuPy + non-CUDA-aware MPI does not work well with buffered communication, particularly
             # with MAX, MIN operator. Here we copy the array back to CPU, transfer, and copy them back to GPUs
             send_buf = ncp.max(ncp.abs(local_array), axis=axis).astype(ncp.float64)
-            if self.engine == "cupy" and self.base_comm_nccl is None and not is_cuda_aware_mpi:
+            if self.engine == "cupy" and self.base_comm_nccl is None and not deps.cuda_aware_mpi_enabled:
                 # CuPy + non-CUDA-aware MPI: This will call non-buffered communication 
                 # which return a list of object - must be copied back to a GPU memory.
                 recv_buf = self._allreduce_subcomm(send_buf.get(), recv_buf.get(), op=MPI.MAX)
@@ -750,7 +702,7 @@ class DistributedArray:
             # Calculate min followed by min reduction
             # See the comment above in +infinity norm
             send_buf = ncp.min(ncp.abs(local_array), axis=axis).astype(ncp.float64)
-            if self.engine == "cupy" and self.base_comm_nccl is None and not is_cuda_aware_mpi:
+            if self.engine == "cupy" and self.base_comm_nccl is None and not deps.cuda_aware_mpi_enabled:
                 recv_buf = self._allreduce_subcomm(send_buf.get(), recv_buf.get(), op=MPI.MIN)
                 recv_buf = ncp.asarray(ncp.squeeze(recv_buf, axis=axis))
             else:
