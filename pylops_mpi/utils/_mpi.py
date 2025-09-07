@@ -1,0 +1,95 @@
+__all__ = [
+    # "mpi_allgather",
+    "mpi_allreduce",
+    # "mpi_bcast",
+    # "mpi_asarray",
+    "mpi_send",
+    # "mpi_recv",
+]
+
+from typing import Optional
+
+import numpy as np
+from mpi4py import MPI
+from pylops.utils.backend import get_module
+from pylops_mpi.utils import deps
+
+
+def mpi_allreduce(base_comm: MPI.Comm,
+                  send_buf, recv_buf=None, 
+                  engine: Optional[str] = "numpy",
+                  op: MPI.Op = MPI.SUM) -> np.ndarray:
+    """MPI_Allreduce/allreduce 
+    
+    Dispatch allreduce routine based on type of input and availability of 
+    CUDA-Aware MPI
+
+    Parameters
+    ----------
+    base_comm : :obj:`MPI.Comm`
+        Base MPI Communicator.
+    send_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray` 
+        The data buffer from the local GPU to be reduced.
+    recv_buf : :obj:`cupy.ndarray`, optional
+        The buffer to store the result of the reduction. If None,
+        a new buffer will be allocated with the appropriate shape.
+    engine : :obj:`str`, optional
+        Engine used to store array (``numpy`` or ``cupy``)
+    op : :obj:mpi4py.MPI.Op, optional
+        The reduction operation to apply. Defaults to MPI.SUM.
+
+    Returns
+    -------
+    recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray` 
+        A buffer containing the result of the reduction, broadcasted
+        to all GPUs.
+    
+    """
+    if deps.cuda_aware_mpi_enabled or engine == "numpy":
+        ncp = get_module(engine)
+        recv_buf = ncp.zeros(send_buf.size, dtype=send_buf.dtype)
+        base_comm.Allreduce(send_buf, recv_buf, op)
+        return recv_buf
+    else:
+        # CuPy with non-CUDA-aware MPI
+        if recv_buf is None:
+            return base_comm.allreduce(send_buf, op)
+        # For MIN and MAX which require recv_buf
+        base_comm.Allreduce(send_buf, recv_buf, op)
+        return recv_buf
+    
+
+def mpi_send(base_comm: MPI.Comm,
+             send_buf, dest, count, tag=0,
+             engine: Optional[str] = "numpy",
+             ) -> None:
+    """MPI_Send/send
+    
+    Dispatch send routine based on type of input and availability of 
+    CUDA-Aware MPI
+
+    Parameters
+    ----------
+    base_comm : :obj:`MPI.Comm`
+        Base MPI Communicator.
+    send_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray` 
+        The array containing data to send.
+    dest: :obj:`int`
+        The rank of the destination GPU device.
+    count : :obj:`int`
+        Number of elements to send from `send_buf`.
+    tag : :obj:`int`
+        Tag of the message to be sent.
+    engine : :obj:`str`, optional
+        Engine used to store array (``numpy`` or ``cupy``)
+    
+    """
+    if deps.cuda_aware_mpi_enabled or engine == "numpy":
+        # Determine MPI type based on array dtype
+        mpi_type = MPI._typedict[send_buf.dtype.char]
+        if count is None:
+            count = send_buf.size
+        base_comm.Send([send_buf, count, mpi_type], dest=dest, tag=tag)
+    else:
+        # Uses CuPy without CUDA-aware MPI
+        base_comm.send(send_buf, dest, tag)
