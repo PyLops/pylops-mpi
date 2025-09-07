@@ -507,18 +507,6 @@ class DistributedArray(DistributedMixIn):
                 return self.sub_comm.allgather(send_buf)
             self.sub_comm.Allgather(send_buf, recv_buf)
 
-    def _send(self, send_buf, dest, count=None, tag=0):
-        """Send operation
-        """
-        if deps.nccl_enabled and self.base_comm_nccl:
-            if count is None:
-                count = send_buf.size
-            nccl_send(self.base_comm_nccl, send_buf, dest, count)
-        else:
-            mpi_send(self.base_comm,
-                     send_buf, dest, count, tag=tag,
-                     engine=self.engine)
-
     def _recv(self, recv_buf=None, source=0, count=None, tag=0):
         """Receive operation
         """

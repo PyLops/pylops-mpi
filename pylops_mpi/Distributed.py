@@ -2,7 +2,7 @@ from typing import Any, NewType
 
 from mpi4py import MPI
 from pylops.utils import deps as pylops_deps  # avoid namespace crashes with pylops_mpi.utils
-from pylops_mpi.utils._mpi import mpi_allreduce
+from pylops_mpi.utils._mpi import mpi_allreduce, mpi_send
 from pylops_mpi.utils import deps
 
 cupy_message = pylops_deps.cupy_import("the DistributedArray module")
@@ -43,3 +43,15 @@ class DistributedMixIn:
         else:
             return mpi_allreduce(self.sub_comm, send_buf, 
                                  recv_buf, self.engine, op)
+
+    def _send(self, send_buf, dest, count=None, tag=0):
+        """Send operation
+        """
+        if deps.nccl_enabled and self.base_comm_nccl:
+            if count is None:
+                count = send_buf.size
+            nccl_send(self.base_comm_nccl, send_buf, dest, count)
+        else:
+            mpi_send(self.base_comm,
+                     send_buf, dest, count, tag=tag,
+                     engine=self.engine)
