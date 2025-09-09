@@ -1,0 +1,12 @@
+﻿pylops\_mpi.basicoperators.MatrixMult.active\_grid\_comm
+========================================================
+
+.. currentmodule:: pylops_mpi.basicoperators.MatrixMult
+
+.. autofunction:: active_grid_comm
+
+.. include:: backreferences/pylops_mpi.basicoperators.MatrixMult.active_grid_comm.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>

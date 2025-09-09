@@ -1,0 +1,12 @@
+﻿pylops\_mpi.basicoperators.MatrixMult.local\_block\_split
+=========================================================
+
+.. currentmodule:: pylops_mpi.basicoperators.MatrixMult
+
+.. autofunction:: local_block_split
+
+.. include:: backreferences/pylops_mpi.basicoperators.MatrixMult.local_block_split.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>

@@ -1,0 +1,12 @@
+﻿pylops\_mpi.basicoperators.MatrixMult.block\_gather
+===================================================
+
+.. currentmodule:: pylops_mpi.basicoperators.MatrixMult
+
+.. autofunction:: block_gather
+
+.. include:: backreferences/pylops_mpi.basicoperators.MatrixMult.block_gather.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>

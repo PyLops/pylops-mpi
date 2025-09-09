@@ -447,6 +447,11 @@
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.DistributedArray.local_split.html">pylops_mpi.DistributedArray.local_split</a></li>
 </ul>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MatrixMult.block_gather.html">pylops_mpi.basicoperators.MatrixMult.block_gather</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MatrixMult.local_block_split.html">pylops_mpi.basicoperators.MatrixMult.local_block_split</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MatrixMult.active_grid_comm.html">pylops_mpi.basicoperators.MatrixMult.active_grid_comm</a></li>
+</ul>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.utils.dottest.html">pylops_mpi.utils.dottest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.utils.benchmark.html">pylops_mpi.utils.benchmark</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.utils.mark.html">pylops_mpi.utils.mark</a></li>
@@ -617,8 +622,11 @@ operations on the distributed array such as dot product or norm.</p>
 <p><a class="reference internal" href="../../gallery/plot_distributed_array.html#sphx-glr-gallery-plot-distributed-array-py"><span class="std std-ref">Distributed Array</span></a></p>
   <div class="sphx-glr-thumbnail-title">Distributed Array</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="Note that whilst the different blocks of the matrix \mathbf{A} are directly stored in the operator on different ranks, the matrix \mathbf{X} is effectively represented by a 1-D :pypylops_mpi.DistributedArray where the different blocks are flattened and stored on different ranks. Note that to optimize communications, the ranks are organized in a 2D grid and some of the row blocks of \mathbf{A} and column blocks of \mathbf{X} are replicated across different ranks - see below for details."><img alt="" src="../../_images/sphx_glr_plot_matrixmult_thumb.png" />
-<p><a class="reference internal" href="../../gallery/plot_matrixmult.html#sphx-glr-gallery-plot-matrixmult-py"><span class="std std-ref">Distributed Matrix Multiplication</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Distributed Matrix Multiplication</div>
+<p><a class="reference internal" href="../../gallery/plot_matrixmult.html#sphx-glr-gallery-plot-matrixmult-py"><span class="std std-ref">Distributed Matrix Multiplication - Block-row-column decomposition</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Distributed Matrix Multiplication - Block-row-column decomposition</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Note that whilst the different blocks of matrix \mathbf{A} are directly stored in the operator on different ranks, the matrices \mathbf{X} and \mathbf{Y} are effectively represented by 1-D :pypylops_mpi.DistributedArray objects where the different blocks are flattened and stored on different ranks. Note that to optimize communications, the ranks are organized in a square grid and blocks of \mathbf{A} and \mathbf{X} are systematically broadcast across different ranks during computation - see below for details."><img alt="" src="../../_images/sphx_glr_plot_summamatrixmult_thumb.png" />
+<p><a class="reference internal" href="../../gallery/plot_summamatrixmult.html#sphx-glr-gallery-plot-summamatrixmult-py"><span class="std std-ref">Distributed Matrix Multiplication - SUMMA</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Distributed Matrix Multiplication - SUMMA</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the use of the :pypylops_mpi.MPILinearOperator to wrap PyLops Operators. PyLops operators can be converted into :pypylops_mpi.MPILinearOperator using the :pypylops_mpi.asmpilinearoperator method. Additionally, the example showcases how to use these wrapped PyLops operators with other operators provided by PyLops-MPI."><img alt="" src="../../_images/sphx_glr_plot_mpilinop_thumb.png" />
 <p><a class="reference internal" href="../../gallery/plot_mpilinop.html#sphx-glr-gallery-plot-mpilinop-py"><span class="std std-ref">MPILinearOperator</span></a></p>
   <div class="sphx-glr-thumbnail-title">MPILinearOperator</div>

@@ -568,61 +568,89 @@ one MPI process. In fact, minor communications like those dealing with array-rel
 You can find many <a class="reference external" href="https://github.com/PyLops/pylops_notebooks/tree/master/developement-mpi/Cupy_MPI">other examples</a> from the <a class="reference external" href="https://github.com/PyLops/pylops_notebooks">PyLops Notebooks repository</a>.</p>
 </div>
 </section>
-<section id="supports-for-nccl-backend">
-<h2>Supports for NCCL Backend<a class="headerlink" href="#supports-for-nccl-backend" title="Link to this heading">#</a></h2>
-<p>In the following, we provide a list of modules (i.e., operators and solvers) where we plan to support NCCL and the current status:</p>
+<section id="supports-for-cupy-and-nccl">
+<h2>Supports for CuPy and NCCL<a class="headerlink" href="#supports-for-cupy-and-nccl" title="Link to this heading">#</a></h2>
+<p>In the following, we provide a list of modules (i.e., operators and solvers) with their current status (available on CPU+MPI,
+GPU+MPI, and GPU+NCCL):</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <colgroup>
-<col style="width: 66.7%" />
-<col style="width: 33.3%" />
+<col style="width: 40.0%" />
+<col style="width: 20.0%" />
+<col style="width: 20.0%" />
+<col style="width: 20.0%" />
 </colgroup>
 <thead>
-<tr class="row-odd"><th class="head"><p>modules</p></th>
-<th class="head"><p>NCCL supported</p></th>
+<tr class="row-odd"><th class="head"><p>Operator/method</p></th>
+<th class="head"><p>CPU</p></th>
+<th class="head"><p>GPU+MPI</p></th>
+<th class="head"><p>GPU+NCCL</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><a class="reference internal" href="api/generated/pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a></p></td>
 <td><p>✅</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPIVStack.html#pylops_mpi.basicoperators.MPIVStack" title="pylops_mpi.basicoperators.MPIVStack"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIVStack</span></code></a></p></td>
+<td><p>✅</p></td>
 <td><p>✅</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPIMatrixMult.html#pylops_mpi.basicoperators.MPIMatrixMult" title="pylops_mpi.basicoperators.MPIMatrixMult"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIMatrixMult</span></code></a></p></td>
+<td><p>✅</p></td>
+<td><p>🔴</p></td>
+<td><p>🔴</p></td>
+</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPIVStack.html#pylops_mpi.basicoperators.MPIVStack" title="pylops_mpi.basicoperators.MPIVStack"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIVStack</span></code></a></p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
 <td><p>✅</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPIHStack.html#pylops_mpi.basicoperators.MPIHStack" title="pylops_mpi.basicoperators.MPIHStack"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIHStack</span></code></a></p></td>
 <td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPIBlockDiag.html#pylops_mpi.basicoperators.MPIBlockDiag" title="pylops_mpi.basicoperators.MPIBlockDiag"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIBlockDiag</span></code></a></p></td>
 <td><p>✅</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPIGradient.html#pylops_mpi.basicoperators.MPIGradient" title="pylops_mpi.basicoperators.MPIGradient"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIGradient</span></code></a></p></td>
+<td><p>✅</p></td>
 <td><p>✅</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPIFirstDerivative.html#pylops_mpi.basicoperators.MPIFirstDerivative" title="pylops_mpi.basicoperators.MPIFirstDerivative"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIFirstDerivative</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPIFirstDerivative.html#pylops_mpi.basicoperators.MPIFirstDerivative" title="pylops_mpi.basicoperators.MPIFirstDerivative"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIFirstDerivative</span></code></a></p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
 <td><p>✅</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPISecondDerivative.html#pylops_mpi.basicoperators.MPISecondDerivative" title="pylops_mpi.basicoperators.MPISecondDerivative"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPISecondDerivative</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPISecondDerivative.html#pylops_mpi.basicoperators.MPISecondDerivative" title="pylops_mpi.basicoperators.MPISecondDerivative"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPISecondDerivative</span></code></a></p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
 <td><p>✅</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPILaplacian.html#pylops_mpi.basicoperators.MPILaplacian" title="pylops_mpi.basicoperators.MPILaplacian"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPILaplacian</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPILaplacian.html#pylops_mpi.basicoperators.MPILaplacian" title="pylops_mpi.basicoperators.MPILaplacian"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPILaplacian</span></code></a></p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/generated/pylops_mpi.basicoperators.MPIGradient.html#pylops_mpi.basicoperators.MPIGradient" title="pylops_mpi.basicoperators.MPIGradient"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIGradient</span></code></a></p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.signalprocessing.MPIFredhoml1</span></code></p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/generated/pylops_mpi.waveeqprocessing.MPIMDC.html#pylops_mpi.waveeqprocessing.MPIMDC" title="pylops_mpi.waveeqprocessing.MPIMDC"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.waveeqprocessing.MPIMDC</span></code></a></p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
 <td><p>✅</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/generated/pylops_mpi.optimization.basic.cg.html#pylops_mpi.optimization.basic.cg" title="pylops_mpi.optimization.basic.cg"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.optimization.basic.cg</span></code></a></p></td>
 <td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api/generated/pylops_mpi.optimization.basic.cgls.html#pylops_mpi.optimization.basic.cgls" title="pylops_mpi.optimization.basic.cgls"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.optimization.basic.cgls</span></code></a></p></td>
 <td><p>✅</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.signalprocessing.Fredhoml1</span></code></p></td>
 <td><p>✅</p></td>
-</tr>
-<tr class="row-even"><td><p>Complex Numeric Data Type for NCCL</p></td>
 <td><p>✅</p></td>
-</tr>
-<tr class="row-odd"><td><p>ISTA Solver</p></td>
-<td><p>Planned ⏳</p></td>
 </tr>
 </tbody>
 </table>
@@ -679,7 +707,7 @@ You can find many <a class="reference external" href="https://github.com/PyLops/
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supports-for-nccl-backend">Supports for NCCL Backend</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supports-for-cupy-and-nccl">Supports for CuPy and NCCL</a></li>
 </ul>
   </nav></div>
 

@@ -18,15 +18,15 @@
 .. _sphx_glr_gallery_plot_matrixmult.py:
 
 
-Distributed Matrix Multiplication
-=================================
+Distributed Matrix Multiplication - Block-row-column decomposition
+==================================================================
 This example shows how to use the :py:class:`pylops_mpi.basicoperators.MPIMatrixMult`
-operator to perform matrix-matrix multiplication between a matrix :math:`\mathbf{A}`
-blocked over rows (i.e., blocks of rows are stored over different ranks) and a
-matrix :math:`\mathbf{X}` blocked over columns (i.e., blocks of columns are
-stored over different ranks), with equal number of row and column blocks.
-Similarly, the adjoint operation can be peformed with a matrix :math:`\mathbf{Y}`
-blocked in the same fashion of matrix :math:`\mathbf{X}`.
+operator with ``kind='blocked'`` to perform matrix-matrix multiplication between 
+a matrix :math:`\mathbf{A}` blocked over rows (i.e., blocks of rows are stored 
+over different ranks) and a matrix :math:`\mathbf{X}` blocked over columns 
+(i.e., blocks of columns are stored over different ranks), with equal number 
+of row and column blocks. Similarly, the adjoint operation can be peformed with 
+a matrix :math:`\mathbf{Y}` blocked in the same fashion of matrix :math:`\mathbf{X}`.
 
 Note that whilst the different blocks of the matrix :math:`\mathbf{A}` are directly
 stored in the operator on different ranks, the matrix :math:`\mathbf{X}` is
@@ -36,20 +36,21 @@ optimize communications, the ranks are organized in a 2D grid and some of the
 row blocks of :math:`\mathbf{A}` and column blocks of :math:`\mathbf{X}` are
 replicated across different ranks - see below for details.
 
-.. GENERATED FROM PYTHON SOURCE LINES 21-34
+.. GENERATED FROM PYTHON SOURCE LINES 21-35
 
 .. code-block:: Python
 
 
-    from matplotlib import pyplot as plt
     import math
     import numpy as np
     from mpi4py import MPI
+    from matplotlib import pyplot as plt
 
     import pylops
 
     import pylops_mpi
     from pylops_mpi import Partition
+    from pylops_mpi.basicoperators.MatrixMult import active_grid_comm, MPIMatrixMult
 
     plt.close("all")
 
@@ -60,13 +61,13 @@ replicated across different ranks - see below for details.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 35-38
+.. GENERATED FROM PYTHON SOURCE LINES 36-39
 
 We set the seed such that all processes can create the input matrices filled
 with the same random number. In practical application, such matrices will be
 filled with data that is appropriate that is appropriate the use-case.
 
-.. GENERATED FROM PYTHON SOURCE LINES 38-40
+.. GENERATED FROM PYTHON SOURCE LINES 39-41
 
 .. code-block:: Python
 
@@ -79,11 +80,10 @@ filled with data that is appropriate that is appropriate the use-case.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 41-44
+.. GENERATED FROM PYTHON SOURCE LINES 42-44
 
 We are now ready to create the input matrices :math:`\mathbf{A}` of size
-:math:`M \times k` :math:`\mathbf{A}` of size and :math:`\mathbf{A}` of size
-:math:`K \times N`.
+:math:`M \times k` and :math:`\mathbf{X}` of size :math:`K \times N`.
 
 .. GENERATED FROM PYTHON SOURCE LINES 44-48
 
@@ -143,14 +143,13 @@ responsible to identify any rank that should be deactivated (if the number
 of rows of the operator or columns of the input/output matrices are smaller
 than the row or columm ranks.
 
-.. GENERATED FROM PYTHON SOURCE LINES 89-101
+.. GENERATED FROM PYTHON SOURCE LINES 89-100
 
 .. code-block:: Python
 
 
     base_comm = MPI.COMM_WORLD
-    comm, rank, row_id, col_id, is_active = \
-        pylops_mpi.MPIMatrixMult.active_grid_comm(base_comm, N, M)
+    comm, rank, row_id, col_id, is_active = active_grid_comm(base_comm, N, M)
     print(f"Process {base_comm.Get_rank()} is {'active' if is_active else 'inactive'}")
     if not is_active: exit(0)
 
@@ -172,7 +171,7 @@ than the row or columm ranks.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 102-133
+.. GENERATED FROM PYTHON SOURCE LINES 101-132
 
 At this point we divide the rows and columns of :math:`\mathbf{A}` and
 :math:`\mathbf{X}`, respectively, such that each rank ends up with:
@@ -206,7 +205,7 @@ At this point we divide the rows and columns of :math:`\mathbf{A}` and
   </div>
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 133-147
+.. GENERATED FROM PYTHON SOURCE LINES 132-146
 
 .. code-block:: Python
 
@@ -231,16 +230,16 @@ At this point we divide the rows and columns of :math:`\mathbf{A}` and
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 148-150
+.. GENERATED FROM PYTHON SOURCE LINES 147-149
 
 We are now ready to create the :py:class:`pylops_mpi.basicoperators.MPIMatrixMult`
 operator and the input matrix :math:`\mathbf{X}`
 
-.. GENERATED FROM PYTHON SOURCE LINES 150-163
+.. GENERATED FROM PYTHON SOURCE LINES 149-162
 
 .. code-block:: Python
 
-    Aop = pylops_mpi.MPIMatrixMult(A_p, M, base_comm=comm, dtype="float32")
+    Aop = MPIMatrixMult(A_p, M, base_comm=comm, dtype="float32", kind="block")
 
     col_lens = comm.allgather(my_own_cols)
     total_cols = np.sum(col_lens)
@@ -260,14 +259,14 @@ operator and the input matrix :math:`\mathbf{X}`
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 164-168
+.. GENERATED FROM PYTHON SOURCE LINES 163-167
 
 We can now apply the forward pass :math:`\mathbf{y} = \mathbf{Ax}` (which
 effectively implements a distributed matrix-matrix multiplication
 :math:`Y = \mathbf{AX}`). Note :math:`\mathbf{Y}` is distributed in the same
 way as the input :math:`\mathbf{X}`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 168-170
+.. GENERATED FROM PYTHON SOURCE LINES 167-169
 
 .. code-block:: Python
 
@@ -280,7 +279,7 @@ way as the input :math:`\mathbf{X}`.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 171-176
+.. GENERATED FROM PYTHON SOURCE LINES 170-175
 
 Next we apply the adjoint pass :math:`\mathbf{x}_{adj} = \mathbf{A}^H \mathbf{x}`
 (which effectively implements a distributed matrix-matrix multiplication
@@ -288,7 +287,7 @@ Next we apply the adjoint pass :math:`\mathbf{x}_{adj} = \mathbf{A}^H \mathbf{x}
 :math:`\mathbf{X}_{adj}` is again distributed in the same way as the input
 :math:`\mathbf{X}`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 176-178
+.. GENERATED FROM PYTHON SOURCE LINES 175-177
 
 .. code-block:: Python
 
@@ -301,7 +300,7 @@ Next we apply the adjoint pass :math:`\mathbf{x}_{adj} = \mathbf{A}^H \mathbf{x}
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 179-185
+.. GENERATED FROM PYTHON SOURCE LINES 178-184
 
 Finally, we show the :py:class:`pylops_mpi.basicoperators.MPIMatrixMult`
 operator can be combined with any other PyLops-MPI operator. We are going to
@@ -310,7 +309,7 @@ multiplication. The only gotcha here is that one needs to be aware of the
 ad-hoc distribution of the arrays that are fed to this operator and make
 sure it is matched in the other operators involved in the chain.
 
-.. GENERATED FROM PYTHON SOURCE LINES 185-190
+.. GENERATED FROM PYTHON SOURCE LINES 184-189
 
 .. code-block:: Python
 

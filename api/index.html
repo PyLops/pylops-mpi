@@ -449,6 +449,11 @@
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.DistributedArray.local_split.html">pylops_mpi.DistributedArray.local_split</a></li>
 </ul>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.basicoperators.MatrixMult.block_gather.html">pylops_mpi.basicoperators.MatrixMult.block_gather</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.basicoperators.MatrixMult.local_block_split.html">pylops_mpi.basicoperators.MatrixMult.local_block_split</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.basicoperators.MatrixMult.active_grid_comm.html">pylops_mpi.basicoperators.MatrixMult.active_grid_comm</a></li>
+</ul>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.utils.dottest.html">pylops_mpi.utils.dottest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.utils.benchmark.html">pylops_mpi.utils.benchmark</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.utils.mark.html">pylops_mpi.utils.mark</a></li>
@@ -553,8 +558,8 @@ large-scale linear algebra operations, inversions and computations.</p>
 <h3>Basic Operators<a class="headerlink" href="#basic-operators" title="Link to this heading">#</a></h3>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIMatrixMult.html#pylops_mpi.basicoperators.MPIMatrixMult" title="pylops_mpi.basicoperators.MPIMatrixMult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIMatrixMult</span></code></a>(A, M[, saveAt, base_comm, dtype])</p></td>
-<td><p>MPI Matrix multiplication</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIMatrixMult.html#pylops_mpi.basicoperators.MPIMatrixMult" title="pylops_mpi.basicoperators.MPIMatrixMult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIMatrixMult</span></code></a>(A, M[, saveAt, base_comm, ...])</p></td>
+<td><p>MPI Distributed Matrix Multiplication Operator</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIBlockDiag.html#pylops_mpi.basicoperators.MPIBlockDiag" title="pylops_mpi.basicoperators.MPIBlockDiag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIBlockDiag</span></code></a>(ops[, base_comm, mask, dtype])</p></td>
 <td><p>MPI Block-diagonal operator.</p></td>
@@ -652,6 +657,20 @@ large-scale linear algebra operations, inversions and computations.</p>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.DistributedArray.local_split.html#pylops_mpi.DistributedArray.local_split" title="pylops_mpi.DistributedArray.local_split"><code class="xref py py-obj docutils literal notranslate"><span class="pre">local_split</span></code></a>(global_shape, base_comm, ...)</p></td>
 <td><p>To get the local shape from the global shape</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.basicoperators.MatrixMult.block_gather.html#pylops_mpi.basicoperators.MatrixMult.block_gather" title="pylops_mpi.basicoperators.MatrixMult.block_gather"><code class="xref py py-obj docutils literal notranslate"><span class="pre">block_gather</span></code></a>(x, orig_shape, comm)</p></td>
+<td><p>Local block from 2D block distributed matrix</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/pylops_mpi.basicoperators.MatrixMult.local_block_split.html#pylops_mpi.basicoperators.MatrixMult.local_block_split" title="pylops_mpi.basicoperators.MatrixMult.local_block_split"><code class="xref py py-obj docutils literal notranslate"><span class="pre">local_block_split</span></code></a>(global_shape, rank, comm)</p></td>
+<td><p>Local sub‐block of a 2D global array</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.basicoperators.MatrixMult.active_grid_comm.html#pylops_mpi.basicoperators.MatrixMult.active_grid_comm" title="pylops_mpi.basicoperators.MatrixMult.active_grid_comm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">active_grid_comm</span></code></a>(base_comm, N, M)</p></td>
+<td><p>Active grid for distributed matrix multiplication.</p></td>
 </tr>
 </tbody>
 </table>

@@ -449,6 +449,11 @@
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.DistributedArray.local_split.html">pylops_mpi.DistributedArray.local_split</a></li>
 </ul>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MatrixMult.block_gather.html">pylops_mpi.basicoperators.MatrixMult.block_gather</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MatrixMult.local_block_split.html">pylops_mpi.basicoperators.MatrixMult.local_block_split</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MatrixMult.active_grid_comm.html">pylops_mpi.basicoperators.MatrixMult.active_grid_comm</a></li>
+</ul>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.utils.dottest.html">pylops_mpi.utils.dottest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.utils.benchmark.html">pylops_mpi.utils.benchmark</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.utils.mark.html">pylops_mpi.utils.mark</a></li>
@@ -514,32 +519,32 @@
                   
   <section id="pylops-mpi-basicoperators-mpimatrixmult">
 <h1>pylops_mpi.basicoperators.MPIMatrixMult<a class="headerlink" href="#pylops-mpi-basicoperators-mpimatrixmult" title="Link to this heading">#</a></h1>
-<dl class="py class">
+<dl class="py function">
 <dt class="sig sig-object py" id="pylops_mpi.basicoperators.MPIMatrixMult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylops_mpi.basicoperators.</span></span><span class="sig-name descname"><span class="pre">MPIMatrixMult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">M</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saveAt=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm=&lt;mpi4py.MPI.Intracomm</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype='float64'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/basicoperators/MatrixMult.html#MPIMatrixMult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.basicoperators.MPIMatrixMult" title="Link to this definition">#</a></dt>
-<dd><p>MPI Matrix multiplication</p>
-<p>Implement distributed matrix-matrix multiplication between a matrix
-<span class="math notranslate nohighlight">\(\mathbf{A}\)</span> blocked over rows (i.e., blocks of rows are stored
-over different ranks) and the input model and data vector, which are both to
-be interpreted as matrices blocked over columns.</p>
+<span class="sig-prename descclassname"><span class="pre">pylops_mpi.basicoperators.</span></span><span class="sig-name descname"><span class="pre">MPIMatrixMult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">M</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saveAt=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm=&lt;mpi4py.MPI.Intracomm</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind='summa'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype='float64'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/basicoperators/MatrixMult.html#MPIMatrixMult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.basicoperators.MPIMatrixMult" title="Link to this definition">#</a></dt>
+<dd><p>MPI Distributed Matrix Multiplication Operator</p>
+<p>This operator performs distributed matrix-matrix multiplication
+using either the SUMMA (Scalable Universal Matrix Multiplication
+Algorithm <a class="reference internal" href="#r35b0d639bb10-1" id="id1">[1]</a>) or a 1D block-row decomposition algorithm (based on the
+specified <code class="docutils literal notranslate"><span class="pre">kind</span></code> parameter).</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
-<dt><strong>A</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a></span></dt><dd><p>Local block of the matrix of shape <span class="math notranslate nohighlight">\([N_{loc} \times K]\)</span>
-where <span class="math notranslate nohighlight">\(N_{loc}\)</span> is the number of rows stored on this MPI rank and
-<code class="docutils literal notranslate"><span class="pre">K</span></code> is the global number of columns.</p>
+<dt><strong>A</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a></span></dt><dd><p>Local block of the matrix operator.</p>
 </dd>
-<dt><strong>M</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a></span></dt><dd><p>Global leading dimension (i.e., number of columns) of the matrices
-representing the input model and data vectors.</p>
+<dt><strong>M</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a></span></dt><dd><p>Global number of columns in the operand and result matrices.</p>
 </dd>
-<dt><strong>saveAt</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Save <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">A.H</span></code> to speed up the computation of adjoint
-(<code class="docutils literal notranslate"><span class="pre">True</span></code>) or create <code class="docutils literal notranslate"><span class="pre">A.H</span></code> on-the-fly (<code class="docutils literal notranslate"><span class="pre">False</span></code>)
-Note that <code class="docutils literal notranslate"><span class="pre">saveAt=True</span></code> will double the amount of required memory.
-Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+<dt><strong>saveAt</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, store both <span class="math notranslate nohighlight">\(\mathbf{A}\)</span> and its conjugate transpose
+<span class="math notranslate nohighlight">\(\mathbf{A}^H\)</span> to accelerate adjoint operations (uses twice the
+memory). Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 </dd>
-<dt><strong>base_comm</strong><span class="classifier"><a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/reference/mpi4py.MPI.Comm.html#mpi4py.MPI.Comm" title="(in MPI for Python v4.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpi4py.MPI.Comm</span></code></a>, optional</span></dt><dd><p>MPI Base Communicator. Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.MPI.COMM_WORLD</span></code>.</p>
+<dt><strong>base_comm</strong><span class="classifier"><a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/reference/mpi4py.MPI.Comm.html#mpi4py.MPI.Comm" title="(in MPI for Python v4.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpi4py.MPI.Comm</span></code></a>, optional</span></dt><dd><p>MPI communicator to use. Defaults to <code class="docutils literal notranslate"><span class="pre">MPI.COMM_WORLD</span></code>.</p>
 </dd>
-<dt><strong>dtype</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Type of elements in input array.</p>
+<dt><strong>kind</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Algorithm used to perform matrix multiplication: <code class="docutils literal notranslate"><span class="pre">'block'</span></code> for #
+block-row-column decomposition, and <code class="docutils literal notranslate"><span class="pre">'summa'</span></code> for SUMMA algorithm, or
+. Default is <code class="docutils literal notranslate"><span class="pre">'summa'</span></code>.</p>
+</dd>
+<dt><strong>dtype</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Type of elements in input array. Defaults to <code class="docutils literal notranslate"><span class="pre">numpy.float64</span></code>.</p>
 </dd>
 </dl>
 </dd>
@@ -547,105 +552,70 @@ Default is <code class="docutils literal notranslate"><span class="pre">False</s
 <dd class="field-even"><dl>
 <dt><strong>shape</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a></span></dt><dd><p>Operator shape</p>
 </dd>
+<dt><strong>kind</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Selected distributed matrix multiply algorithm (<code class="docutils literal notranslate"><span class="pre">'block'</span></code> or <code class="docutils literal notranslate"><span class="pre">'summa'</span></code>).</p>
+</dd>
 </dl>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>Exception</dt><dd><p>If the operator is created with a non-square number of MPI ranks.</p>
+<dt>NotImplementedError</dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">kind</span></code> is not one of <code class="docutils literal notranslate"><span class="pre">'summa'</span></code> or <code class="docutils literal notranslate"><span class="pre">'block'</span></code>.</p>
 </dd>
-<dt>ValueError</dt><dd><p>If input vector does not have the correct partition type.</p>
+<dt>Exception</dt><dd><p>If the MPI communicator does not form a compatible grid for the
+selected algorithm.</p>
 </dd>
 </dl>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>This operator performs a matrix-matrix multiplication, whose forward
-operation can be described as <span class="math notranslate nohighlight">\(Y = A \cdot X\)</span> where:</p>
+<p>The forward operator computes:</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{Y} = \mathbf{A} \cdot \mathbf{X}\]</div>
+<p>where:</p>
 <ul class="simple">
-<li><p><span class="math notranslate nohighlight">\(\mathbf{A}\)</span> is the distributed matrix operator of shape <span class="math notranslate nohighlight">\([N \times K]\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathbf{A}\)</span> is the distributed operator matrix of shape <span class="math notranslate nohighlight">\([N \times K]\)</span></p></li>
 <li><p><span class="math notranslate nohighlight">\(\mathbf{X}\)</span> is the distributed operand matrix of shape <span class="math notranslate nohighlight">\([K \times M]\)</span></p></li>
 <li><p><span class="math notranslate nohighlight">\(\mathbf{Y}\)</span> is the resulting distributed matrix of shape <span class="math notranslate nohighlight">\([N \times M]\)</span></p></li>
 </ul>
-<p>whilst the adjoint operation is represented by
-<span class="math notranslate nohighlight">\(\mathbf{X}_{adj} = \mathbf{A}^H \cdot \mathbf{Y}\)</span> where
-<span class="math notranslate nohighlight">\(\mathbf{A}^H\)</span> is the complex conjugate and transpose of <span class="math notranslate nohighlight">\(\mathbf{A}\)</span>.</p>
-<p>This implementation is based on a 1D block distribution of the operator
-matrix and reshaped model and data vectors replicated across <span class="math notranslate nohighlight">\(P\)</span>
-processes by a factor equivalent to <span class="math notranslate nohighlight">\(\sqrt{P}\)</span> across a square process
-grid (<span class="math notranslate nohighlight">\(\sqrt{P}\times\sqrt{P}\)</span>). More specifically:</p>
+<p>The adjoint (conjugate-transpose) operation computes:</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{X}_{adj} = \mathbf{A}^H \cdot \mathbf{Y}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mathbf{A}^H\)</span> is the complex-conjugate transpose of <span class="math notranslate nohighlight">\(\mathbf{A}\)</span>.</p>
+<p>Based on the choice of <code class="docutils literal notranslate"><span class="pre">kind</span></code>, the distribution layouts of the operator and model and
+data vectors differ as follows:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Summa<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<p>2D block-grid distribution over a square process grid  <span class="math notranslate nohighlight">\([\sqrt{P} \times \sqrt{P}]\)</span>:</p>
 <ul class="simple">
-<li><p>The matrix <code class="docutils literal notranslate"><span class="pre">A</span></code> is distributed across MPI processes in a block-row fashion
-and each process holds a local block of <code class="docutils literal notranslate"><span class="pre">A</span></code> with shape
-<span class="math notranslate nohighlight">\([N_{loc} \times K]\)</span></p></li>
-<li><p>The operand matrix <code class="docutils literal notranslate"><span class="pre">X</span></code> is distributed in a block-column fashion and
-each process holds a local block of <code class="docutils literal notranslate"><span class="pre">X</span></code> with shape
-<span class="math notranslate nohighlight">\([K \times M_{loc}]\)</span></p></li>
-<li><p>Communication is minimized by using a 2D process grid layout</p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathbf{A}\)</span> and <span class="math notranslate nohighlight">\(\mathbf{X}\)</span> (and  <span class="math notranslate nohighlight">\(\mathbf{Y}\)</span>) are partitioned into
+<span class="math notranslate nohighlight">\([N_{loc} \times K_{loc}]\)</span> and <span class="math notranslate nohighlight">\([K_{loc} \times M_{loc}]\)</span> tiles on each
+rank, respectively.</p></li>
+<li><p>Each SUMMA iteration broadcasts row- and column-blocks of <span class="math notranslate nohighlight">\(\mathbf{A}\)</span> and
+<span class="math notranslate nohighlight">\(\mathbf{X}\)</span> (forward) or <span class="math notranslate nohighlight">\(\mathbf{Y}\)</span> (adjoint) and accumulates local
+partial products.</p></li>
 </ul>
-<p><strong>Forward Operation step-by-step</strong></p>
-<ol class="arabic simple">
-<li><p><strong>Input Preparation</strong>: The input vector <code class="docutils literal notranslate"><span class="pre">x</span></code> (flattened from matrix <code class="docutils literal notranslate"><span class="pre">X</span></code>
-of shape <code class="docutils literal notranslate"><span class="pre">(K,</span> <span class="pre">M)</span></code>) is reshaped to <code class="docutils literal notranslate"><span class="pre">(K,</span> <span class="pre">M_local)</span></code> where <code class="docutils literal notranslate"><span class="pre">M_local</span></code>
-is the number of columns assigned to the current process.</p></li>
-<li><p><strong>Local Computation</strong>: Each process computes <code class="docutils literal notranslate"><span class="pre">A_local</span> <span class="pre">&#64;</span> <span class="pre">X_local</span></code> where:
-- <code class="docutils literal notranslate"><span class="pre">A_local</span></code> is the local block of matrix <code class="docutils literal notranslate"><span class="pre">A</span></code> (shape <code class="docutils literal notranslate"><span class="pre">N_local</span> <span class="pre">x</span> <span class="pre">K</span></code>)
-- <code class="docutils literal notranslate"><span class="pre">X_local</span></code> is the broadcasted operand (shape <code class="docutils literal notranslate"><span class="pre">K</span> <span class="pre">x</span> <span class="pre">M_local</span></code>)</p></li>
-<li><p><strong>Row-wise Gather</strong>: Results from all processes in each row are gathered
-using <code class="docutils literal notranslate"><span class="pre">allgather</span></code> to ensure that each rank has a block-column of the
-output matrix.</p></li>
-</ol>
-<p><strong>Adjoint Operation step-by-step</strong></p>
-<p>The adjoint operation performs the conjugate transpose multiplication:</p>
-<ol class="arabic simple">
-<li><p><strong>Input Reshaping</strong>: The input vector <code class="docutils literal notranslate"><span class="pre">x</span></code> is reshaped to <code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">M_local)</span></code>
-representing the local columns of the input matrix.</p></li>
-<li><p><strong>Local Adjoint Computation</strong>: Each process computes
-<code class="docutils literal notranslate"><span class="pre">A_local.H</span> <span class="pre">&#64;</span> <span class="pre">X_tile</span></code> where <code class="docutils literal notranslate"><span class="pre">A_local.H</span></code> is either i) Pre-computed
-and stored in <code class="docutils literal notranslate"><span class="pre">At</span></code> (if <code class="docutils literal notranslate"><span class="pre">saveAt=True</span></code>), ii) computed on-the-fly as
-<code class="docutils literal notranslate"><span class="pre">A.T.conj()</span></code> (if <code class="docutils literal notranslate"><span class="pre">saveAt=False</span></code>). Each process multiplies its
-transposed  local <code class="docutils literal notranslate"><span class="pre">A</span></code> block <code class="docutils literal notranslate"><span class="pre">A_local^H</span></code> (shape <code class="docutils literal notranslate"><span class="pre">K</span> <span class="pre">x</span> <span class="pre">N_block</span></code>)
-with the extracted  <code class="docutils literal notranslate"><span class="pre">X_tile</span></code> (shape <code class="docutils literal notranslate"><span class="pre">N_block</span> <span class="pre">x</span> <span class="pre">M_local</span></code>),
-producing a partial result of  shape <code class="docutils literal notranslate"><span class="pre">(K,</span> <span class="pre">M_local)</span></code>.
-This computes the local contribution of columns of  <code class="docutils literal notranslate"><span class="pre">A^H</span></code> to the final
-result.</p></li>
-<li><p><strong>Row-wise Reduction</strong>: Since the full result <code class="docutils literal notranslate"><span class="pre">Y</span> <span class="pre">=</span> <span class="pre">A^H</span> <span class="pre">\cdot</span> <span class="pre">X</span></code> is the
-sum of the contributions from all column blocks of <code class="docutils literal notranslate"><span class="pre">A^H</span></code>, processes in
-the same row perform an <code class="docutils literal notranslate"><span class="pre">allreduce</span></code> sum to combine their partial results.
-This gives the complete <code class="docutils literal notranslate"><span class="pre">(K,</span> <span class="pre">M_local)</span></code> result for their assigned column.</p></li>
-</ol>
-<p class="rubric">Methods</p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
-<tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code>(A, M[, saveAt, base_comm, dtype])</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">active_grid_comm</span></code>(base_comm, N, M)</p></td>
-<td><p>Configure active grid</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">adjoint</span></code>()</p></td>
-<td><p>Adjoint MPI LinearOperator</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">conj</span></code>()</p></td>
-<td><p>Complex conjugate operator</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dot</span></code>(x)</p></td>
-<td><p>Matrix Vector Multiplication</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">matvec</span></code>(x)</p></td>
-<td><p>Matrix-vector multiplication.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">rmatvec</span></code>(x)</p></td>
-<td><p>Adjoint Matrix-vector multiplication.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">transpose</span></code>()</p></td>
-<td><p>Transposition of MPI LinearOperator</p></td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Block<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<p>1D block-row distribution over a <span class="math notranslate nohighlight">\([1 \times P]\)</span> grid:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\mathbf{A}\)</span> is partitioned into <span class="math notranslate nohighlight">\([N_{loc} \times K]\)</span> blocks across ranks.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathbf{X}\)</span> (and  <span class="math notranslate nohighlight">\(\mathbf{Y}\)</span>) are partitioned into <span class="math notranslate nohighlight">\([K \times M_{loc}]\)</span> blocks.</p></li>
+<li><p>Local multiplication is followed by row-wise gather (forward) or
+allreduce (adjoint) across ranks.</p></li>
+</ul>
+<div role="list" class="citation-list">
+<div class="citation" id="r35b0d639bb10-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>Robert A. van de Geijn, R., and Watts, J. “SUMMA: Scalable Universal
+Matrix Multiplication Algorithm”, 1995.</p>
+</div>
 </div>
 </dd></dl>
 
-<div style='clear:both'></div><div style='clear:both'></div></section>
+<div style='clear:both'></div></section>
 
 
                 </article>
