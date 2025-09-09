@@ -82,7 +82,7 @@ def local_block_split(global_shape: Tuple[int, int],
                       comm: MPI.Comm) -> Tuple[slice, slice]:
     r"""Local sub‐block of a 2D global array
 
-    Compute the local sub‐block of a 2D global array for a process in a square 
+    Compute the local sub‐block of a 2D global array for a process in a square
     process grid.
 
     Parameters
@@ -106,9 +106,8 @@ def local_block_split(global_shape: Tuple[int, int],
     ValueError
         If `rank` is not an integer value or out of range.
     RuntimeError
-        If the number of processes participating in the provided communicator 
+        If the number of processes participating in the provided communicator
         is not a perfect square.
-    
     """
     size = comm.Get_size()
     p_prime = math.isqrt(size)
@@ -130,7 +129,7 @@ def local_block_split(global_shape: Tuple[int, int],
 
 def block_gather(x: DistributedArray, orig_shape: Tuple[int, int], comm: MPI.Comm):
     r"""Local block from 2D block distributed matrix
-    
+
     Gather distributed local blocks from 2D block distributed matrix distributed
     amongst a square process grid into the full global array.
 
@@ -152,9 +151,8 @@ def block_gather(x: DistributedArray, orig_shape: Tuple[int, int], comm: MPI.Com
     Raises
     ------
     RuntimeError
-        If the number of processes participating in the provided communicator 
+        If the number of processes participating in the provided communicator
         is not a perfect square.
-    
     """
     ncp = get_module(x.engine)
     p_prime = math.isqrt(comm.Get_size())
@@ -169,7 +167,7 @@ def block_gather(x: DistributedArray, orig_shape: Tuple[int, int], comm: MPI.Com
         pr, pc = divmod(rank, p_prime)
         rs, cs = pr * br, pc * bc
         re, ce = min(rs + br, nr), min(cs + bc, nc)
-        if len(all_blks[rank]) !=0:
+        if len(all_blks[rank]) != 0:
             C[rs:re, cs:ce] = all_blks[rank].reshape(re - rs, cs - ce)
     return C
 
@@ -519,11 +517,11 @@ class _MPISummaMatrixMult(MPILinearOperator):
         size = base_comm.Get_size()
 
         # Determine grid dimensions (P_prime × C) such that P_prime * C ≥ size
-        self._P_prime =  math.isqrt(size)
+        self._P_prime = math.isqrt(size)
         if self._P_prime * self._P_prime != size:
             raise Exception(f"Number of processes must be a square number, provided {size} instead...")
 
-        self._row_id, self._col_id =  divmod(rank, self._P_prime)
+        self._row_id, self._col_id = divmod(rank, self._P_prime)
 
         self.base_comm = base_comm
         self._row_comm = base_comm.Split(color=self._row_id, key=self._col_id)
@@ -541,7 +539,7 @@ class _MPISummaMatrixMult(MPILinearOperator):
 
         bn = self._N_padded // self._P_prime
         bk = self._K_padded // self._P_prime
-        bm = self._M_padded // self._P_prime
+        bm = self._M_padded // self._P_prime  # noqa: F841
 
         pr = (bn - A.shape[0]) if self._row_id == self._P_prime - 1 else 0
         pc = (bk - A.shape[1]) if self._col_id == self._P_prime - 1 else 0
@@ -552,7 +550,7 @@ class _MPISummaMatrixMult(MPILinearOperator):
         if saveAt:
             self.At = self.A.T.conj()
 
-        self.dims  = (self.K, self.M)
+        self.dims = (self.K, self.M)
         self.dimsd = (self.N, self.M)
         shape = (int(np.prod(self.dimsd)), int(np.prod(self.dims)))
         super().__init__(shape=shape, dtype=np.dtype(dtype), base_comm=base_comm)
@@ -597,7 +595,7 @@ class _MPISummaMatrixMult(MPILinearOperator):
         if pad_k > 0 or pad_m > 0:
             x_block = ncp.pad(x_block, [(0, pad_k), (0, pad_m)], mode='constant')
 
-        Y_local = ncp.zeros((self.A.shape[0], bm),dtype=output_dtype)
+        Y_local = ncp.zeros((self.A.shape[0], bm), dtype=output_dtype)
 
         for k in range(self._P_prime):
             Atemp = self.A.copy() if self._col_id == k else ncp.empty_like(self.A)
@@ -690,19 +688,18 @@ class _MPISummaMatrixMult(MPILinearOperator):
 
 
 def MPIMatrixMult(
-            A: NDArray,
-            M: int,
-            saveAt: bool = False,
-            base_comm: MPI.Comm = MPI.COMM_WORLD,
-            kind: Literal["summa", "block"] = "summa",
-            dtype: DTypeLike = "float64",
-    ):
+        A: NDArray,
+        M: int,
+        saveAt: bool = False,
+        base_comm: MPI.Comm = MPI.COMM_WORLD,
+        kind: Literal["summa", "block"] = "summa",
+        dtype: DTypeLike = "float64"):
     r"""
     MPI Distributed Matrix Multiplication Operator
 
     This operator performs distributed matrix-matrix multiplication
-    using either the SUMMA (Scalable Universal Matrix Multiplication 
-    Algorithm [1]_) or a 1D block-row decomposition algorithm (based on the 
+    using either the SUMMA (Scalable Universal Matrix Multiplication
+    Algorithm [1]_) or a 1D block-row decomposition algorithm (based on the
     specified ``kind`` parameter).
 
     Parameters
@@ -712,7 +709,7 @@ def MPIMatrixMult(
     M : :obj:`int`
         Global number of columns in the operand and result matrices.
     saveAt : :obj:`bool`, optional
-        If ``True``, store both :math:`\mathbf{A}` and its conjugate transpose 
+        If ``True``, store both :math:`\mathbf{A}` and its conjugate transpose
         :math:`\mathbf{A}^H` to accelerate adjoint operations (uses twice the
         memory). Default is ``False``.
     base_comm : :obj:`mpi4py.MPI.Comm`, optional
@@ -729,8 +726,7 @@ def MPIMatrixMult(
     shape : :obj:`tuple`
         Operator shape
     kind : :obj:`str`, optional
-        Selected distributed matrix multiply algorithm (``'block'`` or 
-        ``'summa'``).
+        Selected distributed matrix multiply algorithm (``'block'`` or ``'summa'``).
 
     Raises
     ------
@@ -739,7 +735,7 @@ def MPIMatrixMult(
     Exception
         If the MPI communicator does not form a compatible grid for the
         selected algorithm.
-    
+
     Notes
     -----
     The forward operator computes:
@@ -762,20 +758,20 @@ def MPIMatrixMult(
 
     Based on the choice of ``kind``, the distribution layouts of the operator and model and
     data vectors differ as follows:
-    
+
     :summa:
 
     2D block-grid distribution over a square process grid  :math:`[\sqrt{P} \times \sqrt{P}]`:
 
-    - :math:`\mathbf{A}` and :math:`\mathbf{X}` (and  :math:`\mathbf{Y}`) are partitioned into 
-      :math:`[N_{loc} \times K_{loc}]` and :math:`[K_{loc} \times M_{loc}]` tiles on each 
+    - :math:`\mathbf{A}` and :math:`\mathbf{X}` (and  :math:`\mathbf{Y}`) are partitioned into
+      :math:`[N_{loc} \times K_{loc}]` and :math:`[K_{loc} \times M_{loc}]` tiles on each
       rank, respectively.
     - Each SUMMA iteration broadcasts row- and column-blocks of :math:`\mathbf{A}` and
-      :math:`\mathbf{X}` (forward) or :math:`\mathbf{Y}` (adjoint) and accumulates local 
+      :math:`\mathbf{X}` (forward) or :math:`\mathbf{Y}` (adjoint) and accumulates local
       partial products.
 
     :block:
-    
+
     1D block-row distribution over a :math:`[1 \times P]` grid:
 
     - :math:`\mathbf{A}` is partitioned into :math:`[N_{loc} \times K]` blocks across ranks.
@@ -783,7 +779,7 @@ def MPIMatrixMult(
     - Local multiplication is followed by row-wise gather (forward) or
       allreduce (adjoint) across ranks.
 
-    .. [1] Robert A. van de Geijn, R., and Watts, J. "SUMMA: Scalable Universal 
+    .. [1] Robert A. van de Geijn, R., and Watts, J. "SUMMA: Scalable Universal
        Matrix Multiplication Algorithm", 1995.
 
     """
