@@ -75,7 +75,7 @@ def mpi_send(base_comm: MPI.Comm,
     send_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray` 
         The array containing data to send.
     dest: :obj:`int`
-        The rank of the destination GPU device.
+        The rank of the destination CPU/GPU device.
     count : :obj:`int`
         Number of elements to send from `send_buf`.
     tag : :obj:`int`
@@ -93,3 +93,43 @@ def mpi_send(base_comm: MPI.Comm,
     else:
         # Uses CuPy without CUDA-aware MPI
         base_comm.send(send_buf, dest, tag)
+
+def mpi_recv(base_comm: MPI.Comm,
+            recv_buf=None, source=0, count=None, tag=0,
+            engine: Optional[str] = "numpy") -> np.ndarray:
+    """ MPI_Recv/recv
+    Dispatch receive routine based on type of input and availability of 
+    CUDA-Aware MPI
+
+    Parameters
+    ----------
+    base_comm : :obj:`MPI.Comm`
+        Base MPI Communicator.
+    recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`, optional
+        The buffered array to receive data.
+    source : :obj:`int`
+        The rank of the sending CPU/GPU device.
+    count : :obj:`int`
+        Number of elements to receive.
+    tag : :obj:`int`
+        Tag of the message to be sent.
+    engine : :obj:`str`, optional
+        Engine used to store array (``numpy`` or ``cupy``)
+    
+    """
+    if deps.cuda_aware_mpi_enabled or engine == "numpy":
+        ncp = get_module(engine)
+        if recv_buf is None:
+            if count is None:
+                raise ValueError("Must provide either recv_buf or count for MPI receive")
+            # Default to int32 works currently because add_ghost_cells() is called
+            # with recv_buf and is not affected by this branch. The int32 is for when
+            # dimension or shape-related integers are send/recv
+            recv_buf = ncp.zeros(count, dtype=ncp.int32)
+        mpi_type = MPI._typedict[recv_buf.dtype.char]
+        base_comm.Recv([recv_buf, recv_buf.size, mpi_type], source=source, tag=tag)
+    else:
+        # Uses CuPy without CUDA-aware MPI
+        recv_buf = base_comm.recv(source=source, tag=tag)
+    return recv_buf
+
