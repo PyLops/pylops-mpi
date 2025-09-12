@@ -66,6 +66,7 @@ def _nccl_sync():
         return
     cp.cuda.runtime.deviceSynchronize()
 
+
 def mpi_op_to_nccl(mpi_op) -> NcclOp:
     """ Map MPI reduction operation to NCCL equivalent
 

@@ -1,5 +1,3 @@
-from typing import Any, NewType, Tuple
-
 from mpi4py import MPI
 from pylops.utils import deps as pylops_deps  # avoid namespace crashes with pylops_mpi.utils
 from pylops_mpi.utils._mpi import mpi_allreduce, mpi_allgather, mpi_send, mpi_recv, _prepare_allgather_inputs, _unroll_allgather_recv
@@ -10,9 +8,9 @@ nccl_message = deps.nccl_import("the DistributedArray module")
 
 if nccl_message is None and cupy_message is None:
     from pylops_mpi.utils._nccl import (
-        nccl_allgather, nccl_allreduce, 
-        nccl_asarray, nccl_bcast, nccl_split, nccl_send, nccl_recv
+        nccl_allgather, nccl_allreduce, nccl_send, nccl_recv
     )
+
 
 class DistributedMixIn:
     r"""Distributed Mixin class
@@ -30,7 +28,7 @@ class DistributedMixIn:
         if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
             return nccl_allreduce(self.base_comm_nccl, send_buf, recv_buf, op)
         else:
-            return mpi_allreduce(self.base_comm, send_buf, 
+            return mpi_allreduce(self.base_comm, send_buf,
                                  recv_buf, self.engine, op)
 
     def _allreduce_subcomm(self, send_buf, recv_buf=None, op: MPI.Op = MPI.SUM):
@@ -39,7 +37,7 @@ class DistributedMixIn:
         if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
             return nccl_allreduce(self.sub_comm, send_buf, recv_buf, op)
         else:
-            return mpi_allreduce(self.sub_comm, send_buf, 
+            return mpi_allreduce(self.sub_comm, send_buf,
                                  recv_buf, self.engine, op)
 
     def _allgather(self, send_buf, recv_buf=None):
@@ -96,7 +94,5 @@ class DistributedMixIn:
             return recv_buf
         else:
             return mpi_recv(self.base_comm,
-                     recv_buf, source, count, tag=tag,
-                     engine=self.engine)
-
-
+                            recv_buf, source, count, tag=tag,
+                            engine=self.engine)

@@ -15,7 +15,7 @@ cupy_message = pylops_deps.cupy_import("the DistributedArray module")
 nccl_message = deps.nccl_import("the DistributedArray module")
 
 if nccl_message is None and cupy_message is None:
-    from pylops_mpi.utils._nccl import nccl_asarray, nccl_bcast, nccl_split 
+    from pylops_mpi.utils._nccl import nccl_asarray, nccl_bcast, nccl_split
     from cupy.cuda.nccl import NcclCommunicator
 else:
     NcclCommunicator = Any
@@ -613,14 +613,14 @@ class DistributedArray(DistributedMixIn):
             # with MAX, MIN operator. Here we copy the array back to CPU, transfer, and copy them back to GPUs
             send_buf = ncp.max(ncp.abs(local_array), axis=axis).astype(ncp.float64)
             if self.engine == "cupy" and self.base_comm_nccl is None and not deps.cuda_aware_mpi_enabled:
-                # CuPy + non-CUDA-aware MPI: This will call non-buffered communication 
+                # CuPy + non-CUDA-aware MPI: This will call non-buffered communication
                 # which return a list of object - must be copied back to a GPU memory.
                 recv_buf = self._allreduce_subcomm(send_buf.get(), recv_buf.get(), op=MPI.MAX)
                 recv_buf = ncp.asarray(ncp.squeeze(recv_buf, axis=axis))
             else:
                 recv_buf = self._allreduce_subcomm(send_buf, recv_buf, op=MPI.MAX)
                 # TODO (tharitt): In current implementation, there seems to be a semantic difference between Buffered MPI and NCCL
-                # the (1, size) is collapsed to (size, ) with buffered MPI while NCCL retains it. 
+                # the (1, size) is collapsed to (size, ) with buffered MPI while NCCL retains it.
                 # There may be a way to unify it - may be something to do with how we allocate the recv_buf.
                 if self.base_comm_nccl:
                     recv_buf = ncp.squeeze(recv_buf, axis=axis)
