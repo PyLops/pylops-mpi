@@ -9,14 +9,13 @@ from pylops.utils import DTypeLike, NDArray
 from pylops.utils import deps as pylops_deps  # avoid namespace crashes with pylops_mpi.utils
 from pylops.utils._internal import _value_or_sized_to_tuple
 from pylops.utils.backend import get_array_module, get_module, get_module_name
-from pylops_mpi.utils._mpi import mpi_allreduce, mpi_send
 from pylops_mpi.utils import deps
 
 cupy_message = pylops_deps.cupy_import("the DistributedArray module")
 nccl_message = deps.nccl_import("the DistributedArray module")
 
 if nccl_message is None and cupy_message is None:
-    from pylops_mpi.utils._nccl import nccl_allgather, nccl_allreduce, nccl_asarray, nccl_bcast, nccl_split, nccl_send, nccl_recv, _prepare_nccl_allgather_inputs, _unroll_nccl_allgather_recv
+    from pylops_mpi.utils._nccl import nccl_asarray, nccl_bcast, nccl_split 
     from cupy.cuda.nccl import NcclCommunicator
 else:
     NcclCommunicator = Any
@@ -473,67 +472,6 @@ class DistributedArray(DistributedMixIn):
         """
         if not np.array_equal(self.mask, dist_array.mask):
             raise ValueError("Mask of both the arrays must be same")
-
-    def _allgather(self, send_buf, recv_buf=None):
-        """Allgather operation
-        """
-        if deps.nccl_enabled and self.base_comm_nccl:
-            if isinstance(send_buf, (tuple, list, int)):
-                return nccl_allgather(self.base_comm_nccl, send_buf, recv_buf)
-            else:
-                send_shapes = self.base_comm.allgather(send_buf.shape)
-                (padded_send, padded_recv) = _prepare_nccl_allgather_inputs(send_buf, send_shapes)
-                raw_recv = nccl_allgather(self.base_comm_nccl, padded_send, recv_buf if recv_buf else padded_recv)
-                return _unroll_nccl_allgather_recv(raw_recv, padded_send.shape, send_shapes)
-        else:
-            if recv_buf is None:
-                return self.base_comm.allgather(send_buf)
-            self.base_comm.Allgather(send_buf, recv_buf)
-            return recv_buf
-
-    def _allgather_subcomm(self, send_buf, recv_buf=None):
-        """Allgather operation with subcommunicator
-        """
-        if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
-            if isinstance(send_buf, (tuple, list, int)):
-                return nccl_allgather(self.sub_comm, send_buf, recv_buf)
-            else:
-                send_shapes = self._allgather_subcomm(send_buf.shape)
-                (padded_send, padded_recv) = _prepare_nccl_allgather_inputs(send_buf, send_shapes)
-                raw_recv = nccl_allgather(self.sub_comm, padded_send, recv_buf if recv_buf else padded_recv)
-                return _unroll_nccl_allgather_recv(raw_recv, padded_send.shape, send_shapes)
-        else:
-            if recv_buf is None:
-                return self.sub_comm.allgather(send_buf)
-            self.sub_comm.Allgather(send_buf, recv_buf)
-
-    def _recv(self, recv_buf=None, source=0, count=None, tag=0):
-        """Receive operation
-        """
-        if deps.nccl_enabled and self.base_comm_nccl:
-            if recv_buf is None:
-                raise ValueError("recv_buf must be supplied when using NCCL")
-            if count is None:
-                count = recv_buf.size
-            nccl_recv(self.base_comm_nccl, recv_buf, source, count)
-            return recv_buf
-        else:
-            # NumPy + MPI will benefit from buffered communication regardless of MPI installation
-            if deps.cuda_aware_mpi_enabled or self.engine == "numpy":
-                ncp = get_module(self.engine)
-                if recv_buf is None:
-                    if count is None:
-                        raise ValueError("Must provide either recv_buf or count for MPI receive")
-                    # Default to int32 works currently because add_ghost_cells() is called
-                    # with recv_buf and is not affected by this branch. The int32 is for when
-                    # dimension or shape-related integers are send/recv
-                    recv_buf = ncp.zeros(count, dtype=ncp.int32)
-                mpi_type = MPI._typedict[recv_buf.dtype.char]
-                self.base_comm.Recv([recv_buf, recv_buf.size, mpi_type], source=source, tag=tag)
-            else:
-                # Uses CuPy without CUDA-aware MPI
-                recv_buf = self.base_comm.recv(source=source, tag=tag)
-            return recv_buf
 
     def _nccl_local_shapes(self, masked: bool):
         """Get the the list of shapes of every GPU in the communicator
