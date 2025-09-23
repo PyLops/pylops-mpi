@@ -15,7 +15,7 @@ cupy_message = pylops_deps.cupy_import("the DistributedArray module")
 nccl_message = deps.nccl_import("the DistributedArray module")
 
 if nccl_message is None and cupy_message is None:
-    from pylops_mpi.utils._nccl import nccl_asarray, nccl_bcast, nccl_split
+    from pylops_mpi.utils._nccl import nccl_asarray, nccl_split
     from cupy.cuda.nccl import NcclCommunicator
 else:
     NcclCommunicator = Any
@@ -204,10 +204,7 @@ class DistributedArray(DistributedMixIn):
             the specified index positions.
         """
         if self.partition is Partition.BROADCAST:
-            if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
-                nccl_bcast(self.base_comm_nccl, self.local_array, index, value)
-            else:
-                self.local_array[index] = self.base_comm.bcast(value)
+            self._bcast(self.local_array, index, value)
         else:
             self.local_array[index] = value
 
@@ -343,7 +340,9 @@ class DistributedArray(DistributedMixIn):
         if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
             return self._nccl_local_shapes(False)
         else:
-            return self._allgather(self.local_shape)
+            return self._allgather(self.base_comm,
+                                   self.base_comm_nccl, 
+                                   self.local_shape)
 
     @property
     def sub_comm(self):
@@ -383,7 +382,10 @@ class DistributedArray(DistributedMixIn):
             if masked:
                 final_array = self._allgather_subcomm(self.local_array)
             else:
-                final_array = self._allgather(self.local_array)
+                final_array = self._allgather(self.base_comm,
+                                              self.base_comm_nccl, 
+                                              self.local_array,
+                                              engine=self.engine)
             return np.concatenate(final_array, axis=self.axis)
 
     @classmethod
@@ -433,6 +435,7 @@ class DistributedArray(DistributedMixIn):
         else:
             slices = [slice(None)] * x.ndim
             local_shapes = np.append([0], dist_array._allgather(
+                base_comm, base_comm_nccl,
                 dist_array.local_shape[axis]))
             sum_shapes = np.cumsum(local_shapes)
             slices[axis] = slice(sum_shapes[dist_array.rank],
@@ -480,7 +483,9 @@ class DistributedArray(DistributedMixIn):
         if masked:
             all_tuples = self._allgather_subcomm(self.local_shape).get()
         else:
-            all_tuples = self._allgather(self.local_shape).get()
+            all_tuples = self._allgather(self.base_comm,
+                                         self.base_comm_nccl, 
+                                         self.local_shape).get()
         # NCCL returns the flat array that packs every tuple as 1-dimensional array
         # unpack each tuple from each rank
         tuple_len = len(self.local_shape)
@@ -578,7 +583,9 @@ class DistributedArray(DistributedMixIn):
         y = DistributedArray.to_dist(x=dist_array.local_array, base_comm=self.base_comm, base_comm_nccl=self.base_comm_nccl) \
             if self.partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST] else dist_array
         # Flatten the local arrays and calculate dot product
-        return self._allreduce_subcomm(ncp.dot(x.local_array.flatten(), y.local_array.flatten()))
+        return self._allreduce_subcomm(self.sub_comm, self.base_comm_nccl,
+                                       ncp.dot(x.local_array.flatten(), y.local_array.flatten()),
+                                       engine=self.engine)
 
     def _compute_vector_norm(self, local_array: NDArray,
                              axis: int, ord: Optional[int] = None):
@@ -606,7 +613,9 @@ class DistributedArray(DistributedMixIn):
             raise ValueError(f"norm-{ord} not possible for vectors")
         elif ord == 0:
             # Count non-zero then sum reduction
-            recv_buf = self._allreduce_subcomm(ncp.count_nonzero(local_array, axis=axis).astype(ncp.float64))
+            recv_buf = self._allreduce_subcomm(self.sub_comm, self.base_comm_nccl,
+                                               ncp.count_nonzero(local_array, axis=axis).astype(ncp.float64),
+                                               engine=self.engine)
         elif ord == ncp.inf:
             # Calculate max followed by max reduction
             # CuPy + non-CUDA-aware MPI does not work well with buffered communication, particularly
@@ -615,10 +624,14 @@ class DistributedArray(DistributedMixIn):
             if self.engine == "cupy" and self.base_comm_nccl is None and not deps.cuda_aware_mpi_enabled:
                 # CuPy + non-CUDA-aware MPI: This will call non-buffered communication
                 # which return a list of object - must be copied back to a GPU memory.
-                recv_buf = self._allreduce_subcomm(send_buf.get(), recv_buf.get(), op=MPI.MAX)
+                recv_buf = self._allreduce_subcomm(self.sub_comm, self.base_comm_nccl,
+                                                   send_buf.get(), recv_buf.get(), 
+                                                   op=MPI.MAX, engine=self.engine)
                 recv_buf = ncp.asarray(ncp.squeeze(recv_buf, axis=axis))
             else:
-                recv_buf = self._allreduce_subcomm(send_buf, recv_buf, op=MPI.MAX)
+                recv_buf = self._allreduce_subcomm(self.sub_comm, self.base_comm_nccl,
+                                                   send_buf, recv_buf, op=MPI.MAX, 
+                                                   engine=self.engine)
                 # TODO (tharitt): In current implementation, there seems to be a semantic difference between Buffered MPI and NCCL
                 # the (1, size) is collapsed to (size, ) with buffered MPI while NCCL retains it.
                 # There may be a way to unify it - may be something to do with how we allocate the recv_buf.
@@ -629,14 +642,20 @@ class DistributedArray(DistributedMixIn):
             # See the comment above in +infinity norm
             send_buf = ncp.min(ncp.abs(local_array), axis=axis).astype(ncp.float64)
             if self.engine == "cupy" and self.base_comm_nccl is None and not deps.cuda_aware_mpi_enabled:
-                recv_buf = self._allreduce_subcomm(send_buf.get(), recv_buf.get(), op=MPI.MIN)
+                recv_buf = self._allreduce_subcomm(self.sub_comm, self.base_comm_nccl,
+                                                   send_buf.get(), recv_buf.get(), 
+                                                   op=MPI.MIN, engine=self.engine)
                 recv_buf = ncp.asarray(ncp.squeeze(recv_buf, axis=axis))
             else:
-                recv_buf = self._allreduce_subcomm(send_buf, recv_buf, op=MPI.MIN)
+                recv_buf = self._allreduce_subcomm(self.sub_comm, self.base_comm_nccl,
+                                                   send_buf, recv_buf, 
+                                                   op=MPI.MIN, engine=self.engine)
                 if self.base_comm_nccl:
                     recv_buf = ncp.asarray(ncp.squeeze(recv_buf, axis=axis))
         else:
-            recv_buf = self._allreduce_subcomm(ncp.sum(ncp.abs(ncp.float_power(local_array, ord)), axis=axis))
+            recv_buf = self._allreduce_subcomm(self.sub_comm, self.base_comm_nccl,
+                                               ncp.sum(ncp.abs(ncp.float_power(local_array, ord)), axis=axis), 
+                                               engine=self.engine)
             recv_buf = ncp.power(recv_buf, 1.0 / ord)
         return recv_buf
 
