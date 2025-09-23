@@ -15,7 +15,7 @@ from mpi4py import MPI
 import os
 import cupy as cp
 import cupy.cuda.nccl as nccl
-from pylops_mpi.utils._mpi import _prepare_allgather_inputs, _unroll_allgather_recv
+from pylops_mpi.utils._common import _prepare_allgather_inputs, _unroll_allgather_recv
 
 cupy_to_nccl_dtype = {
     "float32": nccl.NCCL_FLOAT32,
