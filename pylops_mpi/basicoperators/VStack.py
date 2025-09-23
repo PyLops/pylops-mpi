@@ -6,7 +6,6 @@ from typing import Sequence, Optional
 from pylops import LinearOperator
 from pylops.utils import DTypeLike
 from pylops.utils.backend import get_module
-from pylops.utils import deps as pylops_deps  # avoid namespace crashes with pylops_mpi.utils
 
 from pylops_mpi import (
     MPILinearOperator,
@@ -17,13 +16,6 @@ from pylops_mpi import (
 )
 from pylops_mpi.Distributed import DistributedMixIn
 from pylops_mpi.utils.decorators import reshaped
-from pylops_mpi.utils import deps
-
-cupy_message = pylops_deps.cupy_import("the VStack module")
-nccl_message = deps.nccl_import("the VStack module")
-
-if nccl_message is None and cupy_message is None:
-    from pylops_mpi.utils._nccl import nccl_allreduce
 
 
 class MPIVStack(DistributedMixIn, MPILinearOperator):
@@ -142,19 +134,18 @@ class MPIVStack(DistributedMixIn, MPILinearOperator):
     @reshaped(forward=False, stacking=True)
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
-        # TODO: consider adding base_comm, base_comm_nccl, engine to the
-        # input parameters of _allreduce instead of relying on self
-        self.base_comm, self.base_comm_nccl, self.engine = \
-            x.base_comm, x.base_comm_nccl, x.engine
-        y = DistributedArray(global_shape=self.shape[1], base_comm=x.base_comm, 
+        y = DistributedArray(global_shape=self.shape[1],
+                             base_comm=x.base_comm, 
                              base_comm_nccl=x.base_comm_nccl, 
                              partition=Partition.BROADCAST,
-                             engine=x.engine, dtype=self.dtype)
+                             engine=x.engine,
+                             dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
             y1.append(oper.rmatvec(x.local_array[self.nnops[iop]: self.nnops[iop + 1]]))
         y1 = ncp.sum(ncp.vstack(y1), axis=0)
-        y[:] = self._allreduce(y1, op=MPI.SUM) 
+        y[:] = self._allreduce(x.base_comm, x.base_comm_nccl, 
+                               y1, op=MPI.SUM, engine=x.engine) 
         return y
 
 
