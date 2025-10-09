@@ -3,12 +3,9 @@ __all__ = [
     "_unroll_allgather_recv"
 ]
 
-from typing import Optional
 
 import numpy as np
-from mpi4py import MPI
 from pylops.utils.backend import get_module
-from pylops_mpi.utils import deps
 
 
 # TODO: return type annotation for both cupy and numpy

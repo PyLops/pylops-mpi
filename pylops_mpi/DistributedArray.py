@@ -341,7 +341,7 @@ class DistributedArray(DistributedMixIn):
             return self._nccl_local_shapes(False)
         else:
             return self._allgather(self.base_comm,
-                                   self.base_comm_nccl, 
+                                   self.base_comm_nccl,
                                    self.local_shape)
 
     @property
@@ -383,7 +383,7 @@ class DistributedArray(DistributedMixIn):
                 final_array = self._allgather_subcomm(self.local_array)
             else:
                 final_array = self._allgather(self.base_comm,
-                                              self.base_comm_nccl, 
+                                              self.base_comm_nccl,
                                               self.local_array,
                                               engine=self.engine)
             return np.concatenate(final_array, axis=self.axis)
@@ -484,7 +484,7 @@ class DistributedArray(DistributedMixIn):
             all_tuples = self._allgather_subcomm(self.local_shape).get()
         else:
             all_tuples = self._allgather(self.base_comm,
-                                         self.base_comm_nccl, 
+                                         self.base_comm_nccl,
                                          self.local_shape).get()
         # NCCL returns the flat array that packs every tuple as 1-dimensional array
         # unpack each tuple from each rank
@@ -625,12 +625,12 @@ class DistributedArray(DistributedMixIn):
                 # CuPy + non-CUDA-aware MPI: This will call non-buffered communication
                 # which return a list of object - must be copied back to a GPU memory.
                 recv_buf = self._allreduce_subcomm(self.sub_comm, self.base_comm_nccl,
-                                                   send_buf.get(), recv_buf.get(), 
+                                                   send_buf.get(), recv_buf.get(),
                                                    op=MPI.MAX, engine=self.engine)
                 recv_buf = ncp.asarray(ncp.squeeze(recv_buf, axis=axis))
             else:
                 recv_buf = self._allreduce_subcomm(self.sub_comm, self.base_comm_nccl,
-                                                   send_buf, recv_buf, op=MPI.MAX, 
+                                                   send_buf, recv_buf, op=MPI.MAX,
                                                    engine=self.engine)
                 # TODO (tharitt): In current implementation, there seems to be a semantic difference between Buffered MPI and NCCL
                 # the (1, size) is collapsed to (size, ) with buffered MPI while NCCL retains it.
@@ -643,18 +643,18 @@ class DistributedArray(DistributedMixIn):
             send_buf = ncp.min(ncp.abs(local_array), axis=axis).astype(ncp.float64)
             if self.engine == "cupy" and self.base_comm_nccl is None and not deps.cuda_aware_mpi_enabled:
                 recv_buf = self._allreduce_subcomm(self.sub_comm, self.base_comm_nccl,
-                                                   send_buf.get(), recv_buf.get(), 
+                                                   send_buf.get(), recv_buf.get(),
                                                    op=MPI.MIN, engine=self.engine)
                 recv_buf = ncp.asarray(ncp.squeeze(recv_buf, axis=axis))
             else:
                 recv_buf = self._allreduce_subcomm(self.sub_comm, self.base_comm_nccl,
-                                                   send_buf, recv_buf, 
+                                                   send_buf, recv_buf,
                                                    op=MPI.MIN, engine=self.engine)
                 if self.base_comm_nccl:
                     recv_buf = ncp.asarray(ncp.squeeze(recv_buf, axis=axis))
         else:
             recv_buf = self._allreduce_subcomm(self.sub_comm, self.base_comm_nccl,
-                                               ncp.sum(ncp.abs(ncp.float_power(local_array, ord)), axis=axis), 
+                                               ncp.sum(ncp.abs(ncp.float_power(local_array, ord)), axis=axis),
                                                engine=self.engine)
             recv_buf = ncp.power(recv_buf, 1.0 / ord)
         return recv_buf

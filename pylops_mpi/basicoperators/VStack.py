@@ -135,8 +135,8 @@ class MPIVStack(DistributedMixIn, MPILinearOperator):
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
         y = DistributedArray(global_shape=self.shape[1],
-                             base_comm=x.base_comm, 
-                             base_comm_nccl=x.base_comm_nccl, 
+                             base_comm=x.base_comm,
+                             base_comm_nccl=x.base_comm_nccl,
                              partition=Partition.BROADCAST,
                              engine=x.engine,
                              dtype=self.dtype)
@@ -144,8 +144,8 @@ class MPIVStack(DistributedMixIn, MPILinearOperator):
         for iop, oper in enumerate(self.ops):
             y1.append(oper.rmatvec(x.local_array[self.nnops[iop]: self.nnops[iop + 1]]))
         y1 = ncp.sum(ncp.vstack(y1), axis=0)
-        y[:] = self._allreduce(x.base_comm, x.base_comm_nccl, 
-                               y1, op=MPI.SUM, engine=x.engine) 
+        y[:] = self._allreduce(x.base_comm, x.base_comm_nccl,
+                               y1, op=MPI.SUM, engine=x.engine)
         return y
 
 

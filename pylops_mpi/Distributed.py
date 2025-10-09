@@ -22,8 +22,8 @@ class DistributedMixIn:
     MPI installation is available, the latter with CuPy arrays when a CUDA-Aware
     MPI installation is not available).
     """
-    def _allreduce(self, base_comm, base_comm_nccl, 
-                   send_buf, recv_buf=None, op: MPI.Op = MPI.SUM, 
+    def _allreduce(self, base_comm, base_comm_nccl,
+                   send_buf, recv_buf=None, op: MPI.Op = MPI.SUM,
                    engine="numpy"):
         """Allreduce operation
         """
@@ -33,7 +33,7 @@ class DistributedMixIn:
             return mpi_allreduce(base_comm, send_buf,
                                  recv_buf, engine, op)
 
-    def _allreduce_subcomm(self, sub_comm, base_comm_nccl, 
+    def _allreduce_subcomm(self, sub_comm, base_comm_nccl,
                            send_buf, recv_buf=None, op: MPI.Op = MPI.SUM,
                            engine="numpy"):
         """Allreduce operation with subcommunicator
@@ -44,7 +44,7 @@ class DistributedMixIn:
             return mpi_allreduce(sub_comm, send_buf,
                                  recv_buf, engine, op)
 
-    def _allgather(self, base_comm, base_comm_nccl, 
+    def _allgather(self, base_comm, base_comm_nccl,
                    send_buf, recv_buf=None,
                    engine="numpy"):
         """Allgather operation
@@ -85,7 +85,7 @@ class DistributedMixIn:
             # self.local_array[index] = self.base_comm.bcast(value)
             mpi_bcast(self.base_comm, self.rank, self.local_array, index, value,
                       engine=self.engine)
-        
+
     def _send(self, send_buf, dest, count=None, tag=0):
         """Send operation
         """
