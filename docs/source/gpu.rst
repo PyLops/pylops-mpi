@@ -11,7 +11,7 @@ This library must be installed *before* PyLops-mpi is installed.
 
 .. note::
 
-   Set environment variable ``CUPY_PYLOPS=0`` to force PyLops to ignore the ``cupy`` backend.
+   Set the environment variable ``CUPY_PYLOPS=0`` to force PyLops to ignore the ``cupy`` backend.
    This can be also used if a previous (or faulty) version of ``cupy`` is installed in your system,
    otherwise you will get an error when importing PyLops.
 
@@ -21,6 +21,14 @@ generated using both ``numpy`` and ``cupy`` based local arrays, and all of the o
 can handle both scenarios. Note that, since most operators in PyLops-mpi are thin-wrappers around PyLops operators,
 some of the operators in PyLops that lack a GPU implementation cannot be used also in PyLops-mpi when working with
 cupy arrays.
+
+.. note::
+
+   By default when using ``cupy`` arrays, PyLops-MPI will try to use methods in MPI4Py that communicate memory buffers.
+   However, this requires a CUDA-Aware MPI installation. If your MPI installation is not CUDA-Aware, set the 
+   environment variable ``PYLOPS_MPI_CUDA_AWARE=0`` to force PyLops-MPI to use methods in  MPI4Py that communicate
+   general Python objects (this will incur a loss of performance!).
+
 
 Moreover, PyLops-MPI also supports the Nvidia's Collective Communication Library (NCCL) for highly-optimized
 collective operations, such as AllReduce, AllGather, etc. This allows PyLops-MPI users to leverage the
