@@ -118,6 +118,15 @@ Utils
     local_split
 
 
+.. currentmodule:: pylops_mpi.basicoperators.MatrixMult
+
+.. autosummary::
+   :toctree: generated/
+
+    block_gather
+    local_block_split
+    active_grid_comm
+
 .. currentmodule:: pylops_mpi.utils
 
 .. autosummary::
