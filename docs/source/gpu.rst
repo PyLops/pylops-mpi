@@ -38,13 +38,35 @@ proprietary technology like NVLink that might be available in their infrastructu
 
    Set environment variable ``NCCL_PYLOPS_MPI=0`` to explicitly force PyLops-MPI to ignore the ``NCCL`` backend.
    However, this is optional as users may opt-out for NCCL by skip passing `cupy.cuda.nccl.NcclCommunicator` to
-   the :class:`pylops_mpi.DistributedArray` 
+   the :class:`pylops_mpi.DistributedArray`.
+
+In summary:
+
+.. list-table::
+   :widths: 50 25 25
+   :header-rows: 1
+
+   * - Operation model
+     - Enabled with
+     - Disabled with 
+   * - NumPy + MPI
+     - Default
+     - Cannot be disabled
+   * - CuPy + MPI
+     - ``PYLOPS_MPI_CUDA_AWARE=0``
+     - ``PYLOPS_MPI_CUDA_AWARE=1`` (default)
+   * - CuPy + CUDA-Aware MPI
+     - ``PYLOPS_MPI_CUDA_AWARE=1`` (default)
+     - ``PYLOPS_MPI_CUDA_AWARE=0``
+   * - CuPy + NCCL
+     - ``NCCL_PYLOPS_MPI=1`` (default)
+     - ``NCCL_PYLOPS_MPI=0``
 
 Example
 -------
 
 Finally, let's briefly look at an example. First we write a code snippet using
-``numpy`` arrays which PyLops-mpi will run on your CPU:
+``numpy`` arrays which PyLops-MPI will run on your CPU:
 
 .. code-block:: python
 
@@ -128,41 +150,67 @@ one MPI process. In fact, minor communications like those dealing with array-rel
    The CuPy and NCCL backend is in active development, with many examples not yet in the docs.
    You can find many `other examples <https://github.com/PyLops/pylops_notebooks/tree/master/developement-mpi/Cupy_MPI>`_ from the `PyLops Notebooks repository <https://github.com/PyLops/pylops_notebooks>`_.
 
+
 Supports for NCCL Backend
 ----------------------------
-In the following, we provide a list of modules (i.e., operators and solvers) where we plan to support NCCL and the current status:
+In the following, we provide a list of modules (i.e., operators and solvers) 
+and their current status in terms of support for the 3 different communication
+backends:
 
 .. list-table::
-   :widths: 50 25 
+   :widths: 50 25 25 25
    :header-rows: 1
 
-   * - modules
-     - NCCL supported
+   * - Operator/method
+     - CPU
+     - GPU with MPI
+     - GPU with NCCL
    * - :class:`pylops_mpi.DistributedArray`
      - ✅ 
+     - ✅ 
+     - ✅ 
+   * - :class:`pylops_mpi.basicoperators.MPIMatrixMult`
+     - ✅ 
+     - 🔴
+     - 🔴
    * - :class:`pylops_mpi.basicoperators.MPIVStack`
      - ✅ 
-   * - :class:`pylops_mpi.basicoperators.MPIVStack`
+     - ✅ 
      - ✅ 
    * - :class:`pylops_mpi.basicoperators.MPIHStack`
      - ✅ 
+     - ✅ 
+     - ✅ 
    * - :class:`pylops_mpi.basicoperators.MPIBlockDiag`
+     - ✅ 
+     - ✅ 
      - ✅ 
    * - :class:`pylops_mpi.basicoperators.MPIGradient`
      - ✅ 
+     - ✅ 
+     - ✅ 
    * - :class:`pylops_mpi.basicoperators.MPIFirstDerivative`
+     - ✅ 
+     - ✅ 
      - ✅ 
    * - :class:`pylops_mpi.basicoperators.MPISecondDerivative`
      - ✅ 
+     - ✅ 
+     - ✅ 
    * - :class:`pylops_mpi.basicoperators.MPILaplacian`
      - ✅ 
-   * - :class:`pylops_mpi.optimization.basic.cg`
      - ✅ 
-   * - :class:`pylops_mpi.optimization.basic.cgls`
      - ✅ 
    * - :class:`pylops_mpi.signalprocessing.Fredhoml1`
      - ✅ 
-   * - Complex Numeric Data Type for NCCL 
      - ✅ 
-   * - ISTA Solver
-     - Planned ⏳
+     - ✅ 
+   * - :class:`pylops_mpi.optimization.basic.cg`
+     - ✅ 
+     - ✅ 
+     - ✅ 
+   * - :class:`pylops_mpi.optimization.basic.cgls`
+     - ✅ 
+     - ✅ 
+     - ✅ 
+   
