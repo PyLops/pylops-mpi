@@ -16,16 +16,41 @@ class DistributedMixIn:
     r"""Distributed Mixin class
 
     This class implements all methods associated with communication primitives
-    from MPI and NCCL. It is mostly charged to identifying which commuicator
+    from MPI and NCCL. It is mostly charged with identifying which commuicator
     to use and whether the buffered or object MPI primitives should be used
     (the former in the case of NumPy arrays or CuPy arrays when a CUDA-Aware
     MPI installation is available, the latter with CuPy arrays when a CUDA-Aware
     MPI installation is not available).
+
     """
     def _allreduce(self, base_comm, base_comm_nccl,
-                   send_buf, recv_buf=None, op: MPI.Op = MPI.SUM,
+                   send_buf, recv_buf=None, 
+                   op: MPI.Op = MPI.SUM,
                    engine="numpy"):
         """Allreduce operation
+
+        Parameters
+        ----------
+        base_comm : :obj:`MPI.Comm`
+            Base MPI Communicator.
+        base_comm_nccl : :obj:`cupy.cuda.nccl.NcclCommunicator`
+            NCCL Communicator.
+        send_buf: :obj: `numpy.ndarray` or `cupy.ndarray`
+            A buffer containing the data to be sent by this rank.
+        recv_buf : :obj: `numpy.ndarray` or `cupy.ndarray`, optional
+            The buffer to store the result of the reduction. If None,
+            a new buffer will be allocated with the appropriate shape.
+        op : :obj: `MPI.Op`, optional
+            MPI operation to perform.
+        engine : :obj:`str`, optional
+            Engine used to store array (``numpy`` or ``cupy``)
+    
+        Returns
+        -------
+        recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+            A buffer containing the result of the reduction, broadcasted
+            to all GPUs.
+        
         """
         if deps.nccl_enabled and base_comm_nccl is not None:
             return nccl_allreduce(base_comm_nccl, send_buf, recv_buf, op)
@@ -34,9 +59,33 @@ class DistributedMixIn:
                                  recv_buf, engine, op)
 
     def _allreduce_subcomm(self, sub_comm, base_comm_nccl,
-                           send_buf, recv_buf=None, op: MPI.Op = MPI.SUM,
+                           send_buf, recv_buf=None, 
+                           op: MPI.Op = MPI.SUM,
                            engine="numpy"):
         """Allreduce operation with subcommunicator
+
+        Parameters
+        ----------
+        sub_comm : :obj:`MPI.Comm`
+            MPI Subcommunicator.
+        base_comm_nccl : :obj:`cupy.cuda.nccl.NcclCommunicator`
+            NCCL Communicator.
+        send_buf: :obj: `numpy.ndarray` or `cupy.ndarray`
+            A buffer containing the data to be sent by this rank.
+        recv_buf : :obj: `numpy.ndarray` or `cupy.ndarray`, optional
+            The buffer to store the result of the reduction. If None,
+            a new buffer will be allocated with the appropriate shape.
+        op : :obj: `MPI.Op`, optional
+            MPI operation to perform.
+        engine : :obj:`str`, optional
+            Engine used to store array (``numpy`` or ``cupy``)
+    
+        Returns
+        -------
+        recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+            A buffer containing the result of the reduction, broadcasted
+            to all ranks.
+        
         """
         if deps.nccl_enabled and base_comm_nccl is not None:
             return nccl_allreduce(sub_comm, send_buf, recv_buf, op)
@@ -48,6 +97,26 @@ class DistributedMixIn:
                    send_buf, recv_buf=None,
                    engine="numpy"):
         """Allgather operation
+
+        Parameters
+        ----------
+        sub_comm : :obj:`MPI.Comm`
+            MPI Subcommunicator.
+        base_comm_nccl : :obj:`cupy.cuda.nccl.NcclCommunicator`
+            NCCL Communicator.
+        send_buf: :obj: `numpy.ndarray` or `cupy.ndarray`
+            A buffer containing the data to be sent by this rank.
+        recv_buf : :obj: `numpy.ndarray` or `cupy.ndarray`, optional
+            The buffer to store the result of the gathering. If None,
+            a new buffer will be allocated with the appropriate shape.
+        engine : :obj:`str`, optional
+            Engine used to store array (``numpy`` or ``cupy``)
+    
+        Returns
+        -------
+        recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+            A buffer containing the gathered data from all ranks.
+        
         """
         if deps.nccl_enabled and base_comm_nccl is not None:
             if isinstance(send_buf, (tuple, list, int)):
