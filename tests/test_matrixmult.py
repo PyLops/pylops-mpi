@@ -219,7 +219,8 @@ def test_MPIMatrixMult_summa(N, K, M, dtype_str):
         local_shapes=comm.allgather(X_p.shape[0] * X_p.shape[1]),
         partition=Partition.SCATTER,
         base_comm=comm,
-        dtype=dtype
+        dtype=dtype,
+        engine=backend,
     )
 
     x_dist.local_array[:] = X_p.ravel()
