@@ -9,7 +9,7 @@ from numpy.testing import assert_allclose
 import pytest
 
 from pylops_mpi.utils._nccl import initialize_nccl_comm, nccl_allgather
-from pylops_mpi.utils._mpi import _prepare_allgather_inputs, _unroll_allgather_recv
+from pylops_mpi.utils._common import _prepare_allgather_inputs, _unroll_allgather_recv
 
 np.random.seed(42)
 
