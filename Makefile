@@ -78,7 +78,7 @@ doc_nccl:
 	rm tutorials/*_cupy.py tutorials/*_nccl.py
 
 docupdate:
-	cd docs && make html && cd ..
+	cd docs && NCCL_PYLOPS_MPI=0 make html && cd ..
 
 servedoc:
 	$(PYTHON) -m http.server --directory docs/build/
