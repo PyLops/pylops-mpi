@@ -24,7 +24,7 @@ class DistributedMixIn:
 
     """
     def _allreduce(self, base_comm, base_comm_nccl,
-                   send_buf, recv_buf=None, 
+                   send_buf, recv_buf=None,
                    op: MPI.Op = MPI.SUM,
                    engine="numpy"):
         """Allreduce operation
@@ -44,13 +44,13 @@ class DistributedMixIn:
             MPI operation to perform.
         engine : :obj:`str`, optional
             Engine used to store array (``numpy`` or ``cupy``)
-    
+
         Returns
         -------
         recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
             A buffer containing the result of the reduction, broadcasted
             to all GPUs.
-        
+
         """
         if deps.nccl_enabled and base_comm_nccl is not None:
             return nccl_allreduce(base_comm_nccl, send_buf, recv_buf, op)
@@ -59,7 +59,7 @@ class DistributedMixIn:
                                  recv_buf, engine, op)
 
     def _allreduce_subcomm(self, sub_comm, base_comm_nccl,
-                           send_buf, recv_buf=None, 
+                           send_buf, recv_buf=None,
                            op: MPI.Op = MPI.SUM,
                            engine="numpy"):
         """Allreduce operation with subcommunicator
@@ -79,13 +79,13 @@ class DistributedMixIn:
             MPI operation to perform.
         engine : :obj:`str`, optional
             Engine used to store array (``numpy`` or ``cupy``)
-    
+
         Returns
         -------
         recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
             A buffer containing the result of the reduction, broadcasted
             to all ranks.
-        
+
         """
         if deps.nccl_enabled and base_comm_nccl is not None:
             return nccl_allreduce(sub_comm, send_buf, recv_buf, op)
@@ -111,12 +111,12 @@ class DistributedMixIn:
             a new buffer will be allocated with the appropriate shape.
         engine : :obj:`str`, optional
             Engine used to store array (``numpy`` or ``cupy``)
-    
+
         Returns
         -------
         recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
             A buffer containing the gathered data from all ranks.
-        
+
         """
         if deps.nccl_enabled and base_comm_nccl is not None:
             if isinstance(send_buf, (tuple, list, int)):
