@@ -47,7 +47,7 @@ lint:
 	flake8 pylops_mpi/ tests/ examples/ tutorials/
 
 tests:
-	mpiexec -n $(NUM_PROCESSES) pytest tests/ --with-mpi
+	export TEST_CUPY_PYLOPS=0 && mpiexec -n $(NUM_PROCESSES) pytest tests/ --with-mpi
 
 # assuming NUM_PROCESSES <= number of gpus available
 tests_gpu:
