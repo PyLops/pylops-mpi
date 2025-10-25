@@ -265,17 +265,45 @@ class DistributedMixIn:
                      send_buf, dest, count, tag=tag,
                      engine=engine)
 
-    def _recv(self, recv_buf=None, source=0, count=None, tag=0):
+    def _recv(self,
+              base_comm: MPI.Comm,
+              base_comm_nccl: NcclCommunicatorType,
+              recv_buf=None, source=0, count=None, tag=0,
+              engine: str = "numpy",
+              ) -> NDArray:
         """Receive operation
+
+        Parameters
+        ----------
+        base_comm : :obj:`MPI.Comm`
+            Base MPI Communicator.
+        base_comm_nccl : :obj:`cupy.cuda.nccl.NcclCommunicator`
+            NCCL Communicator.
+        recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`, optional
+            The buffered array to receive data.
+        source : :obj:`int`
+            The rank of the sending CPU/GPU device.
+        count : :obj:`int`
+            Number of elements to receive.
+        tag : :obj:`int`
+            Tag of the message to be sent.
+        engine : :obj:`str`, optional
+            Engine used to store array (``numpy`` or ``cupy``)
+
+        Returns
+        -------
+        recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+            The buffer containing the received data.
+
         """
-        if deps.nccl_enabled and self.base_comm_nccl:
+        if deps.nccl_enabled and base_comm_nccl is not None:
             if recv_buf is None:
                 raise ValueError("recv_buf must be supplied when using NCCL")
             if count is None:
                 count = recv_buf.size
-            nccl_recv(self.base_comm_nccl, recv_buf, source, count)
+            nccl_recv(base_comm_nccl, recv_buf, source, count)
             return recv_buf
         else:
-            return mpi_recv(self.base_comm,
+            return mpi_recv(base_comm,
                             recv_buf, source, count, tag=tag,
-                            engine=self.engine)
+                            engine=engine)

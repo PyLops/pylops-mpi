@@ -797,7 +797,9 @@ class DistributedArray(DistributedMixIn):
                 # Transfer of ghost cells can be skipped if len(recv_buf) = 0
                 # Additionally, NCCL will hang if the buffer size is 0 so this optimization is somewhat mandatory
                 if len(recv_buf) != 0:
-                    ghosted_array = ncp.concatenate([self._recv(recv_buf, source=self.rank - 1, tag=1), ghosted_array], axis=self.axis)
+                    ghosted_array = ncp.concatenate([self._recv(self.base_comm, self.base_comm_nccl,
+                                                                recv_buf, source=self.rank - 1, tag=1,
+                                                                engine=self.engine), ghosted_array], axis=self.axis)
             # The skip in sender is to match with what described in receiver
             if self.rank != self.size - 1 and len(send_buf) != 0:
                 if cells_front > self.local_shape[self.axis]:
@@ -831,7 +833,9 @@ class DistributedArray(DistributedMixIn):
                 recv_shape[self.axis] = total_cells_back[self.rank]
                 recv_buf = ncp.zeros(recv_shape, dtype=ghosted_array.dtype)
                 if len(recv_buf) != 0:
-                    ghosted_array = ncp.append(ghosted_array, self._recv(recv_buf, source=self.rank + 1, tag=0),
+                    ghosted_array = ncp.append(ghosted_array, self._recv(self.base_comm, self.base_comm_nccl,
+                                                                         recv_buf, source=self.rank + 1, tag=0,
+                                                                         engine=self.engine),
                                                axis=self.axis)
         return ghosted_array
 

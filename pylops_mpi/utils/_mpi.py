@@ -8,7 +8,6 @@ __all__ = [
 
 from typing import Optional, Union
 
-import numpy as np
 from mpi4py import MPI
 from pylops.utils import NDArray
 from pylops.utils.backend import get_module
@@ -37,12 +36,12 @@ def mpi_allgather(base_comm: MPI.Comm,
         a new buffer will be allocated with the appropriate shape.
     engine : :obj:`str`, optional
         Engine used to store array (``numpy`` or ``cupy``)
-    
+
     Returns
     -------
     recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
         A buffer containing the gathered data from all ranks.
-    
+
     """
     if deps.cuda_aware_mpi_enabled or engine == "numpy":
         send_shapes = base_comm.allgather(send_buf.shape)
