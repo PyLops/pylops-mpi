@@ -167,7 +167,7 @@ def mpi_send(base_comm: MPI.Comm,
         Tag of the message to be sent.
     engine : :obj:`str`, optional
         Engine used to store array (``numpy`` or ``cupy``)
-    
+
     """
     if deps.cuda_aware_mpi_enabled or engine == "numpy":
         # Determine MPI type based on array dtype
@@ -183,7 +183,7 @@ def mpi_send(base_comm: MPI.Comm,
 def mpi_recv(base_comm: MPI.Comm,
              recv_buf: Optional[NDArray] = None,
              source: int = 0,
-             count: Optional[int] = None, 
+             count: Optional[int] = None,
              tag: int = 0,
              engine: Optional[str] = "numpy",
              ) -> NDArray:
@@ -205,7 +205,7 @@ def mpi_recv(base_comm: MPI.Comm,
         Tag of the message to be sent.
     engine : :obj:`str`, optional
         Engine used to store array (``numpy`` or ``cupy``)
-    
+
     Returns
     -------
     recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
