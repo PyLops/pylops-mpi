@@ -2,31 +2,54 @@ __all__ = [
     "mpi_allgather",
     "mpi_allreduce",
     "mpi_bcast",
-    # "mpi_asarray",
     "mpi_send",
     "mpi_recv",
 ]
 
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
 from mpi4py import MPI
+from pylops.utils import NDArray
 from pylops.utils.backend import get_module
 from pylops_mpi.utils import deps
 from pylops_mpi.utils._common import _prepare_allgather_inputs, _unroll_allgather_recv
 
 
 def mpi_allgather(base_comm: MPI.Comm,
-                  send_buf, recv_buf=None,
-                  engine: Optional[str] = "numpy") -> np.ndarray:
+                  send_buf: NDArray,
+                  recv_buf: Optional[NDArray] = None,
+                  engine: str = "numpy",
+                  ) -> NDArray:
+    """MPI_Allallgather/allallgather
 
+    Dispatch allgather routine based on type of input and availability of
+    CUDA-Aware MPI
+
+    Parameters
+    ----------
+    base_comm : :obj:`MPI.Comm`
+        Base MPI Communicator.
+    send_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+        The data buffer from the local rank to be gathered.
+    recv_buf : :obj:`cupy.ndarray`, optional
+        The buffer to store the result of the gathering. If None,
+        a new buffer will be allocated with the appropriate shape.
+    engine : :obj:`str`, optional
+        Engine used to store array (``numpy`` or ``cupy``)
+    
+    Returns
+    -------
+    recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+        A buffer containing the gathered data from all ranks.
+    
+    """
     if deps.cuda_aware_mpi_enabled or engine == "numpy":
         send_shapes = base_comm.allgather(send_buf.shape)
         (padded_send, padded_recv) = _prepare_allgather_inputs(send_buf, send_shapes, engine=engine)
         recv_buffer_to_use = recv_buf if recv_buf else padded_recv
         base_comm.Allgather(padded_send, recv_buffer_to_use)
         return _unroll_allgather_recv(recv_buffer_to_use, padded_send.shape, send_shapes)
-
     else:
         # CuPy with non-CUDA-aware MPI
         if recv_buf is None:
@@ -36,9 +59,11 @@ def mpi_allgather(base_comm: MPI.Comm,
 
 
 def mpi_allreduce(base_comm: MPI.Comm,
-                  send_buf, recv_buf=None,
-                  engine: Optional[str] = "numpy",
-                  op: MPI.Op = MPI.SUM) -> np.ndarray:
+                  send_buf: NDArray,
+                  recv_buf: Optional[NDArray] = None,
+                  engine: str = "numpy",
+                  op: MPI.Op = MPI.SUM,
+                  ) -> NDArray:
     """MPI_Allreduce/allreduce
 
     Dispatch allreduce routine based on type of input and availability of
@@ -49,7 +74,7 @@ def mpi_allreduce(base_comm: MPI.Comm,
     base_comm : :obj:`MPI.Comm`
         Base MPI Communicator.
     send_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
-        The data buffer from the local GPU to be reduced.
+        The data buffer from the local rank to be reduced.
     recv_buf : :obj:`cupy.ndarray`, optional
         The buffer to store the result of the reduction. If None,
         a new buffer will be allocated with the appropriate shape.
@@ -62,7 +87,7 @@ def mpi_allreduce(base_comm: MPI.Comm,
     -------
     recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
         A buffer containing the result of the reduction, broadcasted
-        to all GPUs.
+        to all ranks.
 
     """
     if deps.cuda_aware_mpi_enabled or engine == "numpy":
@@ -80,8 +105,34 @@ def mpi_allreduce(base_comm: MPI.Comm,
 
 
 def mpi_bcast(base_comm: MPI.Comm,
-              rank, local_array, index, value,
-              engine: Optional[str] = "numpy") -> np.ndarray:
+              rank: int,
+              local_array: NDArray,
+              index: int,
+              value: Union[int, NDArray],
+              engine: Optional[str] = "numpy",
+              ) -> None:
+    """MPI_Bcast/bcast
+
+    Dispatch bcast routine based on type of input and availability of
+    CUDA-Aware MPI
+
+    Parameters
+    ----------
+    base_comm : :obj:`MPI.Comm`
+        Base MPI Communicator.
+    rank : :obj:`int`
+            Rank.
+    local_array : :obj:`numpy.ndarray`
+        Localy array to be broadcasted.
+    index : :obj:`int` or :obj:`slice`
+        Represents the index positions where a value needs to be assigned.
+    value : :obj:`int` or :obj:`numpy.ndarray`
+        Represents the value that will be assigned to the local array at
+        the specified index positions.
+    engine : :obj:`str`, optional
+        Engine used to store array (``numpy`` or ``cupy``)
+
+    """
     if deps.cuda_aware_mpi_enabled or engine == "numpy":
         if rank == 0:
             local_array[index] = value
@@ -92,8 +143,11 @@ def mpi_bcast(base_comm: MPI.Comm,
 
 
 def mpi_send(base_comm: MPI.Comm,
-             send_buf, dest, count, tag=0,
-             engine: Optional[str] = "numpy",
+             send_buf: NDArray,
+             dest: int,
+             count: Optional[int] = None,
+             tag: int = 0,
+             engine: str = "numpy",
              ) -> None:
     """MPI_Send/send
 
@@ -114,6 +168,7 @@ def mpi_send(base_comm: MPI.Comm,
         Tag of the message to be sent.
     engine : :obj:`str`, optional
         Engine used to store array (``numpy`` or ``cupy``)
+    
     """
     if deps.cuda_aware_mpi_enabled or engine == "numpy":
         # Determine MPI type based on array dtype
@@ -127,8 +182,12 @@ def mpi_send(base_comm: MPI.Comm,
 
 
 def mpi_recv(base_comm: MPI.Comm,
-             recv_buf=None, source=0, count=None, tag=0,
-             engine: Optional[str] = "numpy") -> np.ndarray:
+             recv_buf: Optional[NDArray] = None,
+             source: int = 0,
+             count: Optional[int] = None, 
+             tag: int = 0,
+             engine: Optional[str] = "numpy",
+             ) -> NDArray:
     """ MPI_Recv/recv
     Dispatch receive routine based on type of input and availability of
     CUDA-Aware MPI
@@ -147,6 +206,12 @@ def mpi_recv(base_comm: MPI.Comm,
         Tag of the message to be sent.
     engine : :obj:`str`, optional
         Engine used to store array (``numpy`` or ``cupy``)
+    
+    Returns
+    -------
+    recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+        The buffer containing the received data.
+
     """
     if deps.cuda_aware_mpi_enabled or engine == "numpy":
         ncp = get_module(engine)
