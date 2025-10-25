@@ -204,7 +204,9 @@ class DistributedArray(DistributedMixIn):
             the specified index positions.
         """
         if self.partition is Partition.BROADCAST:
-            self._bcast(self.local_array, index, value)
+            self._bcast(self.base_comm, self.base_comm_nccl,
+                        self.rank, self.local_array,
+                        index, value, engine=self.engine)
         else:
             self.local_array[index] = value
 
@@ -380,7 +382,10 @@ class DistributedArray(DistributedMixIn):
         else:
             # Gather all the local arrays and apply concatenation.
             if masked:
-                final_array = self._allgather_subcomm(self.local_array)
+                final_array = self._allgather_subcomm(self.sub_comm,
+                                                      self.base_comm_nccl,
+                                                      self.local_array,
+                                                      engine=self.engine)
             else:
                 final_array = self._allgather(self.base_comm,
                                               self.base_comm_nccl,
@@ -481,7 +486,9 @@ class DistributedArray(DistributedMixIn):
         """
         # gather tuple of shapes from every rank within thee communicator and copy from GPU to CPU
         if masked:
-            all_tuples = self._allgather_subcomm(self.local_shape).get()
+            all_tuples = self._allgather_subcomm(self.sub_comm,
+                                                 self.base_comm_nccl,
+                                                 self.local_shape).get()
         else:
             all_tuples = self._allgather(self.base_comm,
                                          self.base_comm_nccl,
@@ -799,7 +806,9 @@ class DistributedArray(DistributedMixIn):
                                      f"{self.local_shape[self.axis]} < {cells_front}; "
                                      f"to achieve this use NUM_PROCESSES <= "
                                      f"{max(1, self.global_shape[self.axis] // cells_front)}")
-                self._send(send_buf, dest=self.rank + 1, tag=1)
+                self._send(self.base_comm, self.base_comm_nccl,
+                           send_buf, dest=self.rank + 1, tag=1,
+                           engine=self.engine)
         if cells_back is not None:
             total_cells_back = self.base_comm.allgather(cells_back) + [0]
             # Read cells_back which needs to be sent to rank - 1(cells_back for rank - 1)
@@ -814,7 +823,9 @@ class DistributedArray(DistributedMixIn):
                                      f"{self.local_shape[self.axis]} < {cells_back}; "
                                      f"to achieve this use NUM_PROCESSES <= "
                                      f"{max(1, self.global_shape[self.axis] // cells_back)}")
-                self._send(send_buf, dest=self.rank - 1, tag=0)
+                self._send(self.base_comm, self.base_comm_nccl,
+                           send_buf, dest=self.rank - 1, tag=0,
+                           engine=self.engine)
             if self.rank != self.size - 1:
                 recv_shape = list(recv_shapes[self.rank + 1])
                 recv_shape[self.axis] = total_cells_back[self.rank]

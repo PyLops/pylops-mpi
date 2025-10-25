@@ -1,4 +1,7 @@
+from typing import Any, NewType, Optional, Union
+
 from mpi4py import MPI
+from pylops.utils import NDArray
 from pylops.utils import deps as pylops_deps  # avoid namespace crashes with pylops_mpi.utils
 from pylops_mpi.utils._mpi import mpi_allreduce, mpi_allgather, mpi_bcast, mpi_send, mpi_recv, _prepare_allgather_inputs, _unroll_allgather_recv
 from pylops_mpi.utils import deps
@@ -10,6 +13,11 @@ if nccl_message is None and cupy_message is None:
     from pylops_mpi.utils._nccl import (
         nccl_allgather, nccl_allreduce, nccl_bcast, nccl_send, nccl_recv
     )
+    from cupy.cuda.nccl import NcclCommunicator
+else:
+    NcclCommunicator = Any
+
+NcclCommunicatorType = NewType("NcclCommunicator", NcclCommunicator)
 
 
 class DistributedMixIn:
@@ -23,10 +31,14 @@ class DistributedMixIn:
     MPI installation is not available).
 
     """
-    def _allreduce(self, base_comm, base_comm_nccl,
-                   send_buf, recv_buf=None,
+    def _allreduce(self,
+                   base_comm: MPI.Comm,
+                   base_comm_nccl: NcclCommunicatorType,
+                   send_buf: NDArray,
+                   recv_buf: Optional[NDArray] = None,
                    op: MPI.Op = MPI.SUM,
-                   engine="numpy"):
+                   engine: str = "numpy",
+                   ) -> NDArray:
         """Allreduce operation
 
         Parameters
@@ -58,10 +70,14 @@ class DistributedMixIn:
             return mpi_allreduce(base_comm, send_buf,
                                  recv_buf, engine, op)
 
-    def _allreduce_subcomm(self, sub_comm, base_comm_nccl,
-                           send_buf, recv_buf=None,
+    def _allreduce_subcomm(self,
+                           sub_comm: MPI.Comm,
+                           base_comm_nccl: NcclCommunicatorType,
+                           send_buf: NDArray,
+                           recv_buf: Optional[NDArray] = None,
                            op: MPI.Op = MPI.SUM,
-                           engine="numpy"):
+                           engine: str = "numpy",
+                           ) -> NDArray:
         """Allreduce operation with subcommunicator
 
         Parameters
@@ -93,15 +109,19 @@ class DistributedMixIn:
             return mpi_allreduce(sub_comm, send_buf,
                                  recv_buf, engine, op)
 
-    def _allgather(self, base_comm, base_comm_nccl,
-                   send_buf, recv_buf=None,
-                   engine="numpy"):
+    def _allgather(self,
+                   base_comm: MPI.Comm,
+                   base_comm_nccl: NcclCommunicatorType,
+                   send_buf: NDArray,
+                   recv_buf: Optional[NDArray] = None,
+                   engine: str = "numpy",
+                   ) -> NDArray:
         """Allgather operation
 
         Parameters
         ----------
-        sub_comm : :obj:`MPI.Comm`
-            MPI Subcommunicator.
+        base_comm : :obj:`MPI.Comm`
+            Base MPI Communicator.
         base_comm_nccl : :obj:`cupy.cuda.nccl.NcclCommunicator`
             NCCL Communicator.
         send_buf: :obj: `numpy.ndarray` or `cupy.ndarray`
@@ -131,41 +151,119 @@ class DistributedMixIn:
                 return base_comm.allgather(send_buf)
             return mpi_allgather(base_comm, send_buf, recv_buf, engine)
 
-    def _allgather_subcomm(self, send_buf, recv_buf=None):
+    def _allgather_subcomm(self,
+                           sub_comm: MPI.Comm,
+                           base_comm_nccl: NcclCommunicatorType,
+                           send_buf: NDArray,
+                           recv_buf: Optional[NDArray] = None,
+                           engine: str = "numpy",
+                           ) -> NDArray:
         """Allgather operation with subcommunicator
+
+        Parameters
+        ----------
+        sub_comm : :obj:`MPI.Comm`
+            MPI Subcommunicator.
+        base_comm_nccl : :obj:`cupy.cuda.nccl.NcclCommunicator`
+            NCCL Communicator.
+        send_buf: :obj: `numpy.ndarray` or `cupy.ndarray`
+            A buffer containing the data to be sent by this rank.
+        recv_buf : :obj: `numpy.ndarray` or `cupy.ndarray`, optional
+            The buffer to store the result of the gathering. If None,
+            a new buffer will be allocated with the appropriate shape.
+        engine : :obj:`str`, optional
+            Engine used to store array (``numpy`` or ``cupy``)
+
+        Returns
+        -------
+        recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+            A buffer containing the gathered data from all ranks.
+
         """
-        if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
+        if deps.nccl_enabled and base_comm_nccl is not None:
             if isinstance(send_buf, (tuple, list, int)):
-                return nccl_allgather(self.sub_comm, send_buf, recv_buf)
+                return nccl_allgather(sub_comm, send_buf, recv_buf)
             else:
-                send_shapes = self._allgather_subcomm(send_buf.shape)
+                send_shapes = sub_comm._allgather_subcomm(send_buf.shape)
                 (padded_send, padded_recv) = _prepare_allgather_inputs(send_buf, send_shapes, engine="cupy")
-                raw_recv = nccl_allgather(self.sub_comm, padded_send, recv_buf if recv_buf else padded_recv)
+                raw_recv = nccl_allgather(sub_comm, padded_send, recv_buf if recv_buf else padded_recv)
                 return _unroll_allgather_recv(raw_recv, padded_send.shape, send_shapes)
         else:
-            return mpi_allgather(self.sub_comm, send_buf, recv_buf, self.engine)
+            return mpi_allgather(sub_comm, send_buf, recv_buf, engine)
 
-    def _bcast(self, local_array, index, value):
+    def _bcast(self,
+               base_comm: MPI.Comm,
+               base_comm_nccl: NcclCommunicatorType,
+               rank : int,
+               local_array: NDArray,
+               index: int,
+               value: Union[int, NDArray],
+               engine: str = "numpy",
+               ) -> None:
         """BCast operation
-        """
-        if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
-            nccl_bcast(self.base_comm_nccl, local_array, index, value)
-        else:
-            # self.local_array[index] = self.base_comm.bcast(value)
-            mpi_bcast(self.base_comm, self.rank, self.local_array, index, value,
-                      engine=self.engine)
 
-    def _send(self, send_buf, dest, count=None, tag=0):
-        """Send operation
+        Parameters
+        ----------
+        base_comm : :obj:`MPI.Comm`
+            Base MPI Communicator.
+        base_comm_nccl : :obj:`cupy.cuda.nccl.NcclCommunicator`
+            NCCL Communicator.
+        rank : :obj:`int`
+            Rank.
+        local_array : :obj:`numpy.ndarray`
+            Localy array to be broadcasted.
+        index : :obj:`int` or :obj:`slice`
+            Represents the index positions where a value needs to be assigned.
+        value : :obj:`int` or :obj:`numpy.ndarray`
+            Represents the value that will be assigned to the local array at
+            the specified index positions.
+        engine : :obj:`str`, optional
+            Engine used to store array (``numpy`` or ``cupy``)
+
         """
-        if deps.nccl_enabled and self.base_comm_nccl:
+        if deps.nccl_enabled and base_comm_nccl is not None:
+            nccl_bcast(base_comm_nccl, local_array, index, value)
+        else:
+            mpi_bcast(base_comm, rank, local_array, index, value,
+                      engine=engine)
+
+    def _send(self,
+              base_comm: MPI.Comm,
+              base_comm_nccl: NcclCommunicatorType,
+              send_buf: NDArray,
+              dest: int,
+              count: Optional[int] = None,
+              tag: int = 0,
+              engine: str = "numpy",
+              ) -> None:
+        """Send operation
+
+        Parameters
+        ----------
+        base_comm : :obj:`MPI.Comm`
+            Base MPI Communicator.
+        base_comm_nccl : :obj:`cupy.cuda.nccl.NcclCommunicator`
+            NCCL Communicator.
+        send_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+            The array containing data to send.
+        dest: :obj:`int`
+            The rank of the destination.
+        count : :obj:`int`
+            Number of elements to send from `send_buf`.
+        tag : :obj:`int`
+            Tag of the message to be sent.
+        engine : :obj:`str`, optional
+            Engine used to store array (``numpy`` or ``cupy``)
+
+        """
+        if deps.nccl_enabled and base_comm_nccl is not None:
             if count is None:
                 count = send_buf.size
-            nccl_send(self.base_comm_nccl, send_buf, dest, count)
+            nccl_send(base_comm_nccl, send_buf, dest, count)
         else:
-            mpi_send(self.base_comm,
+            mpi_send(base_comm,
                      send_buf, dest, count, tag=tag,
-                     engine=self.engine)
+                     engine=engine)
 
     def _recv(self, recv_buf=None, source=0, count=None, tag=0):
         """Receive operation
