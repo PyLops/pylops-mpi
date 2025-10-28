@@ -15,7 +15,13 @@ The minimal set of dependencies for the PyLops-MPI project is:
 * `MPI4py <https://mpi4py.readthedocs.io/en/stable/>`_
 * `PyLops <https://pylops.readthedocs.io/en/stable/>`_
 
-Additionally, to use the NCCL engine, the following additional 
+Additionally, to use the CUDA-aware MPI engine, the following additional 
+dependencies are required:
+
+* `CuPy <https://cupy.dev/>`_
+* CUDA-aware MPI
+
+Similarly, to use the NCCL engine, the following additional 
 dependencies are required:
 
 * `CuPy <https://cupy.dev/>`_
@@ -27,12 +33,18 @@ if this is not possible, some of the dependencies must be installed prior to ins
 
 Download and Install MPI
 ========================
-Visit the official MPI website to download an appropriate MPI implementation for your system.
-Follow the installation instructions provided by the MPI vendor.
+Visit the official website of your MPI vendor of choice to download an appropriate MPI 
+implementation for your system:
 
-* `Open MPI <https://www.open-mpi.org/software/ompi/v1.10/>`_
-* `MPICH <https://www.mpich.org/downloads/>`_
-* `Intel MPI <https://www.intel.com/content/www/us/en/developer/tools/oneapi/mpi-library.html#gs.10j8fx>`_
+* `Open MPI <https://docs.open-mpi.org/>`_
+* `MPICH <https://www.mpich.org/>`_
+* `Intel MPI <https://www.intel.com/content/www/us/en/developer/tools/oneapi/mpi-library.html>`_
+* ...
+
+Alternatively, the conda-forge community provides ready-to-use binary packages for four MPI implementations 
+(see `MPI4Py documentation <https://mpi4py.readthedocs.io/en/stable/install.html#conda-packages>`_ for more 
+details). In this case, you can defer the installation to the stage when the conda environment for your project 
+is created - see below for more details.
 
 Verify MPI Installation
 =======================
@@ -41,6 +53,17 @@ After installing MPI, verify its installation by opening a terminal and running 
 .. code-block:: bash
 
    >> mpiexec --version
+
+Install CUDA-Aware MPI (optional)
+=================================
+To be able to achieve the best performance when using PyLops-MPI with CuPy arrays, a CUDA-Aware version of 
+MPI must be installed.
+
+For `Open MPI`, the conda-forge package has built-in CUDA support, as long as a pre-installed CUDA is detected.
+Run the following `commands <https://docs.open-mpi.org/en/v5.0.x/tuning-apps/networking/cuda.html#how-do-i-verify-that-open-mpi-has-been-built-with-cuda-support>`_
+for diagnostics.
+
+For the other MPI implementations, refer to their specific documentation.
 
 Install NCCL (optional)
 =======================
@@ -102,6 +125,15 @@ For a ``conda`` environment, run
 
 This will create and activate an environment called ``pylops_mpi``, with all 
 required and optional dependencies.
+
+If you want to also install MPI as part of the creation process of the conda environment,
+modify the ``environment-dev.yml`` file by adding ``openmpi``\``mpich`\``impi_rt``\``msmpi``
+just above ``mpi4py``. Note that only ``openmpi`` provides a CUDA-Aware MPI installation.
+
+If you want to leverage CUDA-Aware MPI but prefer to use another MPI installation, you must
+either switch to a `Pip`-based installation (see below), or move ``mpi4py`` into the ``pip``
+section of the ``environment-dev.yml`` file and export the variable ``MPICC`` pointing to
+the path of your CUDA-Aware MPI installation.
 
 If you want to enable `NCCL <https://developer.nvidia.com/nccl>`_ in PyLops-MPI, run this instead
 

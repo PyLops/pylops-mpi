@@ -128,7 +128,8 @@ class MPIFredholm1(MPILinearOperator):
             for isl in range(self.nsls[self.rank]):
                 y1[isl] = ncp.dot(self.G[isl], x[isl])
         # gather results
-        y[:] = ncp.vstack(y._allgather(y1)).ravel()
+        y[:] = ncp.vstack(y._allgather(y.base_comm, y.base_comm_nccl, y1,
+                                       engine=y.engine)).ravel()
         return y
 
     def _rmatvec(self, x: NDArray) -> NDArray:
@@ -165,5 +166,6 @@ class MPIFredholm1(MPILinearOperator):
                     y1[isl] = ncp.dot(x[isl].T.conj(), self.G[isl]).T.conj()
 
         # gather results
-        y[:] = ncp.vstack(y._allgather(y1)).ravel()
+        y[:] = ncp.vstack(y._allgather(y.base_comm, y.base_comm_nccl, y1,
+                                       engine=y.engine)).ravel()
         return y

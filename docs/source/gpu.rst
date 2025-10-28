@@ -11,7 +11,7 @@ This library must be installed *before* PyLops-mpi is installed.
 
 .. note::
 
-   Set environment variable ``CUPY_PYLOPS=0`` to force PyLops to ignore the ``cupy`` backend.
+   Set the environment variable ``CUPY_PYLOPS=0`` to force PyLops to ignore the ``cupy`` backend.
    This can be also used if a previous (or faulty) version of ``cupy`` is installed in your system,
    otherwise you will get an error when importing PyLops.
 
@@ -22,6 +22,14 @@ can handle both scenarios. Note that, since most operators in PyLops-mpi are thi
 some of the operators in PyLops that lack a GPU implementation cannot be used also in PyLops-mpi when working with
 cupy arrays.
 
+.. note::
+
+   By default when using ``cupy`` arrays, PyLops-MPI will try to use methods in MPI4Py that communicate memory buffers.
+   However, this requires a CUDA-Aware MPI installation. If your MPI installation is not CUDA-Aware, set the 
+   environment variable ``PYLOPS_MPI_CUDA_AWARE=0`` to force PyLops-MPI to use methods in  MPI4Py that communicate
+   general Python objects (this will incur a loss of performance!).
+
+
 Moreover, PyLops-MPI also supports the Nvidia's Collective Communication Library (NCCL) for highly-optimized
 collective operations, such as AllReduce, AllGather, etc. This allows PyLops-MPI users to leverage the
 proprietary technology like NVLink that might be available in their infrastructure for fast data communication.
@@ -30,13 +38,35 @@ proprietary technology like NVLink that might be available in their infrastructu
 
    Set environment variable ``NCCL_PYLOPS_MPI=0`` to explicitly force PyLops-MPI to ignore the ``NCCL`` backend.
    However, this is optional as users may opt-out for NCCL by skip passing `cupy.cuda.nccl.NcclCommunicator` to
-   the :class:`pylops_mpi.DistributedArray` 
+   the :class:`pylops_mpi.DistributedArray`.
+
+In summary:
+
+.. list-table::
+   :widths: 50 25 25
+   :header-rows: 1
+
+   * - Operation model
+     - Enabled with
+     - Disabled with 
+   * - NumPy + MPI
+     - Default
+     - Cannot be disabled
+   * - CuPy + MPI
+     - ``PYLOPS_MPI_CUDA_AWARE=0``
+     - ``PYLOPS_MPI_CUDA_AWARE=1`` (default)
+   * - CuPy + CUDA-Aware MPI
+     - ``PYLOPS_MPI_CUDA_AWARE=1`` (default)
+     - ``PYLOPS_MPI_CUDA_AWARE=0``
+   * - CuPy + NCCL
+     - ``NCCL_PYLOPS_MPI=1`` (default)
+     - ``NCCL_PYLOPS_MPI=0``
 
 Example
 -------
 
 Finally, let's briefly look at an example. First we write a code snippet using
-``numpy`` arrays which PyLops-mpi will run on your CPU:
+``numpy`` arrays which PyLops-MPI will run on your CPU:
 
 .. code-block:: python
 
@@ -156,6 +186,8 @@ GPU+MPI, and GPU+NCCL):
    * - :class:`pylops_mpi.basicoperators.MPIFirstDerivative`
      - ✅
      - ✅
+     - ✅ 
+     - ✅ 
      - ✅ 
    * - :class:`pylops_mpi.basicoperators.MPISecondDerivative`
      - ✅
