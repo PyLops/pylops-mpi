@@ -534,19 +534,19 @@ distributed data <code class="docutils literal notranslate"><span class="pre">y<
 </dd>
 <dt><strong>x0</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a> or <a class="reference internal" href="pylops_mpi.StackedDistributedArray.html#pylops_mpi.StackedDistributedArray" title="pylops_mpi.StackedDistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.StackedDistributedArray</span></code></a></span></dt><dd><p>Initial guess</p>
 </dd>
-<dt><strong>niter</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a>, optional</span></dt><dd><p>Number of iterations</p>
+<dt><strong>niter</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a>, optional</span></dt><dd><p>Number of iterations</p>
 </dd>
-<dt><strong>damp</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Damping coefficient</p>
+<dt><strong>damp</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Damping coefficient</p>
 </dd>
-<dt><strong>tol</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Tolerance on residual norm</p>
+<dt><strong>tol</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Tolerance on residual norm</p>
 </dd>
-<dt><strong>show</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Display iterations log</p>
+<dt><strong>show</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Display iterations log</p>
 </dd>
-<dt><strong>itershow</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a>, optional</span></dt><dd><p>Display set log for the first N1 steps, last N2 steps,
+<dt><strong>itershow</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a>, optional</span></dt><dd><p>Display set log for the first N1 steps, last N2 steps,
 and every N3 steps in between where N1, N2, N3 are the
 three element of the list.</p>
 </dd>
-<dt><strong>callback</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#callable" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callable</span></code></a>, optional</span></dt><dd><p>Function with signature (<code class="docutils literal notranslate"><span class="pre">callback(x)</span></code>) to call after each iteration
+<dt><strong>callback</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#callable" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callable</span></code></a>, optional</span></dt><dd><p>Function with signature (<code class="docutils literal notranslate"><span class="pre">callback(x)</span></code>) to call after each iteration
 where <code class="docutils literal notranslate"><span class="pre">x</span></code> is the DistributedArray.</p>
 </dd>
 </dl>
@@ -555,18 +555,18 @@ where <code class="docutils literal notranslate"><span class="pre">x</span></cod
 <dd class="field-even"><dl>
 <dt><strong>x</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a> or <a class="reference internal" href="pylops_mpi.StackedDistributedArray.html#pylops_mpi.StackedDistributedArray" title="pylops_mpi.StackedDistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.StackedDistributedArray</span></code></a></span></dt><dd><p>Estimated model of size (M, )</p>
 </dd>
-<dt><strong>istop</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a></span></dt><dd><p>Gives the reason for termination</p>
+<dt><strong>istop</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a></span></dt><dd><p>Gives the reason for termination</p>
 <p><code class="docutils literal notranslate"><span class="pre">1</span></code> means <span class="math notranslate nohighlight">\(\mathbf{x}\)</span> is an approximate solution to
 <span class="math notranslate nohighlight">\(\mathbf{y} = \mathbf{Op}\,\mathbf{x}\)</span></p>
 <p><code class="docutils literal notranslate"><span class="pre">2</span></code> means <span class="math notranslate nohighlight">\(\mathbf{x}\)</span> approximately solves the least-squares
 problem</p>
 </dd>
-<dt><strong>iit</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a></span></dt><dd><p>Iteration number upon termination</p>
+<dt><strong>iit</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a></span></dt><dd><p>Iteration number upon termination</p>
 </dd>
-<dt><strong>r1norm</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p><span class="math notranslate nohighlight">\(||\mathbf{r}||_2\)</span>, where
+<dt><strong>r1norm</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p><span class="math notranslate nohighlight">\(||\mathbf{r}||_2\)</span>, where
 <span class="math notranslate nohighlight">\(\mathbf{r} = \mathbf{y} - \mathbf{Op}\,\mathbf{x}\)</span></p>
 </dd>
-<dt><strong>r2norm</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p><span class="math notranslate nohighlight">\(\sqrt{\mathbf{r}^T\mathbf{r}  +
+<dt><strong>r2norm</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p><span class="math notranslate nohighlight">\(\sqrt{\mathbf{r}^T\mathbf{r}  +
 \epsilon^2 \mathbf{x}^T\mathbf{x}}\)</span>.
 Equal to <code class="docutils literal notranslate"><span class="pre">r1norm</span></code> if <span class="math notranslate nohighlight">\(\epsilon=0\)</span></p>
 </dd>

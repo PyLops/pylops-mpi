@@ -282,7 +282,7 @@ and perform different mathematical operations on those two objects.
 
  .. code-block:: none
 
-    Dot-product: 548.0
+    Dot-product: [548.]
     Dot-product (np): 548.0
 
 

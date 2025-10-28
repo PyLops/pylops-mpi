@@ -459,7 +459,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearOperator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">DTypeLike</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils.backend</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_module</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">deps</span> <span class="k">as</span> <span class="n">pylops_deps</span>  <span class="c1"># avoid namespace crashes with pylops_mpi.utils</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">MPILinearOperator</span><span class="p">,</span>
@@ -468,19 +467,13 @@
     <span class="n">Partition</span><span class="p">,</span>
     <span class="n">StackedDistributedArray</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.Distributed</span><span class="w"> </span><span class="kn">import</span> <span class="n">DistributedMixIn</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.utils.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">reshaped</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">deps</span>
-
-<span class="n">cupy_message</span> <span class="o">=</span> <span class="n">pylops_deps</span><span class="o">.</span><span class="n">cupy_import</span><span class="p">(</span><span class="s2">&quot;the VStack module&quot;</span><span class="p">)</span>
-<span class="n">nccl_message</span> <span class="o">=</span> <span class="n">deps</span><span class="o">.</span><span class="n">nccl_import</span><span class="p">(</span><span class="s2">&quot;the VStack module&quot;</span><span class="p">)</span>
-
-<span class="k">if</span> <span class="n">nccl_message</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cupy_message</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.utils._nccl</span><span class="w"> </span><span class="kn">import</span> <span class="n">nccl_allreduce</span>
 
 
 <div class="viewcode-block" id="MPIVStack">
 <a class="viewcode-back" href="../../../api/generated/pylops_mpi.basicoperators.MPIVStack.html#pylops_mpi.basicoperators.MPIVStack">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">MPIVStack</span><span class="p">(</span><span class="n">MPILinearOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MPIVStack</span><span class="p">(</span><span class="n">DistributedMixIn</span><span class="p">,</span> <span class="n">MPILinearOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;MPI VStack Operator</span>
 
 <span class="sd">    Create a vertical stack of a set of linear operators using MPI. Each rank must</span>
@@ -596,16 +589,18 @@
     <span class="nd">@reshaped</span><span class="p">(</span><span class="n">forward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">stacking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="n">ncp</span> <span class="o">=</span> <span class="n">get_module</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">base_comm</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span> <span class="n">base_comm_nccl</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span> <span class="n">partition</span><span class="o">=</span><span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="p">,</span>
-                             <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                             <span class="n">base_comm</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span>
+                             <span class="n">base_comm_nccl</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span>
+                             <span class="n">partition</span><span class="o">=</span><span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="p">,</span>
+                             <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span>
+                             <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
         <span class="n">y1</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">iop</span><span class="p">,</span> <span class="n">oper</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">):</span>
             <span class="n">y1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">oper</span><span class="o">.</span><span class="n">rmatvec</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">nnops</span><span class="p">[</span><span class="n">iop</span><span class="p">]:</span> <span class="bp">self</span><span class="o">.</span><span class="n">nnops</span><span class="p">[</span><span class="n">iop</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]]))</span>
         <span class="n">y1</span> <span class="o">=</span> <span class="n">ncp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">ncp</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">y1</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">nccl_enabled</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">:</span>
-            <span class="n">y</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">nccl_allreduce</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="n">MPI</span><span class="o">.</span><span class="n">SUM</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">y</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="o">.</span><span class="n">allreduce</span><span class="p">(</span><span class="n">y1</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="n">MPI</span><span class="o">.</span><span class="n">SUM</span><span class="p">)</span>
+        <span class="n">y</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_allreduce</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span>
+                               <span class="n">y1</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="n">MPI</span><span class="o">.</span><span class="n">SUM</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">y</span></div>
 
 

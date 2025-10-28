@@ -475,7 +475,13 @@
 <li><p><a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/">MPI4py</a></p></li>
 <li><p><a class="reference external" href="https://pylops.readthedocs.io/en/stable/">PyLops</a></p></li>
 </ul>
-<p>Additionally, to use the NCCL engine, the following additional
+<p>Additionally, to use the CUDA-aware MPI engine, the following additional
+dependencies are required:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://cupy.dev/">CuPy</a></p></li>
+<li><p>CUDA-aware MPI</p></li>
+</ul>
+<p>Similarly, to use the NCCL engine, the following additional
 dependencies are required:</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://cupy.dev/">CuPy</a></p></li>
@@ -486,13 +492,18 @@ or its standalone package manager <a class="reference external" href="https://do
 if this is not possible, some of the dependencies must be installed prior to installing PyLops-MPI.</p>
 <section id="download-and-install-mpi">
 <h3>Download and Install MPI<a class="headerlink" href="#download-and-install-mpi" title="Link to this heading">#</a></h3>
-<p>Visit the official MPI website to download an appropriate MPI implementation for your system.
-Follow the installation instructions provided by the MPI vendor.</p>
+<p>Visit the official website of your MPI vendor of choice to download an appropriate MPI
+implementation for your system:</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://www.open-mpi.org/software/ompi/v1.10/">Open MPI</a></p></li>
-<li><p><a class="reference external" href="https://www.mpich.org/downloads/">MPICH</a></p></li>
-<li><p><a class="reference external" href="https://www.intel.com/content/www/us/en/developer/tools/oneapi/mpi-library.html#gs.10j8fx">Intel MPI</a></p></li>
+<li><p><a class="reference external" href="https://docs.open-mpi.org/">Open MPI</a></p></li>
+<li><p><a class="reference external" href="https://www.mpich.org/">MPICH</a></p></li>
+<li><p><a class="reference external" href="https://www.intel.com/content/www/us/en/developer/tools/oneapi/mpi-library.html">Intel MPI</a></p></li>
+<li><p>…</p></li>
 </ul>
+<p>Alternatively, the conda-forge community provides ready-to-use binary packages for four MPI implementations
+(see <a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/install.html#conda-packages">MPI4Py documentation</a> for more
+details). In this case, you can defer the installation to the stage when the conda environment for your project
+is created - see below for more details.</p>
 </section>
 <section id="verify-mpi-installation">
 <h3>Verify MPI Installation<a class="headerlink" href="#verify-mpi-installation" title="Link to this heading">#</a></h3>
@@ -500,6 +511,15 @@ Follow the installation instructions provided by the MPI vendor.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>mpiexec<span class="w"> </span>--version
 </pre></div>
 </div>
+</section>
+<section id="install-cuda-aware-mpi-optional">
+<h3>Install CUDA-Aware MPI (optional)<a class="headerlink" href="#install-cuda-aware-mpi-optional" title="Link to this heading">#</a></h3>
+<p>To be able to achieve the best performance when using PyLops-MPI with CuPy arrays, a CUDA-Aware version of
+MPI must be installed.</p>
+<p>For <cite>Open MPI</cite>, the conda-forge package has built-in CUDA support, as long as a pre-installed CUDA is detected.
+Run the following <a class="reference external" href="https://docs.open-mpi.org/en/v5.0.x/tuning-apps/networking/cuda.html#how-do-i-verify-that-open-mpi-has-been-built-with-cuda-support">commands</a>
+for diagnostics.</p>
+<p>For the other MPI implementations, refer to their specific documentation.</p>
 </section>
 <section id="install-nccl-optional">
 <h3>Install NCCL (optional)<a class="headerlink" href="#install-nccl-optional" title="Link to this heading">#</a></h3>
@@ -545,6 +565,13 @@ For that end, we provide a <cite>Makefile</cite> with useful commands for settin
 </div>
 <p>This will create and activate an environment called <code class="docutils literal notranslate"><span class="pre">pylops_mpi</span></code>, with all
 required and optional dependencies.</p>
+<p>If you want to also install MPI as part of the creation process of the conda environment,
+modify the <code class="docutils literal notranslate"><span class="pre">environment-dev.yml</span></code> file by adding <code class="docutils literal notranslate"><span class="pre">openmpi</span></code>``mpich```impi_rt````msmpi``
+just above <code class="docutils literal notranslate"><span class="pre">mpi4py</span></code>. Note that only <code class="docutils literal notranslate"><span class="pre">openmpi</span></code> provides a CUDA-Aware MPI installation.</p>
+<p>If you want to leverage CUDA-Aware MPI but prefer to use another MPI installation, you must
+either switch to a <cite>Pip</cite>-based installation (see below), or move <code class="docutils literal notranslate"><span class="pre">mpi4py</span></code> into the <code class="docutils literal notranslate"><span class="pre">pip</span></code>
+section of the <code class="docutils literal notranslate"><span class="pre">environment-dev.yml</span></code> file and export the variable <code class="docutils literal notranslate"><span class="pre">MPICC</span></code> pointing to
+the path of your CUDA-Aware MPI installation.</p>
 <p>If you want to enable <a class="reference external" href="https://developer.nvidia.com/nccl">NCCL</a> in PyLops-MPI, run this instead</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>make<span class="w"> </span>dev-install_conda_nccl
 </pre></div>
@@ -682,6 +709,7 @@ Apart from ensuring that docstrings are properly formatted, they can aid in catc
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#download-and-install-mpi">Download and Install MPI</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#verify-mpi-installation">Verify MPI Installation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#install-cuda-aware-mpi-optional">Install CUDA-Aware MPI (optional)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#install-nccl-optional">Install NCCL (optional)</a></li>
 </ul>
 </li>
