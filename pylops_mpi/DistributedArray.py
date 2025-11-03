@@ -502,6 +502,7 @@ class DistributedArray(DistributedMixIn):
     def __neg__(self):
         arr = DistributedArray(global_shape=self.global_shape,
                                base_comm=self.base_comm,
+                               base_comm_nccl=self.base_comm_nccl,
                                partition=self.partition,
                                axis=self.axis,
                                local_shapes=self.local_shapes,
