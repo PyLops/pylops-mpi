@@ -963,6 +963,7 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">arr</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">global_shape</span><span class="p">,</span>
                                <span class="n">base_comm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span>
+                               <span class="n">base_comm_nccl</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span>
                                <span class="n">partition</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">partition</span><span class="p">,</span>
                                <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
                                <span class="n">local_shapes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">local_shapes</span><span class="p">,</span>

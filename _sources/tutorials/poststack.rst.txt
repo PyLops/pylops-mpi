@@ -284,7 +284,7 @@ normal equations, and :math:`\mathbf{d}^{Norm}` is the data of the normal equati
         99        6.1544e-01         6.5026e-01     6.5026e-01
        100        6.1561e-01         6.4212e-01     6.4212e-01
 
-    Iterations = 100        Total time (s) = 28.48
+    Iterations = 100        Total time (s) = 29.19
     -----------------------------------------------------------------
 
 
@@ -349,7 +349,7 @@ normal equations, and :math:`\mathbf{d}^{Norm}` is the data of the normal equati
         99         6.3033e-01         1.9903e+02
        100         6.3026e-01         1.9777e+02
 
-    Iterations = 100        Total time (s) = 45.17
+    Iterations = 100        Total time (s) = 42.86
     -------------------------------------------------------
 
 
@@ -486,7 +486,7 @@ To run this tutorial with our NCCL backend, refer to `Post Stack Inversion with 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (2 minutes 19.569 seconds)
+   **Total running time of the script:** (2 minutes 13.503 seconds)
 
 
 .. _sphx_glr_download_tutorials_poststack.py:
