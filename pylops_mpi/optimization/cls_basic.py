@@ -51,6 +51,9 @@ class CG(Solver):
         print(msg)
         sys.stdout.flush()
 
+    def memory_usage(self) -> None:
+        pass
+
     def setup(
             self,
             y: Union[DistributedArray, StackedDistributedArray],
@@ -298,6 +301,9 @@ class CGLS(Solver):
         )
         print(msg)
         sys.stdout.flush()
+
+    def memory_usage(self) -> None:
+        pass
 
     def setup(self,
               y: Union[DistributedArray, StackedDistributedArray],
