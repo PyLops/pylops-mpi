@@ -110,11 +110,11 @@ def initialize_nccl_comm() -> nccl.NcclCommunicator:
 
     # Create a communicator for ranks on the same node
     node_comm = comm.Split_type(MPI.COMM_TYPE_SHARED)
-    ranks_on_node = node_comm.Get_size()
+    size_node = node_comm.Get_size()
 
     device_id = int(
         os.environ.get("OMPI_COMM_WORLD_LOCAL_RANK")
-        or (rank % ranks_on_node) % cp.cuda.runtime.getDeviceCount()
+        or (rank % size_node) % cp.cuda.runtime.getDeviceCount()
     )
     cp.cuda.Device(device_id).use()
 
