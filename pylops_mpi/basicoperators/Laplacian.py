@@ -113,12 +113,14 @@ class MPILaplacian(MPILinearOperator):
             if ax == 0:
                 l2op += weight * MPISecondDerivative(dims=self.dims,
                                                      sampling=samp,
+                                                     kind=self.kind,
                                                      edge=self.edge,
                                                      dtype=self.dtype)
             else:
                 l2op += weight * MPIBlockDiag(ops=[SecondDerivative(dims=local_dims,
                                                                     axis=ax,
                                                                     sampling=samp,
+                                                                    kind=self.kind,
                                                                     edge=self.edge,
                                                                     dtype=self.dtype)])
         return l2op
