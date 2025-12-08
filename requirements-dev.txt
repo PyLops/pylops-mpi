@@ -1,6 +1,6 @@
 numpy
 scipy>=1.8.0
-pylops
+pylops==2.5.0
 mpi4py
 matplotlib
 pytest
