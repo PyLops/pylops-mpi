@@ -12,6 +12,7 @@
         ~CG.__init__
         ~CG.callback
         ~CG.finalize
+        ~CG.memory_usage
         ~CG.run
         ~CG.setup
         ~CG.solve

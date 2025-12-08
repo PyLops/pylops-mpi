@@ -12,6 +12,7 @@
         ~CGLS.__init__
         ~CGLS.callback
         ~CGLS.finalize
+        ~CGLS.memory_usage
         ~CGLS.run
         ~CGLS.setup
         ~CGLS.solve

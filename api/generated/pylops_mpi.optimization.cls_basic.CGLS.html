@@ -50,11 +50,11 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="../../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/generated/pylops_mpi.optimization.cls_basic.CGLS';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -521,7 +521,7 @@
 <h1>pylops_mpi.optimization.cls_basic.CGLS<a class="headerlink" href="#pylops-mpi-optimization-cls-basic-cgls" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="pylops_mpi.optimization.cls_basic.CGLS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylops_mpi.optimization.cls_basic.</span></span><span class="sig-name descname"><span class="pre">CGLS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callbacks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/optimization/cls_basic.html#CGLS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.optimization.cls_basic.CGLS" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pylops_mpi.optimization.cls_basic.</span></span><span class="sig-name descname"><span class="pre">CGLS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callbacks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/optimization/cls_basic.html#CGLS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.optimization.cls_basic.CGLS" title="Link to this definition">#</a></dt>
 <dd><p>Conjugate gradient least squares</p>
 <p>Solve an overdetermined system of equations given either an MPILinearOperator or an MPIStackedLinearOperator <code class="docutils literal notranslate"><span class="pre">Op</span></code>
 and distributed data <code class="docutils literal notranslate"><span class="pre">y</span></code> using conjugate gradient iterations.</p>
@@ -540,7 +540,7 @@ and distributed data <code class="docutils literal notranslate"><span class="pre
 \epsilon^2 || \mathbf{x} ||_2^2\]</div>
 <p>where <span class="math notranslate nohighlight">\(\epsilon\)</span> is the damping coefficient.</p>
 <p class="rubric">Methods</p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code>(Op[, callbacks])</p></td>
 <td><p></p></td>
@@ -551,16 +551,19 @@ and distributed data <code class="docutils literal notranslate"><span class="pre
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">finalize</span></code>([show])</p></td>
 <td><p>Finalize solver</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">run</span></code>(x[, niter, show, itershow])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">memory_usage</span></code>()</p></td>
+<td><p>Compute memory usage of the solver</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">run</span></code>(x[, niter, show, itershow])</p></td>
 <td><p>Run solver</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup</span></code>(y, x0[, niter, damp, tol, show])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup</span></code>(y, x0[, niter, damp, tol, show])</p></td>
 <td><p>Setup solver</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">solve</span></code>(y, x0[, niter, damp, tol, show, itershow])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">solve</span></code>(y, x0[, niter, damp, tol, show, itershow])</p></td>
 <td><p>Run entire solver</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">step</span></code>(x[, show])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">step</span></code>(x[, show])</p></td>
 <td><p>Run one step of solver</p></td>
 </tr>
 </tbody>
@@ -571,7 +574,7 @@ and distributed data <code class="docutils literal notranslate"><span class="pre
 <div style='clear:both'></div><section id="examples-using-pylops-mpi-optimization-cls-basic-cgls">
 <h2>Examples using <code class="docutils literal notranslate"><span class="pre">pylops_mpi.optimization.cls_basic.CGLS</span></code><a class="headerlink" href="#examples-using-pylops-mpi-optimization-cls-basic-cgls" title="Link to this heading">#</a></h2>
 <div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This tutorial builds on the :pypylops.avo.poststack.PoststackLinearModelling operator to model 1d post-stack seismic traces 1d profiles of the subsurface acoustic impedence by means of the following equation"><img alt="" src="../../_images/sphx_glr_poststack_thumb.png" />
-<p><a class="reference internal" href="../../tutorials/poststack.html#sphx-glr-tutorials-poststack-py"><span class="std std-ref">Post Stack Inversion - 3D</span></a></p>
+<p><a class="reference internal" href="../../tutorials/poststack.html"><span class="doc">Post Stack Inversion - 3D</span></a></p>
   <div class="sphx-glr-thumbnail-title">Post Stack Inversion - 3D</div>
 </div></div><div style='clear:both'></div></section>
 </section>
@@ -662,7 +665,7 @@ and distributed data <code class="docutils literal notranslate"><span class="pre
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
     <br/>
   </p>
 </div>

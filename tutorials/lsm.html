@@ -50,11 +50,11 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/lsm';</script>
     <link rel="icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -490,7 +490,7 @@ is the wavelet. Ultimately, while the Green’s functions can be computed in man
 solving this system of equations for the reflectivity model is what we generally
 refer to as Least-squares migration (LSM).</p>
 <p>We can easily set up this problem where sources are distributed across different ranks,
-and each <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.waveeqprocessing.LSM.html#pylops.waveeqprocessing.LSM" title="(in PyLops vdev)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops.waveeqprocessing.LSM</span></code></a> is responsible for performing modelling
+and each <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.waveeqprocessing.LSM.html#pylops.waveeqprocessing.LSM" title="(in PyLops dev)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops.waveeqprocessing.LSM</span></code></a> is responsible for performing modelling
 with the reflectivity at each rank in the subsurface. In a compact matrix-vector notation,
 this problem can be written as:</p>
 <div class="math notranslate nohighlight">
@@ -589,7 +589,7 @@ across different ranks.</p>
 <li><img src="../_images/sphx_glr_lsm_001.png" srcset="../_images/sphx_glr_lsm_001.png" alt="Velocity" class = "sphx-glr-multi-img"/></li>
 <li><img src="../_images/sphx_glr_lsm_002.png" srcset="../_images/sphx_glr_lsm_002.png" alt="Reflectivity" class = "sphx-glr-multi-img"/></li>
 </ul>
-<p>We create a <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.waveeqprocessing.LSM.html#pylops.waveeqprocessing.LSM" title="(in PyLops vdev)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops.waveeqprocessing.LSM</span></code></a> at each rank and then push them
+<p>We create a <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.waveeqprocessing.LSM.html#pylops.waveeqprocessing.LSM" title="(in PyLops dev)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops.waveeqprocessing.LSM</span></code></a> at each rank and then push them
 into a <a class="reference internal" href="../api/generated/pylops_mpi.basicoperators.MPIVStack.html#pylops_mpi.basicoperators.MPIVStack" title="pylops_mpi.basicoperators.MPIVStack"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIVStack</span></code></a> to perform a matrix-vector
 product with the broadcasted reflectivity at every location on the subsurface.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Wavelet</span>
@@ -674,7 +674,7 @@ damp = 0.000000e+00     tol = 1.000000e-04      niter = 100
     99       -1.2546e-02         2.8528e+00     2.8528e+00
    100       -1.2389e-02         2.8342e+00     2.8342e+00
 
-Iterations = 100        Total time (s) = 1.28
+Iterations = 100        Total time (s) = 1.23
 -----------------------------------------------------------------
 </pre></div>
 </div>
@@ -722,7 +722,7 @@ Iterations = 100        Total time (s) = 1.28
 <li><img src="../_images/sphx_glr_lsm_005.png" srcset="../_images/sphx_glr_lsm_005.png" alt="$d$, $d_{adj}$, $d_{inv}$" class = "sphx-glr-multi-img"/></li>
 </ul>
 <p>To run this tutorial with our NCCL backend, refer to <a class="reference external" href="https://github.com/PyLops/pylops-mpi/blob/main/tutorials_nccl/lsm_nccl.py">Least-squares Migration with NCCL tutorial</a> in the repository.</p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 2.993 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 2.909 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-lsm-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/d5dae76a02f3b395d667034f44fd5555/lsm.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">lsm.ipynb</span></code></a></p>
@@ -804,7 +804,7 @@ Iterations = 100        Total time (s) = 1.28
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
     <br/>
   </p>
 </div>

@@ -33,7 +33,7 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
   .. image:: /gallery/images/thumb/sphx_glr_plot_cgls_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_plot_cgls.py`
+  :doc:`/gallery/plot_cgls`
 
 .. raw:: html
 
@@ -50,7 +50,7 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
   .. image:: /gallery/images/thumb/sphx_glr_plot_derivative_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_plot_derivative.py`
+  :doc:`/gallery/plot_derivative`
 
 .. raw:: html
 
@@ -67,7 +67,7 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
   .. image:: /gallery/images/thumb/sphx_glr_plot_distributed_array_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_plot_distributed_array.py`
+  :doc:`/gallery/plot_distributed_array`
 
 .. raw:: html
 
@@ -84,7 +84,7 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
   .. image:: /gallery/images/thumb/sphx_glr_plot_matrixmult_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_plot_matrixmult.py`
+  :doc:`/gallery/plot_matrixmult`
 
 .. raw:: html
 
@@ -101,7 +101,7 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
   .. image:: /gallery/images/thumb/sphx_glr_plot_summamatrixmult_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_plot_summamatrixmult.py`
+  :doc:`/gallery/plot_summamatrixmult`
 
 .. raw:: html
 
@@ -118,7 +118,7 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
   .. image:: /gallery/images/thumb/sphx_glr_plot_mpilinop_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_plot_mpilinop.py`
+  :doc:`/gallery/plot_mpilinop`
 
 .. raw:: html
 
@@ -135,7 +135,7 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
   .. image:: /gallery/images/thumb/sphx_glr_plot_mdc_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_plot_mdc.py`
+  :doc:`/gallery/plot_mdc`
 
 .. raw:: html
 
@@ -152,7 +152,7 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
   .. image:: /gallery/images/thumb/sphx_glr_plot_stacked_array_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_plot_stacked_array.py`
+  :doc:`/gallery/plot_stacked_array`
 
 .. raw:: html
 
@@ -169,7 +169,7 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
   .. image:: /gallery/images/thumb/sphx_glr_plot_stacking_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_plot_stacking.py`
+  :doc:`/gallery/plot_stacking`
 
 .. raw:: html
 

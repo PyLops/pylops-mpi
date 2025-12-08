@@ -32,7 +32,7 @@ Tutorials
   .. image:: /tutorials/images/thumb/sphx_glr_benchmarking_thumb.png
     :alt:
 
-  :ref:`sphx_glr_tutorials_benchmarking.py`
+  :doc:`/tutorials/benchmarking`
 
 .. raw:: html
 
@@ -49,7 +49,7 @@ Tutorials
   .. image:: /tutorials/images/thumb/sphx_glr_lsm_thumb.png
     :alt:
 
-  :ref:`sphx_glr_tutorials_lsm.py`
+  :doc:`/tutorials/lsm`
 
 .. raw:: html
 
@@ -66,7 +66,7 @@ Tutorials
   .. image:: /tutorials/images/thumb/sphx_glr_mdd_thumb.png
     :alt:
 
-  :ref:`sphx_glr_tutorials_mdd.py`
+  :doc:`/tutorials/mdd`
 
 .. raw:: html
 
@@ -83,7 +83,7 @@ Tutorials
   .. image:: /tutorials/images/thumb/sphx_glr_poststack_thumb.png
     :alt:
 
-  :ref:`sphx_glr_tutorials_poststack.py`
+  :doc:`/tutorials/poststack`
 
 .. raw:: html
 

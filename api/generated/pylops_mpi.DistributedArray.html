@@ -50,8 +50,8 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="../../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/generated/pylops_mpi.DistributedArray';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -519,7 +519,7 @@
 <h1>pylops_mpi.DistributedArray<a class="headerlink" href="#pylops-mpi-distributedarray" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="pylops_mpi.DistributedArray">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylops_mpi.</span></span><span class="sig-name descname"><span class="pre">DistributedArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">global_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm=&lt;mpi4py.MPI.Intracomm</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm_nccl=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partition=Partition.SCATTER</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_shapes=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">engine='numpy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'numpy.float64'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/DistributedArray.html#DistributedArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.DistributedArray" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pylops_mpi.</span></span><span class="sig-name descname"><span class="pre">DistributedArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">global_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;mpi4py.MPI.Intracomm</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm_nccl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Partition.SCATTER</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">engine</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'numpy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;class</span> <span class="pre">'numpy.float64'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/DistributedArray.html#DistributedArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.DistributedArray" title="Link to this definition">#</a></dt>
 <dd><p>Distributed Numpy Arrays</p>
 <p>Multidimensional NumPy-like distributed arrays.
 It brings NumPy arrays to high-performance computing.</p>
@@ -564,7 +564,7 @@ operations on the distributed array such as dot product or norm.</p>
 </dd>
 </dl>
 <p class="rubric">Methods</p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code>(global_shape[, base_comm, ...])</p></td>
 <td><p></p></td>
@@ -613,43 +613,43 @@ operations on the distributed array such as dot product or norm.</p>
 <div style='clear:both'></div><section id="examples-using-pylops-mpi-distributedarray">
 <h2>Examples using <code class="docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code><a class="headerlink" href="#examples-using-pylops-mpi-distributedarray" title="Link to this heading">#</a></h2>
 <div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the utilization of :pypylops_mpi.optimization.basic.cgls solver. Our solver uses the :pypylops_mpi.DistributedArray to reduce the following cost function in a distributed fashion :"><img alt="" src="../../_images/sphx_glr_plot_cgls_thumb.png" />
-<p><a class="reference internal" href="../../gallery/plot_cgls.html#sphx-glr-gallery-plot-cgls-py"><span class="std std-ref">CGLS Solver</span></a></p>
+<p><a class="reference internal" href="../../gallery/plot_cgls.html"><span class="doc">CGLS Solver</span></a></p>
   <div class="sphx-glr-thumbnail-title">CGLS Solver</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="We will be focusing here on the case where the input array x is assumed to be an n-dimensional :pypylops_mpi.DistributedArray and the derivative is applied over the first axis (``axis=0``). Since the array is distributed over multiple processes, the derivative operators must take care of applying the derivatives across the edges using the information from the previous/next processes, using the so-called ghost cells."><img alt="" src="../../_images/sphx_glr_plot_derivative_thumb.png" />
-<p><a class="reference internal" href="../../gallery/plot_derivative.html#sphx-glr-gallery-plot-derivative-py"><span class="std std-ref">Derivatives</span></a></p>
+<p><a class="reference internal" href="../../gallery/plot_derivative.html"><span class="doc">Derivatives</span></a></p>
   <div class="sphx-glr-thumbnail-title">Derivatives</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="Distributed Array"><img alt="" src="../../_images/sphx_glr_plot_distributed_array_thumb.png" />
-<p><a class="reference internal" href="../../gallery/plot_distributed_array.html#sphx-glr-gallery-plot-distributed-array-py"><span class="std std-ref">Distributed Array</span></a></p>
+<p><a class="reference internal" href="../../gallery/plot_distributed_array.html"><span class="doc">Distributed Array</span></a></p>
   <div class="sphx-glr-thumbnail-title">Distributed Array</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="Note that whilst the different blocks of the matrix \mathbf{A} are directly stored in the operator on different ranks, the matrix \mathbf{X} is effectively represented by a 1-D :pypylops_mpi.DistributedArray where the different blocks are flattened and stored on different ranks. Note that to optimize communications, the ranks are organized in a 2D grid and some of the row blocks of \mathbf{A} and column blocks of \mathbf{X} are replicated across different ranks - see below for details."><img alt="" src="../../_images/sphx_glr_plot_matrixmult_thumb.png" />
-<p><a class="reference internal" href="../../gallery/plot_matrixmult.html#sphx-glr-gallery-plot-matrixmult-py"><span class="std std-ref">Distributed Matrix Multiplication - Block-row-column decomposition</span></a></p>
+<p><a class="reference internal" href="../../gallery/plot_matrixmult.html"><span class="doc">Distributed Matrix Multiplication - Block-row-column decomposition</span></a></p>
   <div class="sphx-glr-thumbnail-title">Distributed Matrix Multiplication - Block-row-column decomposition</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="Note that whilst the different blocks of matrix \mathbf{A} are directly stored in the operator on different ranks, the matrices \mathbf{X} and \mathbf{Y} are effectively represented by 1-D :pypylops_mpi.DistributedArray objects where the different blocks are flattened and stored on different ranks. Note that to optimize communications, the ranks are organized in a square grid and blocks of \mathbf{A} and \mathbf{X} are systematically broadcast across different ranks during computation - see below for details."><img alt="" src="../../_images/sphx_glr_plot_summamatrixmult_thumb.png" />
-<p><a class="reference internal" href="../../gallery/plot_summamatrixmult.html#sphx-glr-gallery-plot-summamatrixmult-py"><span class="std std-ref">Distributed Matrix Multiplication - SUMMA</span></a></p>
+<p><a class="reference internal" href="../../gallery/plot_summamatrixmult.html"><span class="doc">Distributed Matrix Multiplication - SUMMA</span></a></p>
   <div class="sphx-glr-thumbnail-title">Distributed Matrix Multiplication - SUMMA</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the use of the :pypylops_mpi.MPILinearOperator to wrap PyLops Operators. PyLops operators can be converted into :pypylops_mpi.MPILinearOperator using the :pypylops_mpi.asmpilinearoperator method. Additionally, the example showcases how to use these wrapped PyLops operators with other operators provided by PyLops-MPI."><img alt="" src="../../_images/sphx_glr_plot_mpilinop_thumb.png" />
-<p><a class="reference internal" href="../../gallery/plot_mpilinop.html#sphx-glr-gallery-plot-mpilinop-py"><span class="std std-ref">MPILinearOperator</span></a></p>
+<p><a class="reference internal" href="../../gallery/plot_mpilinop.html"><span class="doc">MPILinearOperator</span></a></p>
   <div class="sphx-glr-thumbnail-title">MPILinearOperator</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="Multi-Dimensional Convolution"><img alt="" src="../../_images/sphx_glr_plot_mdc_thumb.png" />
-<p><a class="reference internal" href="../../gallery/plot_mdc.html#sphx-glr-gallery-plot-mdc-py"><span class="std std-ref">Multi-Dimensional Convolution</span></a></p>
+<p><a class="reference internal" href="../../gallery/plot_mdc.html"><span class="doc">Multi-Dimensional Convolution</span></a></p>
   <div class="sphx-glr-thumbnail-title">Multi-Dimensional Convolution</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="Stacked Array"><img alt="" src="../../_images/sphx_glr_plot_stacked_array_thumb.png" />
-<p><a class="reference internal" href="../../gallery/plot_stacked_array.html#sphx-glr-gallery-plot-stacked-array-py"><span class="std std-ref">Stacked Array</span></a></p>
+<p><a class="reference internal" href="../../gallery/plot_stacked_array.html"><span class="doc">Stacked Array</span></a></p>
   <div class="sphx-glr-thumbnail-title">Stacked Array</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="This example shows how to use &quot;stacking&quot; operators such as :pypylops_mpi.basicoperators.MPIVStack, :pypylops_mpi.basicoperators.MPIHStack and :pypylops_mpi.basicoperators.MPIBlockDiag."><img alt="" src="../../_images/sphx_glr_plot_stacking_thumb.png" />
-<p><a class="reference internal" href="../../gallery/plot_stacking.html#sphx-glr-gallery-plot-stacking-py"><span class="std std-ref">Stacking Operators</span></a></p>
+<p><a class="reference internal" href="../../gallery/plot_stacking.html"><span class="doc">Stacking Operators</span></a></p>
   <div class="sphx-glr-thumbnail-title">Stacking Operators</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip=":pypylops_mpi.utils.benchmark is a decorator used to decorate any function to measure its execution time from start to finish :pypylops_mpi.utils.mark is a function used inside the benchmark-decorated function to provide fine-grain time measurements."><img alt="" src="../../_images/sphx_glr_benchmarking_thumb.png" />
-<p><a class="reference internal" href="../../tutorials/benchmarking.html#sphx-glr-tutorials-benchmarking-py"><span class="std std-ref">Benchmark Utility in PyLops-MPI</span></a></p>
+<p><a class="reference internal" href="../../tutorials/benchmarking.html"><span class="doc">Benchmark Utility in PyLops-MPI</span></a></p>
   <div class="sphx-glr-thumbnail-title">Benchmark Utility in PyLops-MPI</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="We solve the inverse of the demigration operator to obtain accurate and detailed sub surface images. Regardless of the choice of the modelling operator (i.e., ray-based or full wavefield-based), the demigration/migration process can be expressed as a linear operator of such kind:"><img alt="" src="../../_images/sphx_glr_lsm_thumb.png" />
-<p><a class="reference internal" href="../../tutorials/lsm.html#sphx-glr-tutorials-lsm-py"><span class="std std-ref">Least-squares Migration</span></a></p>
+<p><a class="reference internal" href="../../tutorials/lsm.html"><span class="doc">Least-squares Migration</span></a></p>
   <div class="sphx-glr-thumbnail-title">Least-squares Migration</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="More precisely, compared to its counterpart in the PyLops documentation, this example distributes the frequency slices of the kernel of the MDC operator across multiple processes. Whilst both the entire model and data sit on all processes, within the MDC operator, and more precisely when the :pypylops_mpi.signalprocessing.Fredholm1 is called, different groups of frequencies are processed by the different ranks."><img alt="" src="../../_images/sphx_glr_mdd_thumb.png" />
-<p><a class="reference internal" href="../../tutorials/mdd.html#sphx-glr-tutorials-mdd-py"><span class="std std-ref">Multi-Dimensional Deconvolution</span></a></p>
+<p><a class="reference internal" href="../../tutorials/mdd.html"><span class="doc">Multi-Dimensional Deconvolution</span></a></p>
   <div class="sphx-glr-thumbnail-title">Multi-Dimensional Deconvolution</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="This tutorial builds on the :pypylops.avo.poststack.PoststackLinearModelling operator to model 1d post-stack seismic traces 1d profiles of the subsurface acoustic impedence by means of the following equation"><img alt="" src="../../_images/sphx_glr_poststack_thumb.png" />
-<p><a class="reference internal" href="../../tutorials/poststack.html#sphx-glr-tutorials-poststack-py"><span class="std std-ref">Post Stack Inversion - 3D</span></a></p>
+<p><a class="reference internal" href="../../tutorials/poststack.html"><span class="doc">Post Stack Inversion - 3D</span></a></p>
   <div class="sphx-glr-thumbnail-title">Post Stack Inversion - 3D</div>
 </div></div><div style='clear:both'></div></section>
 </section>
@@ -740,7 +740,7 @@ operations on the distributed array such as dot product or norm.</p>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
     <br/>
   </p>
 </div>

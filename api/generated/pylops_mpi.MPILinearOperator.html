@@ -50,8 +50,8 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="../../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/generated/pylops_mpi.MPILinearOperator';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
@@ -519,24 +519,24 @@
 <h1>pylops_mpi.MPILinearOperator<a class="headerlink" href="#pylops-mpi-mpilinearoperator" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="pylops_mpi.MPILinearOperator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pylops_mpi.</span></span><span class="sig-name descname"><span class="pre">MPILinearOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Op=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm=&lt;mpi4py.MPI.Intracomm</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/LinearOperator.html#MPILinearOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.MPILinearOperator" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pylops_mpi.</span></span><span class="sig-name descname"><span class="pre">MPILinearOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Op</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;mpi4py.MPI.Intracomm</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/LinearOperator.html#MPILinearOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.MPILinearOperator" title="Link to this definition">#</a></dt>
 <dd><p>MPI-enabled PyLops Linear Operator</p>
 <p>Common interface for performing matrix-vector products in distributed fashion.</p>
 <p>In practice, this class provides methods to perform matrix-vector and
-adjoint matrix-vector products between any <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.LinearOperator.html#pylops.LinearOperator" title="(in PyLops vdev)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops.LinearOperator</span></code></a>
+adjoint matrix-vector products between any <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.LinearOperator.html#pylops.LinearOperator" title="(in PyLops dev)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops.LinearOperator</span></code></a>
 (which must be the same across ranks) and a <a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>
 with <code class="docutils literal notranslate"><span class="pre">Partition.BROADCAST</span></code> and <code class="docutils literal notranslate"><span class="pre">Partition.UNSAFE_BROADCAST</span></code> partition. It
 internally handles the extraction of the local array from the distributed array
 and the creation of the output <a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>.</p>
 <p>Note that whilst this operator could also be used with different
-<a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.LinearOperator.html#pylops.LinearOperator" title="(in PyLops vdev)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops.LinearOperator</span></code></a> across ranks, and with a
+<a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.LinearOperator.html#pylops.LinearOperator" title="(in PyLops dev)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops.LinearOperator</span></code></a> across ranks, and with a
 <a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a> with <code class="docutils literal notranslate"><span class="pre">Partition.SCATTER</span></code>, it is however
 reccomended to use the <a class="reference internal" href="pylops_mpi.basicoperators.MPIBlockDiag.html#pylops_mpi.basicoperators.MPIBlockDiag" title="pylops_mpi.basicoperators.MPIBlockDiag"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIBlockDiag</span></code></a> operator
 instead as this can also handle distributed arrays with subcommunicators.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
-<dt><strong>Op</strong><span class="classifier"><a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.LinearOperator.html#pylops.LinearOperator" title="(in PyLops vdev)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops.LinearOperator</span></code></a>, optional</span></dt><dd><p>PyLops Linear Operator to wrap. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<dt><strong>Op</strong><span class="classifier"><a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.LinearOperator.html#pylops.LinearOperator" title="(in PyLops dev)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops.LinearOperator</span></code></a>, optional</span></dt><dd><p>PyLops Linear Operator to wrap. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 </dd>
 <dt><strong>shape</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple(int,</span> <span class="pre">int)</span></code>, optional</span></dt><dd><p>Shape of the MPI Linear Operator. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 </dd>
@@ -548,7 +548,7 @@ instead as this can also handle distributed arrays with subcommunicators.</p>
 </dd>
 </dl>
 <p class="rubric">Methods</p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code>([Op, shape, dtype, base_comm])</p></td>
 <td><p></p></td>
@@ -579,31 +579,31 @@ instead as this can also handle distributed arrays with subcommunicators.</p>
 <div style='clear:both'></div><section id="examples-using-pylops-mpi-mpilinearoperator">
 <h2>Examples using <code class="docutils literal notranslate"><span class="pre">pylops_mpi.MPILinearOperator</span></code><a class="headerlink" href="#examples-using-pylops-mpi-mpilinearoperator" title="Link to this heading">#</a></h2>
 <div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the utilization of :pypylops_mpi.optimization.basic.cgls solver. Our solver uses the :pypylops_mpi.DistributedArray to reduce the following cost function in a distributed fashion :"><img alt="" src="../../_images/sphx_glr_plot_cgls_thumb.png" />
-<p><a class="reference internal" href="../../gallery/plot_cgls.html#sphx-glr-gallery-plot-cgls-py"><span class="std std-ref">CGLS Solver</span></a></p>
+<p><a class="reference internal" href="../../gallery/plot_cgls.html"><span class="doc">CGLS Solver</span></a></p>
   <div class="sphx-glr-thumbnail-title">CGLS Solver</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="We will be focusing here on the case where the input array x is assumed to be an n-dimensional :pypylops_mpi.DistributedArray and the derivative is applied over the first axis (``axis=0``). Since the array is distributed over multiple processes, the derivative operators must take care of applying the derivatives across the edges using the information from the previous/next processes, using the so-called ghost cells."><img alt="" src="../../_images/sphx_glr_plot_derivative_thumb.png" />
-<p><a class="reference internal" href="../../gallery/plot_derivative.html#sphx-glr-gallery-plot-derivative-py"><span class="std std-ref">Derivatives</span></a></p>
+<p><a class="reference internal" href="../../gallery/plot_derivative.html"><span class="doc">Derivatives</span></a></p>
   <div class="sphx-glr-thumbnail-title">Derivatives</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="Note that whilst the different blocks of the matrix \mathbf{A} are directly stored in the operator on different ranks, the matrix \mathbf{X} is effectively represented by a 1-D :pypylops_mpi.DistributedArray where the different blocks are flattened and stored on different ranks. Note that to optimize communications, the ranks are organized in a 2D grid and some of the row blocks of \mathbf{A} and column blocks of \mathbf{X} are replicated across different ranks - see below for details."><img alt="" src="../../_images/sphx_glr_plot_matrixmult_thumb.png" />
-<p><a class="reference internal" href="../../gallery/plot_matrixmult.html#sphx-glr-gallery-plot-matrixmult-py"><span class="std std-ref">Distributed Matrix Multiplication - Block-row-column decomposition</span></a></p>
+<p><a class="reference internal" href="../../gallery/plot_matrixmult.html"><span class="doc">Distributed Matrix Multiplication - Block-row-column decomposition</span></a></p>
   <div class="sphx-glr-thumbnail-title">Distributed Matrix Multiplication - Block-row-column decomposition</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="Note that whilst the different blocks of matrix \mathbf{A} are directly stored in the operator on different ranks, the matrices \mathbf{X} and \mathbf{Y} are effectively represented by 1-D :pypylops_mpi.DistributedArray objects where the different blocks are flattened and stored on different ranks. Note that to optimize communications, the ranks are organized in a square grid and blocks of \mathbf{A} and \mathbf{X} are systematically broadcast across different ranks during computation - see below for details."><img alt="" src="../../_images/sphx_glr_plot_summamatrixmult_thumb.png" />
-<p><a class="reference internal" href="../../gallery/plot_summamatrixmult.html#sphx-glr-gallery-plot-summamatrixmult-py"><span class="std std-ref">Distributed Matrix Multiplication - SUMMA</span></a></p>
+<p><a class="reference internal" href="../../gallery/plot_summamatrixmult.html"><span class="doc">Distributed Matrix Multiplication - SUMMA</span></a></p>
   <div class="sphx-glr-thumbnail-title">Distributed Matrix Multiplication - SUMMA</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the use of the :pypylops_mpi.MPILinearOperator to wrap PyLops Operators. PyLops operators can be converted into :pypylops_mpi.MPILinearOperator using the :pypylops_mpi.asmpilinearoperator method. Additionally, the example showcases how to use these wrapped PyLops operators with other operators provided by PyLops-MPI."><img alt="" src="../../_images/sphx_glr_plot_mpilinop_thumb.png" />
-<p><a class="reference internal" href="../../gallery/plot_mpilinop.html#sphx-glr-gallery-plot-mpilinop-py"><span class="std std-ref">MPILinearOperator</span></a></p>
+<p><a class="reference internal" href="../../gallery/plot_mpilinop.html"><span class="doc">MPILinearOperator</span></a></p>
   <div class="sphx-glr-thumbnail-title">MPILinearOperator</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="Stacked Array"><img alt="" src="../../_images/sphx_glr_plot_stacked_array_thumb.png" />
-<p><a class="reference internal" href="../../gallery/plot_stacked_array.html#sphx-glr-gallery-plot-stacked-array-py"><span class="std std-ref">Stacked Array</span></a></p>
+<p><a class="reference internal" href="../../gallery/plot_stacked_array.html"><span class="doc">Stacked Array</span></a></p>
   <div class="sphx-glr-thumbnail-title">Stacked Array</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="This example shows how to use &quot;stacking&quot; operators such as :pypylops_mpi.basicoperators.MPIVStack, :pypylops_mpi.basicoperators.MPIHStack and :pypylops_mpi.basicoperators.MPIBlockDiag."><img alt="" src="../../_images/sphx_glr_plot_stacking_thumb.png" />
-<p><a class="reference internal" href="../../gallery/plot_stacking.html#sphx-glr-gallery-plot-stacking-py"><span class="std std-ref">Stacking Operators</span></a></p>
+<p><a class="reference internal" href="../../gallery/plot_stacking.html"><span class="doc">Stacking Operators</span></a></p>
   <div class="sphx-glr-thumbnail-title">Stacking Operators</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="We solve the inverse of the demigration operator to obtain accurate and detailed sub surface images. Regardless of the choice of the modelling operator (i.e., ray-based or full wavefield-based), the demigration/migration process can be expressed as a linear operator of such kind:"><img alt="" src="../../_images/sphx_glr_lsm_thumb.png" />
-<p><a class="reference internal" href="../../tutorials/lsm.html#sphx-glr-tutorials-lsm-py"><span class="std std-ref">Least-squares Migration</span></a></p>
+<p><a class="reference internal" href="../../tutorials/lsm.html"><span class="doc">Least-squares Migration</span></a></p>
   <div class="sphx-glr-thumbnail-title">Least-squares Migration</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="This tutorial builds on the :pypylops.avo.poststack.PoststackLinearModelling operator to model 1d post-stack seismic traces 1d profiles of the subsurface acoustic impedence by means of the following equation"><img alt="" src="../../_images/sphx_glr_poststack_thumb.png" />
-<p><a class="reference internal" href="../../tutorials/poststack.html#sphx-glr-tutorials-poststack-py"><span class="std std-ref">Post Stack Inversion - 3D</span></a></p>
+<p><a class="reference internal" href="../../tutorials/poststack.html"><span class="doc">Post Stack Inversion - 3D</span></a></p>
   <div class="sphx-glr-thumbnail-title">Post Stack Inversion - 3D</div>
 </div></div><div style='clear:both'></div></section>
 </section>
@@ -694,7 +694,7 @@ instead as this can also handle distributed arrays with subcommunicators.</p>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
     <br/>
   </p>
 </div>
