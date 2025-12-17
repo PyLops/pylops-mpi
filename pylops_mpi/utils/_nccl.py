@@ -238,28 +238,20 @@ def nccl_allreduce(nccl_comm, send_buf, recv_buf=None, op: MPI.Op = MPI.SUM) -> 
     return recv_buf
 
 
-def nccl_bcast(nccl_comm, local_array, index, value) -> None:
-    """ NCCL equivalent of MPI_Bcast. Broadcasts a single value at the given index
-    from the root GPU (rank 0) to all other GPUs.
+def nccl_bcast(nccl_comm, send_buf, root: int = 0) -> None:
+    """NCCL equivalent of MPI_Bcast for an array buffer.
 
-    Parameters
-    ----------
-    nccl_comm : :obj:`cupy.cuda.nccl.NcclCommunicator`
-        The NCCL communicator used for collective communication.
-    local_array : :obj:`cupy.ndarray`
-        The local array on each GPU. The value at `index` will be broadcasted.
-    index : :obj:`int`
-        The index in the array to be broadcasted.
-    value : :obj:`scalar`
-        The value to broadcast (only used by the root GPU, rank 0).
+    Notes
+    -----
+    Any root-only assignment (e.g., setting a value prior to broadcast) must be
+    done outside this function.
     """
-    if nccl_comm.rank_id() == 0:
-        local_array[index] = value
+    send_buf = send_buf if isinstance(send_buf, cp.ndarray) else cp.asarray(send_buf)
     nccl_comm.bcast(
-        local_array[index].data.ptr,
-        _nccl_buf_size(local_array[index]),
-        cupy_to_nccl_dtype[str(local_array[index].dtype)],
-        0,
+        send_buf.data.ptr,
+        _nccl_buf_size(send_buf),
+        cupy_to_nccl_dtype[str(send_buf.dtype)],
+        root,
         cp.cuda.Stream.null.ptr,
     )
 

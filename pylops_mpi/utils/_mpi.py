@@ -104,41 +104,26 @@ def mpi_allreduce(base_comm: MPI.Comm,
 
 
 def mpi_bcast(base_comm: MPI.Comm,
-              rank: int,
-              local_array: NDArray,
-              index: int,
-              value: Union[int, NDArray],
+              send_buf: NDArray,
+              root: int = 0,
               engine: Optional[str] = "numpy",
-              ) -> None:
+              ) -> NDArray:
     """MPI_Bcast/bcast
 
     Dispatch bcast routine based on type of input and availability of
-    CUDA-Aware MPI
+    CUDA-Aware MPI.
 
-    Parameters
-    ----------
-    base_comm : :obj:`MPI.Comm`
-        Base MPI Communicator.
-    rank : :obj:`int`
-            Rank.
-    local_array : :obj:`numpy.ndarray`
-        Localy array to be broadcasted.
-    index : :obj:`int` or :obj:`slice`
-        Represents the index positions where a value needs to be assigned.
-    value : :obj:`int` or :obj:`numpy.ndarray`
-        Represents the value that will be assigned to the local array at
-        the specified index positions.
-    engine : :obj:`str`, optional
-        Engine used to store array (``numpy`` or ``cupy``)
-
+    Notes
+    -----
+    Any root-only assignment (e.g., setting a value prior to broadcast) must be
+    done outside this function.
     """
     if deps.cuda_aware_mpi_enabled or engine == "numpy":
-        if rank == 0:
-            local_array[index] = value
-        base_comm.Bcast(local_array[index])
-    else:
-        # CuPy with non-CUDA-aware MPI
-        local_array[index] = base_comm.bcast(value)
+        base_comm.Bcast(send_buf, root=root)
+        return send_buf
+    # CuPy with non-CUDA-aware MPI: use object broadcast
+    value = send_buf if base_comm.Get_rank() == root else None
+    return base_comm.bcast(value, root=root)
 
 
 def mpi_send(base_comm: MPI.Comm,
