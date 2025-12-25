@@ -6,7 +6,7 @@ __all__ = [
     "mpi_recv",
 ]
 
-from typing import Optional, Union
+from typing import Optional
 
 from mpi4py import MPI
 from pylops.utils import NDArray
@@ -113,10 +113,22 @@ def mpi_bcast(base_comm: MPI.Comm,
     Dispatch bcast routine based on type of input and availability of
     CUDA-Aware MPI.
 
-    Notes
-    -----
-    Any root-only assignment (e.g., setting a value prior to broadcast) must be
-    done outside this function.
+    Parameters
+    ----------
+    base_comm : :obj:`MPI.Comm`
+        Base MPI Communicator.
+    send_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+        The data buffer to be broadcasted to the other ranks from the broadcasting root rank.
+    root : :obj:`int`, optional
+        The rank of the broadcasting process.
+    engine : :obj:`str`, optional
+        Engine used to store array (``numpy`` or ``cupy``)
+
+    Returns
+    -------
+    send_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+        The buffer containing the broadcasted data.
+
     """
     if deps.cuda_aware_mpi_enabled or engine == "numpy":
         base_comm.Bcast(send_buf, root=root)

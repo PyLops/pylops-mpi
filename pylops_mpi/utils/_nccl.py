@@ -240,11 +240,14 @@ def nccl_allreduce(nccl_comm, send_buf, recv_buf=None, op: MPI.Op = MPI.SUM) -> 
 
 def nccl_bcast(nccl_comm, send_buf, root: int = 0) -> None:
     """NCCL equivalent of MPI_Bcast for an array buffer.
-
-    Notes
-    -----
-    Any root-only assignment (e.g., setting a value prior to broadcast) must be
-    done outside this function.
+    Parameters
+    ----------
+    nccl_comm : :obj:`cupy.cuda.nccl.NcclCommunicator`
+        The NCCL communicator used for collective communication.
+    send_buf: :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+        The data buffer to be broadcasted to the other ranks from the broadcasting root rank.
+    root: :obj:`int`
+        The rank of the broadcasting process.
     """
     send_buf = send_buf if isinstance(send_buf, cp.ndarray) else cp.asarray(send_buf)
     nccl_comm.bcast(

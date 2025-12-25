@@ -1,4 +1,4 @@
-from typing import Any, NewType, Optional, Union
+from typing import Any, NewType, Optional
 
 from mpi4py import MPI
 from pylops.utils import NDArray
@@ -198,12 +198,25 @@ class DistributedMixIn:
                root: int = 0,
                engine: str = "numpy",
                ) -> NDArray:
-        """BCast operation.
+        """Broadcast operation
 
-        Notes
-        -----
-        Any root-only assignment (e.g., setting a value prior to broadcast) must
-        be done outside this method.
+        Parameters
+        ----------
+        base_comm : :obj:`MPI.Comm`
+            Base MPI Communicator.
+        base_comm_nccl : :obj:`cupy.cuda.nccl.NcclCommunicator`
+            NCCL Communicator.
+        send_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+            A buffer containing the data to be broadcast from the root rank.
+        root : :obj:`int`, optional
+            The rank of the process that holds the source data.
+        engine : :obj:`str`, optional
+            Engine used to store array (``numpy`` or ``cupy``)
+
+        Returns
+        -------
+        send_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+            The buffer containing the broadcasted data.
         """
         if deps.nccl_enabled and base_comm_nccl is not None:
             nccl_bcast(base_comm_nccl, send_buf, root=root)

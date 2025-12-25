@@ -205,7 +205,7 @@ class DistributedArray(DistributedMixIn):
         """
         if self.partition is Partition.BROADCAST:
             view = self.local_array[index]
-            if self.rank == 0: 
+            if self.rank == 0:
                 view[...] = value
             view = self._bcast(self.base_comm, self.base_comm_nccl,
                                view, root=0, engine=self.engine)
