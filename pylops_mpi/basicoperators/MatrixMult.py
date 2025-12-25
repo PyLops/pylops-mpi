@@ -724,7 +724,8 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
                         self._send(self.base_comm, None, A_local, dest=destA, tag=tagA, engine=x.engine)
                 if self._col_id == moving_col and ATtemp is None:
                     tagA = (100 + k) * 1000 + self.rank
-                    ATtemp = self._recv(self.base_comm, None, source=srcA, tag=tagA, engine=x.engine)
+                    recv_buf = ncp.empty_like(A_local)
+                    ATtemp = self._recv(self.base_comm, None, recv_buf, source=srcA, tag=tagA, engine=x.engine)
             Y_local += ncp.dot(ATtemp, Xtemp)
 
         Y_local_unpadded = Y_local[:local_k, :local_m]
