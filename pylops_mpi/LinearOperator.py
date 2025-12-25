@@ -76,7 +76,6 @@ class MPILinearOperator:
 
         """
         M, N = self.shape
-
         if x.global_shape != (N,):
             raise ValueError("dimension mismatch")
 

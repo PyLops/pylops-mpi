@@ -2,15 +2,29 @@
     Designed to run with n processes
     $ mpiexec -n 10 pytest test_distributedarray.py --with-mpi
 """
-import numpy as np
+import os
+
+if int(os.environ.get("TEST_CUPY_PYLOPS", 0)):
+    import cupy as np
+    from cupy.testing import assert_allclose
+
+    backend = "cupy"
+else:
+    import numpy as np
+    from numpy.testing import assert_allclose
+
+    backend = "numpy"
 from mpi4py import MPI
 import pytest
-from numpy.testing import assert_allclose
 
 from pylops_mpi import DistributedArray, Partition
 from pylops_mpi.DistributedArray import local_split
 
 np.random.seed(42)
+rank = MPI.COMM_WORLD.Get_rank()
+if backend == "cupy":
+    device_id = rank % np.cuda.runtime.getDeviceCount()
+    np.cuda.Device(device_id).use()
 
 par1 = {'global_shape': (500, 501),
         'partition': Partition.SCATTER, 'dtype': np.float64,
@@ -77,7 +91,8 @@ def test_creation(par):
     """Test creation of local arrays"""
     distributed_array = DistributedArray(global_shape=par['global_shape'],
                                          partition=par['partition'],
-                                         dtype=par['dtype'], axis=par['axis'])
+                                         dtype=par['dtype'], axis=par['axis'],
+                                         engine=backend)
     loc_shape = local_split(distributed_array.global_shape,
                             distributed_array.base_comm,
                             distributed_array.partition,
@@ -88,12 +103,14 @@ def test_creation(par):
     # Distributed array of ones
     distributed_ones = DistributedArray(global_shape=par['global_shape'],
                                         partition=par['partition'],
-                                        dtype=par['dtype'], axis=par['axis'])
+                                        dtype=par['dtype'], axis=par['axis'],
+                                        engine=backend)
     distributed_ones[:] = 1
     # Distributed array of zeroes
     distributed_zeroes = DistributedArray(global_shape=par['global_shape'],
                                           partition=par['partition'],
-                                          dtype=par['dtype'], axis=par['axis'])
+                                          dtype=par['dtype'], axis=par['axis'],
+                                          engine=backend)
     distributed_zeroes[:] = 0
     # Test for distributed ones
     assert isinstance(distributed_ones, DistributedArray)
@@ -132,7 +149,8 @@ def test_local_shapes(par):
     distributed_array = DistributedArray(global_shape=par['global_shape'],
                                          partition=par['partition'],
                                          axis=par['axis'], local_shapes=loc_shapes,
-                                         dtype=par['dtype'])
+                                         dtype=par['dtype'],
+                                         engine=backend)
     assert isinstance(distributed_array, DistributedArray)
     assert distributed_array.local_shape == loc_shapes[distributed_array.rank]
 
@@ -189,6 +207,8 @@ def test_distributed_norm(par):
     arr = DistributedArray.to_dist(x=par['x'], axis=par['axis'])
     assert_allclose(arr.norm(ord=1, axis=par['axis']),
                     np.linalg.norm(par['x'], ord=1, axis=par['axis']), rtol=1e-14)
+
+    # TODO (tharitt): FAIL with CuPy + MPI for inf norm
     assert_allclose(arr.norm(ord=np.inf, axis=par['axis']),
                     np.linalg.norm(par['x'], ord=np.inf, axis=par['axis']), rtol=1e-14)
     assert_allclose(arr.norm(), np.linalg.norm(par['x'].flatten()), rtol=1e-13)
@@ -317,6 +337,8 @@ def test_distributed_maskednorm(par):
     arr = DistributedArray.to_dist(x=x, mask=mask, axis=par['axis'])
     assert_allclose(arr.norm(ord=1, axis=par['axis']),
                     np.linalg.norm(par['x'], ord=1, axis=par['axis']) / nsub, rtol=1e-14)
+
+    # TODO (tharitt): Fail with CuPy + MPI
     assert_allclose(arr.norm(ord=np.inf, axis=par['axis']),
                     np.linalg.norm(par['x'], ord=np.inf, axis=par['axis']), rtol=1e-14)
     assert_allclose(arr.norm(ord=2, axis=par['axis']),

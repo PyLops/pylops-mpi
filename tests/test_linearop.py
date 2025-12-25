@@ -2,8 +2,18 @@
     Designed to run with n processes
     $ mpiexec -n 10 pytest test_linearop.py --with-mpi
 """
-import numpy as np
-from numpy.testing import assert_allclose
+import os
+
+if int(os.environ.get("TEST_CUPY_PYLOPS", 0)):
+    import cupy as np
+    from cupy.testing import assert_allclose
+
+    backend = "cupy"
+else:
+    import numpy as np
+    from numpy.testing import assert_allclose
+
+    backend = "numpy"
 from mpi4py import MPI
 import pytest
 
@@ -21,6 +31,9 @@ from pylops_mpi import (
 np.random.seed(42)
 rank = MPI.COMM_WORLD.Get_rank()
 size = MPI.COMM_WORLD.Get_size()
+if backend == "cupy":
+    device_id = rank % np.cuda.runtime.getDeviceCount()
+    np.cuda.Device(device_id).use()
 
 par1 = {'ny': 101, 'nx': 101, 'dtype': np.float64}
 par1j = {'ny': 101, 'nx': 101, 'dtype': np.complex128}
@@ -67,7 +80,7 @@ def test_transpose(par):
     Top_MPI = BDiag_MPI.T
 
     # For forward mode
-    x = DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    x = DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
     x[:] = np.ones(par['ny'])
     x_global = x.asarray()
     Top_x = Top_MPI @ x
@@ -75,7 +88,7 @@ def test_transpose(par):
     Top_x_np = Top_x.asarray()
 
     # For adjoint mode
-    y = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    y = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
     y[:] = np.ones(par['nx'])
     y_global = y.asarray()
     Top_y = Top_MPI.H @ y
@@ -101,7 +114,7 @@ def test_scaled(par):
     Sop_MPI = BDiag_MPI * -4
 
     # For forward mode
-    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
     x[:] = np.ones(par['nx'])
     x_global = x.asarray()
     Sop_x = Sop_MPI @ x
@@ -109,7 +122,7 @@ def test_scaled(par):
     Sop_x_np = Sop_x.asarray()
 
     # For adjoint mode
-    y = DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    y = DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
     y[:] = np.ones(par['ny'])
     y_global = y.asarray()
     Sop_y = Sop_MPI.H @ y
@@ -129,13 +142,15 @@ def test_scaled(par):
 @pytest.mark.parametrize("par", [(par1), (par1j)])
 def test_power(par):
     """Test the PowerLinearOperator"""
-    Op = pylops.MatrixMult(A=((rank + 1) * np.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
+    Op = pylops.MatrixMult(A=((rank + 1) * np.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']),
+                           dtype=par['dtype'])
     BDiag_MPI = MPIBlockDiag(ops=[Op, ])
+
     # Power Operator
     Pop_MPI = BDiag_MPI ** 3
 
     # Forward Mode
-    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
     x[:] = np.ones(par['nx'])
     x_global = x.asarray()
     Pop_x = Pop_MPI @ x
@@ -143,7 +158,7 @@ def test_power(par):
     Pop_x_np = Pop_x.asarray()
 
     # Adjoint Mode
-    y = DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    y = DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
     y[:] = np.ones(par['ny'])
     y_global = y.asarray()
     Pop_y = Pop_MPI.H @ y
@@ -154,7 +169,7 @@ def test_power(par):
         ops = [pylops.MatrixMult((i + 1) * np.ones(shape=(par['ny'], par['nx'])).astype(par['dtype'])) for i in
                range(size)]
         BDiag = pylops.BlockDiag(ops=ops)
-        Pop = BDiag ** 3
+        Pop = BDiag * BDiag * BDiag  # temporarely replaced BDiag ** 3 until bug in PyLops is fixed
         assert_allclose(Pop_x_np, Pop @ x_global, rtol=1e-9)
         assert_allclose(Pop_y_np, Pop.H @ y_global, rtol=1e-9)
 
@@ -172,7 +187,7 @@ def test_sum(par):
     Sop_MPI = BDiag_MPI_1 + BDiag_MPI_2
 
     # Forward Mode
-    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
     x[:] = np.ones(par['nx'])
     x_global = x.asarray()
     Sop_x = Sop_MPI @ x
@@ -180,7 +195,7 @@ def test_sum(par):
     Sop_x_np = Sop_x.asarray()
 
     # Adjoint Mode
-    y = DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    y = DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
     y[:] = np.ones(par['ny'])
     y_global = y.asarray()
     Sop_y = Sop_MPI.H @ y
@@ -208,11 +223,11 @@ def test_product(par):
 
     Op2 = pylops.MatrixMult(A=((rank + 2) * np.ones(shape=(par['nx'], par['ny']))).astype(par['dtype']))
     BDiag_MPI_2 = MPIBlockDiag(ops=[Op2, ])
-    # Product Op
+    # , engine=backendProduct Op
     Pop_MPI = BDiag_MPI_1 * BDiag_MPI_2
 
     # Forward Mode
-    x = DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    x = DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
     x[:] = np.ones(par['ny'])
     x_global = x.asarray()
     Pop_x = Pop_MPI @ x
@@ -220,7 +235,7 @@ def test_product(par):
     Pop_x_np = Pop_x.asarray()
 
     # Adjoint Mode
-    y = DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    y = DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
     y[:] = np.ones(par['ny'])
     y_global = y.asarray()
     Pop_y = Pop_MPI.H @ y
@@ -249,7 +264,7 @@ def test_conj(par):
     Cop_MPI = BDiag_MPI.conj()
 
     # For forward mode
-    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'])
+    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
     x[:] = np.ones(par['nx'])
     x_global = x.asarray()
     Cop_x = Cop_MPI @ x
@@ -257,7 +272,7 @@ def test_conj(par):
     Cop_x_np = Cop_x.asarray()
 
     # For adjoint mode
-    y = DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'])
+    y = DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
     y[:] = np.ones(par['ny'])
     y_global = y.asarray()
     Cop_y = Cop_MPI.H @ y
@@ -284,7 +299,8 @@ def test_mpilinop(par):
     # Use Partition="BROADCAST" for a single operator
     # Forward
     x = DistributedArray(global_shape=Mop.shape[1],
-                         partition=Partition.BROADCAST, dtype=par['dtype'])
+                         partition=Partition.BROADCAST, dtype=par['dtype'],
+                         engine=backend)
     x[:] = np.random.normal(1, 10, x.local_shape).astype(par['dtype'])
     x_global = x.asarray()
     y_dist = Mop @ x
@@ -292,7 +308,8 @@ def test_mpilinop(par):
 
     # Adjoint
     x = DistributedArray(global_shape=Mop.shape[0],
-                         partition=Partition.BROADCAST, dtype=par['dtype'])
+                         partition=Partition.BROADCAST, dtype=par['dtype'],
+                         engine=backend)
     x[:] = np.random.normal(1, 10, x.local_shape).astype(par['dtype'])
     x_adj_global = x.asarray()
     y_adj_dist = Mop.H @ x
@@ -317,7 +334,7 @@ def test_fwd_mpilinop(par):
     FullOp_MPI = VStack_MPI @ Mop
 
     # Broadcasted DistributedArray
-    x = DistributedArray(global_shape=FullOp_MPI.shape[1], partition=Partition.BROADCAST, dtype=par['dtype'])
+    x = DistributedArray(global_shape=FullOp_MPI.shape[1], partition=Partition.BROADCAST, dtype=par['dtype'], engine=backend)
     x[:] = np.random.normal(1, 10, x.local_shape).astype(par['dtype'])
     x_global = x.asarray()
 
@@ -346,7 +363,7 @@ def test_adj_mpilinop(par):
     FullOp_MPI = VStack_MPI @ Mop
 
     # Scattered DistributedArray
-    x = DistributedArray(global_shape=FullOp_MPI.shape[0], partition=Partition.SCATTER, dtype=par['dtype'])
+    x = DistributedArray(global_shape=FullOp_MPI.shape[0], partition=Partition.SCATTER, dtype=par['dtype'], engine=backend)
     x[:] = np.random.normal(1, 10, x.local_shape).astype(par['dtype'])
     x_global = x.asarray()
 

@@ -29,7 +29,7 @@ dev-install:
 
 dev-install_nccl:
 	make pipcheck
-	$(PIP) install -r requirements-dev.txt && $(PIP) install cupy-cuda12x nvidia-nccl-cu12  $(PIP) install -e .
+	$(PIP) install -r requirements-dev.txt && $(PIP) install cupy-cuda12x nvidia-nccl-cu12 && $(PIP) install -e .
 
 install_conda:
 	conda env create -f environment.yml && conda activate pylops_mpi && pip install .
@@ -47,7 +47,11 @@ lint:
 	flake8 pylops_mpi/ tests/ examples/ tutorials/
 
 tests:
-	mpiexec -n $(NUM_PROCESSES) pytest tests/ --with-mpi
+	export TEST_CUPY_PYLOPS=0 && mpiexec -n $(NUM_PROCESSES) pytest tests/ --with-mpi
+
+# assuming NUM_PROCESSES <= number of gpus available
+tests_gpu:
+	export TEST_CUPY_PYLOPS=1 && mpiexec -n $(NUM_PROCESSES) pytest tests/ --with-mpi
 
 # assuming NUM_PROCESSES <= number of gpus available
 tests_nccl:	
@@ -74,7 +78,7 @@ doc_nccl:
 	rm tutorials/*_cupy.py tutorials/*_nccl.py
 
 docupdate:
-	cd docs && make html && cd ..
+	cd docs && NCCL_PYLOPS_MPI=0 make html && cd ..
 
 servedoc:
 	$(PYTHON) -m http.server --directory docs/build/
