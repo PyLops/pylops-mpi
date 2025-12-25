@@ -161,7 +161,8 @@ def block_gather(x: DistributedArray, orig_shape: Tuple[int, int], comm: MPI.Com
     if p_prime * p_prime != comm.Get_size():
         raise RuntimeError(f"Communicator size must be a perfect square, got {comm.Get_size()!r}")
 
-    all_blks = comm.allgather(x.local_array)
+    comm_nccl = x.base_comm_nccl if comm == x.base_comm else None
+    all_blks = x._allgather(comm, comm_nccl, x.local_array, engine=x.engine)
     nr, nc = orig_shape
     br, bc = math.ceil(nr / p_prime), math.ceil(nc / p_prime)
     C = ncp.zeros((nr, nc), dtype=all_blks[0].dtype)
@@ -706,7 +707,7 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
 
         A_local = self.At if hasattr(self, "At") else self.A.T.conj()
         Y_local = ncp.zeros((self.A.shape[1], bm), dtype=output_dtype)
-
+        base_comm_nccl = self.base_comm_nccl if x.engine == "cupy" else None
         for k in range(self._P_prime):
             Xtemp = x_block.copy() if self._row_id == k else ncp.empty_like(x_block)
             col_comm_nccl = self._col_comm_nccl if x.engine == "cupy" else None
@@ -721,11 +722,13 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
                     destA = self._col_id * self._P_prime + moving_col
                     if destA != self.rank:
                         tagA = (100 + k) * 1000 + destA
-                        self._send(self.base_comm, None, A_local, dest=destA, tag=tagA, engine=x.engine)
+                        self._send(self.base_comm, base_comm_nccl, A_local,
+                                   dest=destA, tag=tagA, engine=x.engine)
                 if self._col_id == moving_col and ATtemp is None:
                     tagA = (100 + k) * 1000 + self.rank
                     recv_buf = ncp.empty_like(A_local)
-                    ATtemp = self._recv(self.base_comm, None, recv_buf, source=srcA, tag=tagA, engine=x.engine)
+                    ATtemp = self._recv(self.base_comm, base_comm_nccl, recv_buf,
+                                        source=srcA, tag=tagA, engine=x.engine)
             Y_local += ncp.dot(ATtemp, Xtemp)
 
         Y_local_unpadded = Y_local[:local_k, :local_m]
@@ -761,6 +764,8 @@ def MPIMatrixMult(
         memory). Default is ``False``.
     base_comm : :obj:`mpi4py.MPI.Comm`, optional
         MPI communicator to use. Defaults to ``MPI.COMM_WORLD``.
+    base_comm_nccl : :obj:`cupy.cuda.nccl.NcclCommunicator`, optional
+        NCCL communicator to use when operating on ``cupy`` arrays.
     kind : :obj:`str`, optional
         Algorithm used to perform matrix multiplication: ``'block'`` for #
         block-row-column decomposition, and ``'summa'`` for SUMMA algorithm, or
