@@ -600,6 +600,7 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
             raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
 
         output_dtype = np.result_type(self.dtype, x.dtype)
+        acc_dtype = np.promote_types(output_dtype, np.float64)
         # Calculate local shapes for block distribution
         bn = self._N_padded // self._P_prime  # block size in N dimension
         bm = self._M_padded // self._P_prime  # block size in M dimension
@@ -626,7 +627,7 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
         local_k = bk if self._row_id != self._P_prime - 1 else self.K - (self._P_prime - 1) * bk
 
         # Reshape x.local_array to its 2D block form
-        x_block = x.local_array.reshape((local_k, local_m))
+        x_block = x.local_array.reshape((local_k, local_m)).astype(acc_dtype, copy=False)
 
         # Pad the block to the full padded size if necessary
         pad_k = bk - local_k
@@ -635,10 +636,11 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
         if pad_k > 0 or pad_m > 0:
             x_block = ncp.pad(x_block, [(0, pad_k), (0, pad_m)], mode='constant')
 
-        Y_local = ncp.zeros((self.A.shape[0], bm), dtype=output_dtype)
+        A_acc = self.A.astype(acc_dtype, copy=False)
+        Y_local = ncp.zeros((self.A.shape[0], bm), dtype=acc_dtype)
 
         for k in range(self._P_prime):
-            Atemp = self.A.copy() if self._col_id == k else ncp.empty_like(self.A)
+            Atemp = A_acc.copy() if self._col_id == k else ncp.empty_like(A_acc)
             Xtemp = x_block.copy() if self._row_id == k else ncp.empty_like(x_block)
             row_comm_nccl = self._row_comm_nccl if x.engine == "cupy" else None
             col_comm_nccl = self._col_comm_nccl if x.engine == "cupy" else None
@@ -646,7 +648,7 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
             Xtemp = self._bcast(self._col_comm, col_comm_nccl, Xtemp, root=k, engine=x.engine)
             Y_local += ncp.dot(Atemp, Xtemp)
 
-        Y_local_unpadded = Y_local[:local_n, :local_m]
+        Y_local_unpadded = Y_local[:local_n, :local_m].astype(output_dtype, copy=False)
         y[:] = Y_local_unpadded.flatten()
         return y
 
@@ -676,6 +678,7 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
             output_dtype = x.dtype if np.iscomplexobj(x.local_array) else self.dtype
             # But still need to check type promotion for precision
             output_dtype = np.result_type(self.dtype, output_dtype)
+        acc_dtype = np.promote_types(output_dtype, np.float64)
 
         y = DistributedArray(
             global_shape=(self.K * self.M),
@@ -696,7 +699,7 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
         local_n = bn if self._row_id != self._P_prime - 1 else self.N - (self._P_prime - 1) * bn
 
         # Reshape x.local_array to its 2D block form
-        x_block = x.local_array.reshape((local_n, local_m))
+        x_block = x.local_array.reshape((local_n, local_m)).astype(acc_dtype, copy=False)
 
         # Pad the block to the full padded size if necessary
         pad_n = bn - local_n
@@ -705,8 +708,8 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
         if pad_n > 0 or pad_m > 0:
             x_block = ncp.pad(x_block, [(0, pad_n), (0, pad_m)], mode='constant')
 
-        A_local = self.At if hasattr(self, "At") else self.A.T.conj()
-        Y_local = ncp.zeros((self.A.shape[1], bm), dtype=output_dtype)
+        A_local = (self.At if hasattr(self, "At") else self.A.T.conj()).astype(acc_dtype, copy=False)
+        Y_local = ncp.zeros((self.A.shape[1], bm), dtype=acc_dtype)
         base_comm_nccl = self.base_comm_nccl if x.engine == "cupy" else None
         for k in range(self._P_prime):
             Xtemp = x_block.copy() if self._row_id == k else ncp.empty_like(x_block)
@@ -731,7 +734,7 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
                                         source=srcA, tag=tagA, engine=x.engine)
             Y_local += ncp.dot(ATtemp, Xtemp)
 
-        Y_local_unpadded = Y_local[:local_k, :local_m]
+        Y_local_unpadded = Y_local[:local_k, :local_m].astype(output_dtype, copy=False)
         y[:] = Y_local_unpadded.flatten()
         return y
 
