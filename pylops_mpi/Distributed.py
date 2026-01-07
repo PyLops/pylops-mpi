@@ -1,4 +1,4 @@
-from typing import Any, NewType, Optional, Union
+from typing import Any, NewType, Optional
 
 from mpi4py import MPI
 from pylops.utils import NDArray
@@ -194,13 +194,11 @@ class DistributedMixIn:
     def _bcast(self,
                base_comm: MPI.Comm,
                base_comm_nccl: NcclCommunicatorType,
-               rank : int,
-               local_array: NDArray,
-               index: int,
-               value: Union[int, NDArray],
+               send_buf: NDArray,
+               root: int = 0,
                engine: str = "numpy",
-               ) -> None:
-        """BCast operation
+               ) -> NDArray:
+        """Broadcast operation
 
         Parameters
         ----------
@@ -208,24 +206,22 @@ class DistributedMixIn:
             Base MPI Communicator.
         base_comm_nccl : :obj:`cupy.cuda.nccl.NcclCommunicator`
             NCCL Communicator.
-        rank : :obj:`int`
-            Rank.
-        local_array : :obj:`numpy.ndarray`
-            Localy array to be broadcasted.
-        index : :obj:`int` or :obj:`slice`
-            Represents the index positions where a value needs to be assigned.
-        value : :obj:`int` or :obj:`numpy.ndarray`
-            Represents the value that will be assigned to the local array at
-            the specified index positions.
+        send_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+            A buffer containing the data to be broadcast from the root rank.
+        root : :obj:`int`, optional
+            The rank of the process that holds the source data.
         engine : :obj:`str`, optional
             Engine used to store array (``numpy`` or ``cupy``)
 
+        Returns
+        -------
+        send_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+            The buffer containing the broadcasted data.
         """
         if deps.nccl_enabled and base_comm_nccl is not None:
-            nccl_bcast(base_comm_nccl, local_array, index, value)
-        else:
-            mpi_bcast(base_comm, rank, local_array, index, value,
-                      engine=engine)
+            nccl_bcast(base_comm_nccl, send_buf, root=root)
+            return send_buf
+        return mpi_bcast(base_comm, send_buf, root=root, engine=engine)
 
     def _send(self,
               base_comm: MPI.Comm,
