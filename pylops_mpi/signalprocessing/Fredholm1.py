@@ -17,7 +17,7 @@ from pylops_mpi.DistributedArray import subcomm_split
 
 def _choose_pb_and_p(P: int, nsl: int) -> Tuple[int, int]:
     """
-    Choose Pb to minimize the α–β model under constraint P/Pb is a perfect square.
+    Choose Pb to minimize the α-β model under constraint P/Pb is a perfect square.
     Heuristic: largest Pb <= nsl such that P % Pb == 0 and is_square(P/Pb).
     """
     best = None
@@ -140,33 +140,32 @@ class MPIFredholm1SUMMA(DistributedMixIn, MPILinearOperator):
         self.col_comm = self.batch_comm.Split(color=self.col_id, key=self.row_id)
 
         # # NCCL subcomms if provided
-        # if base_comm_nccl is not None:
-        #     # subcomm_split expects mask per WORLD rank
-        #     # batch_comm: group by batch_id
-        #     mask_batch = [r // self.P2 for r in range(self.size)]
-        #     self.batch_comm_nccl = subcomm_split(mask_batch, base_comm_nccl)
-        #
-        #     # row_comm: group by (batch_id,row_id)
-        #     mask_row = []
-        #     mask_col = []
-        #     for r in range(self.size):
-        #         bid = r // self.P2
-        #         rig = r % self.P2
-        #         rr, cc = divmod(rig, self.p)
-        #         mask_row.append(bid * self.p + rr)
-        #         mask_col.append(bid * self.p + cc)
-        #     self.row_comm_nccl = subcomm_split(mask_row, base_comm_nccl)
-        #     self.col_comm_nccl = subcomm_split(mask_col, base_comm_nccl)
-        # else:
-        self.batch_comm_nccl = None
-        self.row_comm_nccl = None
-        self.col_comm_nccl = None
+        if base_comm_nccl is not None:
+            # subcomm_split expects mask per WORLD rank
+            # batch_comm: group by batch_id
+            mask_batch = [r // self.P2 for r in range(self.size)]
+            self.batch_comm_nccl = subcomm_split(mask_batch, base_comm_nccl)
+
+            # row_comm: group by (batch_id,row_id)
+            mask_row = []
+            mask_col = []
+            for r in range(self.size):
+                bid = r // self.P2
+                rig = r % self.P2
+                rr, cc = divmod(rig, self.p)
+                mask_row.append(bid * self.p + rr)
+                mask_col.append(bid * self.p + cc)
+            self.row_comm_nccl = subcomm_split(mask_row, base_comm_nccl)
+            self.col_comm_nccl = subcomm_split(mask_col, base_comm_nccl)
+        else:
+            self.batch_comm_nccl = None
+            self.row_comm_nccl = None
+            self.col_comm_nccl = None
 
         # Store G tile and optional GT
         self.G = G_local.astype(np.dtype(dtype))
         if saveGt:
-            # (B, nx_loc, ny_loc) -> (B, ny_loc, nx_loc)
-            self.GT = self.G.transpose(0, 2, 1).conj()
+            self.GT = self.G.transpose(0, 2, 1).conj() # (B, nx_loc, ny_loc) -> (B, ny_loc, nx_loc)
 
         # Infer global nx, ny from within-group tiling
         # A tile: (nx_loc, ny_loc) where nx is reduced on col_comm, ny on row_comm
@@ -252,16 +251,16 @@ class MPIFredholm1SUMMA(DistributedMixIn, MPILinearOperator):
         # Reshape local x tile and pad to (B, bk, bm)
         X = x.local_array.reshape((self.B, self.local_k, self.local_m)).astype(output_dtype)
         if self.local_k != self.bk or self.local_m != self.bm:
-            Xp = ncp.zeros((self.B, self.bk, self.bm), dtype=output_dtype)
-            Xp[:, :self.local_k, :self.local_m] = X
-            X = Xp
+            X_padded = ncp.zeros((self.B, self.bk, self.bm), dtype=output_dtype)
+            X_padded[:, :self.local_k, :self.local_m] = X
+            X = X_padded
 
         # Pad local G tile to (B, bn, bk) for SUMMA A tiles
         G = self.G[:, :self.local_n, :self.local_ka].astype(output_dtype)
         if self.local_n != self.bn or self.local_ka != self.bk:
-            Gp = ncp.zeros((self.B, self.bn, self.bk), dtype=output_dtype)
-            Gp[:, :self.local_n, :self.local_ka] = G
-            G = Gp
+            G_padded = ncp.zeros((self.B, self.bn, self.bk), dtype=output_dtype)
+            G_padded[:, :self.local_n, :self.local_ka] = G
+            G = G_padded
 
         Y = ncp.zeros((self.B, self.bn, self.bm), dtype=output_dtype)
 
@@ -277,9 +276,8 @@ class MPIFredholm1SUMMA(DistributedMixIn, MPILinearOperator):
             Btemp = self._bcast(self.col_comm, col_nccl, Btemp, root=k, engine=x.engine)
 
             Y += ncp.matmul(Atemp, Btemp)
-
-        # Unpad to local (B, local_n, local_m) and write out
-        Y = Y[:, :self.local_n, :self.local_m]
+        
+        Y = Y[:, :self.local_n, :self.local_m]  # Unpad to local (B, local_n, local_m) and write out
         y[:] = Y.ravel()
         return y
 
@@ -321,9 +319,9 @@ class MPIFredholm1SUMMA(DistributedMixIn, MPILinearOperator):
         # Reshape x tile and pad to (B, bn, bm)
         X = x.local_array.reshape((self.B, self.local_n, self.local_m)).astype(output_dtype)
         if self.local_n != self.bn or self.local_m != self.bm:
-            Xp = ncp.zeros((self.B, self.bn, self.bm), dtype=output_dtype)
-            Xp[:, :self.local_n, :self.local_m] = X
-            X = Xp
+            X_padded = ncp.zeros((self.B, self.bn, self.bm), dtype=output_dtype)
+            X_padded[:, :self.local_n, :self.local_m] = X
+            X = X_padded
 
         # Local A^H tile (transpose-conj of A tile): (B, bk, bn)
         if hasattr(self, "GT"):
@@ -332,9 +330,9 @@ class MPIFredholm1SUMMA(DistributedMixIn, MPILinearOperator):
             AT_local = self.G[:, :self.local_n, :self.local_ka].transpose(0, 2, 1).conj().astype(output_dtype)
 
         if self.local_ka != self.bk or self.local_n != self.bn:
-            ATp = ncp.zeros((self.B, self.bk, self.bn), dtype=output_dtype)
-            ATp[:, :self.local_ka, :self.local_n] = AT_local
-            AT_local = ATp
+            AT_padded = ncp.zeros((self.B, self.bk, self.bn), dtype=output_dtype)
+            AT_padded[:, :self.local_ka, :self.local_n] = AT_local
+            AT_local = AT_padded
         AT_local = ncp.ascontiguousarray(AT_local)
 
         Y = ncp.zeros((self.B, self.bk, self.bm), dtype=output_dtype)
@@ -349,7 +347,7 @@ class MPIFredholm1SUMMA(DistributedMixIn, MPILinearOperator):
             Xtemp = X.copy() if self.row_id == k else ncp.empty_like(X)
             Xtemp = self._bcast(self.col_comm, col_nccl, Xtemp, root=k, engine=x.engine)
 
-            # Determine source rank for AT block needed this iteration
+            # Determine source rank for A^T block needed this iteration
             # WORLD rank mapping inside batch group:
             #   world_rank = batch_id*P2 + (row*p + col)
             # Need AT from srcA = (row=k, col=row_id) within this batch group:
@@ -376,8 +374,7 @@ class MPIFredholm1SUMMA(DistributedMixIn, MPILinearOperator):
 
             Y += ncp.matmul(ATtemp, Xtemp)
 
-        # Unpad output to (B, local_k(row_id), local_m)
-        Y = Y[:, :self.local_k, :self.local_m]
+        Y = Y[:, :self.local_k, :self.local_m] # Unpad output to (B, local_k(row_id), local_m)
         y[:] = Y.ravel()
         return y
 
