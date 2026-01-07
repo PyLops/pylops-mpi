@@ -41,7 +41,7 @@ test_params = [
     pytest.param(37, 37, 37, "float64", id="f32_37_37_37"),
     pytest.param(50, 30, 40, "float64", id="f64_50_30_40"),
     # temporarely removed as sometimes crashed CI... to be investigated
-    # pytest.param(22, 20, 16, "complex64", id="c64_22_20_16"),
+    pytest.param(22, 20, 16, "complex", id="c64_22_20_16"),
     pytest.param(3, 4, 5, "float32", id="f32_3_4_5"),
     pytest.param(1, 2, 1, "float64", id="f64_1_2_1",),
     pytest.param(2, 1, 3, "float32", id="f32_2_1_3",),

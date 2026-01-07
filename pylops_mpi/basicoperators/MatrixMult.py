@@ -344,6 +344,13 @@ class _MPIBlockMatrixMult(DistributedMixIn, MPILinearOperator):
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
         output_dtype = np.result_type(self.dtype, x.dtype)
+        if np.issubdtype(output_dtype, np.complexfloating):
+            if x.engine == "numpy" and np.dtype(output_dtype) == np.dtype(np.complex128):
+                acc_dtype = np.promote_types(output_dtype, np.longdouble)
+            else:
+                acc_dtype = np.promote_types(output_dtype, np.float64)
+        else:
+            acc_dtype = output_dtype
         y = DistributedArray(
             global_shape=(self.N * self.dimsd[1]),
             local_shapes=[(self.N * c) for c in self._rank_col_lens],
@@ -357,12 +364,13 @@ class _MPIBlockMatrixMult(DistributedMixIn, MPILinearOperator):
 
         my_own_cols = self._rank_col_lens[self.rank]
         x_arr = x.local_array.reshape((self.dims[0], my_own_cols))
-        X_local = x_arr.astype(output_dtype)
+        X_local = x_arr.astype(acc_dtype, copy=False)
+        A_local = self.A.astype(acc_dtype, copy=False)
         row_comm_nccl = self._row_comm_nccl if x.engine == "cupy" else None
         Y_tiles = self._allgather(
             self._row_comm,
             row_comm_nccl,
-            ncp.matmul(self.A, X_local),
+            ncp.matmul(A_local, X_local).astype(output_dtype, copy=False),
             engine=x.engine,
         )
         Y_local = ncp.vstack(Y_tiles)
@@ -385,6 +393,13 @@ class _MPIBlockMatrixMult(DistributedMixIn, MPILinearOperator):
             output_dtype = x.dtype if np.iscomplexobj(x.local_array) else self.dtype
             # But still need to check type promotion for precision
             output_dtype = np.result_type(self.dtype, output_dtype)
+        if np.issubdtype(output_dtype, np.complexfloating):
+            if x.engine == "numpy" and np.dtype(output_dtype) == np.dtype(np.complex128):
+                acc_dtype = np.promote_types(output_dtype, np.longdouble)
+            else:
+                acc_dtype = np.promote_types(output_dtype, np.float64)
+        else:
+            acc_dtype = output_dtype
 
         y = DistributedArray(
             global_shape=(self.K * self.dimsd[1]),
@@ -397,10 +412,10 @@ class _MPIBlockMatrixMult(DistributedMixIn, MPILinearOperator):
             base_comm_nccl=x.base_comm_nccl
         )
 
-        x_arr = x.local_array.reshape((self.N, self._local_ncols)).astype(output_dtype)
+        x_arr = x.local_array.reshape((self.N, self._local_ncols)).astype(acc_dtype, copy=False)
         X_tile = x_arr[self._row_start:self._row_end, :]
-        A_local = self.At if hasattr(self, "At") else self.A.T.conj()
-        Y_local = ncp.matmul(A_local, X_tile)
+        A_local = (self.At if hasattr(self, "At") else self.A.T.conj()).astype(acc_dtype, copy=False)
+        Y_local = ncp.matmul(A_local, X_tile).astype(output_dtype, copy=False)
         row_comm_nccl = self._row_comm_nccl if x.engine == "cupy" else None
         y_layer = self._allreduce(
             self._row_comm,
@@ -600,7 +615,13 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
             raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
 
         output_dtype = np.result_type(self.dtype, x.dtype)
-        acc_dtype = np.promote_types(output_dtype, np.float64)
+        if np.issubdtype(output_dtype, np.complexfloating):
+            if x.engine == "numpy" and np.dtype(output_dtype) == np.dtype(np.complex128):
+                acc_dtype = np.promote_types(output_dtype, np.longdouble)
+            else:
+                acc_dtype = np.promote_types(output_dtype, np.float64)
+        else:
+            acc_dtype = output_dtype
         # Calculate local shapes for block distribution
         bn = self._N_padded // self._P_prime  # block size in N dimension
         bm = self._M_padded // self._P_prime  # block size in M dimension
@@ -678,7 +699,13 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
             output_dtype = x.dtype if np.iscomplexobj(x.local_array) else self.dtype
             # But still need to check type promotion for precision
             output_dtype = np.result_type(self.dtype, output_dtype)
-        acc_dtype = np.promote_types(output_dtype, np.float64)
+        if np.issubdtype(output_dtype, np.complexfloating):
+            if np.dtype(output_dtype) == np.dtype(np.complex128):
+                acc_dtype = np.promote_types(output_dtype, np.longdouble)
+            else:
+                acc_dtype = np.promote_types(output_dtype, np.float64)
+        else:
+            acc_dtype = output_dtype
 
         y = DistributedArray(
             global_shape=(self.K * self.M),
