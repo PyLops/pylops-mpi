@@ -665,9 +665,12 @@
 <span class="sd">            the specified index positions.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition</span> <span class="ow">is</span> <span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_bcast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_array</span><span class="p">,</span>
-                        <span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
+            <span class="n">view</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_array</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">view</span><span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="n">view</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bcast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span>
+                               <span class="n">view</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">local_array</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">view</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">local_array</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 
@@ -1516,7 +1519,7 @@
 
   <p class="copyright">
     
-      © Copyright 2025, PyLops Development Team.
+      © Copyright 2026, PyLops Development Team.
       <br/>
     
   </p>

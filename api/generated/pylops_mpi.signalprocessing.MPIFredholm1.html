@@ -528,7 +528,7 @@ across the first dimension</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
-<dt><strong>G</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a></span></dt><dd><p>Multi-dimensional convolution kernel of size
+<dt><strong>G</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a></span></dt><dd><p>Multi-dimensional convolution kernel of size
 <span class="math notranslate nohighlight">\([n_{\text{slice}} \times n_x \times n_y]\)</span></p>
 </dd>
 <dt><strong>nz</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a>, optional</span></dt><dd><p>Additional dimension of model</p>
@@ -537,7 +537,7 @@ across the first dimension</p>
 (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or create <code class="docutils literal notranslate"><span class="pre">G.H</span></code> on-the-fly (<code class="docutils literal notranslate"><span class="pre">False</span></code>)
 Note that <code class="docutils literal notranslate"><span class="pre">saveGt=True</span></code> will double the amount of required memory</p>
 </dd>
-<dt><strong>usematmul</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Use <code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.matmul</span></code> (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or for-loop with <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dot.html#numpy.dot" title="(in NumPy v2.3)"><code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.dot</span></code></a>
+<dt><strong>usematmul</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Use <code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.matmul</span></code> (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or for-loop with <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dot.html#numpy.dot" title="(in NumPy v2.4)"><code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.dot</span></code></a>
 (<code class="docutils literal notranslate"><span class="pre">False</span></code>). As it is not possible to define which approach is more
 performant (this is highly dependent on the size of <code class="docutils literal notranslate"><span class="pre">G</span></code> and input
 arrays as well as the hardware used in the computation), we advise users
@@ -685,7 +685,7 @@ distributed arrays with broadcast partion.</p>
 
   <p class="copyright">
     
-      © Copyright 2025, PyLops Development Team.
+      © Copyright 2026, PyLops Development Team.
       <br/>
     
   </p>

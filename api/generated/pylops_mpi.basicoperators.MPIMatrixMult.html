@@ -521,7 +521,7 @@
 <h1>pylops_mpi.basicoperators.MPIMatrixMult<a class="headerlink" href="#pylops-mpi-basicoperators-mpimatrixmult" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="pylops_mpi.basicoperators.MPIMatrixMult">
-<span class="sig-prename descclassname"><span class="pre">pylops_mpi.basicoperators.</span></span><span class="sig-name descname"><span class="pre">MPIMatrixMult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">M</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saveAt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;mpi4py.MPI.Intracomm</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'summa'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'float64'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/basicoperators/MatrixMult.html#MPIMatrixMult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.basicoperators.MPIMatrixMult" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pylops_mpi.basicoperators.</span></span><span class="sig-name descname"><span class="pre">MPIMatrixMult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">M</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saveAt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;mpi4py.MPI.Intracomm</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'summa'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'float64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm_nccl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/basicoperators/MatrixMult.html#MPIMatrixMult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.basicoperators.MPIMatrixMult" title="Link to this definition">#</a></dt>
 <dd><p>MPI Distributed Matrix Multiplication Operator</p>
 <p>This operator performs distributed matrix-matrix multiplication
 using either the SUMMA (Scalable Universal Matrix Multiplication
@@ -530,7 +530,7 @@ specified <code class="docutils literal notranslate"><span class="pre">kind</spa
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
-<dt><strong>A</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a></span></dt><dd><p>Local block of the matrix operator.</p>
+<dt><strong>A</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a></span></dt><dd><p>Local block of the matrix operator.</p>
 </dd>
 <dt><strong>M</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a></span></dt><dd><p>Global number of columns in the operand and result matrices.</p>
 </dd>
@@ -539,6 +539,8 @@ specified <code class="docutils literal notranslate"><span class="pre">kind</spa
 memory). Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 </dd>
 <dt><strong>base_comm</strong><span class="classifier"><a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/reference/mpi4py.MPI.Comm.html#mpi4py.MPI.Comm" title="(in MPI for Python v4.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpi4py.MPI.Comm</span></code></a>, optional</span></dt><dd><p>MPI communicator to use. Defaults to <code class="docutils literal notranslate"><span class="pre">MPI.COMM_WORLD</span></code>.</p>
+</dd>
+<dt><strong>base_comm_nccl</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cupy.cuda.nccl.NcclCommunicator</span></code>, optional</span></dt><dd><p>NCCL communicator to use when operating on <code class="docutils literal notranslate"><span class="pre">cupy</span></code> arrays.</p>
 </dd>
 <dt><strong>kind</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Algorithm used to perform matrix multiplication: <code class="docutils literal notranslate"><span class="pre">'block'</span></code> for #
 block-row-column decomposition, and <code class="docutils literal notranslate"><span class="pre">'summa'</span></code> for SUMMA algorithm, or
@@ -693,7 +695,7 @@ Matrix Multiplication Algorithm”, 1995.</p>
 
   <p class="copyright">
     
-      © Copyright 2025, PyLops Development Team.
+      © Copyright 2026, PyLops Development Team.
       <br/>
     
   </p>
