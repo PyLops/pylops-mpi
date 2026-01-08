@@ -7,7 +7,7 @@ __all__ = ["active_grid_comm",
 import math
 import numpy as np
 from mpi4py import MPI
-from typing import Tuple, Literal
+from typing import Tuple, Literal, Optional, Any
 
 from pylops.utils.backend import get_module
 from pylops.utils.typing import DTypeLike, NDArray
@@ -17,6 +17,8 @@ from pylops_mpi import (
     MPILinearOperator,
     Partition
 )
+from pylops_mpi.Distributed import DistributedMixIn
+from pylops_mpi.DistributedArray import subcomm_split
 
 
 def active_grid_comm(base_comm: MPI.Comm, N: int, M: int):
@@ -159,7 +161,8 @@ def block_gather(x: DistributedArray, orig_shape: Tuple[int, int], comm: MPI.Com
     if p_prime * p_prime != comm.Get_size():
         raise RuntimeError(f"Communicator size must be a perfect square, got {comm.Get_size()!r}")
 
-    all_blks = comm.allgather(x.local_array)
+    comm_nccl = x.base_comm_nccl if comm == x.base_comm else None
+    all_blks = x._allgather(comm, comm_nccl, x.local_array, engine=x.engine)
     nr, nc = orig_shape
     br, bc = math.ceil(nr / p_prime), math.ceil(nc / p_prime)
     C = ncp.zeros((nr, nc), dtype=all_blks[0].dtype)
@@ -172,7 +175,7 @@ def block_gather(x: DistributedArray, orig_shape: Tuple[int, int], comm: MPI.Com
     return C
 
 
-class _MPIBlockMatrixMult(MPILinearOperator):
+class _MPIBlockMatrixMult(DistributedMixIn, MPILinearOperator):
     r"""MPI Blocked Matrix multiplication
 
     Implement distributed matrix-matrix multiplication between a matrix
@@ -281,7 +284,10 @@ class _MPIBlockMatrixMult(MPILinearOperator):
             saveAt: bool = False,
             base_comm: MPI.Comm = MPI.COMM_WORLD,
             dtype: DTypeLike = "float64",
+            base_comm_nccl: Optional[Any] = None,
     ) -> None:
+        if base_comm_nccl is not None and base_comm is not MPI.COMM_WORLD:
+            raise ValueError("base_comm_nccl requires base_comm=MPI.COMM_WORLD")
         rank = base_comm.Get_rank()
         size = base_comm.Get_size()
 
@@ -295,8 +301,17 @@ class _MPIBlockMatrixMult(MPILinearOperator):
         self._row_id = rank // self._P_prime
 
         self.base_comm = base_comm
+        self.base_comm_nccl = base_comm_nccl
         self._row_comm = base_comm.Split(color=self._row_id, key=self._col_id)
         self._col_comm = base_comm.Split(color=self._col_id, key=self._row_id)
+        if base_comm_nccl is not None:
+            mask_row = [r // self._P_prime for r in range(size)]
+            mask_col = [r % self._P_prime for r in range(size)]
+            self._row_comm_nccl = subcomm_split(mask_row, base_comm_nccl)
+            self._col_comm_nccl = subcomm_split(mask_col, base_comm_nccl)
+        else:
+            self._row_comm_nccl = None
+            self._col_comm_nccl = None
 
         self.A = A.astype(np.dtype(dtype))
         if saveAt:
@@ -316,7 +331,7 @@ class _MPIBlockMatrixMult(MPILinearOperator):
         self._col_end = min(self.M, self._col_start + block_cols)
 
         self._local_ncols = max(0, self._col_end - self._col_start)
-        self._rank_col_lens = self.base_comm.allgather(self._local_ncols)
+        self._rank_col_lens = self._allgather(self.base_comm, None, self._local_ncols)
         total_ncols = np.sum(self._rank_col_lens)
 
         self.dims = (self.K, total_ncols)
@@ -329,6 +344,13 @@ class _MPIBlockMatrixMult(MPILinearOperator):
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
         output_dtype = np.result_type(self.dtype, x.dtype)
+        if np.issubdtype(output_dtype, np.complexfloating):
+            if np.dtype(output_dtype) == np.dtype(np.complex128):
+                acc_dtype = np.promote_types(output_dtype, np.longdouble)
+            else:
+                acc_dtype = np.promote_types(output_dtype, np.float64)
+        else:
+            acc_dtype = output_dtype
         y = DistributedArray(
             global_shape=(self.N * self.dimsd[1]),
             local_shapes=[(self.N * c) for c in self._rank_col_lens],
@@ -336,17 +358,22 @@ class _MPIBlockMatrixMult(MPILinearOperator):
             partition=Partition.SCATTER,
             engine=x.engine,
             dtype=output_dtype,
-            base_comm=self.base_comm
+            base_comm=x.base_comm,
+            base_comm_nccl=x.base_comm_nccl
         )
 
         my_own_cols = self._rank_col_lens[self.rank]
         x_arr = x.local_array.reshape((self.dims[0], my_own_cols))
-        X_local = x_arr.astype(output_dtype)
-        Y_local = ncp.vstack(
-            self._row_comm.allgather(
-                ncp.matmul(self.A, X_local)
-            )
+        X_local = x_arr.astype(acc_dtype, copy=False)
+        A_local = self.A.astype(acc_dtype, copy=False)
+        row_comm_nccl = self._row_comm_nccl if x.engine == "cupy" else None
+        Y_tiles = self._allgather(
+            self._row_comm,
+            row_comm_nccl,
+            ncp.matmul(A_local, X_local).astype(output_dtype, copy=False),
+            engine=x.engine,
         )
+        Y_local = ncp.vstack(Y_tiles)
         y[:] = Y_local.flatten()
         return y
 
@@ -366,6 +393,13 @@ class _MPIBlockMatrixMult(MPILinearOperator):
             output_dtype = x.dtype if np.iscomplexobj(x.local_array) else self.dtype
             # But still need to check type promotion for precision
             output_dtype = np.result_type(self.dtype, output_dtype)
+        if np.issubdtype(output_dtype, np.complexfloating):
+            if x.engine == "numpy" and np.dtype(output_dtype) == np.dtype(np.complex128):
+                acc_dtype = np.promote_types(output_dtype, np.longdouble)
+            else:
+                acc_dtype = np.promote_types(output_dtype, np.float64)
+        else:
+            acc_dtype = output_dtype
 
         y = DistributedArray(
             global_shape=(self.K * self.dimsd[1]),
@@ -374,19 +408,27 @@ class _MPIBlockMatrixMult(MPILinearOperator):
             partition=Partition.SCATTER,
             engine=x.engine,
             dtype=output_dtype,
-            base_comm=self.base_comm
+            base_comm=x.base_comm,
+            base_comm_nccl=x.base_comm_nccl
         )
 
-        x_arr = x.local_array.reshape((self.N, self._local_ncols)).astype(output_dtype)
+        x_arr = x.local_array.reshape((self.N, self._local_ncols)).astype(acc_dtype, copy=False)
         X_tile = x_arr[self._row_start:self._row_end, :]
-        A_local = self.At if hasattr(self, "At") else self.A.T.conj()
-        Y_local = ncp.matmul(A_local, X_tile)
-        y_layer = self._row_comm.allreduce(Y_local, op=MPI.SUM)
+        A_local = (self.At if hasattr(self, "At") else self.A.T.conj()).astype(acc_dtype, copy=False)
+        Y_local = ncp.matmul(A_local, X_tile).astype(output_dtype, copy=False)
+        row_comm_nccl = self._row_comm_nccl if x.engine == "cupy" else None
+        y_layer = self._allreduce(
+            self._row_comm,
+            row_comm_nccl,
+            Y_local.ravel(),
+            op=MPI.SUM,
+            engine=x.engine,
+        ).reshape(Y_local.shape)
         y[:] = y_layer.flatten()
         return y
 
 
-class _MPISummaMatrixMult(MPILinearOperator):
+class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
     r"""MPI SUMMA Matrix multiplication
 
     Implements distributed matrix-matrix multiplication using the SUMMA algorithm
@@ -512,7 +554,10 @@ class _MPISummaMatrixMult(MPILinearOperator):
             saveAt: bool = False,
             base_comm: MPI.Comm = MPI.COMM_WORLD,
             dtype: DTypeLike = "float64",
+            base_comm_nccl: Optional[Any] = None,
     ) -> None:
+        if base_comm_nccl is not None and base_comm is not MPI.COMM_WORLD:
+            raise ValueError("base_comm_nccl requires base_comm=MPI.COMM_WORLD")
         rank = base_comm.Get_rank()
         size = base_comm.Get_size()
 
@@ -524,8 +569,17 @@ class _MPISummaMatrixMult(MPILinearOperator):
         self._row_id, self._col_id = divmod(rank, self._P_prime)
 
         self.base_comm = base_comm
+        self.base_comm_nccl = base_comm_nccl
         self._row_comm = base_comm.Split(color=self._row_id, key=self._col_id)
         self._col_comm = base_comm.Split(color=self._col_id, key=self._row_id)
+        if base_comm_nccl is not None:
+            mask_row = [r // self._P_prime for r in range(size)]
+            mask_col = [r % self._P_prime for r in range(size)]
+            self._row_comm_nccl = subcomm_split(mask_row, base_comm_nccl)
+            self._col_comm_nccl = subcomm_split(mask_col, base_comm_nccl)
+        else:
+            self._row_comm_nccl = None
+            self._col_comm_nccl = None
 
         self.A = A.astype(np.dtype(dtype))
 
@@ -561,6 +615,13 @@ class _MPISummaMatrixMult(MPILinearOperator):
             raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
 
         output_dtype = np.result_type(self.dtype, x.dtype)
+        if np.issubdtype(output_dtype, np.complexfloating):
+            if x.engine == "numpy" and np.dtype(output_dtype) == np.dtype(np.complex128):
+                acc_dtype = np.promote_types(output_dtype, np.longdouble)
+            else:
+                acc_dtype = np.promote_types(output_dtype, np.float64)
+        else:
+            acc_dtype = output_dtype
         # Calculate local shapes for block distribution
         bn = self._N_padded // self._P_prime  # block size in N dimension
         bm = self._M_padded // self._P_prime  # block size in M dimension
@@ -568,7 +629,7 @@ class _MPISummaMatrixMult(MPILinearOperator):
         local_n = bn if self._row_id != self._P_prime - 1 else self.N - (self._P_prime - 1) * bn
         local_m = bm if self._col_id != self._P_prime - 1 else self.M - (self._P_prime - 1) * bm
 
-        local_shapes = self.base_comm.allgather(local_n * local_m)
+        local_shapes = self._allgather(self.base_comm, None, local_n * local_m)
 
         y = DistributedArray(global_shape=(self.N * self.M),
                              mask=x.mask,
@@ -576,7 +637,8 @@ class _MPISummaMatrixMult(MPILinearOperator):
                              partition=Partition.SCATTER,
                              engine=x.engine,
                              dtype=output_dtype,
-                             base_comm=self.base_comm)
+                             base_comm=x.base_comm,
+                             base_comm_nccl=x.base_comm_nccl)
 
         # Calculate expected padded dimensions for x
         bk = self._K_padded // self._P_prime  # block size in K dimension
@@ -586,7 +648,7 @@ class _MPISummaMatrixMult(MPILinearOperator):
         local_k = bk if self._row_id != self._P_prime - 1 else self.K - (self._P_prime - 1) * bk
 
         # Reshape x.local_array to its 2D block form
-        x_block = x.local_array.reshape((local_k, local_m))
+        x_block = x.local_array.reshape((local_k, local_m)).astype(acc_dtype, copy=False)
 
         # Pad the block to the full padded size if necessary
         pad_k = bk - local_k
@@ -595,16 +657,19 @@ class _MPISummaMatrixMult(MPILinearOperator):
         if pad_k > 0 or pad_m > 0:
             x_block = ncp.pad(x_block, [(0, pad_k), (0, pad_m)], mode='constant')
 
-        Y_local = ncp.zeros((self.A.shape[0], bm), dtype=output_dtype)
+        A_acc = self.A.astype(acc_dtype, copy=False)
+        Y_local = ncp.zeros((self.A.shape[0], bm), dtype=acc_dtype)
 
         for k in range(self._P_prime):
-            Atemp = self.A.copy() if self._col_id == k else ncp.empty_like(self.A)
+            Atemp = A_acc.copy() if self._col_id == k else ncp.empty_like(A_acc)
             Xtemp = x_block.copy() if self._row_id == k else ncp.empty_like(x_block)
-            self._row_comm.Bcast(Atemp, root=k)
-            self._col_comm.Bcast(Xtemp, root=k)
+            row_comm_nccl = self._row_comm_nccl if x.engine == "cupy" else None
+            col_comm_nccl = self._col_comm_nccl if x.engine == "cupy" else None
+            Atemp = self._bcast(self._row_comm, row_comm_nccl, Atemp, root=k, engine=x.engine)
+            Xtemp = self._bcast(self._col_comm, col_comm_nccl, Xtemp, root=k, engine=x.engine)
             Y_local += ncp.dot(Atemp, Xtemp)
 
-        Y_local_unpadded = Y_local[:local_n, :local_m]
+        Y_local_unpadded = Y_local[:local_n, :local_m].astype(output_dtype, copy=False)
         y[:] = Y_local_unpadded.flatten()
         return y
 
@@ -622,7 +687,7 @@ class _MPISummaMatrixMult(MPILinearOperator):
         local_k = bk if self._row_id != self._P_prime - 1 else self.K - (self._P_prime - 1) * bk
         local_m = bm if self._col_id != self._P_prime - 1 else self.M - (self._P_prime - 1) * bm
 
-        local_shapes = self.base_comm.allgather(local_k * local_m)
+        local_shapes = self._allgather(self.base_comm, None, local_k * local_m)
         # - If A is real: A^H = A^T,
         #       so result_type(real_A, x.dtype) = x.dtype (if x is complex) or real (if x is real)
         # - If A is complex: A^H is complex,
@@ -634,6 +699,13 @@ class _MPISummaMatrixMult(MPILinearOperator):
             output_dtype = x.dtype if np.iscomplexobj(x.local_array) else self.dtype
             # But still need to check type promotion for precision
             output_dtype = np.result_type(self.dtype, output_dtype)
+        if np.issubdtype(output_dtype, np.complexfloating):
+            if np.dtype(output_dtype) == np.dtype(np.complex128):
+                acc_dtype = np.promote_types(output_dtype, np.longdouble)
+            else:
+                acc_dtype = np.promote_types(output_dtype, np.float64)
+        else:
+            acc_dtype = output_dtype
 
         y = DistributedArray(
             global_shape=(self.K * self.M),
@@ -642,7 +714,8 @@ class _MPISummaMatrixMult(MPILinearOperator):
             partition=Partition.SCATTER,
             engine=x.engine,
             dtype=output_dtype,
-            base_comm=self.base_comm
+            base_comm=x.base_comm,
+            base_comm_nccl=x.base_comm_nccl
         )
 
         # Calculate expected padded dimensions for x
@@ -653,7 +726,7 @@ class _MPISummaMatrixMult(MPILinearOperator):
         local_n = bn if self._row_id != self._P_prime - 1 else self.N - (self._P_prime - 1) * bn
 
         # Reshape x.local_array to its 2D block form
-        x_block = x.local_array.reshape((local_n, local_m))
+        x_block = x.local_array.reshape((local_n, local_m)).astype(acc_dtype, copy=False)
 
         # Pad the block to the full padded size if necessary
         pad_n = bn - local_n
@@ -662,27 +735,33 @@ class _MPISummaMatrixMult(MPILinearOperator):
         if pad_n > 0 or pad_m > 0:
             x_block = ncp.pad(x_block, [(0, pad_n), (0, pad_m)], mode='constant')
 
-        A_local = self.At if hasattr(self, "At") else self.A.T.conj()
-        Y_local = ncp.zeros((self.A.shape[1], bm), dtype=output_dtype)
-
+        A_local = (self.At if hasattr(self, "At") else self.A.T.conj()).astype(acc_dtype, copy=False)
+        Y_local = ncp.zeros((self.A.shape[1], bm), dtype=acc_dtype)
+        base_comm_nccl = self.base_comm_nccl if x.engine == "cupy" else None
         for k in range(self._P_prime):
-            requests = []
-            ATtemp = ncp.empty_like(A_local)
-            srcA = k * self._P_prime + self._row_id
-            tagA = (100 + k) * 1000 + self.rank
-            requests.append(self.base_comm.Irecv(ATtemp, source=srcA, tag=tagA))
-            if self._row_id == k:
-                fixed_col = self._col_id
-                for moving_col in range(self._P_prime):
-                    destA = fixed_col * self._P_prime + moving_col
-                    tagA = (100 + k) * 1000 + destA
-                    requests.append(self.base_comm.Isend(A_local, dest=destA, tag=tagA))
             Xtemp = x_block.copy() if self._row_id == k else ncp.empty_like(x_block)
-            requests.append(self._col_comm.Ibcast(Xtemp, root=k))
-            MPI.Request.Waitall(requests)
+            col_comm_nccl = self._col_comm_nccl if x.engine == "cupy" else None
+            Xtemp = self._bcast(self._col_comm, col_comm_nccl, Xtemp, root=k, engine=x.engine)
+
+            ATtemp = None
+            srcA = k * self._P_prime + self._row_id
+            if srcA == self.rank:
+                ATtemp = A_local
+            for moving_col in range(self._P_prime):
+                if self._row_id == k:
+                    destA = self._col_id * self._P_prime + moving_col
+                    if destA != self.rank:
+                        tagA = (100 + k) * 1000 + destA
+                        self._send(self.base_comm, base_comm_nccl, A_local,
+                                   dest=destA, tag=tagA, engine=x.engine)
+                if self._col_id == moving_col and ATtemp is None:
+                    tagA = (100 + k) * 1000 + self.rank
+                    recv_buf = ncp.empty_like(A_local)
+                    ATtemp = self._recv(self.base_comm, base_comm_nccl, recv_buf,
+                                        source=srcA, tag=tagA, engine=x.engine)
             Y_local += ncp.dot(ATtemp, Xtemp)
 
-        Y_local_unpadded = Y_local[:local_k, :local_m]
+        Y_local_unpadded = Y_local[:local_k, :local_m].astype(output_dtype, copy=False)
         y[:] = Y_local_unpadded.flatten()
         return y
 
@@ -693,7 +772,8 @@ def MPIMatrixMult(
         saveAt: bool = False,
         base_comm: MPI.Comm = MPI.COMM_WORLD,
         kind: Literal["summa", "block"] = "summa",
-        dtype: DTypeLike = "float64"):
+        dtype: DTypeLike = "float64",
+        base_comm_nccl: Optional[Any] = None):
     r"""
     MPI Distributed Matrix Multiplication Operator
 
@@ -714,6 +794,8 @@ def MPIMatrixMult(
         memory). Default is ``False``.
     base_comm : :obj:`mpi4py.MPI.Comm`, optional
         MPI communicator to use. Defaults to ``MPI.COMM_WORLD``.
+    base_comm_nccl : :obj:`cupy.cuda.nccl.NcclCommunicator`, optional
+        NCCL communicator to use when operating on ``cupy`` arrays.
     kind : :obj:`str`, optional
         Algorithm used to perform matrix multiplication: ``'block'`` for #
         block-row-column decomposition, and ``'summa'`` for SUMMA algorithm, or
@@ -784,8 +866,8 @@ def MPIMatrixMult(
 
     """
     if kind == "summa":
-        return _MPISummaMatrixMult(A, M, saveAt, base_comm, dtype)
+        return _MPISummaMatrixMult(A, M, saveAt, base_comm, dtype, base_comm_nccl)
     elif kind == "block":
-        return _MPIBlockMatrixMult(A, M, saveAt, base_comm, dtype)
+        return _MPIBlockMatrixMult(A, M, saveAt, base_comm, dtype, base_comm_nccl)
     else:
         raise NotImplementedError("kind must be summa or block")
