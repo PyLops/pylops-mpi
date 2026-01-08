@@ -345,7 +345,7 @@ class _MPIBlockMatrixMult(DistributedMixIn, MPILinearOperator):
             raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
         output_dtype = np.result_type(self.dtype, x.dtype)
         if np.issubdtype(output_dtype, np.complexfloating):
-            if x.engine == "numpy" and np.dtype(output_dtype) == np.dtype(np.complex128):
+            if np.dtype(output_dtype) == np.dtype(np.complex128):
                 acc_dtype = np.promote_types(output_dtype, np.longdouble)
             else:
                 acc_dtype = np.promote_types(output_dtype, np.float64)

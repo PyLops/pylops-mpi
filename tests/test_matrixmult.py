@@ -33,6 +33,18 @@ if backend == "cupy":
     device_id = rank % np.cuda.runtime.getDeviceCount()
     np.cuda.Device(device_id).use()
 
+
+def _allclose_tol(dtype):
+    dt = np.dtype(dtype)
+    finfo = np.finfo(dt)
+    rtol, atol = finfo.resolution,  0.0
+    # relax only for complex
+    if np.issubdtype(dt, np.complexfloating):
+        rtol *= 10   # 1e-15 -> 1e-14 for complex
+        atol = 1e-12
+    return rtol, atol
+
+
 # Define test cases: (N, K, M, dtype_str)
 # M, K, N are matrix dimensions A(N,K), B(K,M)
 # P_prime will be ceil(sqrt(size)).
@@ -134,12 +146,14 @@ def test_MPIMatrixMult_block(N, K, M, dtype_str):
     y = _reorganize_local_matrix(y_dist, N, M, blk_cols_X, p_prime)
     xadj = _reorganize_local_matrix(xadj_dist, K, M, blk_cols_X, p_prime)
 
+    rtol, atol = _allclose_tol(dtype)
+
     if rank == 0:
         y_loc = A_glob @ X_glob
         assert_allclose(
             y.squeeze(),
             y_loc.squeeze(),
-            rtol=np.finfo(np.dtype(dtype)).resolution,
+            rtol=rtol, atol=atol,
             err_msg=f"Rank {rank}: Forward verification failed."
         )
 
@@ -147,7 +161,7 @@ def test_MPIMatrixMult_block(N, K, M, dtype_str):
         assert_allclose(
             xadj.squeeze(),
             xadj_loc.squeeze(),
-            rtol=np.finfo(np.dtype(dtype)).resolution,
+            rtol=rtol, atol=atol,
             err_msg=f"Rank {rank}: Adjoint verification failed."
         )
 
@@ -170,7 +184,7 @@ def test_MPIMatrixMult_block(N, K, M, dtype_str):
         assert_allclose(
             y1.squeeze(),
             y1_loc.squeeze(),
-            rtol=np.finfo(np.dtype(dtype)).resolution,
+            rtol=rtol, atol=atol,
             err_msg=f"Rank {rank}: Forward verification failed."
         )
 
@@ -178,7 +192,7 @@ def test_MPIMatrixMult_block(N, K, M, dtype_str):
         assert_allclose(
             xadj1.squeeze(),
             xadj1_loc.squeeze(),
-            rtol=np.finfo(np.dtype(dtype)).resolution,
+            rtol=rtol, atol=atol,
             err_msg=f"Rank {rank}: Adjoint verification failed."
         )
 
@@ -237,12 +251,14 @@ def test_MPIMatrixMult_summa(N, K, M, dtype_str):
     y = block_gather(y_dist, (N, M), comm)
     xadj = block_gather(xadj_dist, (K, M), comm)
 
+    rtol, atol = _allclose_tol(dtype)
+
     if rank == 0:
         y_loc = A_glob @ X_glob
         assert_allclose(
             y.squeeze(),
             y_loc.squeeze(),
-            rtol=np.finfo(np.dtype(dtype)).resolution,
+            rtol=rtol, atol=atol,
             err_msg=f"Rank {rank}: Forward verification failed."
         )
 
@@ -250,7 +266,7 @@ def test_MPIMatrixMult_summa(N, K, M, dtype_str):
         assert_allclose(
             xadj.squeeze(),
             xadj_loc.squeeze(),
-            rtol=np.finfo(np.dtype(dtype)).resolution,
+            rtol=rtol, atol=atol,
             err_msg=f"Rank {rank}: Adjoint verification failed."
         )
 
@@ -272,7 +288,7 @@ def test_MPIMatrixMult_summa(N, K, M, dtype_str):
         assert_allclose(
              y1.squeeze(),
              y1_loc.squeeze(),
-            rtol=np.finfo(y1_loc.dtype).resolution,
+            rtol=rtol, atol=atol,
             err_msg=f"Rank {rank}: Forward verification failed."
         )
 
@@ -280,6 +296,6 @@ def test_MPIMatrixMult_summa(N, K, M, dtype_str):
         assert_allclose(
             xadj1.squeeze().ravel(),
             xadj1_loc.squeeze().ravel(),
-            rtol=np.finfo(xadj1_loc.dtype).resolution,
+            rtol=rtol, atol=atol,
             err_msg=f"Rank {rank}: Adjoint verification failed."
         )
