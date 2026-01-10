@@ -17,6 +17,7 @@ A list of operators present in pylops_mpi.basicoperators:
     MPISecondDerivative               Second Derivative operator
     MPILaplacian                      Laplacian operator
     MPIGradient                       Gradient operator
+    MPIHalo                           Halo operator
 
 """
 
@@ -28,6 +29,8 @@ from .FirstDerivative import *
 from .SecondDerivative import *
 from .Laplacian import *
 from .Gradient import *
+from .Halo import *
+
 
 __all__ = [
     "MPIMatrixMult",
@@ -39,5 +42,6 @@ __all__ = [
     "MPIFirstDerivative",
     "MPISecondDerivative",
     "MPILaplacian",
-    "MPIGradient"
+    "MPIGradient",
+    "MPIHalo"
 ]
