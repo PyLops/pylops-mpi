@@ -3,7 +3,7 @@ import math
 import numpy as np
 import pylops
 import pylops_mpi
-from pylops_mpi.basicoperators.Halo import MPIHalo, local_block_split
+from pylops_mpi.basicoperators.Halo import MPIHalo, halo_block_split
 from mpi4py import MPI
 
 
@@ -48,7 +48,7 @@ def local_extent_from_slice(local_shape, local_slice, halo):
     return extent, lefts, rights
 
 x_data  = np.arange(np.prod(gdim)).astype(np.float64).reshape(gdim)
-x_slice = local_block_split(gdim, comm, g_shape)
+x_slice = halo_block_split(gdim, comm, g_shape)
 x_local = x_data[x_slice]
 x_local_shape = x_local.shape
 local_extent, lefts, rights = local_extent_from_slice(x_local_shape, x_slice, halo)

@@ -33,7 +33,7 @@ import sys
 import time
 import numpy as np
 import pylops
-from pylops_mpi.basicoperators.Halo import MPIHalo, local_block_split
+from pylops_mpi.basicoperators.Halo import MPIHalo, halo_block_split
 from mpi4py import MPI
 
 import pylops_mpi
@@ -90,7 +90,7 @@ x_dist = pylops_mpi.DistributedArray(
     # local_shapes=comm.allgather(np.prod(x_local.shape)),
     base_comm=comm,
     partition=pylops_mpi.Partition.SCATTER)
-x_slice = local_block_split((n, ), comm, proc_grid_shape)
+x_slice = halo_block_split((n, ), comm, proc_grid_shape)
 x_local = x[x_slice]
 x_dist.local_array[:] = x_local
 

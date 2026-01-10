@@ -6,7 +6,7 @@ from pylops.utils.backend import get_module
 from pylops_mpi import MPILinearOperator, DistributedArray, Partition
 
 
-def local_block_split(global_shape: tuple, comm, grid_shape: tuple = None) -> tuple:
+def halo_block_split(global_shape: tuple, comm, grid_shape: tuple = None) -> tuple:
     ndim = len(global_shape)
     size = comm.Get_size()
     # default: put all ranks on the last axis
