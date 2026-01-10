@@ -33,7 +33,7 @@ import sys
 import time
 import numpy as np
 import pylops
-from pylops_mpi.basicoperators.Halo_new import ScatterType, local_block_split, BoundaryType
+from pylops_mpi.basicoperators.Halo import MPIHalo, local_block_split
 from mpi4py import MPI
 
 import pylops_mpi
@@ -74,14 +74,10 @@ n = nlocal * size
 proc_grid_shape = (size, )  # number of partitions over each axis
 
 halo = 1
-edge = False
-halo_op = pylops_mpi.basicoperators.Halo_new.MPIHalo(
+halo_op = MPIHalo(
     dims=(n, ),
     halo=halo,
-    edge=edge,
-    scatter=ScatterType.BLOCK,
     proc_grid_shape=proc_grid_shape,
-    boundary_mode=BoundaryType.ZERO,
     comm=comm
 )
 
@@ -140,14 +136,10 @@ assert np.allclose(
 pause(comm, t=1)
 
 halo = 2
-edge = False
-halo_op = pylops_mpi.basicoperators.Halo_new.MPIHalo(
+halo_op = MPIHalo(
     dims=(n, ),
     halo=halo,
-    edge=edge,
-    scatter=ScatterType.BLOCK,
     proc_grid_shape=proc_grid_shape,
-    boundary_mode=BoundaryType.ZERO,
     comm=comm
 )
 
