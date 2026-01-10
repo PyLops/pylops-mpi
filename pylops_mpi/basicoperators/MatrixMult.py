@@ -100,7 +100,7 @@ def local_block_split(global_shape: Tuple[int, int],
     Returns
     -------
     Tuple[slice, slice]
-        Two `slice` objects `(row_slice, col_slice)` representing the sub‐block
+        Two `slice` objects `(row_slice, col_slice)` representing the sub-block
         of the global array owned by this rank.
 
     Raises
@@ -343,12 +343,12 @@ class _MPIBlockMatrixMult(DistributedMixIn, MPILinearOperator):
         ncp = get_module(x.engine)
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
-        output_dtype = np.result_type(self.dtype, x.dtype)
-        if np.issubdtype(output_dtype, np.complexfloating):
-            if np.dtype(output_dtype) == np.dtype(np.complex128):
-                acc_dtype = np.promote_types(output_dtype, np.longdouble)
+        output_dtype = ncp.result_type(self.dtype, x.dtype)
+        if ncp.issubdtype(output_dtype, ncp.complexfloating):
+            if x.engine == "numpy" and ncp.dtype(output_dtype) == ncp.dtype(ncp.complex128):
+                acc_dtype = ncp.promote_types(output_dtype, ncp.longdouble)
             else:
-                acc_dtype = np.promote_types(output_dtype, np.float64)
+                acc_dtype = ncp.promote_types(output_dtype, ncp.float64)
         else:
             acc_dtype = output_dtype
         y = DistributedArray(
@@ -386,18 +386,18 @@ class _MPIBlockMatrixMult(DistributedMixIn, MPILinearOperator):
         #       so result_type(real_A, x.dtype) = x.dtype (if x is complex) or real (if x is real)
         # - If A is complex: A^H is complex,
         #       so result will be complex regardless of x
-        if np.iscomplexobj(self.A):
-            output_dtype = np.result_type(self.dtype, x.dtype)
+        if ncp.iscomplexobj(self.A):
+            output_dtype = ncp.result_type(self.dtype, x.dtype)
         else:
             # Real matrix: A^T @ x preserves input type complexity
-            output_dtype = x.dtype if np.iscomplexobj(x.local_array) else self.dtype
+            output_dtype = x.dtype if ncp.iscomplexobj(x.local_array) else self.dtype
             # But still need to check type promotion for precision
-            output_dtype = np.result_type(self.dtype, output_dtype)
-        if np.issubdtype(output_dtype, np.complexfloating):
-            if x.engine == "numpy" and np.dtype(output_dtype) == np.dtype(np.complex128):
-                acc_dtype = np.promote_types(output_dtype, np.longdouble)
+            output_dtype = ncp.result_type(self.dtype, output_dtype)
+        if ncp.issubdtype(output_dtype, ncp.complexfloating):
+            if x.engine == "numpy" and ncp.dtype(output_dtype) == ncp.dtype(ncp.complex128):
+                acc_dtype = ncp.promote_types(output_dtype, ncp.longdouble)
             else:
-                acc_dtype = np.promote_types(output_dtype, np.float64)
+                acc_dtype = ncp.promote_types(output_dtype, ncp.float64)
         else:
             acc_dtype = output_dtype
 
@@ -698,12 +698,13 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
             # Real matrix: A^T @ x preserves input type complexity
             output_dtype = x.dtype if np.iscomplexobj(x.local_array) else self.dtype
             # But still need to check type promotion for precision
-            output_dtype = np.result_type(self.dtype, output_dtype)
-        if np.issubdtype(output_dtype, np.complexfloating):
-            if np.dtype(output_dtype) == np.dtype(np.complex128):
-                acc_dtype = np.promote_types(output_dtype, np.longdouble)
+            output_dtype = ncp.result_type(self.dtype, output_dtype)
+        
+        if ncp.issubdtype(output_dtype, ncp.complexfloating):
+            if x.engine == "numpy" and ncp.dtype(output_dtype) == ncp.dtype(np.complex128):
+                acc_dtype = ncp.promote_types(output_dtype, ncp.longdouble)
             else:
-                acc_dtype = np.promote_types(output_dtype, np.float64)
+                acc_dtype = ncp.promote_types(output_dtype, ncp.float64)
         else:
             acc_dtype = output_dtype
 
