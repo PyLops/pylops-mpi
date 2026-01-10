@@ -204,9 +204,12 @@ class DistributedArray(DistributedMixIn):
             the specified index positions.
         """
         if self.partition is Partition.BROADCAST:
-            self._bcast(self.base_comm, self.base_comm_nccl,
-                        self.rank, self.local_array,
-                        index, value, engine=self.engine)
+            view = self.local_array[index]
+            if self.rank == 0:
+                view[...] = value
+            view = self._bcast(self.base_comm, self.base_comm_nccl,
+                               view, root=0, engine=self.engine)
+            self.local_array[index] = view
         else:
             self.local_array[index] = value
 
