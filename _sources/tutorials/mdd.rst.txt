@@ -356,18 +356,18 @@ back for our input model
         11       0.00e+00+0.00e+00j    5.9781e+00     5.9781e+00
         21       0.00e+00+0.00e+00j    2.9884e+00     2.9884e+00
         31       0.00e+00+0.00e+00j    1.9261e+00     1.9261e+00
-        41       0.00e+00+0.00e+00j    1.3943e+00     1.3943e+00
+        41       0.00e+00+0.00e+00j    1.3946e+00     1.3946e+00
         42       0.00e+00+0.00e+00j    1.3501e+00     1.3501e+00
         43       0.00e+00+0.00e+00j    1.3106e+00     1.3106e+00
         44       0.00e+00+0.00e+00j    1.2716e+00     1.2716e+00
         45       0.00e+00+0.00e+00j    1.2368e+00     1.2368e+00
         46       0.00e+00+0.00e+00j    1.2034e+00     1.2034e+00
-        47       0.00e+00+0.00e+00j    1.1720e+00     1.1720e+00
-        48       0.00e+00+0.00e+00j    1.1520e+00     1.1520e+00
-        49       0.00e+00+0.00e+00j    1.1306e+00     1.1306e+00
+        47       0.00e+00+0.00e+00j    1.1721e+00     1.1721e+00
+        48       0.00e+00+0.00e+00j    1.1524e+00     1.1524e+00
+        49       0.00e+00+0.00e+00j    1.1307e+00     1.1307e+00
         50       0.00e+00+0.00e+00j    1.1048e+00     1.1048e+00
 
-    Iterations = 50        Total time (s) = 6.21
+    Iterations = 50        Total time (s) = 9.24
     -----------------------------------------------------------------
 
 
@@ -381,7 +381,7 @@ To run this tutorial with our NCCL backend, refer to `Multi-Dimensional Deconvol
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 8.010 seconds)
+   **Total running time of the script:** (0 minutes 11.355 seconds)
 
 
 .. _sphx_glr_download_tutorials_mdd.py:
