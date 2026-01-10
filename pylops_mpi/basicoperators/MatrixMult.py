@@ -699,7 +699,7 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
             output_dtype = x.dtype if np.iscomplexobj(x.local_array) else self.dtype
             # But still need to check type promotion for precision
             output_dtype = ncp.result_type(self.dtype, output_dtype)
-        
+
         if ncp.issubdtype(output_dtype, ncp.complexfloating):
             if x.engine == "numpy" and ncp.dtype(output_dtype) == ncp.dtype(np.complex128):
                 acc_dtype = ncp.promote_types(output_dtype, ncp.longdouble)
