@@ -1,4 +1,4 @@
-name: PyLops Testing (CuPy)
+name: PyLops-MPI (CuPy)
 
 on: [push, pull_request]
 
@@ -28,7 +28,7 @@ jobs:
           $PYTHON -m setuptools_scm
           $PIP install .
           EOF
-        srun --account=yuxilab -n 1 -N 1 --gres=gpu:L40S:1 bash pylops_tests.sh
+          srun --account=yuxilab -n 1 -N 1 --gres=gpu:L40S:1 bash pylops_tests.sh
       - name: Tests with pytest 
         run: |
           export CUPY_PYLOPS=1; export TEST_CUPY_PYLOPS=1; export PYLOPS_MPI_CUDA_AWARE=0
