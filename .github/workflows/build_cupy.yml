@@ -64,7 +64,7 @@ jobs:
           srun --account=yuxilab -n 1 -N 1 --gres=gpu:L40S:1 bash pylops_tests.sh
       - name: Tests with pytest 
         run: |
-          export CUPY_PYLOPS=1; export TEST_CUPY_PYLOPS=1; export PYLOPS_MPI_CUDA_AWARE=0
+          export CUPY_PYLOPS=1;
           export PYTEST=".venv-pylops/bin/pytest tests_nccl/ --with-mpi"
           srun --account=yuxilab --mpi=pmix -n ${{matrix.rank}} -N 1 --gres=gpu:L40S:${{matrix.rank}} $PYTEST
           echo "done!"
