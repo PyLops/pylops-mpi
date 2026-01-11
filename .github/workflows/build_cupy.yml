@@ -32,7 +32,7 @@ jobs:
       - name: Tests with pytest 
         run: |
           export CUPY_PYLOPS=1; export TEST_CUPY_PYLOPS=1; export PYLOPS_MPI_CUDA_AWARE=0
-          export PYTEST=".venv-pylops/bin/pytest tests/"
+          export PYTEST=".venv-pylops/bin/pytest tests/ --with-mpi"
           srun --account=yuxilab -n ${{matrix.rank}} -N 1 --gres=gpu:L40S:${{matrix.rank}} $PYTEST
           echo "done!"
 
@@ -65,6 +65,6 @@ jobs:
       - name: Tests with pytest 
         run: |
           export CUPY_PYLOPS=1; export TEST_CUPY_PYLOPS=1; export PYLOPS_MPI_CUDA_AWARE=0
-          export PYTEST=".venv-pylops/bin/pytest tests_nccl/"
+          export PYTEST=".venv-pylops/bin/pytest tests_nccl/ --with-mpi"
           srun --account=yuxilab -n ${{matrix.rank}} -N 1 --gres=gpu:L40S:${{matrix.rank}} $PYTEST
           echo "done!"
