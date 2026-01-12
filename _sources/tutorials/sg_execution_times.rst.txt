@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**03:57.095** total execution time for 4 files **from tutorials**:
+**02:18.333** total execution time for 4 files **from tutorials**:
 
 .. container::
 
@@ -33,14 +33,14 @@ Computation times
      - Time
      - Mem (MB)
    * - :ref:`sphx_glr_tutorials_poststack.py` (``poststack.py``)
-     - 03:42.358
+     - 02:07.831
      - 0.0
    * - :ref:`sphx_glr_tutorials_mdd.py` (``mdd.py``)
-     - 00:11.713
+     - 00:07.598
      - 0.0
    * - :ref:`sphx_glr_tutorials_lsm.py` (``lsm.py``)
-     - 00:03.016
+     - 00:02.896
      - 0.0
    * - :ref:`sphx_glr_tutorials_benchmarking.py` (``benchmarking.py``)
-     - 00:00.008
+     - 00:00.007
      - 0.0

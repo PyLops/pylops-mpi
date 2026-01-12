@@ -515,9 +515,11 @@ i.e., <code class="xref py py-func docutils literal notranslate"><span class="pr
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">inner_func</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:598: RuntimeWarning: invalid value encountered in dot
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:598: RuntimeWarning: overflow encountered in dot
   ncp.dot(x.local_array.flatten(), y.local_array.flatten()),
-[decorator]inner_func: total runtime: 0.002373 s
+/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:598: RuntimeWarning: invalid value encountered in dot
+  ncp.dot(x.local_array.flatten(), y.local_array.flatten()),
+[decorator]inner_func: total runtime: 0.002325 s
 </pre></div>
 </div>
 <p>We may want to get the fine-grained time measurements by timing the execution
@@ -539,9 +541,9 @@ measurement of the top-level function and those that comes from <a class="refere
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">inner_func_with_mark</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[decorator]inner_func_with_mark: total runtime: 0.000591 s
-        Begin array constructor--&gt;Begin dot: 0.000042 s
-        Begin dot--&gt;Finish dot: 0.000543 s
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[decorator]inner_func_with_mark: total runtime: 0.000347 s
+        Begin array constructor--&gt;Begin dot: 0.000061 s
+        Begin dot--&gt;Finish dot: 0.000282 s
 </pre></div>
 </div>
 <p>This utility benchmarking routines can also be nested. Let’s define
@@ -566,11 +568,11 @@ printed out with the nested indentation to specify that nested calls.</p>
   SumArray[:] = self.local_array + dist_array.local_array
 /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:550: RuntimeWarning: invalid value encountered in add
   SumArray[:] = self.local_array + dist_array.local_array
-[decorator]outer_func_with_mark: total runtime: 0.001315 s
-        [decorator]inner_func_with_mark: total runtime: 0.000512 s
-                Begin array constructor--&gt;Begin dot: 0.000030 s
-                Begin dot--&gt;Finish dot: 0.000477 s
-        Outer func start--&gt;Outer func ends: 0.001310 s
+[decorator]outer_func_with_mark: total runtime: 0.000848 s
+        [decorator]inner_func_with_mark: total runtime: 0.000328 s
+                Begin array constructor--&gt;Begin dot: 0.000023 s
+                Begin dot--&gt;Finish dot: 0.000303 s
+        Outer func start--&gt;Outer func ends: 0.000845 s
 </pre></div>
 </div>
 <p>In some cases, we may want to write benchmark output to a text file.
@@ -611,7 +613,7 @@ to isolate the logging of our benchmark from that of the rest of the code</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">inner_func_with_logger</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">)</span>
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.008 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.007 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-benchmarking-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/65850c3b40d96f2a8d2e87ae991d4428/benchmarking.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">benchmarking.ipynb</span></code></a></p>

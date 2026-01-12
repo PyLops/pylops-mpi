@@ -104,9 +104,11 @@ i.e., :py:func:`@benchmark(description="printout_name")`
 
  .. code-block:: none
 
+    /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:598: RuntimeWarning: overflow encountered in dot
+      ncp.dot(x.local_array.flatten(), y.local_array.flatten()),
     /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:598: RuntimeWarning: invalid value encountered in dot
       ncp.dot(x.local_array.flatten(), y.local_array.flatten()),
-    [decorator]inner_func: total runtime: 0.002373 s
+    [decorator]inner_func: total runtime: 0.002325 s
 
 
 
@@ -161,9 +163,9 @@ measurement of the top-level function and those that comes from :py:func:`pylops
 
  .. code-block:: none
 
-    [decorator]inner_func_with_mark: total runtime: 0.000591 s
-            Begin array constructor-->Begin dot: 0.000042 s
-            Begin dot-->Finish dot: 0.000543 s
+    [decorator]inner_func_with_mark: total runtime: 0.000347 s
+            Begin array constructor-->Begin dot: 0.000061 s
+            Begin dot-->Finish dot: 0.000282 s
 
 
 
@@ -222,11 +224,11 @@ printed out with the nested indentation to specify that nested calls.
       SumArray[:] = self.local_array + dist_array.local_array
     /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:550: RuntimeWarning: invalid value encountered in add
       SumArray[:] = self.local_array + dist_array.local_array
-    [decorator]outer_func_with_mark: total runtime: 0.001315 s
-            [decorator]inner_func_with_mark: total runtime: 0.000512 s
-                    Begin array constructor-->Begin dot: 0.000030 s
-                    Begin dot-->Finish dot: 0.000477 s
-            Outer func start-->Outer func ends: 0.001310 s
+    [decorator]outer_func_with_mark: total runtime: 0.000848 s
+            [decorator]inner_func_with_mark: total runtime: 0.000328 s
+                    Begin array constructor-->Begin dot: 0.000023 s
+                    Begin dot-->Finish dot: 0.000303 s
+            Outer func start-->Outer func ends: 0.000845 s
 
 
 
@@ -315,7 +317,7 @@ Run this function and observe that the file `benchmark.log` is written.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 0.008 seconds)
+   **Total running time of the script:** (0 minutes 0.007 seconds)
 
 
 .. _sphx_glr_download_tutorials_benchmarking.py:
