@@ -10,6 +10,7 @@ import pytest
 
 from pylops_mpi.utils._nccl import initialize_nccl_comm, nccl_allgather
 from pylops_mpi.utils._common import _prepare_allgather_inputs, _unroll_allgather_recv
+from pylops_mpi.utils.deps import nccl_enabled
 
 np.random.seed(42)
 
@@ -17,6 +18,11 @@ nccl_comm = initialize_nccl_comm()
 
 par1 = {'n': 3, 'dtype': np.float64}
 
+
+def test_nccl_enabled():
+    """Test nccl_enabled is True (ensures that the tests are effectively
+    run with NCCL and not with the MPI fallack)"""
+    assert nccl_enabled
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), ])
