@@ -6,9 +6,10 @@ if int(os.environ.get("TEST_CUPY_PYLOPS", 0)):
 else:
     import numpy as np
     backend = "numpy"
-import numpy as npp
 from mpi4py import MPI
 import pytest
+import pylops
+from numpy.testing import assert_allclose
 
 import pylops_mpi
 from pylops_mpi.basicoperators.Halo import MPIHalo
@@ -21,28 +22,24 @@ if backend == "cupy":
     np.cuda.Device(device_id).use()
 
 
-@pytest.mark.mpi(min_size=8)
-def test_halo_dottest_plot_config():
+@pytest.mark.mpi(min_size=2)
+def test_halo():
     comm = MPI.COMM_WORLD
     size = comm.Get_size()
-    p_prime = int(round(size ** (1 / 3)))
-    if p_prime ** 3 != size:
-        pytest.skip("MPI size must be a perfect cube for 3D halo grid")
-
-    gdim = (4 * p_prime, 4 * p_prime, 4 * p_prime)
-    g_shape = (p_prime, p_prime, p_prime)
+    nlocal = 16
+    n = nlocal * size
     halo = 1
 
     halo_op = MPIHalo(
-        dims=gdim,
+        dims=(n,),
         halo=halo,
-        proc_grid_shape=g_shape,
+        proc_grid_shape=(size,),
         comm=comm,
         dtype=np.float64,
     )
 
     x_dist = pylops_mpi.DistributedArray(
-        global_shape=npp.prod(gdim),
+        global_shape=n,
         base_comm=comm,
         partition=pylops_mpi.Partition.SCATTER,
         engine=backend,
@@ -51,7 +48,7 @@ def test_halo_dottest_plot_config():
     x_dist[:] = np.random.normal(0.0, 1.0, x_dist.local_array.shape)
 
     y_dist = pylops_mpi.DistributedArray(
-        global_shape=halo_op.shape[0],
+        global_shape=n,
         base_comm=comm,
         partition=pylops_mpi.Partition.SCATTER,
         engine=backend,
@@ -59,4 +56,32 @@ def test_halo_dottest_plot_config():
     )
     y_dist[:] = np.random.normal(0.0, 1.0, y_dist.local_array.shape)
 
-    dottest(halo_op, x_dist, y_dist)
+    local_extent = halo_op.local_extent[0]
+    DOp = pylops.FirstDerivative(
+        dims=local_extent,
+        axis=0,
+        kind="forward",
+        dtype=np.float64,
+    )
+    DOp_dist = pylops_mpi.MPIBlockDiag([DOp], base_comm=comm, dtype=np.float64)
+    Op_dist = halo_op.H @ DOp_dist @ halo_op
+
+    dottest(Op_dist, x_dist, y_dist, n, n)
+
+    y_dist = Op_dist @ x_dist
+    y_adj_dist = Op_dist.H @ x_dist
+    y = y_dist.asarray()
+    y_adj = y_adj_dist.asarray()
+
+    x_global = x_dist.asarray()
+    if rank == 0:
+        DOp_serial = pylops.FirstDerivative(
+            dims=n,
+            axis=0,
+            kind="forward",
+            dtype=np.float64,
+        )
+        y_serial = DOp_serial @ x_global
+        y_adj_serial = DOp_serial.H @ x_global
+        assert_allclose(y, y_serial, rtol=1e-14)
+        assert_allclose(y_adj, y_adj_serial, rtol=1e-14)

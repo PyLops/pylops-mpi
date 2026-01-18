@@ -86,8 +86,7 @@ halo_op = MPIHalo(
     dims=(n, ),
     halo=halo,
     proc_grid_shape=proc_grid_shape,
-    comm=comm,
-    normalize=True,
+    comm=comm
 )
 
 # Distributed array

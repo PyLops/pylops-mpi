@@ -4,6 +4,7 @@ from mpi4py import MPI
 
 from pylops.utils.backend import get_module
 from pylops_mpi import MPILinearOperator, DistributedArray, Partition
+from pylops_mpi.Distributed import DistributedMixIn
 
 
 def halo_block_split(global_shape: tuple, comm, grid_shape: tuple = None) -> tuple:
@@ -31,7 +32,7 @@ def halo_block_split(global_shape: tuple, comm, grid_shape: tuple = None) -> tup
     return tuple(slices)
 
 
-class MPIHalo(MPILinearOperator):
+class MPIHalo(DistributedMixIn, MPILinearOperator):
     def __init__(
         self,
         dims: tuple,
@@ -39,12 +40,10 @@ class MPIHalo(MPILinearOperator):
         proc_grid_shape: tuple = None,
         comm: MPI.Comm = MPI.COMM_WORLD,
         dtype=np.float64,
-        normalize: bool = False,
     ):
         self.global_dims = tuple(dims)
         self.ndim = len(dims)
 
-        self.normalize = normalize
         self.comm = comm
         self.dtype = dtype
 
@@ -55,13 +54,16 @@ class MPIHalo(MPILinearOperator):
 
         self.local_dims = self._calc_local_dims()
         self.local_extent = self._calc_local_extent()
-        self._local_extent_sizes = self.comm.allgather(int(np.prod(self.local_extent)))
+        self._local_extent_sizes = self._allgather(
+            self.comm,
+            None,
+            int(np.prod(self.local_extent)),
+        )
 
         self.shape = (
             int(np.sum(self._local_extent_sizes)),
             int(np.prod(self.global_dims)),
         )
-        self._norm_factors = self._compute_norm_factors() if self.normalize else None
         super().__init__(shape=self.shape, dtype=np.dtype(dtype), base_comm=comm)
 
     def _parse_halo(self, h):
@@ -117,26 +119,6 @@ class MPIHalo(MPILinearOperator):
             ext.append(self.local_dims[ax] + minus_halo + plus_halo)
         return tuple(ext)
 
-    def _compute_norm_factors(self):
-        weights = np.ones(self.local_dims, dtype=np.float64)
-        for ax in range(self.ndim):
-            before, after = self.halo[2 * ax], self.halo[2 * ax + 1]
-            if before == 0 and after == 0:
-                continue
-            n_local = self.local_dims[ax]
-            factors = np.ones(n_local, dtype=np.float64)
-            minus_nbr, plus_nbr = self.neigh[("-", ax)], self.neigh[("+", ax)]
-            minus_copy = minus_nbr != MPI.PROC_NULL
-            plus_copy = plus_nbr != MPI.PROC_NULL
-            if before and minus_copy:
-                factors[:before] += 1.0
-            if after and plus_copy:
-                factors[n_local - after:] += 1.0
-            shape = [1] * self.ndim
-            shape[ax] = n_local
-            weights *= factors.reshape(shape)
-        return (1.0 / np.sqrt(weights)).astype(self.dtype, copy=False)
-
     def _exchange_along_axis(self, ncp, arr, axis, before, after):
         minus_nbr, plus_nbr = self.neigh[("-", axis)], self.neigh[("+", axis)]
         # slice definitions
@@ -162,46 +144,6 @@ class MPIHalo(MPILinearOperator):
             self.cart_comm.Sendrecv(snd, dest=plus_nbr, recvbuf=rcv, source=plus_nbr)
             arr[tuple(rcv_s)] = rcv
 
-    def _exchange_adjoint_along_axis(self, ncp, arr, axis, before, after):
-        minus_nbr, plus_nbr = self.neigh[("-", axis)], self.neigh[("+", axis)]
-        out = arr.copy()
-        if before == 0 and after == 0:
-            return out
-
-        def axis_slice(start, end):
-            s = [slice(None)] * self.ndim
-            s[axis] = slice(start, end)
-            return tuple(s)
-
-        empty = axis_slice(0, 0)
-        halo_minus = axis_slice(0, before) if before else None
-        halo_plus = axis_slice(-after, None) if after else None
-        core_minus = axis_slice(before, 2 * before) if before else None
-        core_plus = axis_slice(-2 * after, -after) if after else None
-
-        # remove contributions from halo slabs along this axis (forward overwrites them)
-        if halo_minus:
-            out[halo_minus] = 0
-        if halo_plus:
-            out[halo_plus] = 0
-
-        # send right halo to plus neighbor, receive right halo from minus neighbor
-        snd_slice = halo_plus or empty
-        rcv_slice = halo_minus or empty
-        rcv = ncp.zeros_like(arr[rcv_slice])
-        self.cart_comm.Sendrecv(arr[snd_slice].copy(), dest=plus_nbr, recvbuf=rcv, source=minus_nbr)
-        if core_minus:
-            out[core_minus] += rcv
-
-        # send left halo to minus neighbor, receive left halo from plus neighbor
-        snd_slice = halo_minus or empty
-        rcv_slice = halo_plus or empty
-        rcv = ncp.zeros_like(arr[rcv_slice])
-        self.cart_comm.Sendrecv(arr[snd_slice].copy(), dest=minus_nbr, recvbuf=rcv, source=plus_nbr)
-        if core_plus:
-            out[core_plus] += rcv
-        return out
-
     def _matvec(self, x):
         ncp = get_module(x.engine)
         if x.partition != Partition.SCATTER:
@@ -211,12 +153,13 @@ class MPIHalo(MPILinearOperator):
             global_shape=self.shape[0],
             partition=Partition.SCATTER,
             local_shapes=self._local_extent_sizes,
+            base_comm=x.base_comm,
+            base_comm_nccl=x.base_comm_nccl,
+            engine=x.engine,
+            dtype=self.dtype,
         )
 
         core = x.local_array.reshape(self.local_dims)
-        if self.normalize:
-            norm = self._norm_factors if ncp is np else ncp.asarray(self._norm_factors)
-            core = core * norm
         halo_arr = ncp.zeros(self.local_extent, dtype=self.dtype)
         # insert core
         core_slices = [
@@ -234,25 +177,16 @@ class MPIHalo(MPILinearOperator):
         return y
 
     def _rmatvec(self, x):
-        ncp = get_module(x.engine)
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
-
-        y = DistributedArray(global_shape=self.shape[1], partition=Partition.SCATTER)
-
-        arr = x.local_array.reshape(self.local_extent).copy()
-        # adjoint of halo exchange (reverse axis order because of the Transpose)
-        for ax in reversed(range(self.ndim)):
-            before, after = self.halo[2 * ax], self.halo[2 * ax + 1]
-            arr = self._exchange_adjoint_along_axis(ncp, arr, axis=ax, before=before, after=after)
-        core_slices = [
-            slice(left, left + ldim)
-            for left, ldim in zip(self.halo[::2], self.local_dims)
-        ]
+        res = DistributedArray(global_shape=self.shape[1],
+                               partition=Partition.SCATTER,
+                               base_comm=x.base_comm,
+                               base_comm_nccl=x.base_comm_nccl,
+                               engine=x.engine,
+                               dtype=self.dtype)
+        arr = x.local_array.reshape(self.local_extent)
+        core_slices = [slice(left, left + ldim) for left, ldim in zip(self.halo[::2], self.local_dims)]
         core = arr[tuple(core_slices)]
-        if self.normalize:
-            norm = self._norm_factors if ncp is np else ncp.asarray(self._norm_factors)
-            core = core * norm
-
-        y[:] = core.ravel()
-        return y
+        res[:] = core.ravel()
+        return res

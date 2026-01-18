@@ -209,8 +209,7 @@ else:
         dims=dims,
         halo=halo,
         proc_grid_shape=proc_grid_shape,
-        comm=comm,
-        normalize=True, # why?
+        comm=comm
     )
 
     # Global array
@@ -261,8 +260,7 @@ if power_of_2:
         dims=dims,
         halo=halo,
         proc_grid_shape=proc_grid_shape,
-        comm=comm,
-        normalize=False, # why?
+        comm=comm
     )
 
     for axis in [0, 1]:
@@ -307,8 +305,7 @@ else:
         dims=dims,
         halo=halo,
         proc_grid_shape=proc_grid_shape,
-        comm=comm,
-        normalize=False, # why?
+        comm=comm
     )
 
     # Global array
