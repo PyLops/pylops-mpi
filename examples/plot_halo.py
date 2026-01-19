@@ -34,6 +34,8 @@ import math
 import time
 import numpy as np
 import pylops
+
+from pylops.utils.wavelets import ricker
 from pylops_mpi.basicoperators.Halo import MPIHalo, halo_block_split
 from mpi4py import MPI
 
@@ -51,6 +53,16 @@ def pause(comm, t=4):
     comm.barrier()
     time.sleep(t)
 
+def local_extent_from_slice(local_shape, local_slice, halo):
+    lefts = []
+    rights = []
+    for sl in local_slice:
+        lefts.append(halo if (sl.start or 0) > 0 else 0)
+        rights.append(halo if sl.stop is not None else 0)
+    extent = tuple(dim + l + r for dim, l, r in zip(local_shape, lefts, rights))
+    return extent, lefts, rights
+
+
 ###############################################################################
 # Let’s start by considering a 1-dimensional distributed array. We are  
 # interested to compute a first derivative: however, because we are required 
@@ -61,7 +73,7 @@ def pause(comm, t=4):
 # :py:class:`pylops_mpi.DistributedArray` class; however, we will see how we
 # can now achieve the same without having to re-implement the derivative operator
 # in pylops-mpi. Instead, we will simply combine the 
-# :py:class:`pylops.basicoperators.FirstDerivative` operator with the
+# :py:class:`pylops.FirstDerivative` operator with the
 # :py:class:`pylops_mpi.basicoperators.MPIBlockDiag` and 
 # :py:class:`pylops_mpi.basicoperators.MPIHalo` operators.
 #
@@ -75,7 +87,7 @@ nlocal = 64
 n = nlocal * size
 proc_grid_shape = (size, )  # number of partitions over each axis
 
-halo = 1
+halo = 1 if size > 1 else 0  # for Sphinx-gallery as it runs with 1 rank
 halo_op = MPIHalo(
     dims=(n, ),
     halo=halo,
@@ -107,13 +119,16 @@ print(f"Rank {rank} - shape before/after haloing: {x_dist.local_array.size}"
 
 ###############################################################################
 # Let’s now instead compute the derivative and compare it with the result of 
-# the :py:class:`pylops_mpi.basicoperators.FirstDerivative` operator.
+# the :py:class:`pylops_mpi.basicoperators.MPIFirstDerivative` operator.
 
 # Derivative operator (using Halo)
-if rank == 0 or rank == size - 1:
-    local_shape_with_halo = (x_local.size + 1, )
+if size == 1:
+    local_shape_with_halo = x_local.size  # for Sphinx-gallery
 else:
-    local_shape_with_halo = (x_local.size + 2, )
+    if rank == 0 or rank == size - 1:
+        local_shape_with_halo = (x_local.size + 1, )
+    else:
+        local_shape_with_halo = (x_local.size + 2, )
 DOp = pylops.FirstDerivative(dims=local_shape_with_halo, axis=0)
 DOp_dist = pylops_mpi.MPIBlockDiag([DOp, ])
 Op_dist = halo_op.H @ DOp_dist @ halo_op
@@ -129,6 +144,7 @@ assert np.allclose(
     y_dist.local_array,
     y1_dist.local_array)
 
+
 ###############################################################################
 # So good so far, we can reproduce a 2-nd order, centered first derivative 
 # by combining basic pylops and pylops-mpi operators. Let's see if we can do the
@@ -136,7 +152,7 @@ assert np.allclose(
 
 pause(comm, t=1)
 
-halo = 2
+halo = 2 if size > 1 else 0  # for Sphinx-gallery as it runs with 1 rank
 halo_op = MPIHalo(
     dims=(n, ),
     halo=halo,
@@ -179,15 +195,6 @@ assert np.allclose(
 # can create local :py:class:`pylops.basicoperators.Diagonal` operators of the
 # correct size.
 
-def local_extent_from_slice(local_shape, local_slice, halo):
-    lefts = []
-    rights = []
-    for sl in local_slice:
-        lefts.append(halo if (sl.start or 0) > 0 else 0)
-        rights.append(halo if sl.stop is not None else 0)
-    extent = tuple(dim + l + r for dim, l, r in zip(local_shape, lefts, rights))
-    return extent, lefts, rights
-
 
 # Input and halo partition
 dims = (n, n)
@@ -196,7 +203,7 @@ power_of_2 = size_2 == int(size_2)
 
 if not power_of_2:
     pause(comm, t=1)
-    if rank == 0: 
+    if rank == 0:
         print(f"Number of ranks = {size} is not a power of 2 of an "
               "integer number, skipping example with 2-dimensional array")
 else:
@@ -204,7 +211,7 @@ else:
     size_2 = int(size_2)
     proc_grid_shape = (size_2, size_2)  # number of partitions over each axis
 
-    halo = 1
+    halo = 1 if size > 1 else 0  # for Sphinx-gallery as it runs with 1 rank
     halo_op = MPIHalo(
         dims=dims,
         halo=halo,
@@ -219,7 +226,8 @@ else:
     x_slice = halo_block_split(dims, comm, proc_grid_shape)
     x_local = x[x_slice]
     x_local_shape = x_local.shape
-    xhalo_local_shape, lefts, rights = local_extent_from_slice(x_local_shape, x_slice, halo)
+    xhalo_local_shape, lefts, rights = \
+        local_extent_from_slice(x_local_shape, x_slice, halo)
     xhalo_local_size = np.prod(xhalo_local_shape)
 
     # Distributed array
@@ -282,7 +290,7 @@ if power_of_2:
 
 
 ###############################################################################
-# Finally, we do the same for a 3-dimensional array
+# And we repeat the same with a 3-dimensional array
 
 
 # Input and halo partition
@@ -348,5 +356,137 @@ else:
         # Check that derivative on entire 2d object is the same as the one on blocks with halo
         assert np.allclose(y[x_slice][core_slices],
                            y_dist.local_array.reshape(x_local_shape)[core_slices])
-        
 
+
+
+###############################################################################
+# Next, we move to something more interesting. We will use the 
+# :py:class:`pylops_mpi.basicoperators.MPIHalo` operator to create a distributed
+# non-stationary convolutional operator acting on 1-dimensional array. This will
+# be ultimately equivalent to PyLops'
+# :py:class:`pylops.signalprocessing.NonStationaryConvolve1D`, however both the 
+# input array and the filters will be distibuted. What makes this operator
+# interesting is that we need to handle convolutions at the edges between
+# different ranks and to do that we will halo the input array of a number of
+# samples equal to the distance between two filters and we will also borrow the
+# filtering from the next/previous rank.
+
+
+# Input signal operator
+nlocal = 64
+nfilters_local = 2
+n = nlocal * size
+proc_grid_shape = (size, )
+
+# Filters
+ntw = 16
+dt = 0.004
+tw = np.arange(ntw) * dt
+fs = np.arange(nfilters_local * size) * 8 + 20
+wavs = np.stack([ricker(tw, f0=f)[0] for f in fs])
+
+# Filters centers (selected such that they are symmetric on either
+# side of the edges of the distributed array between ranks)
+n_between_h = nlocal // nfilters_local
+ih = nlocal // (2 * nfilters_local) + \
+    np.arange(0, nlocal * size, n_between_h)
+
+pause(comm, t=1)
+if rank == 0:
+    print(f"Filters centers: {ih}")
+
+# Input signal
+t = np.arange(n) * dt
+x = np.zeros(n, dtype=np.float64)
+x[ih] = 1.0
+
+# Halo operator
+halo = n_between_h if size > 1 else 0  # for Sphinx-gallery as it runs with 1 rank
+halo_op = MPIHalo(
+    dims=(n, ),
+    halo=halo,
+    proc_grid_shape=proc_grid_shape,
+    comm=comm
+)
+
+# Distributed array
+x_dist = pylops_mpi.DistributedArray(
+    global_shape=n,
+    base_comm=comm,
+    partition=pylops_mpi.Partition.SCATTER)
+x_slice = halo_block_split((n, ), comm, proc_grid_shape)
+x_local = x[x_slice]
+x_dist.local_array[:] = x_local
+
+x_local_shape = x_local.shape
+xhalo_local_shape, lefts, rights = \
+    local_extent_from_slice(x_local_shape, x_slice, halo)
+pause(comm, t=1)
+print(f"Rank {rank} - shape before/after haloing: {x_local_shape}"
+    f"/{xhalo_local_shape}")
+
+# Create operators
+if size == 1:
+    # for Sphinx-gallery
+    COp = pylops.signalprocessing.NonStationaryConvolve1D(
+        dims=nlocal + halo, hs=wavs, ih=ih)
+else:
+    if rank == 0:
+        # Only one extra filters on the right
+        COp = pylops.signalprocessing.NonStationaryConvolve1D(
+            dims=nlocal + halo, hs=wavs[:nfilters_local + 1],
+            ih=ih[:nfilters_local + 1]
+        )
+    elif rank == size - 1:
+        # Only one extra filters on the left
+        COp = pylops.signalprocessing.NonStationaryConvolve1D(
+            dims=nlocal + halo, hs=wavs[-nfilters_local - 1:],
+            ih=ih[-nfilters_local - 1:] - x_slice[0].start + halo
+        )
+    else:
+        # Two extra filters on either side
+        COp = pylops.signalprocessing.NonStationaryConvolve1D(
+            dims=nlocal + 2 * halo, hs=wavs[nfilters_local * rank - 1:nfilters_local * (rank + 1) + 1],
+            ih=ih[nfilters_local * rank - 1:nfilters_local * (rank + 1) + 1] - x_slice[0].start + halo
+        )
+
+# Create and apply total operator
+COp_dist = pylops_mpi.MPIBlockDiag([COp, ])
+Op_dist = halo_op.H @ COp_dist @ halo_op
+
+y_dist = Op_dist @ x_dist
+xadj_dist = Op_dist.H @ y_dist
+
+y_dist = y_dist.asarray()
+xadj_dist = xadj_dist.asarray()
+
+
+# Create and apply benchmark serial operator
+Cop = pylops.signalprocessing.NonStationaryConvolve1D(
+    dims=n, hs=wavs, ih=ih
+)
+
+y = Cop @ x
+xadj = Cop.H @ y
+
+###############################################################################
+# Let's display the results
+
+if rank == 0:
+    plt.figure(figsize=(10, 3))
+    plt.plot(t, x, "k", label="Input")
+    plt.plot(t, y, "b", label="Forward (serial)")
+    plt.plot(t, y_dist, "--r", label="Forward (distr)")
+    plt.xlabel("Time [sec]")
+    plt.xlim(0, t[-1])
+    plt.legend()
+    plt.tight_layout()
+
+    plt.figure(figsize=(10, 3))
+    plt.plot(t, x, "k", label="Input")
+    plt.plot(t, xadj, "b", label="Adjoint (serial)")
+    plt.plot(t, xadj_dist, "--r", label="Adjoint (distr)")
+    plt.xlabel("Time [sec]")
+    plt.xlim(0, t[-1])
+    plt.legend()
+    plt.tight_layout()
