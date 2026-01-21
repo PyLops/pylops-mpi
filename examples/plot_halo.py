@@ -38,6 +38,7 @@ import pylops
 from pylops.utils.wavelets import ricker
 from pylops_mpi.basicoperators.Halo import MPIHalo, halo_block_split
 from mpi4py import MPI
+from scipy.signal.windows import gaussian
 
 import pylops_mpi
 
@@ -56,9 +57,14 @@ def pause(comm, t=4):
 def local_extent_from_slice(local_shape, local_slice, halo):
     lefts = []
     rights = []
-    for sl in local_slice:
-        lefts.append(halo if (sl.start or 0) > 0 else 0)
-        rights.append(halo if sl.stop is not None else 0)
+    if isinstance(halo, int):
+        for sl in local_slice:
+            lefts.append(halo if (sl.start or 0) > 0 else 0)
+            rights.append(halo if sl.stop is not None else 0)
+    else:
+        for sl, hal in zip(local_slice, halo):
+            lefts.append(hal if (sl.start or 0) > 0 else 0)
+            rights.append(hal if sl.stop is not None else 0)
     extent = tuple(dim + l + r for dim, l, r in zip(local_shape, lefts, rights))
     return extent, lefts, rights
 
@@ -460,14 +466,13 @@ xadj_dist = Op_dist.H @ y_dist
 y_dist = y_dist.asarray()
 xadj_dist = xadj_dist.asarray()
 
-
 # Create and apply benchmark serial operator
-Cop = pylops.signalprocessing.NonStationaryConvolve1D(
+COp = pylops.signalprocessing.NonStationaryConvolve1D(
     dims=n, hs=wavs, ih=ih
 )
 
-y = Cop @ x
-xadj = Cop.H @ y
+y = COp @ x
+xadj = COp.H @ y
 
 ###############################################################################
 # Let's display the results
@@ -490,3 +495,136 @@ if rank == 0:
     plt.xlim(0, t[-1])
     plt.legend()
     plt.tight_layout()
+
+
+###############################################################################
+# We repeat the same exercise for a 2-dimensional array using PyLops'
+# :py:class:`pylops.signalprocessing.NonStationaryConvolve2D`; here
+# the input array and the filters are distibuted along the slowest axis.
+
+
+# Input signal operator
+nlocal = (32, 64)
+nfilters_local = (2, 4)
+proc_grid_shape = (size, 1)
+n = (nlocal[0] * proc_grid_shape[0],
+     nlocal[1] * proc_grid_shape[1])
+
+# Filters
+ntw = 15
+dt = 0.004
+tw = np.arange(ntw) * dt
+fs = np.arange(nfilters_local[1] * proc_grid_shape[1]) * 8 + 20
+
+wavy = gaussian(ntw, 2.0)
+wavs = np.zeros((nfilters_local[0] * proc_grid_shape[0],
+                 nfilters_local[1] * proc_grid_shape[1],
+                 ntw, ntw * 2 - 1))
+for ify in range(nfilters_local[0] * proc_grid_shape[0]):
+    for ifx in range(nfilters_local[1] * proc_grid_shape[1]):
+        wavx = ricker(tw, f0=fs[ifx])[0]
+        wav = np.outer(wavy, wavx[None].T)
+        wavs[ify, ifx] = wav
+
+# Filters centers (selected such that they are symmetric on either
+# side of the edges of the distributed array between ranks)
+n_between_hy = nlocal[0] // nfilters_local[0]
+n_between_hx = nlocal[1] // nfilters_local[1]
+
+ihy = nlocal[0] // (2 * nfilters_local[0]) + np.arange(0, nlocal[0] * proc_grid_shape[0], n_between_hy)
+ihx = nlocal[1] // (2 * nfilters_local[1]) + np.arange(0, nlocal[1] * proc_grid_shape[1], n_between_hx)
+
+pause(comm, t=1)
+if rank == 0:
+    print(f"Filters centers - 1st axis: {ihy}, 2nd axis: {ihx}")
+
+# Input signal
+x = np.zeros(n, dtype=np.float64)
+for ih in ihy:
+    x[ih, ihx] = 1.0
+
+# Halo operator
+halo = (n_between_hy, 0) if size > 1 else (0, 0)  # for Sphinx-gallery as it runs with 1 rank
+halo_op = MPIHalo(
+    dims=n,
+    halo=n_between_hy,  # STRANGE!
+    proc_grid_shape=proc_grid_shape,
+    comm=comm
+)
+
+# Distributed array
+x_dist = pylops_mpi.DistributedArray(
+    global_shape=np.prod(n),
+    base_comm=comm,
+    partition=pylops_mpi.Partition.SCATTER)
+x_slice = halo_block_split(n, comm, proc_grid_shape)
+x_local = x[x_slice]
+x_dist.local_array[:] = x_local.ravel()
+
+# Apply halo
+x_dist_halo = halo_op @ x_dist
+
+x_local_shape = x_local.shape
+xhalo_local_shape, lefts, rights = \
+    local_extent_from_slice(x_local_shape, x_slice, halo)
+xhalo_local_size = np.prod(xhalo_local_shape)
+pause(comm, t=1)
+print(f"Rank {rank} - shape before/after haloing: {x_local_shape}"
+      f"/{xhalo_local_shape}")
+
+# Create operators
+if size == 1:
+    # for Sphinx-gallery
+    COp = pylops.signalprocessing.NonStationaryConvolve2D(
+        dims=(nlocal[0] + halo[0], n[1]), hs=wavs, ihx=ihy, ihz=ihx)
+else:
+    if rank == 0:
+        COp = pylops.signalprocessing.NonStationaryConvolve2D(
+            dims=(nlocal[0] + halo[0], n[1]),
+            hs=wavs[:nfilters_local[0] + 1],
+            ihx=ihy[:nfilters_local[0] + 1],
+            ihz=ihx
+        )
+    elif rank == size - 1:
+        COp = pylops.signalprocessing.NonStationaryConvolve2D(
+            dims=(nlocal[0] + halo[0], n[1]),
+            hs=wavs[-nfilters_local[0] - 1:],
+            ihx=ihy[-nfilters_local[0] - 1:] - x_slice[0].start + halo[0],
+            ihz=ihx
+        )
+    else:
+        COp = pylops.signalprocessing.NonStationaryConvolve2D(
+            dims=(nlocal[0] + 2 * halo[0], n[1]),
+            hs=wavs[nfilters_local[0] * rank - 1:nfilters_local[0] * (rank + 1) + 1],
+            ihx=ihy[nfilters_local[0] * rank - 1:nfilters_local[0] * (rank + 1) + 1] - x_slice[0].start + halo[0],
+            ihz=ihx
+        )
+
+# Create and apply total operator
+COp_dist = pylops_mpi.MPIBlockDiag([COp, ])
+Op_dist = halo_op.H @ COp_dist @ halo_op
+
+y_dist = Op_dist @ x_dist
+xadj_dist = Op_dist.H @ y_dist
+
+y_dist = y_dist.asarray().reshape(n)
+xadj_dist = xadj_dist.asarray().reshape(n)
+
+# Create and apply benchmark serial operator
+COp = pylops.signalprocessing.NonStationaryConvolve2D(
+    dims=n, hs=wavs, ihx=ihy, ihz=ihx
+)
+
+y = COp @ x
+xadj = COp.H @ y
+
+###############################################################################
+# Let's display the results
+
+if rank == 0:
+    fig, axs = plt.subplots(2, 2, figsize=(14, 12))
+    axs[0, 0].imshow(y_dist, cmap="gray", vmin=1, vmax=1)
+    axs[0, 1].imshow(y_dist - y, cmap="gray", vmin=.1, vmax=.1)
+    axs[1, 0].imshow(xadj_dist, cmap="gray", vmin=1, vmax=1)
+    axs[1, 1].imshow(xadj_dist - xadj, cmap="gray", vmin=.1, vmax=.1)
+    fig.tight_layout()
