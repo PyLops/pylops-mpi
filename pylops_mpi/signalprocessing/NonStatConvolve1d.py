@@ -4,8 +4,6 @@ import numpy as np
 
 from mpi4py import MPI
 from pylops.signalprocessing import NonStationaryConvolve1D
-from pylops.utils._internal import _value_or_sized_to_tuple
-from pylops.utils.backend import get_module
 from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
 
 from pylops_mpi import MPILinearOperator
@@ -22,7 +20,7 @@ def MPINonStationaryConvolve1D(
         dtype: DTypeLike = "float64",
     ) -> MPILinearOperator:
     r"""1D non-stationary convolution operator.
-    
+
     Apply distributed non-stationary one-dimensional convolution.
     A varying compact filter is provided on a coarser grid and on-the-fly
     interpolation is applied in forward and adjoint modes. Alongside
@@ -61,7 +59,7 @@ def MPINonStationaryConvolve1D(
         If ``ih`` is not regularly sampled
     ValueError
         If ``ih`` is outside the bounds defined by ``dims[axis]``
-    
+
     Notes
     -----
     The MPINonStationaryConvolve1D operator applies non-stationary
@@ -92,7 +90,7 @@ def MPINonStationaryConvolve1D(
         raise ValueError(
             "the indices of filters 'ih' must be larger than 0 and smaller than `dims`"
         )
-    
+
     rank = base_comm.Get_rank()
     size = base_comm.Get_size()
     if hs.shape[0] % size:
@@ -105,7 +103,7 @@ def MPINonStationaryConvolve1D(
             f"number of input samples {dims[0]} is not divisible by "
             f"the number of ranks ({size})"
         )
-    
+
     # Halo operator
     nh_local = hs.shape[0] // size
     dims_local = dims[axis] // size
@@ -147,4 +145,3 @@ def MPINonStationaryConvolve1D(
     Op = HOp.H @ COp_full @ HOp
 
     return Op
-    
