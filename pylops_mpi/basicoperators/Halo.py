@@ -67,7 +67,7 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
         super().__init__(shape=self.shape, dtype=np.dtype(dtype), base_comm=comm)
 
     def _parse_halo(self, h):
-        if isinstance(h, int):
+        if isinstance(h, (int, np.int64, np.int32)):
             halo = (h,) * (2 * self.ndim)
             trimmed = list(halo)
             for ax in range(self.ndim):

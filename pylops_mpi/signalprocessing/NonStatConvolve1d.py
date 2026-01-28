@@ -4,6 +4,7 @@ import numpy as np
 
 from mpi4py import MPI
 from pylops.signalprocessing import NonStationaryConvolve1D
+from pylops.utils._internal import _value_or_sized_to_tuple
 from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
 
 from pylops_mpi import MPILinearOperator
@@ -23,15 +24,24 @@ def MPINonStationaryConvolve1D(
 
     Apply distributed non-stationary one-dimensional convolution.
     A varying compact filter is provided on a coarser grid and on-the-fly
-    interpolation is applied in forward and adjoint modes. Alongside
-    distributing the input array across different ranks, the filters are
-    also distributed and filters operating at the edges of the local arrays
-    are replicated on both ranks either side of the edge.
+    interpolation is applied in forward and adjoint modes. 
+
+    Alongside distributing the input array across different ranks, the 
+    filters are also distributed and filters operating at the edges of the
+    local arrays are replicated on both ranks either side of the edge.
+
+    .. note::
+
+        Currently the 
+        :obj:`pylops_mpi.signalprocessing.MPINonStationaryConvolve1D` 
+        requires that shape of the local arrays of the input 
+        :obj:`pylops_mpi.DistributedArray` are be the same for all ranks.
 
     Parameters
     ----------
     dims : :obj:`list` or :obj:`int`
-        Number of samples for each dimension
+        Number of samples for each dimension of the input
+        :obj:`pylops_mpi.DistributedArray`.
     hs : :obj:`numpy.ndarray`
         Bank of 1d compact filters of size :math:`n_\text{filts} \times n_h`.
         Filters must have odd number of samples and are assumed to be
@@ -78,41 +88,49 @@ def MPINonStationaryConvolve1D(
     """
     # TODO: need to adapt operator to handle NDarrays
     axis = -1
+    rank = base_comm.Get_rank()
+    size = base_comm.Get_size()
+    dims = _value_or_sized_to_tuple(dims)
 
+    # Checks for local operator
     if hs.shape[1] % 2 == 0:
         raise ValueError("filters hs must have odd length")
     if len(np.unique(np.diff(ih))) > 1:
         raise ValueError(
             "the indices of filters 'ih' are must be regularly sampled"
         )
-    # dims = _value_or_sized_to_tuple(dims)
     if min(ih) < 0 or max(ih) >= dims[axis]:
         raise ValueError(
-            "the indices of filters 'ih' must be larger than 0 and smaller than `dims`"
+            "the indices of filters 'ih' must be larger than 0 and "
+            "smaller than `dims`"
         )
 
-    rank = base_comm.Get_rank()
-    size = base_comm.Get_size()
-    if hs.shape[0] % size:
-        raise ValueError(
-            f"number of filters {hs.shape[0]} is not divisible by "
-            f"the number of ranks ({size})"
-        )
+    # Additional check for distributed operarator
     if dims[axis] % size:
         raise ValueError(
             f"number of input samples {dims[0]} is not divisible by "
             f"the number of ranks ({size})"
         )
 
-    # Halo operator
-    nh_local = hs.shape[0] // size
+    # Identify halo as the maximum distance between any partition of
+    # the distributed array into local arrays and any filter plus
+    # half of the size of the filter
     dims_local = dims[axis] // size
-    n_between_h = dims_local // nh_local
-    # TODO: must check that ih provided is such that
-    # filters centers are symmetric on either
-    # side of the edges of the distributed array between ranks)
+    starts_local = np.arange(0, dims[axis], dims_local)
+    start_local = starts_local[rank]
+    end_local = start_local + dims_local - 1
+    ihidx_local = np.where((ih >= start_local) & (ih <= end_local))[0]
+    if len(ihidx_local) == 0:
+        raise ValueError(f"rank {rank} has zerof filters!")
+    ih_local = ih[ihidx_local]
 
-    halo = n_between_h
+    dist_start_local = 0 if rank == 0 else ih_local[0] - start_local
+    dist_end_local = 0 if rank == (size - 1) else end_local - ih_local[-1]
+    dist_start = np.max(np.array(base_comm.allgather(dist_start_local)))
+    dist_end = np.max(np.array(base_comm.allgather(dist_end_local)))
+    halo = max([dist_start, dist_end]) + (hs.shape[1] // 2 + hs.shape[1] % 2)
+
+    # Create halo operator
     HOp = MPIHalo(
         dims=dims,
         halo=halo,
@@ -124,20 +142,20 @@ def MPINonStationaryConvolve1D(
     x_slice = halo_block_split(dims, base_comm, (size, ))
     if rank == 0:
         COp = NonStationaryConvolve1D(
-            dims=dims_local + halo, hs=hs[:nh_local + 1],
-            ih=ih[:nh_local + 1],
+            dims=dims_local + halo, hs=hs[:ihidx_local[-1] + 2],
+            ih=ih[:ihidx_local[-1] + 2],
             dtype=dtype
         )
     elif rank == size - 1:
         COp = NonStationaryConvolve1D(
-            dims=dims_local + halo, hs=hs[-nh_local - 1:],
-            ih=ih[-nh_local - 1:] - x_slice[0].start + halo,
+            dims=dims_local + halo, hs=hs[ihidx_local[0] - 1:],
+            ih=ih[ihidx_local[0] - 1:] - x_slice[0].start + halo,
             dtype=dtype
         )
     else:
         COp = NonStationaryConvolve1D(
-            dims=dims_local + 2 * halo, hs=hs[nh_local * rank - 1:nh_local * (rank + 1) + 1],
-            ih=ih[nh_local * rank - 1:nh_local * (rank + 1) + 1] - x_slice[0].start + halo,
+            dims=dims_local + 2 * halo, hs=hs[ihidx_local[0] - 1: ihidx_local[-1] + 2],
+            ih=ih[ihidx_local[0] - 1: ihidx_local[-1] + 2] - x_slice[0].start + halo,
             dtype=dtype
         )
 
