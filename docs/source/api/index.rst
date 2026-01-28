@@ -48,6 +48,8 @@ Basic Operators
     MPIVStack
     MPIStackedVStack
     MPIHStack
+    MPIHalo
+    
 
 Derivatives
 ~~~~~~~~~~~
