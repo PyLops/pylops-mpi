@@ -73,6 +73,7 @@ Signal Processing
    :toctree: generated/
 
     MPIFredholm1
+    MPINonStationaryConvolve1D
 
 
 Wave-Equation processing

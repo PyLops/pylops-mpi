@@ -113,8 +113,8 @@ def MPINonStationaryConvolve1D(
         )
 
     # Identify halo as the maximum distance between any partition of
-    # the distributed array into local arrays and any filter plus
-    # half of the size of the filter
+    # the distributed array into local arrays and the closest filter
+    # outside of the partition plus half of the size of the filter
     dims_local = dims[axis] // size
     starts_local = np.arange(0, dims[axis], dims_local)
     start_local = starts_local[rank]
@@ -122,13 +122,17 @@ def MPINonStationaryConvolve1D(
     ihidx_local = np.where((ih >= start_local) & (ih <= end_local))[0]
     if len(ihidx_local) == 0:
         raise ValueError(f"rank {rank} has zerof filters!")
-    ih_local = ih[ihidx_local]
 
-    dist_start_local = 0 if rank == 0 else ih_local[0] - start_local
-    dist_end_local = 0 if rank == (size - 1) else end_local - ih_local[-1]
+    ihdiff = np.diff(ih)[0]
+    ih_local = ih[ihidx_local]
+    dist_start_local = 0 if rank == 0 else ihdiff - (ih_local[0] - start_local)
+    dist_end_local = 0 if rank == (size - 1) else ihdiff - (end_local - ih_local[-1])
     dist_start = np.max(np.array(base_comm.allgather(dist_start_local)))
     dist_end = np.max(np.array(base_comm.allgather(dist_end_local)))
-    halo = max([dist_start, dist_end]) + (hs.shape[1] // 2 + hs.shape[1] % 2)
+    halo = max([dist_start, dist_end]) + (hs.shape[1] // 2 + 1)
+    if size == 1:
+        # to allow operator to work also with size=1
+        halo = 0
 
     # Create halo operator
     HOp = MPIHalo(
@@ -139,25 +143,30 @@ def MPINonStationaryConvolve1D(
         dtype=dtype
     )
 
-    x_slice = halo_block_split(dims, base_comm, (size, ))
-    if rank == 0:
+    if size == 1:
+        # to allow operator to work also with size=1
         COp = NonStationaryConvolve1D(
-            dims=dims_local + halo, hs=hs[:ihidx_local[-1] + 2],
-            ih=ih[:ihidx_local[-1] + 2],
-            dtype=dtype
-        )
-    elif rank == size - 1:
-        COp = NonStationaryConvolve1D(
-            dims=dims_local + halo, hs=hs[ihidx_local[0] - 1:],
-            ih=ih[ihidx_local[0] - 1:] - x_slice[0].start + halo,
-            dtype=dtype
-        )
+            dims=dims_local + halo, hs=hs, ih=ih)
     else:
-        COp = NonStationaryConvolve1D(
-            dims=dims_local + 2 * halo, hs=hs[ihidx_local[0] - 1: ihidx_local[-1] + 2],
-            ih=ih[ihidx_local[0] - 1: ihidx_local[-1] + 2] - x_slice[0].start + halo,
-            dtype=dtype
-        )
+        x_slice = halo_block_split(dims, base_comm, (size, ))
+        if rank == 0:
+            COp = NonStationaryConvolve1D(
+                dims=dims_local + halo, hs=hs[:ihidx_local[-1] + 2],
+                ih=ih[:ihidx_local[-1] + 2],
+                dtype=dtype
+            )
+        elif rank == size - 1:
+            COp = NonStationaryConvolve1D(
+                dims=dims_local + halo, hs=hs[ihidx_local[0] - 1:],
+                ih=ih[ihidx_local[0] - 1:] - x_slice[0].start + halo,
+                dtype=dtype
+            )
+        else:
+            COp = NonStationaryConvolve1D(
+                dims=dims_local + 2 * halo, hs=hs[ihidx_local[0] - 1: ihidx_local[-1] + 2],
+                ih=ih[ihidx_local[0] - 1: ihidx_local[-1] + 2] - x_slice[0].start + halo,
+                dtype=dtype
+            )
 
     COp_full = MPIBlockDiag([COp, ])
     Op = HOp.H @ COp_full @ HOp
