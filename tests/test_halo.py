@@ -12,7 +12,7 @@ import pylops
 from numpy.testing import assert_allclose
 
 import pylops_mpi
-from pylops_mpi.basicoperators.Halo import MPIHalo
+from pylops_mpi.basicoperators import MPIHalo
 from pylops_mpi.utils.dottest import dottest
 
 np.random.seed(42)

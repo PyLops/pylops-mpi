@@ -92,14 +92,14 @@ x[ih] = 1.0
 
 # Distributed array
 x_dist = pylops_mpi.DistributedArray(
-        global_shape=n,
-        base_comm=comm,
-        partition=pylops_mpi.Partition.SCATTER)
+    global_shape=n,
+    base_comm=comm,
+    partition=pylops_mpi.Partition.SCATTER)
 x_dist.local_array[:] = x[nlocal * rank: nlocal * (rank + 1)]
 
 # Create operator
 COp_dist = pylops_mpi.signalprocessing.MPINonStationaryConvolve1D(
-        n, wavs, ih, base_comm=comm)
+    n, wavs, ih, base_comm=comm)
 
 # Apply operator
 y_dist = COp_dist @ x_dist
