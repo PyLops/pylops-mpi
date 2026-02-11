@@ -195,6 +195,21 @@ def test_local_shapes_nccl(par):
         rtol=1e-14,
     )
 
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par4), (par4j), (par5), (par5j),
+                                 (par6), (par6b), (par7), (par7b)])
+def test_redistribute(par):
+    x_gpu = cp.asarray(par["x"])
+    dist_array = DistributedArray.to_dist(
+        x=x_gpu,
+        base_comm_nccl=nccl_comm,
+        partition=par["partition"],
+        axis=par["axis"],
+    )
+    redist_array = dist_array.redistribute(axis=par['axis'] - 1)
+    assert isinstance(redist_array, DistributedArray)
+    assert_allclose(dist_array.asarray().get(), redist_array.asarray().get(), rtol=1e-13)
+
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par1, par2", [(par4, par5), (par4j, par5j)])
