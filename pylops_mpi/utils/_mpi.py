@@ -226,6 +226,46 @@ def mpi_recv(base_comm: MPI.Comm,
     return recv_buf
 
 
+def mpi_sendrecv(base_comm: MPI.Comm, sendbuf: NDArray, recvbuf: NDArray, dest: int = 0, sendtag: int = 0,
+                 source: int = 0, recvtag: int = 0, engine: Optional[str] = "numpy") -> NDArray:
+    """MPI Send/Recv
+    Dispatch send and receive in one combined call based on type of input and availability of
+    CUDA-Aware MPI
+
+    Parameters
+    ----------
+    base_comm : :obj:`MPI.Comm`
+        Base MPI Communicator.
+    sendbuf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+        The array containing data to send.
+    recvbuf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`, optional
+        The buffered array to receive data.
+    dest: :obj:`int`
+        The rank of the destination CPU/GPU device.
+    sendtag : :obj:`int`
+        Tag of the message to be sent.
+    source: :obj:`int`
+        The rank of the sending CPU/GPU device.
+    recvtag : :obj:`int`
+        Tag of the message to be received.
+    engine : :obj:`str`, optional
+        Engine used to store array (``numpy`` or ``cupy``)
+
+    Returns
+    -------
+    recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+        The buffer containing the received data.
+
+    """
+    if deps.cuda_aware_mpi_enabled or engine == "numpy":
+        _mpi_calls(base_comm, "Sendrecv", engine=engine, sendbuf=sendbuf, dest=dest, sendtag=sendtag,
+                   recvbuf=recvbuf, source=source, recvtag=recvtag)
+    else:
+        recvbuf = _mpi_calls(base_comm, "sendrecv", engine=engine, sendbuf=sendbuf, dest=dest, sendtag=sendtag,
+                             recvbuf=recvbuf, source=source, recvtag=recvtag)
+    return recvbuf
+
+
 def _mpi_calls(comm: MPI.Comm, func: str, *args, engine: Optional[str] = "numpy", **kwargs):
     """MPI Calls
     Wrapper around MPI comm calls with optional GPU synchronization for CuPy arrays.

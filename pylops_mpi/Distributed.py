@@ -3,7 +3,8 @@ from typing import Any, NewType, Optional
 from mpi4py import MPI
 from pylops.utils import NDArray
 from pylops.utils import deps as pylops_deps  # avoid namespace crashes with pylops_mpi.utils
-from pylops_mpi.utils._mpi import mpi_allreduce, mpi_allgather, mpi_bcast, mpi_send, mpi_recv, _prepare_allgather_inputs, _unroll_allgather_recv
+from pylops_mpi.utils._mpi import (mpi_allreduce, mpi_allgather, mpi_bcast, mpi_send, mpi_recv, mpi_sendrecv,
+                                   _prepare_allgather_inputs, _unroll_allgather_recv)
 from pylops_mpi.utils import deps
 
 cupy_message = pylops_deps.cupy_import("the DistributedArray module")
@@ -31,6 +32,7 @@ class DistributedMixIn:
     MPI installation is not available).
 
     """
+
     def _allreduce(self,
                    base_comm: MPI.Comm,
                    base_comm_nccl: NcclCommunicatorType,
@@ -303,3 +305,13 @@ class DistributedMixIn:
             return mpi_recv(base_comm,
                             recv_buf, source, count, tag=tag,
                             engine=engine)
+
+    def _sendrecv(self,
+                  base_comm: MPI.Comm,
+                  base_comm_nccl: NcclCommunicatorType,
+                  sendbuf: NDArray, recvbuf: NDArray, dest: int = 0, sendtag: int = 0,
+                  source: int = 0, recvtag: int = 0, engine: Optional[str] = "numpy"
+                  ):
+        if deps.nccl_enabled and base_comm_nccl is not None:
+            raise NotImplementedError("SendRecv has not been implemented using NCCL")
+        return mpi_sendrecv(base_comm, sendbuf, recvbuf, dest, sendtag, source, recvtag, engine)
