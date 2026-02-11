@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:03.466** total execution time for 9 files **from gallery**:
+**00:03.542** total execution time for 9 files **from gallery**:
 
 .. container::
 
@@ -36,22 +36,22 @@ Computation times
      - 00:01.180
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_derivative.py` (``plot_derivative.py``)
-     - 00:01.027
+     - 00:01.082
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_mdc.py` (``plot_mdc.py``)
-     - 00:00.439
+     - 00:00.447
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_stacking.py` (``plot_stacking.py``)
-     - 00:00.355
+     - 00:00.363
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_mpilinop.py` (``plot_mpilinop.py``)
-     - 00:00.285
+     - 00:00.290
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_cgls.py` (``plot_cgls.py``)
-     - 00:00.154
+     - 00:00.156
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_stacked_array.py` (``plot_stacked_array.py``)
-     - 00:00.017
+     - 00:00.016
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_matrixmult.py` (``plot_matrixmult.py``)
      - 00:00.004
