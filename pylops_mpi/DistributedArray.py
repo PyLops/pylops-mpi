@@ -468,9 +468,10 @@ class DistributedArray(DistributedMixIn):
         """
         if self.axis == axis or self.partition is not Partition.SCATTER:
             return self
+        ncp = get_module(self.engine)
         counts_from = block_counts(self.global_shape[self.axis], self.size)
         counts_to = block_counts(self.global_shape[axis], self.size)
-        offsets_to = np.cumsum([0] + counts_to[:-1])
+        offsets_to = ncp.cumsum(ncp.array([0] + counts_to[:-1]))
         send_slices = []
         for r in range(self.size):
             start = offsets_to[r]
@@ -484,7 +485,7 @@ class DistributedArray(DistributedMixIn):
         for r in range(self.size):
             sender_shape[self.axis] = counts_from[r]
             sender_shape[axis] = counts_to[self.rank]
-            recv_buf = np.empty(sender_shape, dtype=self.dtype)
+            recv_buf = ncp.empty(sender_shape, dtype=self.dtype)
             if r == self.rank:
                 recv_buf[:] = send_slices[self.rank]
             else:
@@ -495,12 +496,12 @@ class DistributedArray(DistributedMixIn):
                                           sendtag=0,
                                           recvbuf=recv_buf,
                                           source=r,
-                                          recvtag=0)
+                                          recvtag=0, engine=self.engine)
             recv_list.append(recv_buf)
         redist_array = DistributedArray(global_shape=self.global_shape, base_comm=self.base_comm,
                                         base_comm_nccl=self.base_comm_nccl, mask=self.mask, axis=axis,
                                         engine=self.engine, dtype=self.dtype)
-        redist_array[:] = np.concatenate(recv_list, axis=self.axis)
+        redist_array[:] = ncp.concatenate(recv_list, axis=self.axis)
         return redist_array
 
     def _check_local_shapes(self, local_shapes):
@@ -754,8 +755,7 @@ class DistributedArray(DistributedMixIn):
         if axis is None:
             # Flatten the local arrays and calculate norm
             return x._compute_vector_norm(x.local_array.flatten(), axis=0, ord=ord)
-        if self.base_comm_nccl is None:
-            x = x.redistribute(axis=axis)
+        x = x.redistribute(axis=axis)
         # Calculate vector norm along the axis
         return x._compute_vector_norm(x.local_array, axis=x.axis, ord=ord)
 

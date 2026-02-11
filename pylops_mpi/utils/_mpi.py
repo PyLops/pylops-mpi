@@ -261,8 +261,8 @@ def mpi_sendrecv(base_comm: MPI.Comm, sendbuf: NDArray, recvbuf: NDArray, dest: 
         _mpi_calls(base_comm, "Sendrecv", engine=engine, sendbuf=sendbuf, dest=dest, sendtag=sendtag,
                    recvbuf=recvbuf, source=source, recvtag=recvtag)
     else:
-        recvbuf = _mpi_calls(base_comm, "sendrecv", engine=engine, sendbuf=sendbuf, dest=dest, sendtag=sendtag,
-                             recvbuf=recvbuf, source=source, recvtag=recvtag)
+        recvbuf = _mpi_calls(base_comm, "sendrecv", engine=engine, sendobj=sendbuf, dest=dest, sendtag=sendtag,
+                             source=source, recvtag=recvtag)
     return recvbuf
 
 

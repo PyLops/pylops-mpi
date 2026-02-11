@@ -313,5 +313,10 @@ class DistributedMixIn:
                   source: int = 0, recvtag: int = 0, engine: Optional[str] = "numpy"
                   ):
         if deps.nccl_enabled and base_comm_nccl is not None:
-            raise NotImplementedError("SendRecv has not been implemented using NCCL")
+            from cupy.cuda import nccl
+            nccl.groupStart()
+            nccl_send(base_comm_nccl, sendbuf, dest, sendbuf.size)
+            nccl_recv(base_comm_nccl, recvbuf, source)
+            nccl.groupEnd()
+            return recvbuf
         return mpi_sendrecv(base_comm, sendbuf, recvbuf, dest, sendtag, source, recvtag, engine)
