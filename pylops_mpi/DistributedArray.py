@@ -171,8 +171,8 @@ class DistributedArray(DistributedMixIn):
         self._partition = partition
         self._axis = axis
         self._mask = mask
-        self._sub_comm = (base_comm if base_comm_nccl is None else base_comm_nccl) if mask is None else subcomm_split(mask, (base_comm if base_comm_nccl is None else
-base_comm_nccl))
+        self._sub_comm = (base_comm if base_comm_nccl is None else base_comm_nccl) if mask is None else subcomm_split(
+            mask, (base_comm if base_comm_nccl is None else base_comm_nccl))
         local_shapes = local_shapes if local_shapes is None else [_value_or_sized_to_tuple(local_shape) for local_shape in local_shapes]
         self._check_local_shapes(local_shapes)
         self._local_shape = local_shapes[self.rank] if local_shapes else local_split(global_shape, base_comm,
