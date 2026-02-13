@@ -669,7 +669,7 @@ class DistributedArray(DistributedMixIn):
         ncp = get_module(self.engine)
         ord = 2 if ord is None else ord
         if local_array.ndim == 1:
-            recv_buf = ncp.empty(shape=1, dtype=np.float64)
+            recv_buf = ncp.empty(shape=1, dtype=ncp.float64)
         else:
             global_shape = list(self.global_shape)
             global_shape[axis] = 1

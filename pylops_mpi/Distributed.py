@@ -312,6 +312,36 @@ class DistributedMixIn:
                   sendbuf: NDArray, recvbuf: NDArray, dest: int = 0, sendtag: int = 0,
                   source: int = 0, recvtag: int = 0, engine: Optional[str] = "numpy"
                   ):
+        """
+        Send/Receive operation in a combined call
+
+        Parameters
+        ----------
+        base_comm : :obj:`MPI.Comm`
+            Base MPI Communicator.
+        base_comm_nccl : :obj:`cupy.cuda.nccl.NcclCommunicator`
+            NCCL Communicator.
+        sendbuf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+            The array containing data to send.
+        recvbuf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`, optional
+            The buffered array to receive data.
+        dest : :obj:`int`
+            The rank of the destination.
+        sendtag : :obj:`int`
+            Tag of the message to be sent.
+        source : :obj:`int`
+            The rank of the source.
+        recvtag : :obj:`int`
+            Tag of the message to be received.
+        engine : :obj:`str`, optional
+            Engine used to store array (``numpy`` or ``cupy``)
+
+        Returns
+        -------
+        recvbuf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+            The buffer containing the received data.
+
+        """
         if deps.nccl_enabled and base_comm_nccl is not None:
             from cupy.cuda import nccl
             nccl.groupStart()
