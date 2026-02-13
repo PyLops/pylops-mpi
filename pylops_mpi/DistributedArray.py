@@ -9,7 +9,7 @@ from pylops.utils import DTypeLike, NDArray
 from pylops.utils import deps as pylops_deps  # avoid namespace crashes with pylops_mpi.utils
 from pylops.utils._internal import _value_or_sized_to_tuple
 from pylops.utils.backend import get_array_module, get_module, get_module_name
-from pylops_mpi.utils import deps, block_counts
+from pylops_mpi.utils import deps
 
 cupy_message = pylops_deps.cupy_import("the DistributedArray module")
 nccl_message = deps.nccl_import("the DistributedArray module")
@@ -171,10 +171,9 @@ class DistributedArray(DistributedMixIn):
         self._partition = partition
         self._axis = axis
         self._mask = mask
-        self._sub_comm = (base_comm if base_comm_nccl is None else base_comm_nccl) if mask is None else subcomm_split(
-            mask, (base_comm if base_comm_nccl is None else base_comm_nccl))
-        local_shapes = local_shapes if local_shapes is None else [_value_or_sized_to_tuple(local_shape) for local_shape
-                                                                  in local_shapes]
+        self._sub_comm = (base_comm if base_comm_nccl is None else base_comm_nccl) if mask is None else subcomm_split(mask, (base_comm if base_comm_nccl is None else
+base_comm_nccl))
+        local_shapes = local_shapes if local_shapes is None else [_value_or_sized_to_tuple(local_shape) for local_shape in local_shapes]
         self._check_local_shapes(local_shapes)
         self._local_shape = local_shapes[self.rank] if local_shapes else local_split(global_shape, base_comm,
                                                                                      partition, axis)
@@ -469,8 +468,11 @@ class DistributedArray(DistributedMixIn):
         if self.axis == axis or self.partition is not Partition.SCATTER:
             return self
         ncp = get_module(self.engine)
-        counts_from = block_counts(self.global_shape[self.axis], self.size)
-        counts_to = block_counts(self.global_shape[axis], self.size)
+        redist_array = DistributedArray(global_shape=self.global_shape, base_comm=self.base_comm,
+                                        base_comm_nccl=self.base_comm_nccl, mask=self.mask, axis=axis,
+                                        engine=self.engine, dtype=self.dtype)
+        counts_from = [x[self.axis] for x in self.local_shapes]
+        counts_to = [x[axis] for x in redist_array.local_shapes]
         offsets_to = ncp.cumsum(ncp.array([0] + counts_to[:-1]))
         send_slices = []
         for r in range(self.size):
@@ -498,9 +500,6 @@ class DistributedArray(DistributedMixIn):
                                           source=r,
                                           recvtag=0, engine=self.engine)
             recv_list.append(recv_buf)
-        redist_array = DistributedArray(global_shape=self.global_shape, base_comm=self.base_comm,
-                                        base_comm_nccl=self.base_comm_nccl, mask=self.mask, axis=axis,
-                                        engine=self.engine, dtype=self.dtype)
         redist_array[:] = ncp.concatenate(recv_list, axis=self.axis)
         return redist_array
 
@@ -644,8 +643,7 @@ class DistributedArray(DistributedMixIn):
         # Convert to Partition.SCATTER if Partition.BROADCAST
         x = DistributedArray.to_dist(x=self.local_array, base_comm=self.base_comm, base_comm_nccl=self.base_comm_nccl) \
             if self.partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST] else self
-        y = DistributedArray.to_dist(x=dist_array.local_array, base_comm=self.base_comm,
-                                     base_comm_nccl=self.base_comm_nccl) \
+        y = DistributedArray.to_dist(x=dist_array.local_array, base_comm=self.base_comm, base_comm_nccl=self.base_comm_nccl) \
             if self.partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST] else dist_array
         # Flatten the local arrays and calculate dot product
         return self._allreduce_subcomm(self.sub_comm, self.base_comm_nccl,
@@ -803,7 +801,7 @@ class DistributedArray(DistributedMixIn):
         arr : :obj:`pylops_mpi.DistributedArray`
             Flattened 1-D DistributedArray
         """
-        local_shapes = [(np.prod(local_shape, axis=-1),) for local_shape in self.local_shapes]
+        local_shapes = [(np.prod(local_shape, axis=-1), ) for local_shape in self.local_shapes]
         arr = DistributedArray(global_shape=np.prod(self.global_shape),
                                base_comm=self.base_comm,
                                base_comm_nccl=self.base_comm_nccl,
