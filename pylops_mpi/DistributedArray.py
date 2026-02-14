@@ -453,7 +453,14 @@ class DistributedArray(DistributedMixIn):
         return dist_array
 
     def redistribute(self, axis: int):
-        """
+        """Redistribute the array along the specified axis.
+
+        If the array is SCATTER-partitioned and the requested axis differs
+        from the current one, this method performs an all-to-all data exchange
+        across ranks to realign the distribution along `axis`. It slices the
+        local data into per-destination chunks, exchanges them using
+        send/receive operations, and concatenates the received buffers to
+        form the new local array.
 
         Parameters
         ----------
@@ -746,6 +753,7 @@ class DistributedArray(DistributedMixIn):
             Order of the norm.
         axis : :obj:`int`, optional
             Axis along which vector norm needs to be computed.
+            Default is `None`, meaning the entire array is treated as a flattened vector.
         """
         # Convert to Partition.SCATTER if Partition.BROADCAST
         x = DistributedArray.to_dist(x=self.local_array, base_comm=self.base_comm, base_comm_nccl=self.base_comm_nccl) \
@@ -753,9 +761,15 @@ class DistributedArray(DistributedMixIn):
         if axis is None:
             # Flatten the local arrays and calculate norm
             return x._compute_vector_norm(x.local_array.flatten(), axis=0, ord=ord)
-        x = x.redistribute(axis=axis)
+        axis = axis % self.ndim
+        if self.axis != axis:
+            ncp = get_module(self.engine)
+            norm_axis = self.axis - 1 if axis < self.axis else self.axis
+            recv_buf = self._allgather(self.base_comm, self.base_comm_nccl,
+                                       ncp.linalg.norm(self.local_array, axis=axis, ord=ord))
+            return ncp.concatenate(recv_buf, axis=norm_axis)
         # Calculate vector norm along the axis
-        return x._compute_vector_norm(x.local_array, axis=x.axis, ord=ord)
+        return x._compute_vector_norm(x.local_array, axis=axis, ord=ord)
 
     def conj(self):
         """Distributed conj() method

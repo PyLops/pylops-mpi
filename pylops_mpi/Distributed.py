@@ -12,7 +12,7 @@ nccl_message = deps.nccl_import("the DistributedArray module")
 
 if nccl_message is None and cupy_message is None:
     from pylops_mpi.utils._nccl import (
-        nccl_allgather, nccl_allreduce, nccl_bcast, nccl_send, nccl_recv
+        nccl_allgather, nccl_allreduce, nccl_bcast, nccl_send, nccl_recv, nccl_sendrecv
     )
     from cupy.cuda.nccl import NcclCommunicator
 else:
@@ -343,10 +343,8 @@ class DistributedMixIn:
 
         """
         if deps.nccl_enabled and base_comm_nccl is not None:
-            from cupy.cuda import nccl
-            nccl.groupStart()
-            nccl_send(base_comm_nccl, sendbuf, dest, sendbuf.size)
-            nccl_recv(base_comm_nccl, recvbuf, source)
-            nccl.groupEnd()
+            if recvbuf is None:
+                raise ValueError("recvbuf must be supplied when using NCCL")
+            nccl_sendrecv(base_comm_nccl, sendbuf, dest, recvbuf, source)
             return recvbuf
         return mpi_sendrecv(base_comm, sendbuf, recvbuf, dest, sendtag, source, recvtag, engine)
