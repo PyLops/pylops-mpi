@@ -761,7 +761,8 @@ class DistributedArray(DistributedMixIn):
         if axis is None:
             # Flatten the local arrays and calculate norm
             return x._compute_vector_norm(x.local_array.flatten(), axis=0, ord=ord)
-        axis = axis % self.ndim
+        if axis >= self.ndim:
+            raise ValueError(f"axis={axis} is out of range for array of dimension {self.ndim}")
         if self.axis != axis:
             ncp = get_module(self.engine)
             norm_axis = self.axis - 1 if axis < self.axis else self.axis
