@@ -336,7 +336,7 @@ def nccl_recv(nccl_comm, recv_buf, source, count=None):
 
 
 def nccl_sendrecv(nccl_comm, sendbuf, dest, recvbuf, source):
-    """NCCL equivalent of MPI_Send. Sends a specified number of elements
+    """NCCL equivalent of MPI_SendRecv. Sends/Receives data in one combined call.
 
     Parameters
     ----------
