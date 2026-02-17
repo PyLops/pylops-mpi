@@ -13,7 +13,6 @@ from mpi4py import MPI
 from pylops.utils import NDArray
 from pylops.utils.backend import get_module
 from pylops_mpi.utils import deps
-from pylops_mpi.utils._common import _prepare_allgather_inputs, _unroll_allgather_recv
 
 
 def mpi_allgather(base_comm: MPI.Comm,
@@ -45,11 +44,19 @@ def mpi_allgather(base_comm: MPI.Comm,
 
     """
     if deps.cuda_aware_mpi_enabled or engine == "numpy":
+        ncp = get_module(engine)
         send_shapes = base_comm.allgather(send_buf.shape)
-        (padded_send, padded_recv) = _prepare_allgather_inputs(send_buf, send_shapes, engine=engine)
-        recv_buffer_to_use = recv_buf if recv_buf else padded_recv
-        _mpi_calls(base_comm, "Allgather", padded_send, recv_buffer_to_use, engine=engine)
-        return _unroll_allgather_recv(recv_buffer_to_use, padded_send.shape, send_shapes)
+        recvcounts = base_comm.allgather(send_buf.size)
+        recv_buf = recv_buf if recv_buf else ncp.zeros(sum(recvcounts), dtype=send_buf.dtype)
+        displs = [0]
+        for i in range(1, len(recvcounts)):
+            displs.append(displs[i - 1] + recvcounts[i - 1])
+        _mpi_calls(base_comm, "Allgatherv", send_buf,
+                   [recv_buf, recvcounts, list(displs), MPI._typedict[send_buf.dtype.char]], engine=engine)
+        return [
+            recv_buf[displs[i]:displs[i] + recvcounts[i]].reshape(send_shapes[i])
+            for i in range(base_comm.size)
+        ]
     else:
         # CuPy with non-CUDA-aware MPI
         if recv_buf is None:
