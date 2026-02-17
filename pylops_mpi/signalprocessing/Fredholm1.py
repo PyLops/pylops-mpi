@@ -132,7 +132,7 @@ class MPIFredholm1(MPILinearOperator):
                                        engine=y.engine)).ravel()
         return y
 
-    def _rmatvec(self, x: NDArray) -> NDArray:
+    def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
         if x.partition not in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
             raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
@@ -151,11 +151,7 @@ class MPIFredholm1(MPILinearOperator):
             if hasattr(self, "GT"):
                 y1 = ncp.matmul(self.GT, x)
             else:
-                y1 = (
-                    ncp.matmul(x.transpose(0, 2, 1).conj(), self.G)
-                    .transpose(0, 2, 1)
-                    .conj()
-                )
+                y1 = ncp.matmul(self.G.transpose(0, 2, 1).conj(), x)
         else:
             y1 = ncp.squeeze(ncp.zeros((self.nsls[self.rank], self.ny, self.nz), dtype=self.dtype))
             if hasattr(self, "GT"):
