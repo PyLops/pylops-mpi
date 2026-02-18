@@ -151,7 +151,11 @@ class MPIFredholm1(MPILinearOperator):
             if hasattr(self, "GT"):
                 y1 = ncp.matmul(self.GT, x)
             else:
-                y1 = ncp.matmul(self.G.transpose(0, 2, 1).conj(), x)
+                y1 = (
+                    ncp.matmul(x.transpose(0, 2, 1).conj(), self.G)
+                    .transpose(0, 2, 1)
+                    .conj()
+                )
         else:
             y1 = ncp.squeeze(ncp.zeros((self.nsls[self.rank], self.ny, self.nz), dtype=self.dtype))
             if hasattr(self, "GT"):

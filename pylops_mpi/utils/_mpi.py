@@ -48,11 +48,14 @@ def mpi_allgather(base_comm: MPI.Comm,
         send_shapes = base_comm.allgather(send_buf.shape)
         recvcounts = base_comm.allgather(send_buf.size)
         recv_buf = recv_buf if recv_buf else ncp.zeros(sum(recvcounts), dtype=send_buf.dtype)
+        if len(set(send_shapes)) == 1:
+            _mpi_calls(base_comm, "Allgather", send_buf.copy(), recv_buf, engine=engine)
+            return [chunk.reshape(send_shapes[0]) for chunk in ncp.split(recv_buf, base_comm.size)]
         displs = [0]
         for i in range(1, len(recvcounts)):
             displs.append(displs[i - 1] + recvcounts[i - 1])
-        _mpi_calls(base_comm, "Allgatherv", send_buf,
-                   [recv_buf, recvcounts, list(displs), MPI._typedict[send_buf.dtype.char]], engine=engine)
+        _mpi_calls(base_comm, "Allgatherv", send_buf.copy(),
+                   [recv_buf, recvcounts, displs, MPI._typedict[send_buf.dtype.char]], engine=engine)
         return [
             recv_buf[displs[i]:displs[i] + recvcounts[i]].reshape(send_shapes[i])
             for i in range(base_comm.size)
