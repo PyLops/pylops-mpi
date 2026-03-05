@@ -19,15 +19,12 @@ of the :py:class:`pylops_mpi.basicoperators.MPIHalo` operator.
 from matplotlib import pyplot as plt
 
 import sys
-import math
 import time
 import numpy as np
 import pylops
 
 from pylops.utils.wavelets import ricker
-from pylops_mpi.basicoperators.Halo import MPIHalo, halo_block_split
 from mpi4py import MPI
-from scipy.signal.windows import gaussian
 
 import pylops_mpi
 
@@ -137,3 +134,101 @@ if rank == 0:
     plt.xlim(0, t[-1])
     plt.legend()
     plt.tight_layout()
+
+###############################################################################
+# Whilst, up until now we can considered 1D signals, 
+# :py:class:`pylops.signalprocessing.NonStationaryConvolve1D` can also operate
+# on NDarray, applying non-stationary filters over one axis. Let's consider
+# here a 2D signal with the filters applied over the first axis.
+
+# Input signal
+t = np.arange(n) * dt
+x = np.zeros((n, 20), dtype=np.float64)
+x[ih] = 1.0
+
+# Distributed array
+x_dist = pylops_mpi.DistributedArray(
+    global_shape=n * 20,
+    base_comm=comm,
+    partition=pylops_mpi.Partition.SCATTER)
+x_dist.local_array[:] = x[nlocal * rank: nlocal * (rank + 1)].ravel()
+
+# Create operator
+COp_dist = pylops_mpi.signalprocessing.MPINonStationaryConvolve1D(
+    (n, 20), wavs, ih, axis=0, base_comm=comm)
+
+# Apply operator
+y_dist = COp_dist @ x_dist
+xadj_dist = COp_dist.H @ y_dist
+
+y_dist = y_dist.asarray().reshape(n, 20)
+xadj_dist = xadj_dist.asarray().reshape(n, 20)
+
+# Create and apply benchmark serial operator
+COp = pylops.signalprocessing.NonStationaryConvolve1D(
+    dims=(n, 20), hs=wavs, ih=ih, axis=0,
+)
+
+y = COp @ x
+xadj = COp.H @ y
+
+if rank == 0:
+    fig, axs = plt.subplots(2, 3, figsize=(12, 7))
+    fig.suptitle("Non-stationary convolution on axis=0")
+    axs[0][0].imshow(x, cmap="gray", vmin=-1, vmax=1)
+    axs[0][1].imshow(y_dist, cmap="gray", vmin=-1, vmax=1)
+    axs[0][2].imshow(xadj_dist, cmap="gray", vmin=-1, vmax=1)
+    axs[1][0].axis("off")
+    axs[1][1].imshow(y_dist - y, cmap="gray", vmin=-1, vmax=1)
+    axs[1][2].imshow(xadj_dist - xadj, cmap="gray", vmin=-1, vmax=1)
+    for ax in axs.ravel():
+        ax.axis("tight")
+
+###############################################################################
+# And on 2D signal with the filters applied over the second axis.
+
+# Input signal
+t = np.arange(n) * dt
+x = np.zeros((20, n), dtype=np.float64)
+x[:, ih] = 1.0
+
+# Distributed array
+x_dist = pylops_mpi.DistributedArray(
+    global_shape=n * 20,
+    base_comm=comm,
+    partition=pylops_mpi.Partition.SCATTER)
+x_dist.local_array[:] = x[:, nlocal * rank: nlocal * (rank + 1)].ravel()
+
+# Create operator
+COp_dist = pylops_mpi.signalprocessing.MPINonStationaryConvolve1D(
+    (20, n), wavs, ih, axis=-1, base_comm=comm)
+
+# Apply operator
+y_dist = COp_dist @ x_dist
+xadj_dist = COp_dist.H @ y_dist
+
+y_dist = y_dist.asarray()
+xadj_dist = xadj_dist.asarray()
+
+y_dist = y_dist.reshape(size, 20, nlocal).transpose(1, 0, 2).reshape(20, -1)
+xadj_dist = xadj_dist.reshape(size, 20, nlocal).transpose(1, 0, 2).reshape(20, -1)
+
+# Create and apply benchmark serial operator
+COp = pylops.signalprocessing.NonStationaryConvolve1D(
+    (20, n), wavs, ih, axis=-1,
+)
+
+y = COp @ x
+xadj = COp.H @ y
+
+if rank == 0:
+    fig, axs = plt.subplots(2, 3, figsize=(12, 7))
+    fig.suptitle("Non-stationary convolution on axis=0")
+    axs[0][0].imshow(x, cmap="gray", vmin=-1, vmax=1)
+    axs[0][1].imshow(y_dist, cmap="gray", vmin=-1, vmax=1)
+    axs[0][2].imshow(xadj_dist, cmap="gray", vmin=-1, vmax=1)
+    axs[1][0].axis("off")
+    axs[1][1].imshow(y_dist - y, cmap="gray", vmin=-1, vmax=1)
+    axs[1][2].imshow(xadj_dist - xadj, cmap="gray", vmin=-1, vmax=1)
+    for ax in axs.ravel():
+        ax.axis("tight")

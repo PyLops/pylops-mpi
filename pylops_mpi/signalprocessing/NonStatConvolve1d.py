@@ -16,7 +16,7 @@ def MPINonStationaryConvolve1D(
         dims: Union[int, InputDimsLike],
         hs: NDArray,
         ih: InputDimsLike,
-        # axis: int = -1,
+        axis: int = -1,
         base_comm: MPI.Comm = MPI.COMM_WORLD,
         dtype: DTypeLike = "float64",
     ) -> MPILinearOperator:
@@ -87,10 +87,10 @@ def MPINonStationaryConvolve1D(
 
     """
     # TODO: need to adapt operator to handle NDarrays
-    axis = -1
     rank = base_comm.Get_rank()
     size = base_comm.Get_size()
     dims = _value_or_sized_to_tuple(dims)
+    ndims = len(dims)
 
     # Checks for local operator
     if hs.shape[1] % 2 == 0:
@@ -135,36 +135,50 @@ def MPINonStationaryConvolve1D(
         halo = 0
 
     # Create halo operator
+    proc_grid_shape = [1, ] * len(dims)
+    proc_grid_shape[axis] = size
     HOp = MPIHalo(
         dims=dims,
         halo=halo,
-        proc_grid_shape=(size, ),
+        proc_grid_shape=proc_grid_shape,
         comm=base_comm,
         dtype=dtype
     )
 
     if size == 1:
         # to allow operator to work also with size=1
+        dims_ns = list(dims)
+        dims_ns[axis] = dims_local + halo
         COp = NonStationaryConvolve1D(
-            dims=dims_local + halo, hs=hs, ih=ih)
+            dims=dims_ns, hs=hs, ih=ih, axis=axis, dtype=dtype)
     else:
-        x_slice = halo_block_split(dims, base_comm, (size, ))
+        x_slice = halo_block_split(dims if len(dims) == 1 else (dims[axis], ),
+                                   base_comm, (size, ))
         if rank == 0:
+            dims_ns = list(dims)
+            dims_ns[axis] = dims_local + halo
             COp = NonStationaryConvolve1D(
-                dims=dims_local + halo, hs=hs[:ihidx_local[-1] + 2],
+                dims=dims_ns, hs=hs[:ihidx_local[-1] + 2],
                 ih=ih[:ihidx_local[-1] + 2],
+                axis=axis,
                 dtype=dtype
             )
         elif rank == size - 1:
+            dims_ns = list(dims)
+            dims_ns[axis] = dims_local + halo
             COp = NonStationaryConvolve1D(
-                dims=dims_local + halo, hs=hs[ihidx_local[0] - 1:],
+                dims=dims_ns, hs=hs[ihidx_local[0] - 1:],
                 ih=ih[ihidx_local[0] - 1:] - x_slice[0].start + halo,
+                axis=axis,
                 dtype=dtype
             )
         else:
+            dims_ns = list(dims)
+            dims_ns[axis] = dims_local + 2 * halo
             COp = NonStationaryConvolve1D(
-                dims=dims_local + 2 * halo, hs=hs[ihidx_local[0] - 1: ihidx_local[-1] + 2],
+                dims=dims_ns, hs=hs[ihidx_local[0] - 1: ihidx_local[-1] + 2],
                 ih=ih[ihidx_local[0] - 1: ihidx_local[-1] + 2] - x_slice[0].start + halo,
+                axis=axis,
                 dtype=dtype
             )
 

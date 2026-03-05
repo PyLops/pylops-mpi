@@ -186,9 +186,7 @@ GPU+MPI, and GPU+NCCL):
    * - :class:`pylops_mpi.basicoperators.MPIFirstDerivative`
      - ✅
      - ✅
-     - ✅ 
-     - ✅ 
-     - ✅ 
+     - ✅
    * - :class:`pylops_mpi.basicoperators.MPISecondDerivative`
      - ✅
      - ✅
