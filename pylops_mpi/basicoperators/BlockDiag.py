@@ -1,6 +1,5 @@
 import numpy as np
 from scipy.sparse.linalg._interface import _get_dtype
-from math import sum
 from mpi4py import MPI
 from typing import Optional, Sequence, List
 from numbers import Integral
