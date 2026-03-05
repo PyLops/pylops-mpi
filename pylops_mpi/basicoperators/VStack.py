@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.sparse.linalg._interface import _get_dtype
+from math import sum
 from mpi4py import MPI
 from typing import Sequence, Optional
 
@@ -183,7 +184,7 @@ class MPIStackedVStack(MPIStackedLinearOperator):
         self.ops = ops
         if len(set(op.shape[1] for op in ops)) > 1:
             raise ValueError("Operators have different number of columns")
-        shape = (int(np.sum(op.shape[0] for op in ops)), ops[0].shape[1])
+        shape = (int(sum(op.shape[0] for op in ops)), ops[0].shape[1])
         dtype = _get_dtype(self.ops) if dtype is None else np.dtype(dtype)
         super().__init__(shape=shape, dtype=dtype, base_comm=base_comm)
 
