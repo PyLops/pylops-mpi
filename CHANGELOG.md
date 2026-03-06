@@ -1,3 +1,18 @@
+# 0.4.0
+* Added `pylops_mpi.Distributed.DistributedMixIn` class with
+  communicator-agnostic calls to communication methods.
+* Added `pylops_mpi.utils._mpi` with implementations of MPI
+  communication methods.
+* Added `kind="summa"` implementation in 
+  `pylops_mpi.basicoperators.MPIMatrixMult` operator.
+* Added `kind` paramter to all operators in `pylops_mpi.basicoperators.MPILaplacian`
+* Added `cp.cuda.Device().synchronize()` before any MPI call when using
+  Cuda-Aware MPI.
+* Modified `pylops_mpi.utils._nccl.initialize_nccl_comm` to 
+  handle nodes with more GPUs than ranks.
+* Fixed bug in `pylops_mpi.DistributedArray.__neg__` by
+  explicitely passing `base_comm_nccl` during internal creation 
+  of distributed array .
 
 # 0.3.0
 * Added `pylops_mpi.basicoperators.MPIMatrixMult` operator.

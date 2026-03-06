@@ -40,7 +40,7 @@ def nccl_import(message: Optional[str] = None) -> str:
 
 
 cuda_aware_mpi_enabled: bool = (
-    True if int(os.getenv("PYLOPS_MPI_CUDA_AWARE", 1)) == 1 else False
+    False if int(os.getenv("PYLOPS_MPI_CUDA_AWARE", 0)) == 0 else True
 )
 
 nccl_enabled: bool = (
