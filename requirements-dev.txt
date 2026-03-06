@@ -1,4 +1,4 @@
-numpy
+numpy>=1.15.0,<=2.3.5
 scipy>=1.8.0
 pylops
 mpi4py
