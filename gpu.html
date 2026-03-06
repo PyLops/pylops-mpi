@@ -481,10 +481,9 @@ some of the operators in PyLops that lack a GPU implementation cannot be used al
 cupy arrays.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>By default when using <code class="docutils literal notranslate"><span class="pre">cupy</span></code> arrays, PyLops-MPI will try to use methods in MPI4Py that communicate memory buffers.
-However, this requires a CUDA-Aware MPI installation. If your MPI installation is not CUDA-Aware, set the
-environment variable <code class="docutils literal notranslate"><span class="pre">PYLOPS_MPI_CUDA_AWARE=0</span></code> to force PyLops-MPI to use methods in  MPI4Py that communicate
-general Python objects (this will incur a loss of performance!).</p>
+<p>By default when using <code class="docutils literal notranslate"><span class="pre">cupy</span></code> arrays, PyLops-MPI will try to use methods in MPI4Py that communicate general
+Python objects (this will incur a loss of performance!). If you have a CUDA-Aware MPI installation, set
+<code class="docutils literal notranslate"><span class="pre">PYLOPS_MPI_CUDA_AWARE=1</span></code> for PyLops-MPI to use methods in MPI4Py that communicate memory buffers.</p>
 </div>
 <p>Moreover, PyLops-MPI also supports the Nvidia’s Collective Communication Library (NCCL) for highly-optimized
 collective operations, such as AllReduce, AllGather, etc. This allows PyLops-MPI users to leverage the
@@ -514,12 +513,12 @@ the <a class="reference internal" href="api/generated/pylops_mpi.DistributedArra
 <td><p>Cannot be disabled</p></td>
 </tr>
 <tr class="row-odd"><td><p>CuPy + MPI</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">PYLOPS_MPI_CUDA_AWARE=0</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">PYLOPS_MPI_CUDA_AWARE=1</span></code> (default)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PYLOPS_MPI_CUDA_AWARE=0</span></code> (default)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PYLOPS_MPI_CUDA_AWARE=1</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>CuPy + CUDA-Aware MPI</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">PYLOPS_MPI_CUDA_AWARE=1</span></code> (default)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">PYLOPS_MPI_CUDA_AWARE=0</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PYLOPS_MPI_CUDA_AWARE=1</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PYLOPS_MPI_CUDA_AWARE=0</span></code> (default)</p></td>
 </tr>
 <tr class="row-odd"><td><p>CuPy + NCCL</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">NCCL_PYLOPS_MPI=1</span></code> (default)</p></td>

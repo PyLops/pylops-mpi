@@ -24,11 +24,9 @@ cupy arrays.
 
 .. note::
 
-   By default when using ``cupy`` arrays, PyLops-MPI will try to use methods in MPI4Py that communicate memory buffers.
-   However, this requires a CUDA-Aware MPI installation. If your MPI installation is not CUDA-Aware, set the 
-   environment variable ``PYLOPS_MPI_CUDA_AWARE=0`` to force PyLops-MPI to use methods in  MPI4Py that communicate
-   general Python objects (this will incur a loss of performance!).
-
+   By default when using ``cupy`` arrays, PyLops-MPI will try to use methods in MPI4Py that communicate general 
+   Python objects (this will incur a loss of performance!). If you have a CUDA-Aware MPI installation, set
+   ``PYLOPS_MPI_CUDA_AWARE=1`` for PyLops-MPI to use methods in MPI4Py that communicate memory buffers.
 
 Moreover, PyLops-MPI also supports the Nvidia's Collective Communication Library (NCCL) for highly-optimized
 collective operations, such as AllReduce, AllGather, etc. This allows PyLops-MPI users to leverage the
@@ -53,11 +51,11 @@ In summary:
      - Default
      - Cannot be disabled
    * - CuPy + MPI
-     - ``PYLOPS_MPI_CUDA_AWARE=0``
-     - ``PYLOPS_MPI_CUDA_AWARE=1`` (default)
+     - ``PYLOPS_MPI_CUDA_AWARE=0`` (default)
+     - ``PYLOPS_MPI_CUDA_AWARE=1``
    * - CuPy + CUDA-Aware MPI
-     - ``PYLOPS_MPI_CUDA_AWARE=1`` (default)
-     - ``PYLOPS_MPI_CUDA_AWARE=0``
+     - ``PYLOPS_MPI_CUDA_AWARE=1``
+     - ``PYLOPS_MPI_CUDA_AWARE=0`` (default)
    * - CuPy + NCCL
      - ``NCCL_PYLOPS_MPI=1`` (default)
      - ``NCCL_PYLOPS_MPI=0``
