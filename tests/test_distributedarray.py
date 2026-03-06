@@ -223,7 +223,6 @@ def test_distributed_masked(par):
 
     # Exclude not handled cases
     shape_axis = par['x'].shape[par['axis']]
-    print('shape_axis, size', shape_axis, size, shape_axis % size != 0)
     if shape_axis % size != 0:
         pytest.skip(f"Array dimension to distributed ({shape_axis}) is not  "
                     f"divisible by the number of processes ({size})...")
@@ -269,7 +268,6 @@ def test_distributed_maskeddot(par1, par2):
 
     # Exclude not handled cases
     shape_axis = par1['x'].shape[par1['axis']]
-    print('shape_axis, size', shape_axis, size, shape_axis % size != 0)
     if shape_axis % size != 0:
         pytest.skip(f"Array dimension to distributed ({shape_axis}) is not  "
                     f"divisible by the number of processes ({size})...")
@@ -313,7 +311,6 @@ def test_distributed_maskednorm(par):
 
     # Exclude not handled cases
     shape_axis = par['x'].shape[par['axis']]
-    print('shape_axis, size', shape_axis, size, shape_axis % size != 0)
     if shape_axis % size != 0:
         pytest.skip(f"Array dimension to distributed ({shape_axis}) is not  "
                     f"divisible by the number of processes ({size})...")

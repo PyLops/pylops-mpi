@@ -48,6 +48,8 @@ Basic Operators
     MPIVStack
     MPIStackedVStack
     MPIHStack
+    MPIHalo
+    
 
 Derivatives
 ~~~~~~~~~~~
@@ -71,6 +73,7 @@ Signal Processing
    :toctree: generated/
 
     MPIFredholm1
+    MPINonStationaryConvolve1D
 
 
 Wave-Equation processing
