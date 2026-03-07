@@ -163,6 +163,16 @@ def test_local_shapes(par):
 
 
 @pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par4), (par4j), (par5), (par5j),
+                                 (par6), (par6b), (par7), (par7b)])
+def test_redistribute(par):
+    arr = DistributedArray.to_dist(x=par['x'], axis=par['axis'], partition=par['partition'])
+    redist_arr = arr.redistribute(axis=par['axis'] - 1)
+    assert isinstance(redist_arr, DistributedArray)
+    assert_allclose(arr.asarray(), redist_arr.asarray(), rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par1, par2", [(par4, par5), (par4j, par5j)])
 def test_distributed_math(par1, par2):
     """Test the Element-Wise Addition, Subtraction and Multiplication"""
@@ -207,8 +217,6 @@ def test_distributed_norm(par):
     arr = DistributedArray.to_dist(x=par['x'], axis=par['axis'])
     assert_allclose(arr.norm(ord=1, axis=par['axis']),
                     np.linalg.norm(par['x'], ord=1, axis=par['axis']), rtol=1e-14)
-
-    # TODO (tharitt): FAIL with CuPy + MPI for inf norm
     assert_allclose(arr.norm(ord=np.inf, axis=par['axis']),
                     np.linalg.norm(par['x'], ord=np.inf, axis=par['axis']), rtol=1e-14)
     assert_allclose(arr.norm(), np.linalg.norm(par['x'].flatten()), rtol=1e-13)
