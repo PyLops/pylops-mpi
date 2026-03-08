@@ -189,8 +189,8 @@ class DistributedArray(DistributedMixIn):
         `Partition.SCATTER` - Local Arrays are assigned their
         unique values.
 
-        `Partition.UNSAFE_SCATTER` - Local Arrays are assigned their
-        unique values.
+        `Partition.UNSAFE_BROADCAST` - Local arrays are updated on each
+        rank without communication across ranks.
 
         `Partition.BROADCAST` - The value at rank-0 is broadcasted
         and is assigned to all the ranks.
