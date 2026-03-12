@@ -744,7 +744,7 @@ class DistributedArray(DistributedMixIn):
         return arr
 
     def norm(self, ord: Optional[int] = None,
-             axis: Optional[int] = None):
+             axis: Optional[int] = None) -> Union[float, NDArray]:
         """Distributed numpy.linalg.norm method
 
         Parameters
@@ -754,6 +754,11 @@ class DistributedArray(DistributedMixIn):
         axis : :obj:`int`, optional
             Axis along which vector norm needs to be computed.
             Default is `None`, meaning the entire array is treated as a flattened vector.
+
+        Returns
+        -------
+        norm : :obj:`float` or :obj:`numpy.ndarray`
+            The computed norm of the distributed array.
         """
         # Convert to Partition.SCATTER if Partition.BROADCAST
         x = DistributedArray.to_dist(x=self.local_array, base_comm=self.base_comm, base_comm_nccl=self.base_comm_nccl) \
@@ -767,7 +772,8 @@ class DistributedArray(DistributedMixIn):
             ncp = get_module(self.engine)
             norm_axis = self.axis - 1 if axis < self.axis else self.axis
             recv_buf = self._allgather(self.base_comm, self.base_comm_nccl,
-                                       ncp.linalg.norm(self.local_array, axis=axis, ord=ord))
+                                       ncp.linalg.norm(self.local_array, axis=axis, ord=ord),
+                                       engine=self.engine)
             return ncp.concatenate(recv_buf, axis=norm_axis)
         # Calculate vector norm along the axis
         return x._compute_vector_norm(x.local_array, axis=axis, ord=ord)

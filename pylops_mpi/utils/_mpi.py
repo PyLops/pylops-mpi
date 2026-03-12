@@ -4,6 +4,7 @@ __all__ = [
     "mpi_bcast",
     "mpi_send",
     "mpi_recv",
+    "mpi_sendrecv"
 ]
 
 from typing import Optional

@@ -8,6 +8,7 @@ __all__ = [
     "nccl_asarray",
     "nccl_send",
     "nccl_recv",
+    "nccl_sendrecv"
 ]
 
 from enum import IntEnum
