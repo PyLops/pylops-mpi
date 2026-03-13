@@ -7,7 +7,7 @@ __all__ = [
     "mpi_sendrecv"
 ]
 
-from typing import Optional
+from typing import List, Optional
 
 from mpi4py import MPI
 from pylops.utils import NDArray
@@ -19,7 +19,7 @@ def mpi_allgather(base_comm: MPI.Comm,
                   send_buf: NDArray,
                   recv_buf: Optional[NDArray] = None,
                   engine: str = "numpy",
-                  ) -> NDArray:
+                  ) -> List[NDArray]:
     """MPI_Allallgather/allallgather
 
     Dispatch allgather routine based on type of input and availability of
@@ -39,8 +39,8 @@ def mpi_allgather(base_comm: MPI.Comm,
 
     Returns
     -------
-    recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
-        A buffer containing the gathered data from all ranks.
+    recv_buf : :obj:`list`
+        A list of arrays containing the gathered data from all ranks.
 
     """
     if deps.cuda_aware_mpi_enabled or engine == "numpy":
@@ -49,17 +49,19 @@ def mpi_allgather(base_comm: MPI.Comm,
         recvcounts = base_comm.allgather(send_buf.size)
         recv_buf = recv_buf if recv_buf else ncp.zeros(sum(recvcounts), dtype=send_buf.dtype)
         if len(set(send_shapes)) == 1:
-            _mpi_calls(base_comm, "Allgather", send_buf.copy(), recv_buf, engine=engine)
+            _mpi_calls(base_comm, "Allgather", ncp.ascontiguousarray(send_buf), recv_buf, engine=engine)
             return [chunk.reshape(send_shapes[0]) for chunk in ncp.split(recv_buf, base_comm.size)]
-        displs = [0]
-        for i in range(1, len(recvcounts)):
-            displs.append(displs[i - 1] + recvcounts[i - 1])
-        _mpi_calls(base_comm, "Allgatherv", send_buf.copy(),
-                   [recv_buf, recvcounts, displs, MPI._typedict[send_buf.dtype.char]], engine=engine)
-        return [
-            recv_buf[displs[i]:displs[i] + recvcounts[i]].reshape(send_shapes[i])
-            for i in range(base_comm.size)
-        ]
+        else:
+            # displs represent the starting offsets in recv_buf where data from each rank will be placed
+            displs = [0]
+            for i in range(1, len(recvcounts)):
+                displs.append(displs[i - 1] + recvcounts[i - 1])
+            _mpi_calls(base_comm, "Allgatherv", ncp.ascontiguousarray(send_buf),
+                       [recv_buf, recvcounts, displs, MPI._typedict[send_buf.dtype.char]], engine=engine)
+            return [
+                recv_buf[displs[i]:displs[i] + recvcounts[i]].reshape(send_shapes[i])
+                for i in range(base_comm.size)
+            ]
     else:
         # CuPy with non-CUDA-aware MPI
         if recv_buf is None:
