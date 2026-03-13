@@ -8,6 +8,7 @@ __all__ = [
     "nccl_asarray",
     "nccl_send",
     "nccl_recv",
+    "nccl_sendrecv"
 ]
 
 from enum import IntEnum
@@ -333,3 +334,25 @@ def nccl_recv(nccl_comm, recv_buf, source, count=None):
                    source,
                    cp.cuda.Stream.null.ptr
                    )
+
+
+def nccl_sendrecv(nccl_comm, sendbuf, dest, recvbuf, source):
+    """NCCL equivalent of MPI_SendRecv. Sends/Receives data in one combined call.
+
+    Parameters
+    ----------
+    nccl_comm : :obj:`cupy.cuda.nccl.NcclCommunicator`
+        The NCCL communicator used for point-to-point communication.
+    sendbuf : :obj:`cupy.ndarray`
+        The array containing data to send.
+    dest: :obj:`int`
+        The rank of the destination GPU device.
+    recvbuf : :obj:`cupy.ndarray`
+        The array to store the received data.
+    source : :obj:`int`
+        The rank of the source GPU device.
+    """
+    nccl.groupStart()
+    nccl_send(nccl_comm, sendbuf, dest, sendbuf.size)
+    nccl_recv(nccl_comm, recvbuf, source)
+    nccl.groupEnd()

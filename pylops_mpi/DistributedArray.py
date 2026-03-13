@@ -171,7 +171,8 @@ class DistributedArray(DistributedMixIn):
         self._partition = partition
         self._axis = axis
         self._mask = mask
-        self._sub_comm = (base_comm if base_comm_nccl is None else base_comm_nccl) if mask is None else subcomm_split(mask, (base_comm if base_comm_nccl is None else base_comm_nccl))
+        self._sub_comm = (base_comm if base_comm_nccl is None else base_comm_nccl) if mask is None else subcomm_split(
+            mask, (base_comm if base_comm_nccl is None else base_comm_nccl))
         local_shapes = local_shapes if local_shapes is None else [_value_or_sized_to_tuple(local_shape) for local_shape in local_shapes]
         self._check_local_shapes(local_shapes)
         self._local_shape = local_shapes[self.rank] if local_shapes else local_split(global_shape, base_comm,
@@ -451,6 +452,67 @@ class DistributedArray(DistributedMixIn):
             dist_array[:] = x[tuple(slices)]
         return dist_array
 
+    def redistribute(self, axis: int):
+        """Redistribute the array along the specified axis.
+
+        If the array is SCATTER-partitioned and the requested axis differs
+        from the current one, this method performs an all-to-all data exchange
+        across ranks to realign the distribution along `axis`. It slices the
+        local data into per-destination chunks, exchanges them using
+        send/receive operations, and concatenates the received buffers to
+        form the new local array.
+
+        If the original distributed array has unbalanced local shapes,
+        the redistributed array will be balanced along the new axis.
+
+        Parameters
+        ----------
+        axis: :obj:`int`
+            Redistribute the Distributed Array along this axs.
+
+        Returns
+        -------
+        redist_array : :obj:`DistributedArray`
+            Distributed Array
+        """
+        if self.axis == axis or self.partition is not Partition.SCATTER:
+            return self
+        ncp = get_module(self.engine)
+        redist_array = DistributedArray(global_shape=self.global_shape, base_comm=self.base_comm,
+                                        base_comm_nccl=self.base_comm_nccl, mask=self.mask, axis=axis,
+                                        engine=self.engine, dtype=self.dtype)
+        counts_from = [x[self.axis] for x in self.local_shapes]
+        counts_to = [x[axis] for x in redist_array.local_shapes]
+        offsets_to = ncp.cumsum(ncp.array([0] + counts_to[:-1]))
+        send_slices = []
+        for r in range(self.size):
+            start = offsets_to[r]
+            end = start + counts_to[r]
+            slicer = [slice(None)] * self.local_array.ndim
+            slicer[axis] = slice(start, end)
+            send_slices.append(self.local_array[tuple(slicer)].copy())
+
+        recv_list = []
+        sender_shape = list(self.global_shape)
+        for r in range(self.size):
+            sender_shape[self.axis] = counts_from[r]
+            sender_shape[axis] = counts_to[self.rank]
+            recv_buf = ncp.empty(sender_shape, dtype=self.dtype)
+            if r == self.rank:
+                recv_buf[:] = send_slices[self.rank]
+            else:
+                recv_buf = self._sendrecv(base_comm=self.base_comm,
+                                          base_comm_nccl=self.base_comm_nccl,
+                                          sendbuf=send_slices[r],
+                                          dest=r,
+                                          sendtag=0,
+                                          recvbuf=recv_buf,
+                                          source=r,
+                                          recvtag=0, engine=self.engine)
+            recv_list.append(recv_buf)
+        redist_array[:] = ncp.concatenate(recv_list, axis=self.axis)
+        return redist_array
+
     def _check_local_shapes(self, local_shapes):
         """Check if the local shapes align with the global shape"""
         if local_shapes:
@@ -615,7 +677,7 @@ class DistributedArray(DistributedMixIn):
         ncp = get_module(self.engine)
         ord = 2 if ord is None else ord
         if local_array.ndim == 1:
-            recv_buf = ncp.empty(shape=1, dtype=np.float64)
+            recv_buf = ncp.empty(shape=1, dtype=ncp.float64)
         else:
             global_shape = list(self.global_shape)
             global_shape[axis] = 1
@@ -685,7 +747,7 @@ class DistributedArray(DistributedMixIn):
         return arr
 
     def norm(self, ord: Optional[int] = None,
-             axis: int = -1):
+             axis: Optional[int] = None) -> Union[float, NDArray]:
         """Distributed numpy.linalg.norm method
 
         Parameters
@@ -693,18 +755,31 @@ class DistributedArray(DistributedMixIn):
         ord : :obj:`int`, optional
             Order of the norm.
         axis : :obj:`int`, optional
-            Axis along which vector norm needs to be computed. Defaults to ``-1``
+            Axis along which vector norm needs to be computed.
+            Default is `None`, meaning the entire array is treated as a flattened vector.
+
+        Returns
+        -------
+        norm : :obj:`float` or :obj:`numpy.ndarray`
+            The computed norm of the distributed array.
         """
         # Convert to Partition.SCATTER if Partition.BROADCAST
         x = DistributedArray.to_dist(x=self.local_array, base_comm=self.base_comm, base_comm_nccl=self.base_comm_nccl) \
             if self.partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST] else self
-        if axis == -1:
+        if axis is None:
             # Flatten the local arrays and calculate norm
             return x._compute_vector_norm(x.local_array.flatten(), axis=0, ord=ord)
-        if axis != x.axis:
-            raise NotImplementedError("Choose axis along the partition.")
+        if axis >= self.ndim:
+            raise ValueError(f"axis={axis} is out of range for array of dimension {self.ndim}")
+        if self.axis != axis:
+            ncp = get_module(self.engine)
+            norm_axis = self.axis - 1 if axis < self.axis else self.axis
+            recv_buf = self._allgather(self.base_comm, self.base_comm_nccl,
+                                       ncp.linalg.norm(self.local_array, axis=axis, ord=ord),
+                                       engine=self.engine)
+            return ncp.concatenate(recv_buf, axis=norm_axis)
         # Calculate vector norm along the axis
-        return x._compute_vector_norm(x.local_array, axis=x.axis, ord=ord)
+        return x._compute_vector_norm(x.local_array, axis=axis, ord=ord)
 
     def conj(self):
         """Distributed conj() method

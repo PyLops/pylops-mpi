@@ -3,7 +3,8 @@ from typing import Any, NewType, Optional
 from mpi4py import MPI
 from pylops.utils import NDArray
 from pylops.utils import deps as pylops_deps  # avoid namespace crashes with pylops_mpi.utils
-from pylops_mpi.utils._mpi import mpi_allreduce, mpi_allgather, mpi_bcast, mpi_send, mpi_recv, _prepare_allgather_inputs, _unroll_allgather_recv
+from pylops_mpi.utils._mpi import (mpi_allreduce, mpi_allgather, mpi_bcast, mpi_send, mpi_recv, mpi_sendrecv,
+                                   _prepare_allgather_inputs, _unroll_allgather_recv)
 from pylops_mpi.utils import deps
 
 cupy_message = pylops_deps.cupy_import("the DistributedArray module")
@@ -11,7 +12,7 @@ nccl_message = deps.nccl_import("the DistributedArray module")
 
 if nccl_message is None and cupy_message is None:
     from pylops_mpi.utils._nccl import (
-        nccl_allgather, nccl_allreduce, nccl_bcast, nccl_send, nccl_recv
+        nccl_allgather, nccl_allreduce, nccl_bcast, nccl_send, nccl_recv, nccl_sendrecv
     )
     from cupy.cuda.nccl import NcclCommunicator
 else:
@@ -31,6 +32,7 @@ class DistributedMixIn:
     MPI installation is not available).
 
     """
+
     def _allreduce(self,
                    base_comm: MPI.Comm,
                    base_comm_nccl: NcclCommunicatorType,
@@ -303,3 +305,46 @@ class DistributedMixIn:
             return mpi_recv(base_comm,
                             recv_buf, source, count, tag=tag,
                             engine=engine)
+
+    def _sendrecv(self,
+                  base_comm: MPI.Comm,
+                  base_comm_nccl: NcclCommunicatorType,
+                  sendbuf: NDArray, recvbuf: NDArray, dest: int = 0, sendtag: int = 0,
+                  source: int = 0, recvtag: int = 0, engine: Optional[str] = "numpy"
+                  ):
+        """
+        Send/Receive operation in a combined call
+
+        Parameters
+        ----------
+        base_comm : :obj:`MPI.Comm`
+            Base MPI Communicator.
+        base_comm_nccl : :obj:`cupy.cuda.nccl.NcclCommunicator`
+            NCCL Communicator.
+        sendbuf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+            The array containing data to send.
+        recvbuf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`, optional
+            The buffered array to receive data.
+        dest : :obj:`int`
+            The rank of the destination.
+        sendtag : :obj:`int`
+            Tag of the message to be sent.
+        source : :obj:`int`
+            The rank of the source.
+        recvtag : :obj:`int`
+            Tag of the message to be received.
+        engine : :obj:`str`, optional
+            Engine used to store array (``numpy`` or ``cupy``)
+
+        Returns
+        -------
+        recvbuf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+            The buffer containing the received data.
+
+        """
+        if deps.nccl_enabled and base_comm_nccl is not None:
+            if recvbuf is None:
+                raise ValueError("recvbuf must be supplied when using NCCL")
+            nccl_sendrecv(base_comm_nccl, sendbuf, dest, recvbuf, source)
+            return recvbuf
+        return mpi_sendrecv(base_comm, sendbuf, recvbuf, dest, sendtag, source, recvtag, engine)
