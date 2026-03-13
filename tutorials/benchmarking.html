@@ -515,11 +515,11 @@ i.e., <code class="xref py py-func docutils literal notranslate"><span class="pr
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">inner_func</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:598: RuntimeWarning: overflow encountered in dot
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:660: RuntimeWarning: overflow encountered in dot
   ncp.dot(x.local_array.flatten(), y.local_array.flatten()),
-/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:598: RuntimeWarning: invalid value encountered in dot
+/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:660: RuntimeWarning: invalid value encountered in dot
   ncp.dot(x.local_array.flatten(), y.local_array.flatten()),
-[decorator]inner_func: total runtime: 0.001945 s
+[decorator]inner_func: total runtime: 0.002503 s
 </pre></div>
 </div>
 <p>We may want to get the fine-grained time measurements by timing the execution
@@ -541,9 +541,9 @@ measurement of the top-level function and those that comes from <a class="refere
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">inner_func_with_mark</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[decorator]inner_func_with_mark: total runtime: 0.000408 s
-        Begin array constructor--&gt;Begin dot: 0.000031 s
-        Begin dot--&gt;Finish dot: 0.000373 s
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[decorator]inner_func_with_mark: total runtime: 0.000321 s
+        Begin array constructor--&gt;Begin dot: 0.000028 s
+        Begin dot--&gt;Finish dot: 0.000289 s
 </pre></div>
 </div>
 <p>This utility benchmarking routines can also be nested. Let’s define
@@ -564,15 +564,15 @@ printed out with the nested indentation to specify that nested calls.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">outer_func_with_mark</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:550: RuntimeWarning: overflow encountered in add
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:612: RuntimeWarning: overflow encountered in add
   SumArray[:] = self.local_array + dist_array.local_array
-/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:550: RuntimeWarning: invalid value encountered in add
+/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:612: RuntimeWarning: invalid value encountered in add
   SumArray[:] = self.local_array + dist_array.local_array
-[decorator]outer_func_with_mark: total runtime: 0.001156 s
-        [decorator]inner_func_with_mark: total runtime: 0.000419 s
-                Begin array constructor--&gt;Begin dot: 0.000021 s
-                Begin dot--&gt;Finish dot: 0.000395 s
-        Outer func start--&gt;Outer func ends: 0.001153 s
+[decorator]outer_func_with_mark: total runtime: 0.000852 s
+        [decorator]inner_func_with_mark: total runtime: 0.000307 s
+                Begin array constructor--&gt;Begin dot: 0.000023 s
+                Begin dot--&gt;Finish dot: 0.000281 s
+        Outer func start--&gt;Outer func ends: 0.000849 s
 </pre></div>
 </div>
 <p>In some cases, we may want to write benchmark output to a text file.

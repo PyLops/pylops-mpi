@@ -20,6 +20,7 @@
         ~DistributedArray.multiply
         ~DistributedArray.norm
         ~DistributedArray.ravel
+        ~DistributedArray.redistribute
         ~DistributedArray.to_dist
         ~DistributedArray.zeros_like
 

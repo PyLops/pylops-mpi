@@ -599,10 +599,13 @@ operations on the distributed array such as dot product or norm.</p>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ravel</span></code>([order])</p></td>
 <td><p>Return a flattened DistributedArray</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_dist</span></code>(x[, base_comm, base_comm_nccl, ...])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">redistribute</span></code>(axis)</p></td>
+<td><p>Redistribute the array along the specified axis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_dist</span></code>(x[, base_comm, base_comm_nccl, ...])</p></td>
 <td><p>Convert A Global Array to a Distributed Array</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">zeros_like</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">zeros_like</span></code>()</p></td>
 <td><p>Creates a copy of the DistributedArray filled with zeros</p></td>
 </tr>
 </tbody>
