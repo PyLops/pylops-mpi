@@ -462,6 +462,9 @@ class DistributedArray(DistributedMixIn):
         send/receive operations, and concatenates the received buffers to
         form the new local array.
 
+        If the original distributed array has unbalanced local shapes,
+        the redistributed array will be balanced along the new axis.
+
         Parameters
         ----------
         axis: :obj:`int`

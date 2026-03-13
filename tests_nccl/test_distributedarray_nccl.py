@@ -41,40 +41,40 @@ par3j = {'global_shape': (200, 201, 101),
          'dtype': np.complex128, 'axis': 2}
 
 par4 = {'x': np.random.normal(100, 100, (500, 501)),
-        'partition': Partition.SCATTER, 'axis': 1}
+        'partition': Partition.SCATTER, 'axis': 1, 'norm_axis': 0}
 
 par4j = {'x': np.random.normal(100, 100, (500, 501)) + 1.0j * np.random.normal(50, 50, (500, 501)),
-         'partition': Partition.SCATTER, 'axis': 1}
+         'partition': Partition.SCATTER, 'axis': 1, 'norm_axis': 0}
 
 par5 = {'x': np.random.normal(300, 300, (500, 501)),
-        'partition': Partition.SCATTER, 'axis': 1}
+        'partition': Partition.SCATTER, 'axis': 1, 'norm_axis': 1}
 
 par5j = {'x': np.random.normal(300, 300, (500, 501)) + 1.0j * np.random.normal(50, 50, (500, 501)),
-         'partition': Partition.SCATTER, 'axis': 1}
+         'partition': Partition.SCATTER, 'axis': 1, 'norm_axis': 0}
 
 par6 = {'x': np.random.normal(100, 100, (600, 600)),
-        'partition': Partition.SCATTER, 'axis': 0}
+        'partition': Partition.SCATTER, 'axis': 0, 'norm_axis': 1}
 
 par6b = {'x': np.random.normal(100, 100, (600, 600)),
-         'partition': Partition.BROADCAST, 'axis': 0}
+         'partition': Partition.BROADCAST, 'axis': 0, 'norm_axis': 1}
 
 par7 = {'x': np.random.normal(300, 300, (600, 600)),
-        'partition': Partition.SCATTER, 'axis': 0}
+        'partition': Partition.SCATTER, 'axis': 0, 'norm_axis': 0}
 
 par7b = {'x': np.random.normal(300, 300, (600, 600)),
-         'partition': Partition.BROADCAST, 'axis': 0}
+         'partition': Partition.BROADCAST, 'axis': 0, 'norm_axis': 0}
 
 par8 = {'x': np.random.normal(100, 100, (1200,)),
-        'partition': Partition.SCATTER, 'axis': 0}
+        'partition': Partition.SCATTER, 'axis': 0, 'norm_axis': 0}
 
 par8b = {'x': np.random.normal(100, 100, (1200,)),
-         'partition': Partition.BROADCAST, 'axis': 0}
+         'partition': Partition.BROADCAST, 'axis': 0, 'norm_axis': 0}
 
 par9 = {'x': np.random.normal(300, 300, (1200,)),
-        'partition': Partition.SCATTER, 'axis': 0}
+        'partition': Partition.SCATTER, 'axis': 0, 'norm_axis': 0}
 
 par9b = {'x': np.random.normal(300, 300, (1200,)),
-         'partition': Partition.BROADCAST, 'axis': 0}
+         'partition': Partition.BROADCAST, 'axis': 0, 'norm_axis': 0}
 
 
 @pytest.mark.mpi(min_size=2)
@@ -275,13 +275,13 @@ def test_distributed_norm_nccl(par):
     x_gpu = cp.asarray(par["x"])
     arr = DistributedArray.to_dist(x=x_gpu, base_comm_nccl=nccl_comm, axis=par["axis"])
     assert_allclose(
-        arr.norm(ord=1, axis=par["axis"]).get(),
-        np.linalg.norm(par["x"], ord=1, axis=par["axis"]),
+        arr.norm(ord=1, axis=par["norm_axis"]).get(),
+        np.linalg.norm(par["x"], ord=1, axis=par["norm_axis"]),
         rtol=1e-14,
     )
     assert_allclose(
-        arr.norm(ord=np.inf, axis=par["axis"]).get(),
-        np.linalg.norm(par["x"], ord=np.inf, axis=par["axis"]),
+        arr.norm(ord=np.inf, axis=par["norm_axis"]).get(),
+        np.linalg.norm(par["x"], ord=np.inf, axis=par["norm_axis"]),
         rtol=1e-14,
     )
     assert_allclose(arr.norm().get(), np.linalg.norm(par["x"].flatten()), rtol=1e-13)
@@ -406,17 +406,17 @@ def test_distributed_maskednorm_nccl(par):
         x=x_gpu, base_comm_nccl=nccl_comm, mask=mask, axis=par["axis"]
     )
     assert_allclose(
-        arr.norm(ord=1, axis=par["axis"]).get(),
-        np.linalg.norm(par["x"], ord=1, axis=par["axis"]) / nsub,
-        rtol=1e-14,
+        arr.norm(ord=1, axis=par['norm_axis']).get(),
+        np.linalg.norm(par['x'], ord=1, axis=par['norm_axis']) / (nsub if par['axis'] == par['norm_axis'] else 1),
+        rtol=1e-14
     )
     assert_allclose(
-        arr.norm(ord=np.inf, axis=par["axis"]).get(),
-        np.linalg.norm(par["x"], ord=np.inf, axis=par["axis"]),
-        rtol=1e-14,
+        arr.norm(ord=2, axis=par['norm_axis']).get(),
+        np.linalg.norm(par['x'], ord=2, axis=par['norm_axis']) / (np.sqrt(nsub) if par['axis'] == par['norm_axis'] else 1),
+        rtol=1e-13
     )
     assert_allclose(
-        arr.norm(ord=2, axis=par["axis"]).get(),
-        np.linalg.norm(par["x"], ord=2, axis=par["axis"]) / np.sqrt(nsub),
-        rtol=1e-13,
+        arr.norm(ord=np.inf, axis=par['norm_axis']).get(),
+        np.linalg.norm(par['x'], ord=np.inf, axis=par['norm_axis']),
+        rtol=1e-14
     )
