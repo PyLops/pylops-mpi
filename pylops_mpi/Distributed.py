@@ -3,7 +3,7 @@ from typing import Any, NewType, Optional
 from mpi4py import MPI
 from pylops.utils import NDArray
 from pylops.utils import deps as pylops_deps  # avoid namespace crashes with pylops_mpi.utils
-from pylops_mpi.utils._mpi import mpi_allreduce, mpi_allgather, mpi_bcast, mpi_send, mpi_recv
+from pylops_mpi.utils._mpi import mpi_allreduce, mpi_allgather, mpi_bcast, mpi_send, mpi_recv, mpi_sendrecv
 from pylops_mpi.utils._common import _prepare_allgather_inputs, _unroll_allgather_recv
 from pylops_mpi.utils import deps
 
