@@ -20,10 +20,14 @@ def mpi_allgather(base_comm: MPI.Comm,
                   recv_buf: Optional[NDArray] = None,
                   engine: str = "numpy",
                   ) -> List[NDArray]:
-    """MPI_Allallgather/allallgather
+    """MPI_Allgather/allgather
 
-    Dispatch allgather routine based on type of input and availability of
-    CUDA-Aware MPI
+    Dispatch the appropriate allgather routine based on buffer sizes and
+    CUDA-aware MPI availability.
+
+    If all ranks provide buffers of equal size, the standard `Allgather`
+    collective is used. Otherwise, `Allgatherv` is invoked to handle
+    variable-sized buffers.
 
     Parameters
     ----------
