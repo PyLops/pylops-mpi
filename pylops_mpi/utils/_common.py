@@ -52,8 +52,44 @@ def _prepare_allgather_inputs(send_buf, send_buf_shapes, engine):
     return send_buf, recv_buf
 
 
-def _unroll_allgather_recv(recv_buf, padded_send_buf_shape, send_buf_shapes) -> list:
-    r"""Unrolll recv_buf after Buffered Allgather (MPI and NCCL)
+def _prepare_allgather_inputs_mpi(send_buf, send_buf_shapes, recvcounts, engine):
+    r"""
+    Prepare send_buf and recv_buf for MPI allgather (mpi_allgather)
+
+    Parameters
+    ----------
+    send_buf : :obj: `numpy.ndarray` or `cupy.ndarray` or array-like
+        The data buffer to be sent for allgather.
+    send_buf_shapes: :obj:`list`
+        A list of shapes for each send_buf (used to calculate padding size)
+    recvcounts: :obj:`list`
+        The element counts per rank in mpi_allgather
+    engine : :obj:`str`
+        Engine used to store array (``numpy`` or ``cupy``)
+
+    Returns
+    -------
+    send_buf: :obj: `numpy.ndarray` or `cupy.ndarray` or array-like
+        A buffer containing the data and padded elements to be sent by this rank.
+    recv_buf : :obj: `numpy.ndarray` or `cupy.ndarray` or array-like
+        A buffer to gather data from all ranks.
+    displs : list, optional
+        The starting offsets in recv_buf where data from each rank in mpi_allgather
+    """
+    ncp = get_module(engine)
+    recv_buf = ncp.zeros(sum(recvcounts), dtype=send_buf.dtype)
+    if len(set(send_buf_shapes)) == 1:
+        displs = None
+    else:
+        displs = [0]
+        for i in range(1, len(recvcounts)):
+            displs.append(displs[i - 1] + recvcounts[i - 1])
+    return ncp.ascontiguousarray(send_buf), recv_buf, displs
+
+
+def _unroll_allgather_recv(recv_buf, send_buf_shapes, padded_send_buf_shape=None,
+                           recvcounts=None, displs=None, engine="numpy") -> list:
+    r"""Unroll recv_buf after Buffered Allgather (MPI and NCCL)
 
     Remove the padded elements in recv_buff, extract an individual array from each device and return them as a list of arrays
     Each GPU may send array with a different shape, so the return type has to be a list of array
@@ -63,27 +99,37 @@ def _unroll_allgather_recv(recv_buf, padded_send_buf_shape, send_buf_shapes) -> 
     ----------
     recv_buf: :obj:`cupy.ndarray` or array-like
         The data buffer returned from nccl_allgather call
-    padded_send_buf_shape: :obj:`tuple`:int
-        The size of send_buf after padding used in nccl_allgather
     send_buf_shapes: :obj:`list`
         A list of original shapes for each GPU send_buf prior to padding
-
+    padded_send_buf_shape : tuple, optional
+        The size of send_buf after padding used in nccl_allgather
+    recvcounts : list, optional
+        The element counts per rank in mpi_allgather
+    displs : list, optional
+        The starting offsets in recv_buf where data from each rank in mpi_allgather
+    engine : :obj:`str`
+        Engine used to store array (``numpy`` or ``cupy``)
     Returns
     -------
     chunks: :obj:`list`
         A list of `cupy.ndarray` from each GPU with the padded element removed
     """
+    ncp = get_module(engine)
     ndev = len(send_buf_shapes)
-    # extract an individual array from each device
-    chunk_size = np.prod(padded_send_buf_shape)
-    chunks = [
-        recv_buf[i * chunk_size:(i + 1) * chunk_size] for i in range(ndev)
-    ]
-
-    # Remove padding from each array: the padded value may appear somewhere
-    # in the middle of the flat array and thus the reshape and slicing for each dimension is required
-    for i in range(ndev):
-        slicing = tuple(slice(0, end) for end in send_buf_shapes[i])
-        chunks[i] = chunks[i].reshape(padded_send_buf_shape)[slicing]
-
-    return chunks
+    if padded_send_buf_shape is not None:
+        chunk_size = int(np.prod(padded_send_buf_shape))
+        chunks = [
+            recv_buf[i * chunk_size:(i + 1) * chunk_size]
+            for i in range(ndev)
+        ]
+        for i in range(ndev):
+            slicing = tuple(slice(0, end) for end in send_buf_shapes[i])
+            chunks[i] = chunks[i].reshape(padded_send_buf_shape)[slicing]
+        return chunks
+    if displs is not None:
+        return [
+            recv_buf[displs[i]:displs[i] + recvcounts[i]].reshape(send_buf_shapes[i])
+            for i in range(ndev)
+        ]
+    chunks = ncp.split(recv_buf, ndev)
+    return [chunk.reshape(send_buf_shapes[0]) for chunk in chunks]

@@ -13,6 +13,7 @@ from mpi4py import MPI
 from pylops.utils import NDArray
 from pylops.utils.backend import get_module
 from pylops_mpi.utils import deps
+from pylops_mpi.utils._common import _unroll_allgather_recv, _prepare_allgather_inputs_mpi
 
 
 def mpi_allgather(base_comm: MPI.Comm,
@@ -48,24 +49,15 @@ def mpi_allgather(base_comm: MPI.Comm,
 
     """
     if deps.cuda_aware_mpi_enabled or engine == "numpy":
-        ncp = get_module(engine)
         send_shapes = base_comm.allgather(send_buf.shape)
         recvcounts = base_comm.allgather(send_buf.size)
-        recv_buf = recv_buf if recv_buf else ncp.zeros(sum(recvcounts), dtype=send_buf.dtype)
+        send_buf, recv_buf, displs = _prepare_allgather_inputs_mpi(send_buf, send_shapes, recvcounts, engine)
         if len(set(send_shapes)) == 1:
-            _mpi_calls(base_comm, "Allgather", ncp.ascontiguousarray(send_buf), recv_buf, engine=engine)
-            return [chunk.reshape(send_shapes[0]) for chunk in ncp.split(recv_buf, base_comm.size)]
+            _mpi_calls(base_comm, "Allgather", send_buf, recv_buf, engine=engine)
         else:
-            # displs represent the starting offsets in recv_buf where data from each rank will be placed
-            displs = [0]
-            for i in range(1, len(recvcounts)):
-                displs.append(displs[i - 1] + recvcounts[i - 1])
-            _mpi_calls(base_comm, "Allgatherv", ncp.ascontiguousarray(send_buf),
+            _mpi_calls(base_comm, "Allgatherv", send_buf,
                        [recv_buf, recvcounts, displs, MPI._typedict[send_buf.dtype.char]], engine=engine)
-            return [
-                recv_buf[displs[i]:displs[i] + recvcounts[i]].reshape(send_shapes[i])
-                for i in range(base_comm.size)
-            ]
+        return _unroll_allgather_recv(recv_buf, send_shapes, recvcounts=recvcounts, displs=displs, engine=engine)
     else:
         # CuPy with non-CUDA-aware MPI
         if recv_buf is None:

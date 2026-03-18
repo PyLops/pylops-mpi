@@ -146,7 +146,7 @@ class DistributedMixIn:
                 send_shapes = base_comm.allgather(send_buf.shape)
                 (padded_send, padded_recv) = _prepare_allgather_inputs(send_buf, send_shapes, engine="cupy")
                 raw_recv = nccl_allgather(base_comm_nccl, padded_send, recv_buf if recv_buf else padded_recv)
-                return _unroll_allgather_recv(raw_recv, padded_send.shape, send_shapes)
+                return _unroll_allgather_recv(raw_recv, send_shapes, padded_send.shape, engine="cupy")
         else:
             if isinstance(send_buf, (tuple, list, int)):
                 return base_comm.allgather(send_buf)
@@ -188,7 +188,7 @@ class DistributedMixIn:
                 send_shapes = sub_comm._allgather_subcomm(send_buf.shape)
                 (padded_send, padded_recv) = _prepare_allgather_inputs(send_buf, send_shapes, engine="cupy")
                 raw_recv = nccl_allgather(sub_comm, padded_send, recv_buf if recv_buf else padded_recv)
-                return _unroll_allgather_recv(raw_recv, padded_send.shape, send_shapes)
+                return _unroll_allgather_recv(raw_recv, send_shapes, padded_send.shape, engine="cupy")
         else:
             return mpi_allgather(sub_comm, send_buf, recv_buf, engine)
 
