@@ -16,7 +16,7 @@ from mpi4py import MPI
 import os
 import cupy as cp
 import cupy.cuda.nccl as nccl
-from pylops_mpi.utils._common import _prepare_allgather_inputs, _unroll_allgather_recv
+from pylops_mpi.utils._common import _prepare_allgather_inputs_nccl, _unroll_allgather_recv
 
 cupy_to_nccl_dtype = {
     "float32": nccl.NCCL_FLOAT32,
@@ -282,7 +282,7 @@ def nccl_asarray(nccl_comm, local_array, local_shapes, axis) -> cp.ndarray:
         Global array gathered from all GPUs and concatenated along `axis`.
     """
 
-    send_buf, recv_buf = _prepare_allgather_inputs(local_array, local_shapes, engine="cupy")
+    send_buf, recv_buf = _prepare_allgather_inputs_nccl(local_array, local_shapes, engine="cupy")
     nccl_allgather(nccl_comm, send_buf, recv_buf)
     chunks = _unroll_allgather_recv(recv_buf, local_shapes, send_buf.shape, engine="cupy")
 

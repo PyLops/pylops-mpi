@@ -4,7 +4,7 @@ from mpi4py import MPI
 from pylops.utils import NDArray
 from pylops.utils import deps as pylops_deps  # avoid namespace crashes with pylops_mpi.utils
 from pylops_mpi.utils._mpi import mpi_allreduce, mpi_allgather, mpi_bcast, mpi_send, mpi_recv, mpi_sendrecv
-from pylops_mpi.utils._common import _prepare_allgather_inputs, _unroll_allgather_recv
+from pylops_mpi.utils._common import _prepare_allgather_inputs_nccl, _unroll_allgather_recv
 from pylops_mpi.utils import deps
 
 cupy_message = pylops_deps.cupy_import("the DistributedArray module")
@@ -144,7 +144,7 @@ class DistributedMixIn:
                 return nccl_allgather(base_comm_nccl, send_buf, recv_buf)
             else:
                 send_shapes = base_comm.allgather(send_buf.shape)
-                (padded_send, padded_recv) = _prepare_allgather_inputs(send_buf, send_shapes, engine="cupy")
+                (padded_send, padded_recv) = _prepare_allgather_inputs_nccl(send_buf, send_shapes, engine="cupy")
                 raw_recv = nccl_allgather(base_comm_nccl, padded_send, recv_buf if recv_buf else padded_recv)
                 return _unroll_allgather_recv(raw_recv, send_shapes, padded_send.shape, engine="cupy")
         else:
@@ -186,7 +186,7 @@ class DistributedMixIn:
                 return nccl_allgather(sub_comm, send_buf, recv_buf)
             else:
                 send_shapes = sub_comm._allgather_subcomm(send_buf.shape)
-                (padded_send, padded_recv) = _prepare_allgather_inputs(send_buf, send_shapes, engine="cupy")
+                (padded_send, padded_recv) = _prepare_allgather_inputs_nccl(send_buf, send_shapes, engine="cupy")
                 raw_recv = nccl_allgather(sub_comm, padded_send, recv_buf if recv_buf else padded_recv)
                 return _unroll_allgather_recv(raw_recv, send_shapes, padded_send.shape, engine="cupy")
         else:

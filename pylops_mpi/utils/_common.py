@@ -1,5 +1,6 @@
 __all__ = [
-    "_prepare_allgather_inputs",
+    "_prepare_allgather_inputs_nccl",
+    "_prepare_allgather_inputs_mpi",
     "_unroll_allgather_recv"
 ]
 
@@ -9,7 +10,7 @@ from pylops.utils.backend import get_module
 
 
 # TODO: return type annotation for both cupy and numpy
-def _prepare_allgather_inputs(send_buf, send_buf_shapes, engine):
+def _prepare_allgather_inputs_nccl(send_buf, send_buf_shapes, engine):
     r""" Prepare send_buf and recv_buf for NCCL allgather (nccl_allgather)
 
     Buffered Allgather (MPI and NCCL) requires the sending buffer to have the same size for every device.
