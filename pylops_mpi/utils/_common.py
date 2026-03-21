@@ -115,10 +115,9 @@ def _unroll_allgather_recv(recv_buf, send_buf_shapes, padded_send_buf_shape=None
     chunks: :obj:`list`
         A list of `cupy.ndarray` from each GPU with the padded element removed
     """
-    ncp = get_module(engine)
     ndev = len(send_buf_shapes)
     if padded_send_buf_shape is not None:
-        chunk_size = int(np.prod(padded_send_buf_shape))
+        chunk_size = np.prod(padded_send_buf_shape)
         chunks = [
             recv_buf[i * chunk_size:(i + 1) * chunk_size]
             for i in range(ndev)
@@ -132,5 +131,6 @@ def _unroll_allgather_recv(recv_buf, send_buf_shapes, padded_send_buf_shape=None
             recv_buf[displs[i]:displs[i] + recvcounts[i]].reshape(send_buf_shapes[i])
             for i in range(ndev)
         ]
+    ncp = get_module(engine)
     chunks = ncp.split(recv_buf, ndev)
     return [chunk.reshape(send_buf_shapes[0]) for chunk in chunks]
