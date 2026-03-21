@@ -92,7 +92,7 @@ def test_allgather_differentsize_withrecbuf(par):
     send_shapes = MPI.COMM_WORLD.allgather(local_array.shape)
     send_buf, recv_buf = _prepare_allgather_inputs_nccl(local_array, send_shapes, engine="cupy")
     recv_buf = nccl_allgather(nccl_comm, send_buf, recv_buf)
-    chunks = _unroll_allgather_recv(recv_buf, send_buf.shape, send_shapes)
+    chunks = _unroll_allgather_recv(recv_buf, send_shapes, send_buf.shape, engine="cupy")
     gathered_array = cp.concatenate(chunks)
 
     # Compare with global array created in rank0
