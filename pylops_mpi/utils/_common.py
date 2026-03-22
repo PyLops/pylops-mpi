@@ -10,7 +10,7 @@ def _unroll_allgather_recv(recv_buf, chunk_shape, send_buf_shapes, displs=None) 
 
     Depending on the provided parameters, the function:
     - uses ``displs`` and element counts to extract variable-sized chunks.
-    - removes padding and reshapes each chunk using ``padded_send_buf_shape``.
+    - removes padding and reshapes each chunk using ``chunk_shape``.
 
     Each rank may send an array with a different shape, so the return type is a list of arrays
     instead of a concatenated array.
@@ -20,11 +20,12 @@ def _unroll_allgather_recv(recv_buf, chunk_shape, send_buf_shapes, displs=None) 
     recv_buf: :obj:`cupy.ndarray` or array-like
         The data buffer returned from nccl_allgather call
     send_buf_shapes: :obj:`list`
-        A list ofOriginal shapes of each rank's send_buf before any padding.
+        A list of original shapes of each rank's send_buf before any padding.
     chunk_shape : tuple
         Shape of each gathered chunk in recv_buf. This must match the shape
         used to construct the gathered buffer: use the padded send buffer shape
-        when padding is required, or the original send buffer shape when no padding is used.
+        when padding is required (e.g., nccl_allgather with padding), or the original send buffer
+        shape when no padding is used.
     displs : list, optional
         Starting offsets in recv_buf for each rank's data, used when chunks have
         variable sizes (e.g., mpi_allgather with displacements).
