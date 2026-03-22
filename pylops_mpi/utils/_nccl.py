@@ -286,7 +286,7 @@ def nccl_asarray(nccl_comm, local_array, local_shapes, axis) -> cp.ndarray:
 
     send_buf, recv_buf = _prepare_allgather_inputs_nccl(local_array, local_shapes, engine="cupy")
     nccl_allgather(nccl_comm, send_buf, recv_buf)
-    chunks = _unroll_allgather_recv(recv_buf, local_shapes, send_buf.shape, engine="cupy")
+    chunks = _unroll_allgather_recv(recv_buf, send_buf.shape, local_shapes)
 
     # combine back to single global array
     return cp.concatenate(chunks, axis=axis)
