@@ -8,8 +8,8 @@ import cupy as cp
 from numpy.testing import assert_allclose
 import pytest
 
-from pylops_mpi.utils._nccl import initialize_nccl_comm, nccl_allgather
-from pylops_mpi.utils._common import _prepare_allgather_inputs, _unroll_allgather_recv
+from pylops_mpi.utils._nccl import initialize_nccl_comm, nccl_allgather, _prepare_allgather_inputs_nccl
+from pylops_mpi.utils._common import _unroll_allgather_recv
 from pylops_mpi.utils.deps import nccl_enabled
 
 np.random.seed(42)
@@ -90,7 +90,7 @@ def test_allgather_differentsize_withrecbuf(par):
 
     # Gathered array
     send_shapes = MPI.COMM_WORLD.allgather(local_array.shape)
-    send_buf, recv_buf = _prepare_allgather_inputs(local_array, send_shapes, engine="cupy")
+    send_buf, recv_buf = _prepare_allgather_inputs_nccl(local_array, send_shapes, engine="cupy")
     recv_buf = nccl_allgather(nccl_comm, send_buf, recv_buf)
     chunks = _unroll_allgather_recv(recv_buf, send_buf.shape, send_shapes)
     gathered_array = cp.concatenate(chunks)

@@ -4,27 +4,33 @@ __all__ = [
     "mpi_bcast",
     "mpi_send",
     "mpi_recv",
-    "mpi_sendrecv"
+    "mpi_sendrecv",
+    "_prepare_allgather_inputs_mpi"
 ]
 
-from typing import Optional
+from typing import List, Optional
+import numpy as np
 
 from mpi4py import MPI
 from pylops.utils import NDArray
 from pylops.utils.backend import get_module
 from pylops_mpi.utils import deps
-from pylops_mpi.utils._common import _prepare_allgather_inputs, _unroll_allgather_recv
+from pylops_mpi.utils._common import _unroll_allgather_recv
 
 
 def mpi_allgather(base_comm: MPI.Comm,
                   send_buf: NDArray,
                   recv_buf: Optional[NDArray] = None,
                   engine: str = "numpy",
-                  ) -> NDArray:
-    """MPI_Allallgather/allallgather
+                  ) -> List[NDArray]:
+    """MPI_Allgather/allgather
 
-    Dispatch allgather routine based on type of input and availability of
-    CUDA-Aware MPI
+    Dispatch the appropriate allgather routine based on buffer sizes and
+    CUDA-aware MPI availability.
+
+    If all ranks provide buffers of equal size, the standard `Allgather`
+    collective is used. Otherwise, `Allgatherv` is invoked to handle
+    variable-sized buffers.
 
     Parameters
     ----------
@@ -40,16 +46,19 @@ def mpi_allgather(base_comm: MPI.Comm,
 
     Returns
     -------
-    recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
-        A buffer containing the gathered data from all ranks.
+    recv_buf : :obj:`list`
+        A list of arrays containing the gathered data from all ranks.
 
     """
     if deps.cuda_aware_mpi_enabled or engine == "numpy":
         send_shapes = base_comm.allgather(send_buf.shape)
-        (padded_send, padded_recv) = _prepare_allgather_inputs(send_buf, send_shapes, engine=engine)
-        recv_buffer_to_use = recv_buf if recv_buf else padded_recv
-        _mpi_calls(base_comm, "Allgather", padded_send, recv_buffer_to_use, engine=engine)
-        return _unroll_allgather_recv(recv_buffer_to_use, padded_send.shape, send_shapes)
+        send_buf, recv_buf, displs, recvcounts = _prepare_allgather_inputs_mpi(send_buf, send_shapes, engine)
+        if len(set(send_shapes)) == 1:
+            _mpi_calls(base_comm, "Allgather", send_buf, recv_buf, engine=engine)
+        else:
+            _mpi_calls(base_comm, "Allgatherv", send_buf,
+                       [recv_buf, recvcounts, displs, MPI._typedict[send_buf.dtype.char]], engine=engine)
+        return _unroll_allgather_recv(recv_buf, send_buf.shape, send_shapes, displs)
     else:
         # CuPy with non-CUDA-aware MPI
         if recv_buf is None:
@@ -293,3 +302,43 @@ def _mpi_calls(comm: MPI.Comm, func: str, *args, engine: Optional[str] = "numpy"
         ncp.cuda.Device().synchronize()
     mpi_func = getattr(comm, func)
     return mpi_func(*args, **kwargs)
+
+
+def _prepare_allgather_inputs_mpi(send_buf, send_buf_shapes, engine):
+    r"""Prepare send_buf and recv_buf for MPI allgather (mpi_allgather)
+
+    Buffered Allgather (MPI) supports both uniform and variable-sized data across ranks. Unlike NCCL, padding is
+    not required when array sizes differ. Instead, displacements are used to correctly place each rank’s data
+    within the received buffer. The function ensures that the send_buf is contiguous.
+
+    Parameters
+    ----------
+    send_buf : :obj: `numpy.ndarray` or `cupy.ndarray` or array-like
+        The data buffer to be sent for allgather.
+    send_buf_shapes: :obj:`list`
+        A list of shapes for each send_buf (used to calculate padding size)
+    engine : :obj:`str`
+        Engine used to store array (``numpy`` or ``cupy``)
+
+    Returns
+    -------
+    send_buf: :obj: `numpy.ndarray` or `cupy.ndarray` or array-like
+        A  buffer containing the data and padded elements to be sent by this rank.
+    recv_buf : :obj: `numpy.ndarray` or `cupy.ndarray` or array-like
+        A buffer to gather data from all ranks.
+    displs : list, optional
+        Starting offsets in recv_buf for each rank's data, used when chunks have
+        variable sizes
+    recvcounts: :obj:`list`
+        A list of element counts from all ranks, where each entry corresponds to one rank.
+    """
+    ncp = get_module(engine)
+    recvcounts = [int(np.prod(shape)) for shape in send_buf_shapes]
+    recv_buf = ncp.zeros(sum(recvcounts), dtype=send_buf.dtype)
+    if len(set(send_buf_shapes)) == 1:
+        displs = None
+    else:
+        displs = [0]
+        for i in range(1, len(recvcounts)):
+            displs.append(displs[i - 1] + recvcounts[i - 1])
+    return ncp.ascontiguousarray(send_buf), recv_buf, displs, recvcounts
