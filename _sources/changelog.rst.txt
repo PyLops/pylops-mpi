@@ -3,6 +3,17 @@
 Changelog
 =========
 
+Version 0.5.0
+-------------
+
+*Released on: 28/03/2026*
+
+* Performed fixes to support `numpy>=2.4`.
+* Added `redistribute` function to :class:`pylops_mpi.DistributedArray`.
+* Introduced MPI_Allgatherv in :func:`pylops_mpi.utils._mpi.mpi_allgather` for variable sized arrays.
+* Modified :func:`pylops_mpi.DistributedArray.norm` to correctly handle cases where distributed axis
+  differs from norm axis.
+
 
 Version 0.4.0
 -------------

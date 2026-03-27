@@ -463,6 +463,17 @@
                   
   <section id="changelog">
 <span id="id1"></span><h1>Changelog<a class="headerlink" href="#changelog" title="Link to this heading">#</a></h1>
+<section id="version-0-5-0">
+<h2>Version 0.5.0<a class="headerlink" href="#version-0-5-0" title="Link to this heading">#</a></h2>
+<p><em>Released on: 28/03/2026</em></p>
+<ul class="simple">
+<li><p>Performed fixes to support <cite>numpy&gt;=2.4</cite>.</p></li>
+<li><p>Added <cite>redistribute</cite> function to <a class="reference internal" href="api/generated/pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>.</p></li>
+<li><p>Introduced MPI_Allgatherv in <code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils._mpi.mpi_allgather</span></code> for variable sized arrays.</p></li>
+<li><p>Modified <code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray.norm</span></code> to correctly handle cases where distributed axis
+differs from norm axis.</p></li>
+</ul>
+</section>
 <section id="version-0-4-0">
 <h2>Version 0.4.0<a class="headerlink" href="#version-0-4-0" title="Link to this heading">#</a></h2>
 <p><em>Released on: 08/03/2026</em></p>
@@ -579,6 +590,7 @@ for NCCL communication backend.</p></li>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#version-0-5-0">Version 0.5.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#version-0-4-0">Version 0.4.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#version-0-3-0">Version 0.3.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#version-0-2-0">Version 0.2.0</a></li>
