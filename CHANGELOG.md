@@ -1,3 +1,9 @@
+# 0.5.0
+* Performed fixes to support `numpy>=2.4`.
+* Added `redistribute` function to `pylops_mpi.DistributedArray`.
+* Introduced MPI_Allgatherv in `pylops_mpi.utils._mpi.mpi_allgather` for variable sized arrays.
+* Modified `pylops_mpi.DistributedArray.norm` to correctly handle cases where distributed axis differs from norm axis.
+
 # 0.4.0
 * Added `pylops_mpi.Distributed.DistributedMixIn` class with
   communicator-agnostic calls to communication methods.
