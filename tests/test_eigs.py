@@ -3,8 +3,6 @@ import pytest
 
 if int(os.environ.get("TEST_CUPY_PYLOPS", 0)):
     import cupy as np
-    from cupy.testing import assert_allclose
-
     backend = "cupy"
 else:
     import numpy as np
@@ -18,6 +16,7 @@ from pylops_mpi.optimization.eigs import power_iteration
 
 par1 = {"n": 21, "imag": 0, "dtype": "float64"}  # square, real
 par2 = {"n": 21, "imag": 1j, "dtype": "complex128"}  # square, complex
+
 
 @pytest.mark.parametrize("par", [(par1), (par2)])
 def test_power_iteration(par):

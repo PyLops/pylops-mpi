@@ -10,17 +10,15 @@ else:
     from numpy.testing import assert_array_almost_equal
 
     backend = "numpy"
-import numpy as npp
 import pytest
 from mpi4py import MPI
 
-from pylops.basicoperators import FirstDerivative, Identity, MatrixMult
-from pylops.optimization.callback import CostToInitialCallback
-from pylops.optimization.cls_sparsity import IRLS
-from pylops.optimization.sparsity import fista, irls, ista, omp, spgl1, splitbregman
+from pylops.basicoperators import MatrixMult, BlockDiag
+from pylops.optimization.sparsity import ista as ista_pylops
 
 from pylops_mpi.DistributedArray import DistributedArray
 from pylops_mpi.basicoperators.BlockDiag import MPIBlockDiag
+from pylops_mpi.optimization.sparsity import ista
 
 par1 = {
     "ny": 11,
@@ -66,31 +64,35 @@ par3j = {
 }  # underdetermined complex, non-zero initial guess
 
 size = MPI.COMM_WORLD.Get_size()
+rank = MPI.COMM_WORLD.Get_rank()
+if backend == "cupy":
+    device_id = rank % np.cuda.runtime.getDeviceCount()
+    np.cuda.Device(device_id).use()
 
 @pytest.mark.parametrize("par", [(par1), (par2), (par3), (par1j), (par2j), (par3j)])
-def test_ISTA_FISTA(par):
-    """Invert problem with ISTA/FISTA"""
-    npp.random.seed(42)
-    A = npp.random.randn(par["ny"], par["nx"]) + par["imag"] * npp.random.randn(
+def test_ISTA(par):
+    """Invert problem with ISTA"""
+    np.random.seed(42)
+    A = np.random.randn(par["ny"], par["nx"]) + par["imag"] * np.random.randn(
         par["ny"], par["nx"]
     )
-    Aop = MPIBlockDiag(ops=[MatrixMult(np.asarray(A), dtype=par["dtype"])])
+    Aop = MPIBlockDiag(ops=[MatrixMult(np.asarray(A), dtype=par["dtype"])], dtype=par['dtype'])
 
-    x = np.random.rand(size * par["nx"]) + par["imag"] * np.random.rand(size * par["nx"])
-    # x[par["nx"] // 2] = 1.0 + par["imag"] * 1.0
-    # x[3] = 1.0 + par["imag"] * 1.0
-    # x[par["nx"] - 4] = -1.0 - par["imag"] * 1.0
-    x = DistributedArray.to_dist(x)
+    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
+    x[:] = np.random.normal(1, 10, par["nx"]) + par["imag"] * np.random.normal(10, 10, par["nx"])
     y = Aop * x
 
     eps = 1.0 if par["ny"] >= par["nx"] else 2.0
-    maxit = 500
+    maxit = 1000
 
-    # Regularization based ISTA and FISTA
+    Aop1 = BlockDiag(ops=[MatrixMult(np.asarray(A), dtype=par["dtype"]) for _ in range(size)])
+    y1 = Aop1 * x.asarray()
+
+    # Regularization based ISTA
     threshkinds = ["hard", "soft", "half"]
     for threshkind in threshkinds:
         for preallocate in [False, True]:
-            xinv1, _, _ = ista(
+            xinv, _, _ = ista(
                 Aop,
                 y,
                 niter=maxit,
@@ -99,3 +101,15 @@ def test_ISTA_FISTA(par):
                 tol=0,
                 preallocate=preallocate,
             )
+            xinv_array = xinv.asarray()
+            if rank == 0:
+                xinv1, _, _ = ista_pylops(
+                    Aop1,
+                    y1,
+                    niter=maxit,
+                    eps=eps,
+                    threshkind=threshkind,
+                    tol=0,
+                    preallocate=preallocate,
+                )
+                assert_array_almost_equal(xinv_array, xinv1, decimal=1)
