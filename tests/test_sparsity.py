@@ -28,15 +28,15 @@ par1 = {
     "dtype": "float64",
 }  # square real, zero initial guess
 par2 = {
-    "ny": 31,
+    "ny": 21,
     "nx": 11,
     "imag": 0,
     "x0": False,
     "dtype": "float64",
 }  # overdetermined real, zero initial guess
 par3 = {
-    "ny": 21,
-    "nx": 41,
+    "ny": 11,
+    "nx": 21,
     "imag": 0,
     "x0": True,
     "dtype": "float64",
@@ -49,15 +49,15 @@ par1j = {
     "dtype": "complex128",
 }  # square complex, zero initial guess
 par2j = {
-    "ny": 31,
+    "ny": 21,
     "nx": 11,
     "imag": 1j,
     "x0": False,
     "dtype": "complex128",
 }  # overdetermined complex, zero initial guess
 par3j = {
-    "ny": 21,
-    "nx": 41,
+    "ny": 11,
+    "nx": 21,
     "imag": 1j,
     "x0": True,
     "dtype": "complex128",
