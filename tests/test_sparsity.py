@@ -2,12 +2,12 @@ import os
 
 if int(os.environ.get("TEST_CUPY_PYLOPS", 0)):
     import cupy as np
-    from cupy.testing import assert_array_almost_equal
+    from cupy.testing import assert_allclose
 
     backend = "cupy"
 else:
     import numpy as np
-    from numpy.testing import assert_array_almost_equal
+    from numpy.testing import assert_allclose
 
     backend = "numpy"
 import pytest
@@ -79,9 +79,12 @@ def test_ISTA(par):
     Aop = MPIBlockDiag(ops=[MatrixMult(np.asarray(A), dtype=par["dtype"])], dtype=par['dtype'])
 
     x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
-    x[:] = np.random.normal(1, 10, par["nx"]) + par["imag"] * np.random.normal(10, 10, par["nx"])
+    x[:] = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
+    x[par["nx"] // 2] = 1.0 + par["imag"] * 1.0
+    x[3] = 1.0 + par["imag"] * 1.0
+    x[par["nx"] - 4] = -1.0 - par["imag"] * 1.0
     y = Aop * x
-
+    x_arr = x.asarray()
     eps = 1.0 if par["ny"] >= par["nx"] else 2.0
     maxit = 1000
 
@@ -112,4 +115,4 @@ def test_ISTA(par):
                     tol=0,
                     preallocate=preallocate,
                 )
-                assert_array_almost_equal(xinv_array, xinv1, decimal=1)
+                assert_allclose(xinv_array, xinv1, rtol=1e-3)
