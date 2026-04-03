@@ -69,6 +69,7 @@ if backend == "cupy":
     device_id = rank % np.cuda.runtime.getDeviceCount()
     np.cuda.Device(device_id).use()
 
+
 @pytest.mark.parametrize("par", [(par1), (par2), (par3), (par1j), (par2j), (par3j)])
 def test_ISTA(par):
     """Invert problem with ISTA"""
@@ -84,7 +85,7 @@ def test_ISTA(par):
     x[3] = 1.0 + par["imag"] * 1.0
     x[par["nx"] - 4] = -1.0 - par["imag"] * 1.0
     y = Aop * x
-    x_arr = x.asarray()
+
     eps = 1.0 if par["ny"] >= par["nx"] else 2.0
     maxit = 1000
 
