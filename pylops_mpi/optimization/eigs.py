@@ -1,17 +1,20 @@
 import numpy as np
-from pylops.utils.backend import get_module
-from pylops_mpi.DistributedArray import DistributedArray
-from pylops_mpi.LinearOperator import MPILinearOperator
-from typing import Tuple
 from mpi4py import MPI
+from pylops.utils.backend import get_module
+from pylops_mpi.DistributedArray import DistributedArray, NcclCommunicatorType
+from pylops_mpi.LinearOperator import MPILinearOperator
+from typing import Tuple, Optional
 
 
 def power_iteration(
     Op: MPILinearOperator,
     niter: int = 10,
     tol: float = 1e-5,
+    base_comm: Optional[MPI.Comm] = MPI.COMM_WORLD,
+    base_comm_nccl: Optional[NcclCommunicatorType] = None,
     dtype: str = "float32",
     backend: str = "numpy",
+
 ) -> Tuple[float, DistributedArray, int]:
     """Power iteration algorithm.
 
@@ -30,6 +33,10 @@ def power_iteration(
         Number of iterations
     tol : :obj:`float`, optional
         Update tolerance
+    base_comm : :obj:`MPI.Comm`
+        Base MPI Communicator.
+    base_comm_nccl : `cupy.cuda.nccl.NcclCommunicator`
+        NCCL Communicator
     dtype : :obj:`str`, optional
         Type of elements in input array.
     backend : :obj:`str`, optional
@@ -48,7 +55,8 @@ def power_iteration(
 
     ncp = get_module(backend)
     cmpx = 1j if np.issubdtype(np.dtype(dtype), np.complexfloating) else 0
-    b_k = DistributedArray(global_shape=Op.shape[1], dtype=dtype, engine=backend)
+    b_k = DistributedArray(global_shape=Op.shape[1], dtype=dtype, engine=backend,
+                           base_comm=base_comm, base_comm_nccl=base_comm_nccl)
     b_k[:] = (
         ncp.random.rand(b_k.local_shape[0]).astype(dtype)
         + cmpx * ncp.random.rand(b_k.local_shape[0]).astype(dtype)
@@ -59,8 +67,7 @@ def power_iteration(
         b1_k = Op.matvec(b_k)
         # Calculate vdot for the global array
         local_dot = ncp.vdot(b_k.local_array, b1_k.local_array)
-        maxeig = b_k.base_comm.allreduce(local_dot, op=MPI.SUM)
-
+        maxeig = b_k._allreduce(b_k.base_comm, b_k.base_comm_nccl, local_dot, engine=backend).item()
         b_k[:] = b1_k.local_array / b1_k.norm()
         if ncp.abs(maxeig - maxeig_old) < tol * ncp.abs(maxeig):
             break

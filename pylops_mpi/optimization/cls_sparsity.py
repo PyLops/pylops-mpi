@@ -38,9 +38,10 @@ def _hardthreshold(x: DistributedArray, thresh: float) -> DistributedArray:
         Threshold vector
     """
     local = x.local_array
+    ncp = get_array_module(local)
     local_out = local.copy()
     # Set elements to 0 where their magnitude is less than or equal to sqrt(2 * thresh) at each rank
-    local_out[np.abs(local) <= np.sqrt(2 * thresh)] = 0.0
+    local_out[ncp.abs(local) <= ncp.sqrt(2 * thresh)] = 0.0
 
     dist = DistributedArray(global_shape=x.global_shape, partition=x.partition, base_comm=x.base_comm,
                             base_comm_nccl=x.base_comm_nccl, dtype=x.dtype, engine=x.engine)
@@ -72,10 +73,11 @@ def _softthreshold(x: DistributedArray, thresh: float) -> DistributedArray:
 
     """
     x_local = x.local_array
-    if np.iscomplexobj(x_local):
-        x1 = np.maximum(np.abs(x_local) - thresh, 0.0) * np.exp(1j * np.angle(x_local))
+    ncp = get_array_module(x_local)
+    if ncp.iscomplexobj(x_local):
+        x1 = ncp.maximum(ncp.abs(x_local) - thresh, 0.0) * ncp.exp(1j * ncp.angle(x_local))
     else:
-        x1 = np.maximum(np.abs(x_local) - thresh, 0.0) * np.sign(x_local)
+        x1 = ncp.maximum(ncp.abs(x_local) - thresh, 0.0) * ncp.sign(x_local)
     dist = DistributedArray(global_shape=x.global_shape, partition=x.partition, base_comm=x.base_comm,
                             base_comm_nccl=x.base_comm_nccl, dtype=x.dtype, engine=x.engine)
     dist[:] = x1
@@ -121,7 +123,7 @@ def _halfthreshold(x: DistributedArray, thresh: float) -> DistributedArray:
     phi = 2.0 / 3.0 * ncp.arccos(arg)
 
     # Apply the non-linear shrinkage transformation:
-    local_out = 2.0 / 3.0 * local * (1.0 + ncp.cos(2.0 * np.pi / 3.0 - phi))
+    local_out = 2.0 / 3.0 * local * (1.0 + ncp.cos(2.0 * ncp.pi / 3.0 - phi))
 
     # Threshold = (54^(1/3) / 4) * thresh^(2/3)
     local_out[ncp.abs(local) <= (54.0 ** (1.0 / 3.0) / 4.0) * thresh ** (2.0 / 3.0)] = 0
@@ -357,6 +359,8 @@ class ISTA(Solver):
             maxeig = np.abs(
                 power_iteration(
                     Op1,
+                    base_comm=y.base_comm,
+                    base_comm_nccl=y.base_comm_nccl,
                     dtype=Op1.dtype,
                     backend=get_module_name(self.ncp),
                     **self.eigsdict
@@ -365,15 +369,16 @@ class ISTA(Solver):
             self.alpha = float(1.0 / maxeig)
         self.thresh = eps * self.alpha * 0.5
         if x0 is None:
-            x = DistributedArray(global_shape=self.Op.shape[1], dtype=self.Op.dtype, engine=y.engine)
+            x = DistributedArray(global_shape=self.Op.shape[1], dtype=self.Op.dtype, engine=y.engine,
+                                 base_comm=y.base_comm, base_comm_nccl=y.base_comm_nccl)
             x[:] = 0
         else:
             x = x0.copy()
         if self.preallocate:
             self.res = DistributedArray(global_shape=y.global_shape, dtype=y.dtype, engine=y.engine,
                                         base_comm=y.base_comm, base_comm_nccl=y.base_comm_nccl)
-            self.res = DistributedArray(global_shape=x.global_shape, dtype=x.dtype, engine=x.engine,
-                                        base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl)
+            self.grad = DistributedArray(global_shape=x.global_shape, dtype=x.dtype, engine=x.engine,
+                                         base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl)
             self.x_unthesh = DistributedArray(global_shape=x.global_shape, dtype=x.dtype, engine=x.engine,
                                               base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl)
             self.xold = DistributedArray(global_shape=x.global_shape, dtype=x.dtype, engine=x.engine,

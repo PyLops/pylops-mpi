@@ -8,5 +8,6 @@ A list of least-squares solvers in pylops_mpi.optimization.basic:
 
     cg                              Conjugate gradient
     cgls                            Conjugate gradient least-squares.
+    ista                            Iterative Shrinkage-Thresholding Algorithm
 
 """

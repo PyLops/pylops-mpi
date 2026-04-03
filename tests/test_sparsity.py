@@ -85,12 +85,14 @@ def test_ISTA(par):
     x[3] = 1.0 + par["imag"] * 1.0
     x[par["nx"] - 4] = -1.0 - par["imag"] * 1.0
     y = Aop * x
+    x_array = x.asarray()
 
     eps = 1.0 if par["ny"] >= par["nx"] else 2.0
     maxit = 1000
 
-    Aop1 = BlockDiag(ops=[MatrixMult(np.asarray(A), dtype=par["dtype"]) for _ in range(size)])
-    y1 = Aop1 * x.asarray()
+    if rank == 0:
+        Aop1 = BlockDiag(ops=[MatrixMult(np.asarray(A), dtype=par["dtype"]) for _ in range(size)], forceflat=True)
+        y1 = Aop1 * x_array
 
     # Regularization based ISTA
     threshkinds = ["hard", "soft", "half"]
