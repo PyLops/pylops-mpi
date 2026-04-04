@@ -13,7 +13,7 @@ else:
 import pytest
 from mpi4py import MPI
 
-from pylops.basicoperators import MatrixMult, BlockDiag
+from pylops.basicoperators import MatrixMult, BlockDiag, Identity
 from pylops.optimization.sparsity import ista as ista_pylops
 
 from pylops_mpi.DistributedArray import DistributedArray
@@ -70,6 +70,52 @@ if backend == "cupy":
     np.cuda.Device(device_id).use()
 
 
+def test_ISTA_unknown_threshkind():
+    """Check error is raised if unknown threshkind is passed"""
+    with pytest.raises(ValueError, match="threshkind must be"):
+        y = DistributedArray(global_shape=size * 5, engine=backend)
+        y[:] = 1
+        _ = ista(MPIBlockDiag(ops=[Identity(5)]), y, 10, threshkind="foo")
+
+
+@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par1j), (par2j), (par3j)])
+def test_ISTA_alpha_too_high(par):
+    """Invert problem with ISTA"""
+    np.random.seed(42)
+    A = np.random.randn(par["ny"], par["nx"]) + par["imag"] * np.random.randn(
+        par["ny"], par["nx"]
+    )
+    Aop = MPIBlockDiag(ops=[MatrixMult(np.asarray(A), dtype=par["dtype"])], dtype=par['dtype'])
+
+    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
+    x[:] = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
+    x[par["nx"] // 2] = 1.0 + par["imag"] * 1.0
+    x[3] = 1.0 + par["imag"] * 1.0
+    x[par["nx"] - 4] = -1.0 - par["imag"] * 1.0
+    y = Aop * x
+
+    # Check that exception is raised
+    with pytest.raises(ValueError, match="due to residual increasing"):
+        xinv, _, _ = ista(
+            Aop,
+            y,
+            niter=100,
+            eps=0.1,
+            alpha=1e5,
+            monitorres=True,
+            tol=0
+        )
+        _, _, cost = ista(
+            Aop,
+            y,
+            niter=100,
+            eps=0.1,
+            alpha=1e5,
+            tol=0,
+        )
+        assert np.isinf(cost[-1])
+
+
 @pytest.mark.parametrize("par", [(par1), (par2), (par3), (par1j), (par2j), (par3j)])
 def test_ISTA(par):
     """Invert problem with ISTA"""
@@ -95,7 +141,7 @@ def test_ISTA(par):
         y1 = Aop1 * x_array
 
     # Regularization based ISTA
-    threshkinds = ["hard", "soft", "half"]
+    threshkinds = ["hard", "soft", "half"] if backend == "numpy" else ["soft", "half"]
     for threshkind in threshkinds:
         for preallocate in [False, True]:
             xinv, _, _ = ista(
@@ -119,3 +165,39 @@ def test_ISTA(par):
                     preallocate=preallocate,
                 )
                 assert_allclose(xinv_array, xinv1, rtol=1e-3)
+
+
+@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par1j), (par2j), (par3j)])
+def test_ISTA_stopping(par):
+    """Invert problem with ISTA"""
+    np.random.seed(42)
+    A = np.random.randn(par["ny"], par["nx"]) + par["imag"] * np.random.randn(
+        par["ny"], par["nx"]
+    )
+    Aop = MPIBlockDiag(ops=[MatrixMult(np.asarray(A), dtype=par["dtype"])], dtype=par['dtype'])
+
+    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
+    x[:] = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
+    x[par["nx"] // 2] = 1.0 + par["imag"] * 1.0
+    x[3] = 1.0 + par["imag"] * 1.0
+    x[par["nx"] - 4] = -1.0 - par["imag"] * 1.0
+    y = Aop * x
+
+    rtol = 5e-1
+
+    # Regularization based ISTA
+    threshkinds = ["hard", "soft", "half"] if backend == "numpy" else ["soft", "half"]
+    for threshkind in threshkinds:
+        for preallocate in [False, True]:
+            _, _, cost = ista(
+                Aop,
+                y,
+                niter=500,
+                eps=0.5,
+                threshkind=threshkind,
+                tol=0.0,
+                rtol=rtol,
+                preallocate=preallocate,
+            )
+            assert cost[-2] / cost[0] >= rtol
+            assert cost[-1] / cost[0] < rtol
