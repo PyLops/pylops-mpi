@@ -1,4 +1,3 @@
-import numpy as np
 from mpi4py import MPI
 from pylops.utils.backend import get_module
 from pylops_mpi.DistributedArray import DistributedArray, NcclCommunicatorType
@@ -54,7 +53,7 @@ def power_iteration(
     """
 
     ncp = get_module(backend)
-    cmpx = 1j if np.issubdtype(np.dtype(dtype), np.complexfloating) else 0
+    cmpx = 1j if ncp.issubdtype(ncp.dtype(dtype), ncp.complexfloating) else 0
     b_k = DistributedArray(global_shape=Op.shape[1], dtype=dtype, engine=backend,
                            base_comm=base_comm, base_comm_nccl=base_comm_nccl)
     b_k[:] = (

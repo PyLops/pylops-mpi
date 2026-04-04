@@ -1,24 +1,24 @@
-import os
+"""Test Sparsity solvers
+    Designed to run with n GPUs (with 1 MPI process per GPU)
+    $ mpiexec -n 10 pytest test_sparsity_nccl.py --with-mpi
 
-if int(os.environ.get("TEST_CUPY_PYLOPS", 0)):
-    import cupy as np
-    from cupy.testing import assert_allclose
-
-    backend = "cupy"
-else:
-    import numpy as np
-    from numpy.testing import assert_allclose
-
-    backend = "numpy"
+This file employs the same test sets as test_sparsity_nccl under NCCL environment
+"""
 import pytest
 from mpi4py import MPI
+from numpy.testing import assert_allclose
+import cupy as cp
 
-from pylops.basicoperators import MatrixMult, BlockDiag, Identity
-from pylops.optimization.sparsity import ista as ista_pylops
+from pylops.basicoperators import BlockDiag, MatrixMult, Identity
+from pylops import ista as ista_pylops
+from pylops.utils import to_numpy
 
+from pylops_mpi.basicoperators import MPIBlockDiag
 from pylops_mpi.DistributedArray import DistributedArray
-from pylops_mpi.basicoperators.BlockDiag import MPIBlockDiag
 from pylops_mpi.optimization.sparsity import ista
+from pylops_mpi.utils._nccl import initialize_nccl_comm
+
+nccl_comm = initialize_nccl_comm()
 
 par1 = {
     "ny": 11,
@@ -63,32 +63,28 @@ par3j = {
     "dtype": "complex128",
 }  # underdetermined complex, non-zero initial guess
 
+cp.random.seed(10)
 size = MPI.COMM_WORLD.Get_size()
 rank = MPI.COMM_WORLD.Get_rank()
-if backend == "cupy":
-    device_id = rank % np.cuda.runtime.getDeviceCount()
-    np.cuda.Device(device_id).use()
-
 
 def test_ISTA_unknown_threshkind():
     """Check error is raised if unknown threshkind is passed"""
     with pytest.raises(ValueError, match="threshkind must be"):
-        y = DistributedArray(global_shape=size * 5, engine=backend)
+        y = DistributedArray(global_shape=size * 5, engine="cupy", base_comm_nccl=nccl_comm)
         y[:] = 1
         _ = ista(MPIBlockDiag(ops=[Identity(5)]), y, 10, threshkind="foo")
 
 
 @pytest.mark.parametrize("par", [(par1), (par2), (par3), (par1j), (par2j), (par3j)])
 def test_ISTA_alpha_too_high(par):
-    """Invert problem with ISTA - alpha too high"""
-    np.random.seed(42)
-    A = np.random.randn(par["ny"], par["nx"]) + par["imag"] * np.random.randn(
+    """Invert problem with ISTA NCCL- alpha too high"""
+    A = cp.random.randn(par["ny"], par["nx"]) + par["imag"] * cp.random.randn(
         par["ny"], par["nx"]
     )
-    Aop = MPIBlockDiag(ops=[MatrixMult(np.asarray(A), dtype=par["dtype"])], dtype=par['dtype'])
+    Aop = MPIBlockDiag(ops=[MatrixMult(cp.asarray(A), dtype=par["dtype"])], dtype=par['dtype'])
 
-    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
-    x[:] = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
+    x = DistributedArray(global_shape=size * par['nx'], base_comm_nccl=nccl_comm, dtype=par['dtype'], engine="cupy")
+    x[:] = cp.zeros(par["nx"]) + par["imag"] * cp.zeros(par["nx"])
     x[par["nx"] // 2] = 1.0 + par["imag"] * 1.0
     x[3] = 1.0 + par["imag"] * 1.0
     x[par["nx"] - 4] = -1.0 - par["imag"] * 1.0
@@ -113,20 +109,19 @@ def test_ISTA_alpha_too_high(par):
         alpha=1e5,
         tol=0,
     )
-    assert np.isinf(cost[-1])
+    assert cp.isinf(cost[-1])
 
 
 @pytest.mark.parametrize("par", [(par1), (par2), (par3), (par1j), (par2j), (par3j)])
 def test_ISTA(par):
-    """Invert problem with ISTA"""
-    np.random.seed(42)
-    A = np.random.randn(par["ny"], par["nx"]) + par["imag"] * np.random.randn(
+    """Invert problem with ISTA NCCL"""
+    A = cp.random.randn(par["ny"], par["nx"]) + par["imag"] * cp.random.randn(
         par["ny"], par["nx"]
     )
-    Aop = MPIBlockDiag(ops=[MatrixMult(np.asarray(A), dtype=par["dtype"])], dtype=par['dtype'])
+    Aop = MPIBlockDiag(ops=[MatrixMult(cp.asarray(A), dtype=par["dtype"])], dtype=par['dtype'])
 
-    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
-    x[:] = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
+    x = DistributedArray(global_shape=size * par['nx'], base_comm_nccl=nccl_comm, dtype=par['dtype'], engine="cupy")
+    x[:] = cp.zeros(par["nx"]) + par["imag"] * cp.zeros(par["nx"])
     x[par["nx"] // 2] = 1.0 + par["imag"] * 1.0
     x[3] = 1.0 + par["imag"] * 1.0
     x[par["nx"] - 4] = -1.0 - par["imag"] * 1.0
@@ -137,11 +132,11 @@ def test_ISTA(par):
     maxit = 1000
 
     if rank == 0:
-        Aop1 = BlockDiag(ops=[MatrixMult(np.asarray(A), dtype=par["dtype"]) for _ in range(size)], forceflat=True)
-        y1 = Aop1 * x_array
+        Aop1 = BlockDiag(ops=[MatrixMult(to_numpy(A), dtype=par["dtype"]) for _ in range(size)], forceflat=True)
+        y1 = Aop1 * x_array.get()
 
     # Regularization based ISTA
-    threshkinds = ["hard", "soft", "half"] if backend == "numpy" else ["soft", "half"]
+    threshkinds = ["soft", "half"]
     for threshkind in threshkinds:
         for preallocate in [False, True]:
             xinv, _, _ = ista(
@@ -164,20 +159,18 @@ def test_ISTA(par):
                     tol=0,
                     preallocate=preallocate,
                 )
-                assert_allclose(xinv_array, xinv1, rtol=1e-3)
-
+                assert_allclose(xinv_array.get(), xinv1, rtol=1e-3)
 
 @pytest.mark.parametrize("par", [(par1), (par2), (par3), (par1j), (par2j), (par3j)])
 def test_ISTA_stopping(par):
-    """Invert problem with ISTA - Stopping"""
-    np.random.seed(42)
-    A = np.random.randn(par["ny"], par["nx"]) + par["imag"] * np.random.randn(
+    """Invert problem with ISTA NCCL- Stopping"""
+    A = cp.random.randn(par["ny"], par["nx"]) + par["imag"] * cp.random.randn(
         par["ny"], par["nx"]
     )
-    Aop = MPIBlockDiag(ops=[MatrixMult(np.asarray(A), dtype=par["dtype"])], dtype=par['dtype'])
+    Aop = MPIBlockDiag(ops=[MatrixMult(cp.asarray(A), dtype=par["dtype"])], dtype=par['dtype'])
 
-    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
-    x[:] = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
+    x = DistributedArray(global_shape=size * par['nx'], base_comm_nccl=nccl_comm, dtype=par['dtype'], engine="cupy")
+    x[:] = cp.zeros(par["nx"]) + par["imag"] * cp.zeros(par["nx"])
     x[par["nx"] // 2] = 1.0 + par["imag"] * 1.0
     x[3] = 1.0 + par["imag"] * 1.0
     x[par["nx"] - 4] = -1.0 - par["imag"] * 1.0
@@ -186,7 +179,7 @@ def test_ISTA_stopping(par):
     rtol = 5e-1
 
     # Regularization based ISTA
-    threshkinds = ["hard", "soft", "half"] if backend == "numpy" else ["soft", "half"]
+    threshkinds = ["soft", "half"]
     for threshkind in threshkinds:
         for preallocate in [False, True]:
             _, _, cost = ista(
