@@ -6,9 +6,9 @@ from typing import Optional, Dict, Any, Callable
 from pylops.optimization.basesolver import Solver
 from pylops.optimization.callback import _callback_stop
 from pylops.utils import get_array_module, get_module_name, get_real_dtype
-from pylops.utils.typing import NDArray, Union, Tuple
+from pylops.utils.typing import NDArray, Tuple
 
-from pylops_mpi.DistributedArray import DistributedArray, StackedDistributedArray
+from pylops_mpi.DistributedArray import DistributedArray
 from pylops_mpi.LinearOperator import MPILinearOperator
 from pylops_mpi.optimization.eigs import power_iteration
 
@@ -225,13 +225,11 @@ class ISTA(Solver):
 
     def _print_step(
             self,
-            x: Union[DistributedArray, StackedDistributedArray],
+            x: DistributedArray,
             costdata: float,
             costreg: float,
             xupdate: float,
     ) -> None:
-        if isinstance(x, DistributedArray):
-            x = x.distarrays[0]
         strx = (
             f"  {x[0]:1.2e}   " if np.iscomplexobj(x.local_array) else f"     {x[0]:11.4e}        "
         )
@@ -251,8 +249,8 @@ class ISTA(Solver):
 
     def setup(
             self,
-            y: Union[DistributedArray, StackedDistributedArray],
-            x0: Union[DistributedArray, StackedDistributedArray],
+            y: DistributedArray,
+            x0: DistributedArray,
             niter: Optional[int] = None,
             SOp: Optional[MPILinearOperator] = None,
             eps: float = 0.1,
@@ -265,14 +263,14 @@ class ISTA(Solver):
             monitorres: bool = False,
             preallocate: bool = False,
             show: bool = False,
-    ) -> Union[DistributedArray, StackedDistributedArray]:
+    ) -> DistributedArray:
         r"""Setup solver
 
         Parameters
         ----------
-        y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
+        y : :obj:`pylops_mpi.DistributedArray`
             Data of size (N, )
-        x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
+        x0 : :obj:`pylops_mpi.DistributedArray``
             Initial guess  of size (M, ).
         niter : :obj:`int`
             Number of iterations
@@ -309,7 +307,7 @@ class ISTA(Solver):
 
         Returns
         -------
-        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
+        x : :obj:`pylops_mpi.DistributedArray`
             Initial guess of size (N,).
 
         """
@@ -397,20 +395,20 @@ class ISTA(Solver):
             self._print_setup()
         return x
 
-    def step(self, x: Union[DistributedArray, StackedDistributedArray], show: bool = False) -> (
-            Tuple)[Union[DistributedArray, StackedDistributedArray], float]:
+    def step(self, x: DistributedArray, show: bool = False) -> (
+            Tuple)[DistributedArray, float]:
         r"""Run one step of solver
 
         Parameters
         ----------
-        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
+        x : :obj:`pylops_mpi.DistributedArray`
             Current model vector to be updated by a step of ISTA
         show : :obj:`bool`, optional
             Display iteration log
 
         Returns
         -------
-        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
+        x : :obj:`pylops_mpi.DistributedArray`
             Updated model vector
         xupdate : :obj:`float`
             Norm of the update
@@ -488,16 +486,16 @@ class ISTA(Solver):
 
     def run(
             self,
-            x: Union[DistributedArray, StackedDistributedArray],
+            x: DistributedArray,
             niter: Optional[int] = None,
             show: bool = False,
             itershow: Tuple[int, int, int] = (10, 10, 10),
-    ) -> Union[DistributedArray, StackedDistributedArray]:
+    ) -> DistributedArray:
         r"""Run solver
 
         Parameters
         ----------
-        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
+        x : :obj:`pylops_mpi.DistributedArray`
             Current model vector to be updated by multiple steps of ISTA
         niter : :obj:`int`, optional
             Number of iterations. Can be set to ``None`` if already
@@ -511,7 +509,7 @@ class ISTA(Solver):
 
         Returns
         -------
-        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray
+        x : :obj:`pylops_mpi.DistributedArray`
             Estimated model of size (M, ).
 
         """
@@ -557,8 +555,8 @@ class ISTA(Solver):
 
     def solve(
             self,
-            y: Union[DistributedArray, StackedDistributedArray],
-            x0: Optional[Union[DistributedArray, StackedDistributedArray]] = None,
+            y: DistributedArray,
+            x0: Optional[DistributedArray] = None,
             niter: Optional[int] = None,
             SOp: Optional[MPILinearOperator] = None,
             eps: float = 0.1,
@@ -576,9 +574,9 @@ class ISTA(Solver):
         r"""
         Parameters
         ----------
-        y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
+        y : :obj:`pylops_mpi.DistributedArray`
             Data of size (N, )
-        x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
+        x0 : :obj:`pylops_mpi.DistributedArray`
             Initial guess  of size (M, ).
         niter : :obj:`int`
             Number of iterations
@@ -615,7 +613,7 @@ class ISTA(Solver):
 
         Returns
         -------
-        x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
+        x : :obj:`pylops_mpi.DistributedArray`
             Initial guess of size (N,).
 
         """

@@ -1,17 +1,17 @@
 from typing import Optional, Dict, Any, Callable
 
-from pylops.utils.typing import Union, Tuple, NDArray
+from pylops.utils.typing import Tuple, NDArray
 from pylops.optimization.callback import CostNanInfCallback, CostToInitialCallback, CostToDataCallback
 
-from pylops_mpi.DistributedArray import DistributedArray, StackedDistributedArray
+from pylops_mpi.DistributedArray import DistributedArray
 from pylops_mpi.LinearOperator import MPILinearOperator
 from pylops_mpi.optimization.cls_sparsity import ISTA
 
 
 def ista(
-        Op: Union[MPILinearOperator],
-        y: Union[DistributedArray, StackedDistributedArray],
-        x0: Optional[Union[DistributedArray, StackedDistributedArray]] = None,
+        Op: MPILinearOperator,
+        y: DistributedArray,
+        x0: Optional[DistributedArray] = None,
         niter: int = 10,
         SOp: Optional[MPILinearOperator] = None,
         eps: float = 0.1,
@@ -28,7 +28,7 @@ def ista(
         itershow: Tuple[int, int, int] = (10, 10, 10),
         callback: Optional[Callable] = None,
         preallocate: bool = False,
-) -> Tuple[Union[DistributedArray, StackedDistributedArray], int, NDArray]:
+) -> Tuple[DistributedArray, int, NDArray]:
     r"""Iterative Shrinkage-Thresholding Algorithm (ISTA).
 
     Solve an optimization problem with :math:`L^p, \; p=0, 0.5, 1`
