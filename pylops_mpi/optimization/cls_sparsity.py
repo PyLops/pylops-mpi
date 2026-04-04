@@ -478,7 +478,7 @@ class ISTA(Solver):
             self.xold = x - self.xold
             xupdate = self.xold.norm()
 
-        costdata = (0.5 * self.res.norm() if self.preallocate else res.norm() ** 2).item()
+        costdata = 0.5 * (self.res.norm() if self.preallocate else res.norm()).item() ** 2
         costreg = (self.eps * x.norm(ord=1)).item()
         self.cost.append(float(costdata + costreg))
         self.iiter += 1
