@@ -205,12 +205,20 @@ class DistributedArray(DistributedMixIn):
             the specified index positions.
         """
         if self.partition is Partition.BROADCAST:
+            ncp = get_module(self.engine)
             view = self.local_array[index]
+            shape = getattr(view, "shape", ())
+            buf = ncp.empty(shape, dtype=self.dtype)
             if self.rank == 0:
-                view[...] = value
-            view = self._bcast(self.base_comm, self.base_comm_nccl,
-                               view, root=0, engine=self.engine)
-            self.local_array[index] = view
+                buf[...] = value
+            buf = self._bcast(
+                self.base_comm,
+                self.base_comm_nccl,
+                buf,
+                root=0,
+                engine=self.engine
+            )
+            self.local_array[index] = buf
         else:
             self.local_array[index] = value
 
@@ -644,7 +652,7 @@ class DistributedArray(DistributedMixIn):
             ProductArray[:] = self.local_array * dist_array
         return ProductArray
 
-    def dot(self, dist_array):
+    def dot(self, dist_array, vdot=False):
         """Distributed Dot Product
         """
         self._check_partition_shape(dist_array)
@@ -656,8 +664,12 @@ class DistributedArray(DistributedMixIn):
         y = DistributedArray.to_dist(x=dist_array.local_array, base_comm=self.base_comm, base_comm_nccl=self.base_comm_nccl) \
             if self.partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST] else dist_array
         # Flatten the local arrays and calculate dot product
+        if vdot:
+            dot_func = ncp.vdot
+        else:
+            dot_func = ncp.dot
         return self._allreduce_subcomm(self.sub_comm, self.base_comm_nccl,
-                                       ncp.dot(x.local_array.flatten(), y.local_array.flatten()),
+                                       dot_func(x.local_array.flatten(), y.local_array.flatten()),
                                        engine=self.engine)
 
     def _compute_vector_norm(self, local_array: NDArray,
@@ -838,6 +850,15 @@ class DistributedArray(DistributedMixIn):
         x = local_array.copy()
         arr[:] = x
         return arr
+
+    def empty_like(self):
+        """Creates an empty like DistributedArray with uninitialized values
+        """
+        dist = DistributedArray(global_shape=self.global_shape, base_comm=self.base_comm,
+                                base_comm_nccl=self.base_comm_nccl, partition=self.partition,
+                                axis=self.axis, local_shapes=self.local_shapes, mask=self.mask,
+                                engine=self.engine, dtype=self.dtype)
+        return dist
 
     def add_ghost_cells(self, cells_front: Optional[int] = None,
                         cells_back: Optional[int] = None):
@@ -1038,13 +1059,13 @@ class StackedDistributedArray:
                 ProductArray[iarr][:] = (self[iarr] * stacked_array)[:]
         return ProductArray
 
-    def dot(self, stacked_array):
+    def dot(self, stacked_array, vdot=False):
         """Dot Product of Stacked Distributed Arrays
         """
         self._check_stacked_size(stacked_array)
         dotprod = 0.
         for iarr in range(self.narrays):
-            dotprod += self[iarr].dot(stacked_array[iarr])
+            dotprod += self[iarr].dot(stacked_array[iarr], vdot=vdot)
         return dotprod
 
     def norm(self, ord: Optional[int] = None):
@@ -1084,6 +1105,19 @@ class StackedDistributedArray:
         """
         arr = StackedDistributedArray([distarray.copy() for distarray in self.distarrays])
         return arr
+
+    def empty_like(self):
+        """Creates an empty like StackedDistributedArray with uninitialized values
+        """
+        dists = []
+        for iarr in range(self.narrays):
+            distarray = self.distarrays[iarr]
+            dist = DistributedArray(global_shape=distarray.global_shape, base_comm=distarray.base_comm,
+                                    base_comm_nccl=distarray.base_comm_nccl, partition=distarray.partition,
+                                    axis=distarray.axis, local_shapes=distarray.local_shapes, mask=distarray.mask,
+                                    engine=distarray.engine, dtype=distarray.dtype)
+            dists.append(dist)
+        return StackedDistributedArray(distarrays=dists)
 
     def __repr__(self):
         repr_dist = "\n".join([distarray.__repr__() for distarray in self.distarrays])

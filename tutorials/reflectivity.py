@@ -94,7 +94,7 @@ r0_dist[:] = 0.
 
 rinv3d_dist = pylops_mpi.optimization.sparsity.ista(
     CDiag, d_dist, x0=r0_dist,
-    niter=200, eps=1e-2, tol=1e-8, show=False)[0]
+    niter=200, eps=1e-2, tol=1e-8, show=True)[0]
 rinv3d = rinv3d_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
