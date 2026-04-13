@@ -8,7 +8,7 @@ dependencies:
   - numpy>=1.15.0
   - scipy>=1.8.0
   - mpi4py
-  - pylops
+  - pylops>=2.6.0
   - matplotlib
   - ipython
   - pytest
