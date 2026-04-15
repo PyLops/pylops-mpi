@@ -1,0 +1,48 @@
+﻿pylops\_mpi.optimization.cls\_sparsity.ISTA
+===========================================
+
+.. currentmodule:: pylops_mpi.optimization.cls_sparsity
+
+.. autoclass:: ISTA
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~ISTA.__init__
+        ~ISTA.callback
+        ~ISTA.finalize
+        ~ISTA.memory_usage
+        ~ISTA.run
+        ~ISTA.setup
+        ~ISTA.solve
+        ~ISTA.step
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.optimization.cls_sparsity.ISTA.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+

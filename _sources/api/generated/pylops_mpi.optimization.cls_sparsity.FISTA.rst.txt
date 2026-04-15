@@ -1,0 +1,48 @@
+﻿pylops\_mpi.optimization.cls\_sparsity.FISTA
+============================================
+
+.. currentmodule:: pylops_mpi.optimization.cls_sparsity
+
+.. autoclass:: FISTA
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~FISTA.__init__
+        ~FISTA.callback
+        ~FISTA.finalize
+        ~FISTA.memory_usage
+        ~FISTA.run
+        ~FISTA.setup
+        ~FISTA.solve
+        ~FISTA.step
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.optimization.cls_sparsity.FISTA.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+

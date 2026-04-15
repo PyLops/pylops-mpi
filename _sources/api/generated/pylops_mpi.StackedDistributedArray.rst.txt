@@ -15,6 +15,7 @@
         ~StackedDistributedArray.conj
         ~StackedDistributedArray.copy
         ~StackedDistributedArray.dot
+        ~StackedDistributedArray.empty_like
         ~StackedDistributedArray.iadd
         ~StackedDistributedArray.multiply
         ~StackedDistributedArray.norm

@@ -1,0 +1,12 @@
+﻿pylops\_mpi.optimization.sparsity.ista
+======================================
+
+.. currentmodule:: pylops_mpi.optimization.sparsity
+
+.. autofunction:: ista
+
+.. include:: backreferences/pylops_mpi.optimization.sparsity.ista.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>

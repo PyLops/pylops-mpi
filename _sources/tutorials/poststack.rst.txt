@@ -25,7 +25,7 @@ of a first part showing how to model a 3D synthetic post-stack seismic data from
 subsurface acoustic impedance in a distributed manner, following by a second part when inversion
 is carried out.
 
-This tutorial builds on the :py:func:`pylops.avo.poststack.PoststackLinearModelling`
+This tutorial builds on the :py:class:`pylops.avo.poststack.PoststackLinearModelling`
 operator to model 1d post-stack seismic traces 1d profiles of the subsurface acoustic impedence
 by means of the following equation
 
@@ -284,7 +284,7 @@ normal equations, and :math:`\mathbf{d}^{Norm}` is the data of the normal equati
         99        6.1544e-01         6.5026e-01     6.5026e-01
        100        6.1561e-01         6.4212e-01     6.4212e-01
 
-    Iterations = 100        Total time (s) = 27.98
+    Iterations = 100        Total time (s) = 28.70
     -----------------------------------------------------------------
 
 
@@ -349,14 +349,14 @@ normal equations, and :math:`\mathbf{d}^{Norm}` is the data of the normal equati
         99         6.3033e-01         1.9903e+02
        100         6.3026e-01         1.9777e+02
 
-    Iterations = 100        Total time (s) = 39.01
+    Iterations = 100        Total time (s) = 39.91
     -------------------------------------------------------
 
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 194-205
+.. GENERATED FROM PYTHON SOURCE LINES 194-206
 
 .. code-block:: Python
 
@@ -368,7 +368,8 @@ normal equations, and :math:`\mathbf{d}^{Norm}` is the data of the normal equati
     dstack_dist = pylops_mpi.StackedDistributedArray([d_dist, d0_dist])
 
     dnorm_dist = BDiag.H @ d_dist
-    minv3d_reg_dist = pylops_mpi.optimization.basic.cgls(StackOp, dstack_dist, x0=mback3d_dist, niter=100, show=False)[0]
+    minv3d_reg_dist = pylops_mpi.optimization.basic.cgls(
+        StackOp, dstack_dist, x0=mback3d_dist, niter=100, show=False)[0]
     minv3d_reg = minv3d_reg_dist.asarray().reshape((ny, nx, nz))
 
 
@@ -378,11 +379,11 @@ normal equations, and :math:`\mathbf{d}^{Norm}` is the data of the normal equati
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 206-207
+.. GENERATED FROM PYTHON SOURCE LINES 207-208
 
 Finally, we display the modeling and inversion results
 
-.. GENERATED FROM PYTHON SOURCE LINES 207-281
+.. GENERATED FROM PYTHON SOURCE LINES 208-280
 
 .. code-block:: Python
 
@@ -392,11 +393,9 @@ Finally, we display the modeling and inversion results
         # as the one running only on rank0
         PPop0 = PoststackLinearModelling(wav, nt0=nz, spatdims=(ny, nx))
         d0 = (PPop0 @ m3d.transpose(2, 0, 1)).transpose(1, 2, 0)
-        d0_0 = (PPop0 @ m3d.transpose(2, 0, 1)).transpose(1, 2, 0)
 
         # Check the two distributed implementations give the same modelling results
         print('Distr == Local', np.allclose(d, d0))
-        print('Smooth Distr == Local', np.allclose(d_0, d0_0))
 
         # Visualize
         fig, axs = plt.subplots(nrows=6, ncols=3, figsize=(9, 14), constrained_layout=True)
@@ -474,19 +473,20 @@ Finally, we display the modeling and inversion results
  .. code-block:: none
 
     Distr == Local True
-    Smooth Distr == Local True
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 282-283
+.. GENERATED FROM PYTHON SOURCE LINES 281-284
 
-To run this tutorial with our NCCL backend, refer to `Post Stack Inversion with NCCL tutorial <https://github.com/PyLops/pylops-mpi/blob/main/tutorials_nccl/poststack_nccl.py>`_ in the repository.
+To run this tutorial with our NCCL backend, refer to `Post Stack Inversion with NCCL
+tutorial <https://github.com/PyLops/pylops-mpi/blob/main/tutorials_nccl/poststack_nccl.py>`_
+in the repository.
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (2 minutes 4.221 seconds)
+   **Total running time of the script:** (2 minutes 6.399 seconds)
 
 
 .. _sphx_glr_download_tutorials_poststack.py:

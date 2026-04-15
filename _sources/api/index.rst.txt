@@ -106,6 +106,24 @@ Basic
     cg
     cgls
 
+Sparsity
+~~~~~
+
+.. currentmodule:: pylops_mpi.optimization.cls_sparsity
+
+.. autosummary::
+   :toctree: generated/
+
+    ISTA
+    FISTA
+
+.. currentmodule:: pylops_mpi.optimization.sparsity
+
+.. autosummary::
+   :toctree: generated/
+
+    ista
+    fista
 
 Utils
 -----
