@@ -153,11 +153,9 @@ if rank == 0:
     # as the one running only on rank0
     PPop0 = PoststackLinearModelling(wav, nt0=nz, spatdims=(ny, nx))
     d0 = (PPop0 @ m3d.transpose(2, 0, 1)).transpose(1, 2, 0)
-    d0_0 = (PPop0 @ m3d.transpose(2, 0, 1)).transpose(1, 2, 0)
 
     # Check the two distributed implementations give the same modelling results
     print('Distr == Local', np.allclose(cp.asnumpy(d), d0, atol=1e-6))
-    print('Smooth Distr == Local', np.allclose(cp.asnumpy(d_0), d0_0, atol=1e-6))
     
     # Visualize
     fig, axs = plt.subplots(nrows=6, ncols=3, figsize=(9, 14), constrained_layout=True)
