@@ -207,8 +207,7 @@ class DistributedArray(DistributedMixIn):
         if self.partition is Partition.BROADCAST:
             ncp = get_module(self.engine)
             view = self.local_array[index]
-            shape = getattr(view, "shape", ())
-            buf = ncp.empty(shape, dtype=self.dtype)
+            buf = ncp.empty(view.shape, dtype=self.dtype)
             if self.rank == 0:
                 buf[...] = value
             buf = self._bcast(
@@ -652,8 +651,25 @@ class DistributedArray(DistributedMixIn):
             ProductArray[:] = self.local_array * dist_array
         return ProductArray
 
-    def dot(self, dist_array, vdot=False):
-        """Distributed Dot Product
+    def dot(self, dist_array, vdot: bool = False):
+        """
+        Compute the distributed dot product between this array and another
+        distributed array.
+
+        Parameters
+        ----------
+        dist_array : :obj:`pylops_mpi.DistributedArray`
+            The distributed array with which to compute the dot product.
+            It must have a compatible shape and partitioning.
+        vdot : bool, optional, Defaults to `False`
+            If True, compute the complex conjugate dot product (like numpy.vdot),
+            where the first argument is conjugated. If False, compute the standard
+            dot product.
+
+        Returns
+        -------
+        result : float
+            The result of the dot product across all ranks. This is reduced across all processes.
         """
         self._check_partition_shape(dist_array)
         self._check_mask(dist_array)
@@ -664,10 +680,7 @@ class DistributedArray(DistributedMixIn):
         y = DistributedArray.to_dist(x=dist_array.local_array, base_comm=self.base_comm, base_comm_nccl=self.base_comm_nccl) \
             if self.partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST] else dist_array
         # Flatten the local arrays and calculate dot product
-        if vdot:
-            dot_func = ncp.vdot
-        else:
-            dot_func = ncp.dot
+        dot_func = ncp.vdot if vdot else ncp.dot
         return self._allreduce_subcomm(self.sub_comm, self.base_comm_nccl,
                                        dot_func(x.local_array.flatten(), y.local_array.flatten()),
                                        engine=self.engine)
@@ -1059,8 +1072,25 @@ class StackedDistributedArray:
                 ProductArray[iarr][:] = (self[iarr] * stacked_array)[:]
         return ProductArray
 
-    def dot(self, stacked_array, vdot=False):
-        """Dot Product of Stacked Distributed Arrays
+    def dot(self, stacked_array, vdot: bool = False):
+        """
+        Compute the distributed dot product between this array and another
+        distributed array.
+
+        Parameters
+        ----------
+        stacked_array : :obj:`pylops_mpi.StackedDistributedArray`
+            The distributed array with which to compute the dot product.
+            It must have a compatible shape and partitioning.
+        vdot : bool, optional, Defaults to `False`
+            If True, compute the complex conjugate dot product (like numpy.vdot),
+            where the first argument is conjugated. If False, compute the standard
+            dot product.
+
+        Returns
+        -------
+        result : float
+            The result of the dot product across all ranks. This is reduced across all processes.
         """
         self._check_stacked_size(stacked_array)
         dotprod = 0.

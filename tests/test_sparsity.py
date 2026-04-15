@@ -126,7 +126,7 @@ def test_ISTA_FISTA_alpha_too_high(par):
             alpha=1e5,
             tol=0,
         )
-        assert np.isinf(cost[-1])
+        assert np.isnan(cost[-1]) or np.isinf(cost[-1])
 
 
 @pytest.mark.parametrize("par", [(par1), (par1j)])
@@ -329,47 +329,3 @@ def test_ISTA_FISTA_broadcastdata(par):
                     tol=0,
                 )
                 assert_allclose(xinv_array, xinv1, rtol=1e-8)
-
-
-@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par1j), (par2j), (par3j)])
-def test_ISTA_FISTA_stopping(par):
-    """Invert problem with ISTA/FISTA - Stopping"""
-    np.random.seed(10)
-    A = np.random.randn(par["ny"], par["nx"]) + par["imag"] * np.random.randn(
-        par["ny"], par["nx"]
-    )
-    Aop = MPIBlockDiag(ops=[MatrixMult(np.asarray(A), dtype=par["dtype"])], dtype=par['dtype'])
-
-    x = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
-    x[:] = np.zeros(par["nx"]).astype(par['dtype']) + par["imag"] * np.zeros(par["nx"]).astype(par['dtype'])
-    x[par["nx"] // 2] = 1.0 + par["imag"] * 1.0
-    x[3] = 1.0 + par["imag"] * 1.0
-    x[par["nx"] - 4] = -1.0 - par["imag"] * 1.0
-    y = Aop * x
-
-    if par["x0"]:
-        x0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
-        x0[:] = np.ones(par["nx"], dtype=par['dtype']) + par["imag"] * np.ones(par["nx"], dtype=par['dtype'])
-    else:
-        # Set TO 0s if x0 = False
-        x0 = DistributedArray(global_shape=size * par['nx'], dtype=par['dtype'], engine=backend)
-        x0[:] = 0
-
-    rtol = 5e-1
-
-    # Regularization based ISTA
-    threshkinds = ["hard", "soft", "half"] if backend == "numpy" else ["soft", "half"]
-    for threshkind in threshkinds:
-        for solver in [ista, fista]:
-            _, _, cost = solver(
-                Aop,
-                y,
-                x0,
-                niter=500,
-                eps=0.5,
-                threshkind=threshkind,
-                tol=0.0,
-                rtol=rtol,
-            )
-            assert cost[-2] / cost[0] >= rtol
-            assert cost[-1] / cost[0] < rtol

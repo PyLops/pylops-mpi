@@ -6,7 +6,6 @@ from typing import Optional, Dict, Any, Callable, Union
 import numpy as np
 
 from pylops.optimization.basesolver import Solver
-from pylops.optimization.callback import _callback_stop
 from pylops.optimization.cls_sparsity import _halfthreshold, _hardthreshold, _softthreshold
 from pylops.utils import get_array_module, get_module_name, get_real_dtype
 from pylops.utils.typing import NDArray, Tuple
@@ -389,10 +388,6 @@ class ISTA(Solver):
             )
             x, xupdate = self.step(x, showstep)
             self.callback(x)
-            # check if any callback has raised a stop flag
-            stop = _callback_stop(self.callbacks)
-            if stop:
-                break
         if xupdate <= self.tol:
             logger.info("Update smaller that tolerance for iteration %d", self.iiter)
         return x
@@ -713,10 +708,6 @@ class FISTA(ISTA):
             )
             x, z, xupdate = self.step(x, z, showstep)
             self.callback(x)
-            # check if any callback has raised a stop flag
-            stop = _callback_stop(self.callbacks)
-            if stop:
-                break
         if xupdate <= self.tol:
             logger.warning(
                 "Update smaller that tolerance for " "iteration %d", self.iiter
