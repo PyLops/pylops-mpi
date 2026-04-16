@@ -526,7 +526,7 @@ i.e., <code class="xref py py-func docutils literal notranslate"><span class="pr
   dot_func(x.local_array.flatten(), y.local_array.flatten()),
 /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:685: RuntimeWarning: invalid value encountered in dot
   dot_func(x.local_array.flatten(), y.local_array.flatten()),
-[decorator]inner_func: total runtime: 0.002358 s
+[decorator]inner_func: total runtime: 0.002396 s
 </pre></div>
 </div>
 <p>We may want to get the fine-grained time measurements by timing the execution
@@ -548,9 +548,9 @@ measurement of the top-level function and those that comes from <a class="refere
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">inner_func_with_mark</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">par</span></a><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[decorator]inner_func_with_mark: total runtime: 0.000378 s
-        Begin array constructor--&gt;Begin dot: 0.000032 s
-        Begin dot--&gt;Finish dot: 0.000341 s
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[decorator]inner_func_with_mark: total runtime: 0.000350 s
+        Begin array constructor--&gt;Begin dot: 0.000030 s
+        Begin dot--&gt;Finish dot: 0.000316 s
 </pre></div>
 </div>
 <p>This utility benchmarking routines can also be nested. Let’s define
@@ -575,11 +575,11 @@ printed out with the nested indentation to specify that nested calls.</p>
   SumArray[:] = self.local_array + dist_array.local_array
 /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:619: RuntimeWarning: invalid value encountered in add
   SumArray[:] = self.local_array + dist_array.local_array
-[decorator]outer_func_with_mark: total runtime: 0.000936 s
-        [decorator]inner_func_with_mark: total runtime: 0.000332 s
+[decorator]outer_func_with_mark: total runtime: 0.000884 s
+        [decorator]inner_func_with_mark: total runtime: 0.000316 s
                 Begin array constructor--&gt;Begin dot: 0.000024 s
-                Begin dot--&gt;Finish dot: 0.000305 s
-        Outer func start--&gt;Outer func ends: 0.000932 s
+                Begin dot--&gt;Finish dot: 0.000289 s
+        Outer func start--&gt;Outer func ends: 0.000880 s
 </pre></div>
 </div>
 <p>In some cases, we may want to write benchmark output to a text file.
