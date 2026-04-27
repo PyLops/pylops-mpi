@@ -1,3 +1,11 @@
+# 0.6.0
+* Introduced `pylops_mpi.optimization.eigs.power_iteration` to estimate the maximum eigenvalue.
+* Added `pylops_mpi.optimization.sparsity.ista`, an iterative shrinkage-thresholding algorithm.
+* Added `pylops_mpi.optimization.sparsity.fista`, a fast variant of ISTA.
+* Included tutorial: "Reflectivity Inversion - 3D", with separate implementations for base, CuPy, and NCCL.
+* Added `empty_like` function to `pylops_mpi.DistributedArray` and `pylops_mpi.StackedDistributedArray`.
+* Introduced a `vdot` parameter in the `dot` method of `pylops_mpi.DistributedArray` and `pylops_mpi.StackedDistributedArray` to support vector dot products.
+
 # 0.5.0
 * Performed fixes to support `numpy>=2.4`.
 * Added `redistribute` function to `pylops_mpi.DistributedArray`.
