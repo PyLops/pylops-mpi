@@ -166,7 +166,7 @@ We now perform sparsity-promotion inversion
 
  .. code-block:: none
 
-    maxeieur 46.490644491857346
+    maxeieur 46.490644491857324
     ISTA (soft thresholding)
     --------------------------------------------------------------------------------
     The Operator Op has 2937000 rows and 2937000 cols
@@ -213,7 +213,7 @@ We now perform sparsity-promotion inversion
        199      -0.0000e+00         7.607e+00   3.124e+02   4.501e-02
        200      -0.0000e+00         7.577e+00   3.123e+02   4.484e-02
 
-    Iterations = 200        Total time (s) = 54.81
+    Iterations = 200        Total time (s) = 74.20
     --------------------------------------------------------------------------------
 
 
@@ -311,7 +311,7 @@ To run this tutorial with our NCCL backend, refer to
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 56.045 seconds)
+   **Total running time of the script:** (1 minutes 15.427 seconds)
 
 
 .. _sphx_glr_download_tutorials_reflectivity.py:
