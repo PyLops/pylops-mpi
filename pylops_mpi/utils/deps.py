@@ -3,7 +3,7 @@ __all__ = [
 ]
 
 import os
-from importlib import util
+from importlib import import_module, util
 from typing import Optional
 
 
@@ -39,6 +39,22 @@ def nccl_import(message: Optional[str] = None) -> str:
     return nccl_message
 
 
+def mpi4py_fft_import(message: str | None) -> str | None:
+    if mpi4py_fft:
+        try:
+            import_module("mpi4py_fft")  # noqa: F401
+            mpi4py_fft_message = None
+        except Exception as e:
+            mpi4py_fft_message = f"Failed to import mpi4py_fft (error:{e})."
+    else:
+        mpi4py_fft_message = (
+            f"mpi4py_fft package not installed. In order to be able to use "
+            f"{message} run "
+            f'"pip install mpi4py_fft" or "conda install -c conda-forge mpi4py_fft".'
+        )
+    return mpi4py_fft_message
+
+
 cuda_aware_mpi_enabled: bool = (
     False if int(os.getenv("PYLOPS_MPI_CUDA_AWARE", 0)) == 0 else True
 )
@@ -46,3 +62,5 @@ cuda_aware_mpi_enabled: bool = (
 nccl_enabled: bool = (
     True if (nccl_import() is None and int(os.getenv("NCCL_PYLOPS_MPI", 1)) == 1) else False
 )
+
+mpi4py_fft = util.find_spec("mpi4py_fft") is not None

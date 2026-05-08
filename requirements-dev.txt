@@ -12,3 +12,4 @@ numba
 nbsphinx
 sphinx_gallery
 flake8
+mpi4py-fft

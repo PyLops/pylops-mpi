@@ -21,5 +21,6 @@ dependencies:
   - nbsphinx
   - pydata-sphinx-theme
   - flake8
+  - mpi4py-fft
   - pip:
       - sphinx-gallery

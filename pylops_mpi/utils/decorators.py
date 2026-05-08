@@ -51,8 +51,13 @@ def reshaped(
                 local_shapes = getattr(self, "local_shapes_n")
                 global_shape = x.global_shape
             else:
+                fwd = (
+                    "rmat" not in f.__name__
+                    and f.__name__ != "div"
+                    and f.__name__ != "__truediv__"
+                )
                 local_shapes = None
-                global_shape = getattr(self, "dims")
+                global_shape = getattr(self, "dims") if fwd else getattr(self, "dimsd")
             arr = DistributedArray(global_shape=global_shape,
                                    base_comm=x.base_comm,
                                    base_comm_nccl=x.base_comm_nccl,
@@ -72,7 +77,8 @@ def reshaped(
             arr[:] = ghosted_array[index: arr_local_shapes[self.rank] + index].reshape(arr.local_shape)
             y: DistributedArray = f(self, arr)
             if len(y.global_shape) > 1:
-                y = y.ravel()
+                # Make sure y is distributed along axis=0 before applying ravel
+                y = y.redistribute(axis=0).ravel()
             return y
         return wrapper
     if func is not None:
