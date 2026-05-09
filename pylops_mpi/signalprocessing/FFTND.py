@@ -249,3 +249,8 @@ class MPIFFTND(_MPIBaseFFTND):
             y[:] = ncp.real(y.local_array)
         y[:] = y.local_array.astype(self.rdtype)
         return y
+
+    def __truediv__(self, y: DistributedArray) -> DistributedArray:
+        y_div = self._rmatvec(y)
+        y_div[:] = y_div.local_array / self._scale
+        return y_div

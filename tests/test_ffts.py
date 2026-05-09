@@ -100,16 +100,16 @@ def test_FFT2d(par):
     x[:] = np.random.randn(*(x.local_shape)) + par['imag'] * np.random.randn(*(x.local_shape))
     x_global = x.asarray()
     # Forward
-    y_dist = ff2d_mpi.matvec(x)
+    y_dist = ff2d_mpi @ x
     y = y_dist.asarray()
     # Adjoint
-    y_adj_dist = ff2d_mpi.rmatvec(y_dist)
+    y_adj_dist = ff2d_mpi.H @ y_dist
     y_adj = y_adj_dist.asarray()
     if rank == 0:
         fft2d = FFT2D(dims=par['dims'], axes=par['axes'], norm=par['norm'], real=par['real'], dtype=par['dtype'])
         assert ff2d_mpi.shape == fft2d.shape
-        y_np = fft2d.matvec(x_global)
-        y_adj_np = fft2d.rmatvec(y_np)
+        y_np = fft2d @ x_global
+        y_adj_np = fft2d.H @ y_np
         assert_allclose(y, y_np, rtol=1e-5, atol=1e-8)
         assert_allclose(y_adj, y_adj_np, rtol=1e-5, atol=1e-8)
 
@@ -125,15 +125,20 @@ def test_FFTND(par):
     x[:] = np.random.randn(*(x.local_shape)) + par['imag'] * np.random.randn(*(x.local_shape))
     x_global = x.asarray()
     # Forward
-    y_dist = ffnd_mpi.matvec(x)
+    y_dist = ffnd_mpi @ x
     y = y_dist.asarray()
     # Adjoint
-    y_adj_dist = ffnd_mpi.rmatvec(y_dist)
+    y_adj_dist = ffnd_mpi.H @ y_dist
     y_adj = y_adj_dist.asarray()
+    # Div
+    y_div_dist = ffnd_mpi / y_dist
+    y_div = y_div_dist.asarray()
     if rank == 0:
         fftnd = FFTND(dims=par['dims'], axes=par['axes'], norm=par['norm'], real=par['real'], dtype=par['dtype'])
         assert ffnd_mpi.shape == fftnd.shape
-        y_np = fftnd.matvec(x_global)
-        y_adj_np = fftnd.rmatvec(y_np)
+        y_np = fftnd @ x_global
+        y_adj_np = fftnd.H @ y_np
+        y_div_np = fftnd / y_np
         assert_allclose(y, y_np, rtol=1e-5, atol=1e-8)
         assert_allclose(y_adj, y_adj_np, rtol=1e-5, atol=1e-8)
+        assert_allclose(y_div, y_div_np, rtol=1e-5, atol=1e-8)

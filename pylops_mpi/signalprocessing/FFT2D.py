@@ -137,3 +137,6 @@ class MPIFFT2D(MPIFFTND):
 
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         return super()._rmatvec(x)
+
+    def __truediv__(self, y: DistributedArray) -> DistributedArray:
+        return super().__truediv__(y)
