@@ -57,7 +57,7 @@ def reshaped(
                     and f.__name__ != "__truediv__"
                 )
                 local_shapes = None
-                global_shape = getattr(self, "dims") if fwd else getattr(self, "dimsd")
+                global_shape = getattr(self, "dims") if fwd else getattr(self, "dimsd", getattr(self, "dims"))
             arr = DistributedArray(global_shape=global_shape,
                                    base_comm=x.base_comm,
                                    base_comm_nccl=x.base_comm_nccl,
