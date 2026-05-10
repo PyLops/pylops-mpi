@@ -13,28 +13,28 @@ from pylops_mpi.basicoperators.Halo import MPIHalo, halo_block_split
 
 
 def MPINonStationaryConvolve1D(
-        dims: Union[int, InputDimsLike],
-        hs: NDArray,
-        ih: InputDimsLike,
-        axis: int = -1,
-        base_comm: MPI.Comm = MPI.COMM_WORLD,
-        dtype: DTypeLike = "float64",
-    ) -> MPILinearOperator:
+    dims: Union[int, InputDimsLike],
+    hs: NDArray,
+    ih: InputDimsLike,
+    axis: int = -1,
+    base_comm: MPI.Comm = MPI.COMM_WORLD,
+    dtype: DTypeLike = "float64",
+) -> MPILinearOperator:
     r"""1D non-stationary convolution operator.
 
     Apply distributed non-stationary one-dimensional convolution.
     A varying compact filter is provided on a coarser grid and on-the-fly
-    interpolation is applied in forward and adjoint modes. 
+    interpolation is applied in forward and adjoint modes.
 
-    Alongside distributing the input array across different ranks, the 
+    Alongside distributing the input array across different ranks, the
     filters are also distributed and filters operating at the edges of the
     local arrays are replicated on both ranks either side of the edge.
 
     .. note::
 
-        Currently the 
-        :obj:`pylops_mpi.signalprocessing.MPINonStationaryConvolve1D` 
-        requires that shape of the local arrays of the input 
+        Currently the
+        :obj:`pylops_mpi.signalprocessing.MPINonStationaryConvolve1D`
+        requires that shape of the local arrays of the input
         :obj:`pylops_mpi.DistributedArray` are be the same for all ranks.
 
     Parameters
@@ -90,7 +90,6 @@ def MPINonStationaryConvolve1D(
     rank = base_comm.Get_rank()
     size = base_comm.Get_size()
     dims = _value_or_sized_to_tuple(dims)
-    ndims = len(dims)
 
     # Checks for local operator
     if hs.shape[1] % 2 == 0:
