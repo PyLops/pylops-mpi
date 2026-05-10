@@ -1,13 +1,42 @@
 import math
+
 import numpy as np
 from mpi4py import MPI
-
 from pylops.utils.backend import get_module
-from pylops_mpi import MPILinearOperator, DistributedArray, Partition
+
+from pylops_mpi import DistributedArray, MPILinearOperator, Partition
 from pylops_mpi.Distributed import DistributedMixIn
 
 
 def halo_block_split(global_shape: tuple, comm, grid_shape: tuple = None) -> tuple:
+    r"""Split a global array over a Cartesian process grid.
+
+    Compute the local slice owned by the calling rank when ``global_shape`` is
+    distributed over ``grid_shape``. This helper follows the same Cartesian
+    partitioning used internally by :class:`MPIHalo`.
+
+    Parameters
+    ----------
+    global_shape : :obj:`tuple`
+        Shape of the global array before flattening.
+    comm : :obj:`mpi4py.MPI.Comm`
+        MPI communicator containing the ranks in the process grid.
+    grid_shape : :obj:`tuple`, optional
+        Number of ranks along each array axis. When ``None``, all ranks are
+        placed along the last axis.
+
+    Returns
+    -------
+    local_slice : :obj:`tuple`
+        Tuple of :class:`slice` objects selecting the local block owned by the
+        calling rank.
+
+    Raises
+    ------
+    ValueError
+        If ``grid_shape`` does not contain exactly ``comm.Get_size()`` ranks.
+
+    """
     ndim = len(global_shape)
     size = comm.Get_size()
     # default: put all ranks on the last axis
@@ -33,6 +62,61 @@ def halo_block_split(global_shape: tuple, comm, grid_shape: tuple = None) -> tup
 
 
 class MPIHalo(DistributedMixIn, MPILinearOperator):
+    r"""MPI Halo
+
+    Apply haloing to a flattened :class:`pylops_mpi.DistributedArray`. The
+    Halo operator is applied over a Cartesian process grid, where each rank
+    owns one local block of the global N-dimensional array.
+
+    Parameters
+    ----------
+    dims : :obj:`tuple`
+        Number of samples for each dimension.
+    halo : :obj:`int` or :obj:`tuple`
+        Number of halo samples to add around local blocks. A scalar value
+        applies the same halo to both sides of every axis. A tuple of length
+        ``ndim`` applies a symmetric halo per axis. A tuple of length
+        ``2 * ndim`` specifies the halo before and after each axis.
+    proc_grid_shape : :obj:`tuple`
+        Number of MPI ranks along each dimension.
+    comm : :obj:`mpi4py.MPI.Comm`, optional
+        MPI Base Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.
+    dtype : :obj:`str`, optional
+        Type of elements in the input array.
+
+    Attributes
+    ----------
+    shape : :obj:`tuple`
+        Operator shape
+
+    Notes
+    -----
+    The MPIHalo operator supplies each rank with exactly the data dependencies that
+    operators require when their output at a point depends only on a local neighborhood
+    of radius :math:`h`. It augments the local array with a halo of width :math:`h`:
+    for a rank :math:`p` that owns a set of grid points, the extended set consists
+    of those owned points plus all points within a distance :math:`h` along the
+    haloed axes, clipped to the global domain boundaries. In forward mode,halo samples
+    are obtained by copying from the neighboring ranks that own them to rank :math:`p.
+
+    The halo operator supplies the local data dependencies that some operators
+    may require. For example, a finite-difference stencil or compact convolution
+    requires only samples within a radius h to compute the output at a point
+    :math:`i` owned by rank :math:`p`, then the complete local result on the owned
+    points can be computed directly from the haloed block. The operator can
+    therefore be applied independently on each rank after the exchange, commonly
+    through :class:`pylops_mpi.basicoperators.MPIBlockDiag`.
+
+    In one dimension, if rank :math:`p` owns the half-open interval :math:`[s_p, e_p)`
+    and ``halo=1``, an interior rank receives :math:`x_{s_p-1}` from the previous
+    rank and :math:`x_{e_p}` from the next rank. Boundary ranks omit samples outside
+    the global domain. In multiple dimensions, the same extension is applied
+    independently along each axis of the Cartesian process grid.
+
+    The reverse operation is implemented by the adjoint: it extracts the original
+    local domain by it removing the ghost cells and returning the local core.
+    """
+
     def __init__(
         self,
         dims: tuple,
@@ -105,7 +189,9 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
         rank = self.cart_comm.Get_rank()
         coords = self.cart_comm.Get_coords(rank)
         local = []
-        for ax, (gdim, coord, grid_procs) in enumerate(zip(self.global_dims, coords, self.proc_grid_shape)):
+        for ax, (gdim, coord, grid_procs) in enumerate(
+            zip(self.global_dims, coords, self.proc_grid_shape)
+        ):
             block_size = math.ceil(gdim / grid_procs)
             start = coord * block_size
             end = min(start + block_size, gdim)
@@ -147,7 +233,9 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
     def _matvec(self, x):
         ncp = get_module(x.engine)
         if x.partition != Partition.SCATTER:
-            raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
+            raise ValueError(
+                f"x should have partition={Partition.SCATTER} Got {x.partition} instead..."
+            )
 
         y = DistributedArray(
             global_shape=self.shape[0],
@@ -171,22 +259,31 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
         # exchange along each axis
         for ax in range(self.ndim):
             before, after = self.halo[2 * ax], self.halo[2 * ax + 1]
-            self._exchange_along_axis(ncp, halo_arr, axis=ax, before=before, after=after)
+            self._exchange_along_axis(
+                ncp, halo_arr, axis=ax, before=before, after=after
+            )
 
         y[:] = halo_arr.ravel()
         return y
 
     def _rmatvec(self, x):
         if x.partition != Partition.SCATTER:
-            raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
-        res = DistributedArray(global_shape=self.shape[1],
-                               partition=Partition.SCATTER,
-                               base_comm=x.base_comm,
-                               base_comm_nccl=x.base_comm_nccl,
-                               engine=x.engine,
-                               dtype=self.dtype)
+            raise ValueError(
+                f"x should have partition={Partition.SCATTER} Got {x.partition} instead..."
+            )
+        res = DistributedArray(
+            global_shape=self.shape[1],
+            partition=Partition.SCATTER,
+            base_comm=x.base_comm,
+            base_comm_nccl=x.base_comm_nccl,
+            engine=x.engine,
+            dtype=self.dtype,
+        )
         arr = x.local_array.reshape(self.local_extent)
-        core_slices = [slice(left, left + ldim) for left, ldim in zip(self.halo[::2], self.local_dims)]
+        core_slices = [
+            slice(left, left + ldim)
+            for left, ldim in zip(self.halo[::2], self.local_dims)
+        ]
         core = arr[tuple(core_slices)]
         res[:] = core.ravel()
         return res
