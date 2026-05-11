@@ -205,7 +205,7 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
             ext.append(self.local_dims[ax] + minus_halo + plus_halo)
         return tuple(ext)
 
-    def _exchange_along_axis(self, ncp, arr, axis, before, after):
+    def _exchange_along_axis(self, ncp, arr, axis, before, after, engine):
         minus_nbr, plus_nbr = self.neigh[("-", axis)], self.neigh[("+", axis)]
         # slice definitions
         slicer = [slice(None)] * self.ndim
@@ -215,7 +215,15 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
             snd_s[axis] = slice(before, 2 * before)
             snd = arr[tuple(snd_s)].copy()
             rcv = ncp.empty_like(snd)
-            self.cart_comm.Sendrecv(snd, dest=minus_nbr, recvbuf=rcv, source=minus_nbr)
+            rcv = self._sendrecv(
+                self.cart_comm,
+                None,
+                snd,
+                rcv,
+                dest=minus_nbr,
+                source=minus_nbr,
+                engine=engine,
+            )
             rcv_s = slicer.copy()
             rcv_s[axis] = slice(0, before)
             arr[tuple(rcv_s)] = rcv
@@ -227,7 +235,15 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
             rcv_s[axis] = slice(-after, None)
             snd = arr[tuple(snd_s)].copy()
             rcv = ncp.empty_like(snd)
-            self.cart_comm.Sendrecv(snd, dest=plus_nbr, recvbuf=rcv, source=plus_nbr)
+            rcv = self._sendrecv(
+                self.cart_comm,
+                None,
+                snd,
+                rcv,
+                dest=plus_nbr,
+                source=plus_nbr,
+                engine=engine,
+            )
             arr[tuple(rcv_s)] = rcv
 
     def _matvec(self, x):
@@ -260,7 +276,7 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
         for ax in range(self.ndim):
             before, after = self.halo[2 * ax], self.halo[2 * ax + 1]
             self._exchange_along_axis(
-                ncp, halo_arr, axis=ax, before=before, after=after
+                ncp, halo_arr, axis=ax, before=before, after=after, engine=x.engine
             )
 
         y[:] = halo_arr.ravel()

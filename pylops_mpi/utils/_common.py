@@ -1,6 +1,7 @@
 __all__ = [
     "_float_scalar",
-    "_prepare_allgather_inputs"
+    "_prepare_allgather_inputs",
+    "_unroll_allgather_recv",
 ]
 
 import numpy as np
@@ -58,7 +59,7 @@ def _prepare_allgather_inputs(send_buf, send_buf_shapes, engine):
     return send_buf, recv_buf
 
 
-def _unroll_allgather_recv(recv_buf, padded_send_buf_shape, send_buf_shapes) -> list:
+def _unroll_allgather_recv(recv_buf, padded_send_buf_shape, send_buf_shapes, displs=None) -> list:
     r"""Unrolll recv_buf after Buffered Allgather (MPI and NCCL)
 
     Remove the padded elements in recv_buff, extract an individual array from each device and return them as a list of arrays
@@ -80,12 +81,17 @@ def _unroll_allgather_recv(recv_buf, padded_send_buf_shape, send_buf_shapes) -> 
         A list of `cupy.ndarray` from each GPU with the padded element removed
     """
     ndev = len(send_buf_shapes)
+    if displs is not None:
+        return [
+            recv_buf[displs[i]:displs[i] + int(np.prod(shape))].reshape(shape)
+            for i, shape in enumerate(send_buf_shapes)
+        ]
+
     # extract an individual array from each device
     chunk_size = np.prod(padded_send_buf_shape)
     chunks = [
         recv_buf[i * chunk_size:(i + 1) * chunk_size] for i in range(ndev)
     ]
-
     # Remove padding from each array: the padded value may appear somewhere
     # in the middle of the flat array and thus the reshape and slicing for each dimension is required
     for i in range(ndev):
