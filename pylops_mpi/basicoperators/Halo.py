@@ -91,30 +91,32 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
 
     Notes
     -----
-    The MPIHalo operator supplies each rank with exactly the data dependencies that
-    operators require when their output at a point depends only on a local neighborhood
-    of radius :math:`h`. It augments the local array with a halo of width :math:`h`:
-    for a rank :math:`p` that owns a set of grid points, the extended set consists
-    of those owned points plus all points within a distance :math:`h` along the
-    haloed axes, clipped to the global domain boundaries. In forward mode,halo samples
-    are obtained by copying from the neighboring ranks that own them to rank :math:`p.
+    The MPIHalo operator extends each rank's local array with a **halo** (ghost cells)
+    of width ``h`` along the haloed axes, providing the neighboring rank's data for
+    stencil-like operators. Ranks are arranged in an N-dimensional Cartesian grid as
+    provided by ``proc_grid_shape``, whereby each rank owns a contiguous block of the
+    global array.The ``halo`` is normalised to a tuple of length ``2 * ndim``, containing
+    one ``(minus, plus)`` halo-width pair for each axis. The tuple is flattened in
+    axis order as
 
-    The halo operator supplies the local data dependencies that some operators
-    may require. For example, a finite-difference stencil or compact convolution
-    requires only samples within a radius h to compute the output at a point
-    :math:`i` owned by rank :math:`p`, then the complete local result on the owned
-    points can be computed directly from the haloed block. The operator can
-    therefore be applied independently on each rank after the exchange, commonly
-    through :class:`pylops_mpi.basicoperators.MPIBlockDiag`.
+    .. math::
+        (h_{0,-}, h_{0,+}, h_{1,-}, h_{1,+}, \ldots)
 
-    In one dimension, if rank :math:`p` owns the half-open interval :math:`[s_p, e_p)`
-    and ``halo=1``, an interior rank receives :math:`x_{s_p-1}` from the previous
-    rank and :math:`x_{e_p}` from the next rank. Boundary ranks omit samples outside
-    the global domain. In multiple dimensions, the same extension is applied
-    independently along each axis of the Cartesian process grid.
+    where ``h_{i,-}`` and ``h_{i,+}`` represent the halo widths on the negative and
+    positive side of axis ``i``, respectively. For convenience, ``halo`` may be
+    provided as a scalar when the same symmetric halo is required along all axes, or
+    as a tuple of length ``2 * ndim`` when explicit control is needed for each axis
+    direction. Ghost cells on the global boundary of an axis are zero by default.
 
-    The reverse operation is implemented by the adjoint: it extracts the original
-    local domain by it removing the ghost cells and returning the local core.
+    In the forward mode, each rank exchanges boundary slices with its left and
+    right neighbors along each axis via ``MPI_Sendrecv``. Ranks at a global
+    boundary have ``MPI.PROC_NULL`` as their neighbor on that side, so those
+    ghost regions remain zero and no exchange is attempted. Once the exchange
+    is complete, the operator can be applied independently on each rank's extended
+    block, typically via :class:`pylops_mpi.basicoperators.MPIBlockDiag`.
+
+    In the adjoint mode, we perform the reverse where we extract the original
+    local domain by removing the ghost cells and returning the local core.
     """
 
     def __init__(
