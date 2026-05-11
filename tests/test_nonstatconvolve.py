@@ -6,16 +6,17 @@ import os
 
 if int(os.environ.get("TEST_CUPY_PYLOPS", 0)):
     import cupy as np
+    from cupy.testing import assert_allclose
     from cupyx.scipy.signal.windows import triang
     backend = "cupy"
 else:
     import numpy as np
+    from numpy.testing import assert_allclose
     from scipy.signal.windows import triang
     backend = "numpy"
 from mpi4py import MPI
 import pytest
 import pylops
-from numpy.testing import assert_allclose
 
 import pylops_mpi
 from pylops_mpi import DistributedArray

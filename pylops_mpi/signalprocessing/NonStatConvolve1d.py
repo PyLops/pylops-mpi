@@ -5,6 +5,7 @@ import numpy as np
 from mpi4py import MPI
 from pylops.signalprocessing import NonStationaryConvolve1D
 from pylops.utils._internal import _value_or_sized_to_tuple
+from pylops.utils.backend import to_numpy
 from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
 
 from pylops_mpi import MPILinearOperator
@@ -90,6 +91,7 @@ def MPINonStationaryConvolve1D(
     rank = base_comm.Get_rank()
     size = base_comm.Get_size()
     dims = _value_or_sized_to_tuple(dims)
+    ih = to_numpy(ih)
 
     # Checks for local operator
     if hs.shape[1] % 2 == 0:
