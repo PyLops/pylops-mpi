@@ -1,6 +1,6 @@
 all = [
-    "fftshift",
-    "ifftshift"
+    "fftshift_nd",
+    "ifftshift_nd"
 ]
 
 import numpy as np
@@ -10,7 +10,7 @@ from pylops.utils import InputDimsLike
 from pylops_mpi import DistributedArray
 
 
-def fftshift(x: DistributedArray, axes: InputDimsLike = None):
+def fftshift_nd(x: DistributedArray, axes: InputDimsLike = None):
     """
     Shift the zero-frequency component to the center of the spectrum for a DistributedArray.
 
@@ -18,6 +18,9 @@ def fftshift(x: DistributedArray, axes: InputDimsLike = None):
     that are local to each process, the shift is applied directly. For the
     distributed axis, the array is first redistributed to a different axis so
     the shift can be performed locally, then left in the redistributed state.
+
+    .. note::
+        This function only supports nd arrays (n >= 2).
 
     Parameters
     ----------
@@ -32,6 +35,10 @@ def fftshift(x: DistributedArray, axes: InputDimsLike = None):
         The shifted array. May be distributed along a different axis than the
         input if the original distributed axis was included in ``axes``.
     """
+    if x.ndim < 2:
+        raise ValueError(
+            f"fftshift_nd requires a 2D or higher array, but got ndim={x.ndim}. "
+        )
     if axes is None:
         axes = tuple(range(x.ndim))
     elif np.isscalar(axes):
@@ -50,7 +57,7 @@ def fftshift(x: DistributedArray, axes: InputDimsLike = None):
     return x
 
 
-def ifftshift(x: DistributedArray, axes: InputDimsLike = None):
+def ifftshift_nd(x: DistributedArray, axes: InputDimsLike = None):
     """
     Shift the zero-frequency component back to the beginning of the spectrum for a DistributedArray.
 
@@ -59,6 +66,9 @@ def ifftshift(x: DistributedArray, axes: InputDimsLike = None):
     a prior :func:`pylops_mpi.utils.fftshift`. For axes that are local to each process, the shift is applied directly.
     For the distributed axis, the array is first redistributed to a different
     axis so the shift can be performed locally.
+
+    .. note::
+        This function only supports nd arrays (n >= 2).
 
     Parameters
     ----------
@@ -73,6 +83,10 @@ def ifftshift(x: DistributedArray, axes: InputDimsLike = None):
         The shifted array. May be distributed along a different axis than the
         input if the original distributed axis was included in ``axes``.
     """
+    if x.ndim < 2:
+        raise ValueError(
+            f"ifftshift_nd requires a 2D or higher array, but got ndim={x.ndim}. "
+        )
     if axes is None:
         axes = tuple(range(x.ndim))
     elif np.isscalar(axes):

@@ -71,7 +71,8 @@ Signal Processing
    :toctree: generated/
 
     MPIFredholm1
-
+    MPIFFT2D
+    MPIFFTND
 
 Wave-Equation processing
 ~~~~~~~~~~~~~~~~~~~~~~~~

@@ -10,7 +10,7 @@ from pylops.utils import DTypeLike, InputDimsLike, get_array_module
 from pylops_mpi.utils.decorators import reshaped
 from pylops_mpi.DistributedArray import DistributedArray, Partition
 from pylops_mpi.signalprocessing._baseffts import _MPIBaseFFTND
-from pylops_mpi.utils import deps, fftshift, ifftshift
+from pylops_mpi.utils import deps, fftshift_nd, ifftshift_nd
 
 mpi4py_fft_message = deps.mpi4py_fft_import("mpi4py_fft")
 
@@ -194,7 +194,7 @@ class MPIFFTND(_MPIBaseFFTND):
                              f"Got  {x.partition} instead...")
         ncp = get_array_module(x.local_array)
         if self.ifftshift_before.any():
-            x = ifftshift(x, axes=self.axes[self.ifftshift_before])
+            x = ifftshift_nd(x, axes=self.axes[self.ifftshift_before])
         if not self.clinear:
             x[:] = ncp.real(x.local_array)
         # Allocate distributed arrays for input and output
@@ -225,7 +225,7 @@ class MPIFFTND(_MPIBaseFFTND):
             y[:] *= self._scale
         y[:] = y.local_array.astype(self.cdtype)
         if self.fftshift_after.any():
-            y = fftshift(y, axes=self.axes[self.fftshift_after])
+            y = fftshift_nd(y, axes=self.axes[self.fftshift_after])
         return y
 
     @reshaped
@@ -238,7 +238,7 @@ class MPIFFTND(_MPIBaseFFTND):
                              f"Got  {x.partition} instead...")
         ncp = get_array_module(x.local_array)
         if self.fftshift_after.any():
-            x = ifftshift(x, axes=self.axes[self.fftshift_after])
+            x = ifftshift_nd(x, axes=self.axes[self.fftshift_after])
         if self.real:
             # Redistribute so that self.axes[-1] is not the one sliced
             safe_axis = next(i for i in range(len(self.dims)) if i != self.axes[-1])
@@ -274,7 +274,7 @@ class MPIFFTND(_MPIBaseFFTND):
             y[:] = ncp.real(y.local_array)
         y[:] = y.local_array.astype(self.rdtype)
         if self.ifftshift_before.any():
-            y = fftshift(y, axes=self.axes[self.ifftshift_before])
+            y = fftshift_nd(y, axes=self.axes[self.ifftshift_before])
         return y
 
     def __truediv__(self, y: DistributedArray) -> DistributedArray:
