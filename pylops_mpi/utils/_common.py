@@ -1,7 +1,6 @@
 __all__ = [
     "_float_scalar",
-    "_prepare_allgather_inputs",
-    "_unroll_allgather_recv"
+    "_prepare_allgather_inputs"
 ]
 
 import numpy as np
