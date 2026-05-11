@@ -107,7 +107,7 @@ Basic
     cgls
 
 Sparsity
-~~~~~
+~~~~~~~~
 
 .. currentmodule:: pylops_mpi.optimization.cls_sparsity
 

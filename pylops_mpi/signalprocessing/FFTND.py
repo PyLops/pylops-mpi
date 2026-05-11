@@ -10,7 +10,7 @@ from pylops.utils import DTypeLike, InputDimsLike, get_array_module
 from pylops_mpi.utils.decorators import reshaped
 from pylops_mpi.DistributedArray import DistributedArray, Partition
 from pylops_mpi.signalprocessing._baseffts import _MPIBaseFFTND
-from pylops_mpi.utils import deps
+from pylops_mpi.utils import deps, fftshift, ifftshift
 
 mpi4py_fft_message = deps.mpi4py_fft_import("mpi4py_fft")
 
@@ -53,6 +53,21 @@ class MPIFFTND(_MPIBaseFFTND):
         model is real. Note that the real FFT is applied only to the first
         dimension to which the FFTND operator is applied (last element of
         ``axes``)
+    ifftshift_before : :obj:`tuple` or :obj:`bool`, optional
+        Apply ifftshift (``True``) or not (``False``) to model vector (before FFT).
+        Consider using this option when the model vector's respective axis is symmetric
+        with respect to the zero value sample. This will shift the zero value sample to
+        coincide with the zero index sample. With such an arrangement, FFT will not
+        introduce a sample-dependent phase-shift when compared to the continuous Fourier
+        Transform. When passing a single value, the shift will the same for every direction.
+        Pass a tuple to specify which dimensions are shifted.
+    fftshift_after : :obj:`tuple` or :obj:`bool`, optional
+        Apply fftshift (``True``) or not (``False``) to data vector (after FFT).
+        Consider using this option when you require frequencies to be arranged
+        naturally, from negative to positive. When not applying fftshift after FFT,
+        frequencies are arranged from zero to largest positive, and then from negative
+        Nyquist to the frequency bin before zero. When passing a single value, the shift
+        will the same for every direction. Pass a tuple to specify which dimensions are shifted.
     dtype : :obj:`str`, optional
         Type of elements in input array. Note that the ``dtype`` of the operator
         is the corresponding complex type even when a real type is provided.
@@ -134,6 +149,8 @@ class MPIFFTND(_MPIBaseFFTND):
         sampling: float | Sequence[float] = 1.0,
         norm: str = "none",
         real: bool = False,
+        ifftshift_before: bool = False,
+        fftshift_after: bool = False,
         dtype: DTypeLike = "complex128",
         base_comm: MPI.Comm = MPI.COMM_WORLD,
         **kwargs_fft,
@@ -144,6 +161,8 @@ class MPIFFTND(_MPIBaseFFTND):
             sampling=sampling,
             norm=norm,
             real=real,
+            fftshift_after=fftshift_after,
+            ifftshift_before=ifftshift_before,
             dtype=dtype,
             base_comm=base_comm
         )
@@ -174,6 +193,8 @@ class MPIFFTND(_MPIBaseFFTND):
             raise ValueError(f"x should have partition={Partition.SCATTER}"
                              f"Got  {x.partition} instead...")
         ncp = get_array_module(x.local_array)
+        if self.ifftshift_before.any():
+            x = ifftshift(x, axes=self.axes[self.ifftshift_before])
         if not self.clinear:
             x[:] = ncp.real(x.local_array)
         # Allocate distributed arrays for input and output
@@ -186,8 +207,8 @@ class MPIFFTND(_MPIBaseFFTND):
         self.fft.forward(u_dist, u_hat, normalize=False)
 
         # Axis along which PFFT decomposes the output array across MPI processes
-        dist_axis = [i for i, s in enumerate(u_hat.subcomm) if s.Get_size() > 1][0]
-        y = DistributedArray(global_shape=self.dimsd, dtype=self.dtype, axis=dist_axis,
+        dist_axis = [i for i, s in enumerate(u_hat.subcomm) if s.Get_size() > 1]
+        y = DistributedArray(global_shape=self.dimsd, dtype=self.dtype, axis=dist_axis[0] if dist_axis else 0,
                              base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl, engine=x.engine)
         y[:] = u_hat
         if self.real:
@@ -203,6 +224,8 @@ class MPIFFTND(_MPIBaseFFTND):
         if self.norm is _FFTNorms.ONE_OVER_N:
             y[:] *= self._scale
         y[:] = y.local_array.astype(self.cdtype)
+        if self.fftshift_after.any():
+            y = fftshift(y, axes=self.axes[self.fftshift_after])
         return y
 
     @reshaped
@@ -214,6 +237,8 @@ class MPIFFTND(_MPIBaseFFTND):
             raise ValueError(f"x should have partition={Partition.SCATTER}, "
                              f"Got  {x.partition} instead...")
         ncp = get_array_module(x.local_array)
+        if self.fftshift_after.any():
+            x = ifftshift(x, axes=self.axes[self.fftshift_after])
         if self.real:
             # Redistribute so that self.axes[-1] is not the one sliced
             safe_axis = next(i for i in range(len(self.dims)) if i != self.axes[-1])
@@ -228,15 +253,15 @@ class MPIFFTND(_MPIBaseFFTND):
         u_dist = newDistArray(self.fft, forward_output=False)
         u_hat = newDistArray(self.fft, forward_output=True)
         # Redistribute input to match the axis decomposed by PFFT
-        x_axis = [i for i, s in enumerate(u_hat.subcomm) if s.Get_size() > 1][0]
-        x = x.redistribute(axis=x_axis)
+        x_axis = [i for i, s in enumerate(u_hat.subcomm) if s.Get_size() > 1]
+        x = x.redistribute(axis=x_axis[0] if x_axis else 0)
         u_hat[:] = x.local_array
         # Perform the parallel backward FFT
         self.fft.backward(u_hat, u_dist, normalize=True)
 
         # Axis along which PFFT decomposes the output array across MPI processes
-        dist_axis = [i for i, s in enumerate(u_dist.subcomm) if s.Get_size() > 1][0]
-        y = DistributedArray(global_shape=self.dims, dtype=self.dtype, axis=dist_axis,
+        dist_axis = [i for i, s in enumerate(u_dist.subcomm) if s.Get_size() > 1]
+        y = DistributedArray(global_shape=self.dims, dtype=self.dtype, axis=dist_axis[0] if dist_axis else 0,
                              base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl, engine=x.engine)
         y[:] = u_dist
         if self.norm is _FFTNorms.NONE:
@@ -248,6 +273,8 @@ class MPIFFTND(_MPIBaseFFTND):
         if not self.clinear:
             y[:] = ncp.real(y.local_array)
         y[:] = y.local_array.astype(self.rdtype)
+        if self.ifftshift_before.any():
+            y = fftshift(y, axes=self.axes[self.ifftshift_before])
         return y
 
     def __truediv__(self, y: DistributedArray) -> DistributedArray:

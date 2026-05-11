@@ -90,12 +90,23 @@ rank = MPI.COMM_WORLD.Get_rank()
 
 
 @pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4)])
-def test_FFT2d(par):
+@pytest.mark.parametrize(
+    "ifftshift_before, fftshift_after",
+    [
+        (False, False),
+        (True, False),
+        (False, True),
+        (True, True),
+    ],
+)
+def test_FFT2d(par, ifftshift_before, fftshift_after):
     """MPIFFT2D Operator"""
     if backend == "cupy":
         pytest.skip("Skipping cupy backend")
     np.random.seed(10)
-    ff2d_mpi = MPIFFT2D(dims=par['dims'], axes=par['axes'], norm=par['norm'], real=par['real'], dtype=par['dtype'])
+    ff2d_mpi = MPIFFT2D(dims=par['dims'], axes=par['axes'], norm=par['norm'], real=par['real'],
+                        ifftshift_before=ifftshift_before, fftshift_after=fftshift_after,
+                        dtype=par['dtype'])
     x = DistributedArray(global_shape=ff2d_mpi.shape[1], dtype=par['dtype'])
     x[:] = np.random.randn(*(x.local_shape)) + par['imag'] * np.random.randn(*(x.local_shape))
     x_global = x.asarray()
@@ -106,7 +117,9 @@ def test_FFT2d(par):
     y_adj_dist = ff2d_mpi.H @ y_dist
     y_adj = y_adj_dist.asarray()
     if rank == 0:
-        fft2d = FFT2D(dims=par['dims'], axes=par['axes'], norm=par['norm'], real=par['real'], dtype=par['dtype'])
+        fft2d = FFT2D(dims=par['dims'], axes=par['axes'], norm=par['norm'], real=par['real'],
+                      ifftshift_before=ifftshift_before, fftshift_after=fftshift_after,
+                      dtype=par['dtype'])
         assert ff2d_mpi.shape == fft2d.shape
         y_np = fft2d @ x_global
         y_adj_np = fft2d.H @ y_np
@@ -115,12 +128,23 @@ def test_FFT2d(par):
 
 
 @pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6), (par7), (par8)])
-def test_FFTND(par):
+@pytest.mark.parametrize(
+    "ifftshift_before, fftshift_after",
+    [
+        (False, False),
+        (True, False),
+        (False, True),
+        (True, True),
+    ],
+)
+def test_FFTND(par, ifftshift_before, fftshift_after):
     """MPIFFTND Operator"""
     if backend == "cupy":
         pytest.skip("Skipping cupy backend")
     np.random.seed(10)
-    ffnd_mpi = MPIFFTND(dims=par['dims'], axes=par['axes'], norm=par['norm'], real=par['real'], dtype=par['dtype'])
+    ffnd_mpi = MPIFFTND(dims=par['dims'], axes=par['axes'], norm=par['norm'], real=par['real'],
+                        ifftshift_before=ifftshift_before, fftshift_after=fftshift_after,
+                        dtype=par['dtype'])
     x = DistributedArray(global_shape=ffnd_mpi.shape[1], dtype=par['dtype'])
     x[:] = np.random.randn(*(x.local_shape)) + par['imag'] * np.random.randn(*(x.local_shape))
     x_global = x.asarray()
@@ -134,7 +158,9 @@ def test_FFTND(par):
     y_div_dist = ffnd_mpi / y_dist
     y_div = y_div_dist.asarray()
     if rank == 0:
-        fftnd = FFTND(dims=par['dims'], axes=par['axes'], norm=par['norm'], real=par['real'], dtype=par['dtype'])
+        fftnd = FFTND(dims=par['dims'], axes=par['axes'], norm=par['norm'], real=par['real'],
+                      ifftshift_before=ifftshift_before, fftshift_after=fftshift_after,
+                      dtype=par['dtype'])
         assert ffnd_mpi.shape == fftnd.shape
         y_np = fftnd @ x_global
         y_adj_np = fftnd.H @ y_np

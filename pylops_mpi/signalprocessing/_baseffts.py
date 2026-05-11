@@ -23,6 +23,8 @@ class _MPIBaseFFTND(MPILinearOperator):
         sampling: float | Sequence[float] = 1.0,
         norm: str = "none",
         real: bool = False,
+        ifftshift_before: bool = False,
+        fftshift_after: bool = False,
         dtype: DTypeLike = "complex128",
         base_comm: MPI.Comm = MPI.COMM_WORLD
     ):
@@ -57,14 +59,26 @@ class _MPIBaseFFTND(MPILinearOperator):
             sampling = sampling.astype(np.float64)
         self.sampling = sampling
         _raise_on_wrong_dtype(self.sampling, np.floating, "sampling")
+        self.ifftshift_before = _value_or_sized_to_array(
+            ifftshift_before, repeat=self.naxes
+        )
+        _raise_on_wrong_dtype(self.ifftshift_before, bool, "ifftshift_before")
 
+        self.fftshift_after = _value_or_sized_to_array(
+            fftshift_after, repeat=self.naxes
+        )
+        _raise_on_wrong_dtype(self.fftshift_after, bool, "fftshift_after")
         if (
             self.naxes != len(self.nffts)
             or self.naxes != len(self.sampling)
+            or self.naxes != len(self.ifftshift_before)
+            or self.naxes != len(self.fftshift_after)
         ):
             msg = (
-                "`axes`, `nffts`, `sampling` must the have same number of elements. Received "
+                "`axes`, `nffts`, `sampling`, `ifftshift_before` and "
+                "`fftshift_after` must the have same number of elements. Received "
                 f"{self.naxes}, {len(self.nffts)}, {len(self.sampling)}, "
+                f"{len(self.ifftshift_before)} and {len(self.fftshift_after)}, "
                 "respectively."
             )
             raise ValueError(msg)
@@ -109,9 +123,27 @@ class _MPIBaseFFTND(MPILinearOperator):
 
         self.real = real
 
-        fs = [np.fft.fftfreq(n, d=s) for n, s in zip(self.nffts, self.sampling, strict=True)]
+        fs = [
+            np.fft.fftshift(np.fft.fftfreq(n, d=s))
+            if fftshift
+            else np.fft.fftfreq(n, d=s)
+            for n, s, fftshift in zip(
+                self.nffts, self.sampling, self.fftshift_after, strict=True
+            )
+        ]
         if self.real:
             fs[-1] = np.fft.rfftfreq(self.nffts[-1], d=self.sampling[-1])
+            if self.fftshift_after[-1]:
+                warnings.warn(
+                    "Using real=True and fftshift_after on the last direction. "
+                    "fftshift should only be applied on directions with negative "
+                    "and positive frequencies. When using FFTND with real=True, "
+                    "are all directions except the last. If you wish to proceed "
+                    "applying fftshift on a frequency axis with only positive "
+                    "frequencies, ignore this message.",
+                    stacklevel=2,
+                )
+                fs[-1] = np.fft.fftshift(fs[-1])
         self.fs = tuple(fs)
         dimsd = np.array(dims)
         dimsd[self.axes] = self.nffts

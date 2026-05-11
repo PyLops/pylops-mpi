@@ -41,6 +41,21 @@ class MPIFFT2D(MPIFFTND):
         model is real. Note that the real FFT is applied only to the first
         dimension to which the FFT2D operator is applied (last element of
         ``axes``)
+    ifftshift_before : :obj:`tuple` or :obj:`bool`, optional
+        Apply ifftshift (``True``) or not (``False``) to model vector (before FFT).
+        Consider using this option when the model vector's respective axis is symmetric
+        with respect to the zero value sample. This will shift the zero value sample to
+        coincide with the zero index sample. With such an arrangement, FFT will not
+        introduce a sample-dependent phase-shift when compared to the continuous Fourier
+        Transform. When passing a single value, the shift will the same for every direction.
+        Pass a tuple to specify which dimensions are shifted.
+    fftshift_after : :obj:`tuple` or :obj:`bool`, optional
+        Apply fftshift (``True``) or not (``False``) to data vector (after FFT).
+        Consider using this option when you require frequencies to be arranged
+        naturally, from negative to positive. When not applying fftshift after FFT,
+        frequencies are arranged from zero to largest positive, and then from negative
+        Nyquist to the frequency bin before zero. When passing a single value, the shift
+        will the same for every direction. Pass a tuple to specify which dimensions are shifted.
     dtype : :obj:`str`, optional
         Type of elements in input array. Note that the ``dtype`` of the operator
         is the corresponding complex type even when a real type is provided.
@@ -116,6 +131,8 @@ class MPIFFT2D(MPIFFTND):
         sampling: float | Sequence[float] = 1.0,
         norm: str = "none",
         real: bool = False,
+        ifftshift_before: bool = False,
+        fftshift_after: bool = False,
         dtype: DTypeLike = "complex128",
         base_comm: MPI.Comm = MPI.COMM_WORLD,
         **kwargs_fft,
@@ -127,8 +144,9 @@ class MPIFFT2D(MPIFFTND):
         if len(axes) != 2:
             msg = "FFT2D must be applied along exactly two dimensions"
             raise ValueError(msg)
-        super().__init__(dims=dims, axes=axes, sampling=sampling, norm=norm, real=real,
-                         dtype=dtype, base_comm=base_comm, **kwargs_fft)
+        super().__init__(dims=dims, axes=axes, sampling=sampling, norm=norm, real=real, dtype=dtype,
+                         ifftshift_before=ifftshift_before, fftshift_after=fftshift_after, base_comm=base_comm,
+                         **kwargs_fft)
         self.f1, self.f2 = self.fs
         del self.fs
 
