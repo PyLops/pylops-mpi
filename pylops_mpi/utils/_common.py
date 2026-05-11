@@ -1,4 +1,5 @@
 __all__ = [
+    "_float_scalar",
     "_prepare_allgather_inputs",
     "_unroll_allgather_recv"
 ]
@@ -6,6 +7,13 @@ __all__ = [
 
 import numpy as np
 from pylops.utils.backend import get_module
+
+
+def _float_scalar(value) -> float:
+    """Convert scalar or one-element ndarray/cupy.ndarray values to float."""
+    if hasattr(value, "item"):
+        value = value.item()
+    return float(value)
 
 
 # TODO: return type annotation for both cupy and numpy
