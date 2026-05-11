@@ -4,26 +4,33 @@ __all__ = [
     "mpi_bcast",
     "mpi_send",
     "mpi_recv",
+    "mpi_sendrecv",
+    "_prepare_allgather_inputs_mpi"
 ]
 
-from typing import Optional
+from typing import List, Optional
+import numpy as np
 
 from mpi4py import MPI
 from pylops.utils import NDArray
 from pylops.utils.backend import get_module
 from pylops_mpi.utils import deps
-from pylops_mpi.utils._common import _prepare_allgather_inputs, _unroll_allgather_recv
+from pylops_mpi.utils._common import _unroll_allgather_recv
 
 
 def mpi_allgather(base_comm: MPI.Comm,
                   send_buf: NDArray,
                   recv_buf: Optional[NDArray] = None,
                   engine: str = "numpy",
-                  ) -> NDArray:
-    """MPI_Allallgather/allallgather
+                  ) -> List[NDArray]:
+    """MPI_Allgather/allgather
 
-    Dispatch allgather routine based on type of input and availability of
-    CUDA-Aware MPI
+    Dispatch the appropriate allgather routine based on buffer sizes and
+    CUDA-aware MPI availability.
+
+    If all ranks provide buffers of equal size, the standard `Allgather`
+    collective is used. Otherwise, `Allgatherv` is invoked to handle
+    variable-sized buffers.
 
     Parameters
     ----------
@@ -39,21 +46,24 @@ def mpi_allgather(base_comm: MPI.Comm,
 
     Returns
     -------
-    recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
-        A buffer containing the gathered data from all ranks.
+    recv_buf : :obj:`list`
+        A list of arrays containing the gathered data from all ranks.
 
     """
     if deps.cuda_aware_mpi_enabled or engine == "numpy":
         send_shapes = base_comm.allgather(send_buf.shape)
-        (padded_send, padded_recv) = _prepare_allgather_inputs(send_buf, send_shapes, engine=engine)
-        recv_buffer_to_use = recv_buf if recv_buf else padded_recv
-        base_comm.Allgather(padded_send, recv_buffer_to_use)
-        return _unroll_allgather_recv(recv_buffer_to_use, padded_send.shape, send_shapes)
+        send_buf, recv_buf, displs, recvcounts = _prepare_allgather_inputs_mpi(send_buf, send_shapes, engine)
+        if len(set(send_shapes)) == 1:
+            _mpi_calls(base_comm, "Allgather", send_buf, recv_buf, engine=engine)
+        else:
+            _mpi_calls(base_comm, "Allgatherv", send_buf,
+                       [recv_buf, recvcounts, displs, MPI._typedict[send_buf.dtype.char]], engine=engine)
+        return _unroll_allgather_recv(recv_buf, send_buf.shape, send_shapes, displs)
     else:
         # CuPy with non-CUDA-aware MPI
         if recv_buf is None:
-            return base_comm.allgather(send_buf)
-        base_comm.Allgather(send_buf, recv_buf)
+            return _mpi_calls(base_comm, "allgather", send_buf)
+        _mpi_calls(base_comm, "Allgather", send_buf, recv_buf)
         return recv_buf
 
 
@@ -92,14 +102,14 @@ def mpi_allreduce(base_comm: MPI.Comm,
     if deps.cuda_aware_mpi_enabled or engine == "numpy":
         ncp = get_module(engine)
         recv_buf = ncp.zeros(send_buf.size, dtype=send_buf.dtype)
-        base_comm.Allreduce(send_buf, recv_buf, op)
+        _mpi_calls(base_comm, "Allreduce", send_buf, recv_buf, op, engine=engine)
         return recv_buf
     else:
         # CuPy with non-CUDA-aware MPI
         if recv_buf is None:
-            return base_comm.allreduce(send_buf, op)
+            return _mpi_calls(base_comm, "allreduce", send_buf, op, engine=engine)
         # For MIN and MAX which require recv_buf
-        base_comm.Allreduce(send_buf, recv_buf, op)
+        _mpi_calls(base_comm, "Allreduce", send_buf, recv_buf, op, engine=engine)
         return recv_buf
 
 
@@ -131,11 +141,11 @@ def mpi_bcast(base_comm: MPI.Comm,
 
     """
     if deps.cuda_aware_mpi_enabled or engine == "numpy":
-        base_comm.Bcast(send_buf, root=root)
+        _mpi_calls(base_comm, "Bcast", send_buf, engine=engine, root=root)
         return send_buf
     # CuPy with non-CUDA-aware MPI: use object broadcast
     value = send_buf if base_comm.Get_rank() == root else None
-    return base_comm.bcast(value, root=root)
+    return _mpi_calls(base_comm, "bcast", value, engine=engine, root=root)
 
 
 def mpi_send(base_comm: MPI.Comm,
@@ -171,10 +181,10 @@ def mpi_send(base_comm: MPI.Comm,
         mpi_type = MPI._typedict[send_buf.dtype.char]
         if count is None:
             count = send_buf.size
-        base_comm.Send([send_buf, count, mpi_type], dest=dest, tag=tag)
+        _mpi_calls(base_comm, "Send", [send_buf, count, mpi_type], engine=engine, dest=dest, tag=tag)
     else:
         # Uses CuPy without CUDA-aware MPI
-        base_comm.send(send_buf, dest, tag)
+        _mpi_calls(base_comm, "send", send_buf, dest, tag, engine=engine)
 
 
 def mpi_recv(base_comm: MPI.Comm,
@@ -219,8 +229,116 @@ def mpi_recv(base_comm: MPI.Comm,
             # dimension or shape-related integers are send/recv
             recv_buf = ncp.zeros(count, dtype=ncp.int32)
         mpi_type = MPI._typedict[recv_buf.dtype.char]
-        base_comm.Recv([recv_buf, recv_buf.size, mpi_type], source=source, tag=tag)
+        _mpi_calls(base_comm, "Recv", [recv_buf, recv_buf.size, mpi_type], engine=engine, source=source, tag=tag)
     else:
         # Uses CuPy without CUDA-aware MPI
-        recv_buf = base_comm.recv(source=source, tag=tag)
+        recv_buf = _mpi_calls(base_comm, "recv", engine=engine, source=source, tag=tag)
     return recv_buf
+
+
+def mpi_sendrecv(base_comm: MPI.Comm, sendbuf: NDArray, recvbuf: NDArray, dest: int = 0, sendtag: int = 0,
+                 source: int = 0, recvtag: int = 0, engine: Optional[str] = "numpy") -> NDArray:
+    """MPI Send/Recv
+    Dispatch send and receive in one combined call based on type of input and availability of
+    CUDA-Aware MPI
+
+    Parameters
+    ----------
+    base_comm : :obj:`MPI.Comm`
+        Base MPI Communicator.
+    sendbuf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+        The array containing data to send.
+    recvbuf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`, optional
+        The buffered array to receive data.
+    dest: :obj:`int`
+        The rank of the destination CPU/GPU device.
+    sendtag : :obj:`int`
+        Tag of the message to be sent.
+    source: :obj:`int`
+        The rank of the sending CPU/GPU device.
+    recvtag : :obj:`int`
+        Tag of the message to be received.
+    engine : :obj:`str`, optional
+        Engine used to store array (``numpy`` or ``cupy``)
+
+    Returns
+    -------
+    recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+        The buffer containing the received data.
+
+    """
+    if deps.cuda_aware_mpi_enabled or engine == "numpy":
+        _mpi_calls(base_comm, "Sendrecv", engine=engine, sendbuf=sendbuf, dest=dest, sendtag=sendtag,
+                   recvbuf=recvbuf, source=source, recvtag=recvtag)
+    else:
+        recvbuf = _mpi_calls(base_comm, "sendrecv", engine=engine, sendobj=sendbuf, dest=dest, sendtag=sendtag,
+                             source=source, recvtag=recvtag)
+    return recvbuf
+
+
+def _mpi_calls(comm: MPI.Comm, func: str, *args, engine: Optional[str] = "numpy", **kwargs):
+    """MPI Calls
+    Wrapper around MPI comm calls with optional GPU synchronization for CuPy arrays.
+
+    Parameters
+    ----------
+    comm: :obj:`MPI.Comm`
+        MPI Communicator
+    func
+        MPI Function to call.
+    args
+        Arguments to pass to the function.
+    engine: :obj:`str`, optional
+        Engine used to store array (``numpy`` or ``cupy``)
+    kwargs
+        Keyword arguments passed to the MPI call.
+
+    Returns
+    -------
+        Result of the MPI call
+    """
+    if engine == "cupy" and deps.cuda_aware_mpi_enabled:
+        ncp = get_module(engine)
+        ncp.cuda.Device().synchronize()
+    mpi_func = getattr(comm, func)
+    return mpi_func(*args, **kwargs)
+
+
+def _prepare_allgather_inputs_mpi(send_buf, send_buf_shapes, engine):
+    r"""Prepare send_buf and recv_buf for MPI allgather (mpi_allgather)
+
+    Buffered Allgather (MPI) supports both uniform and variable-sized data across ranks. Unlike NCCL, padding is
+    not required when array sizes differ. Instead, displacements are used to correctly place each rank’s data
+    within the received buffer. The function ensures that the send_buf is contiguous.
+
+    Parameters
+    ----------
+    send_buf : :obj: `numpy.ndarray` or `cupy.ndarray` or array-like
+        The data buffer to be sent for allgather.
+    send_buf_shapes: :obj:`list`
+        A list of shapes for each send_buf (used to calculate padding size)
+    engine : :obj:`str`
+        Engine used to store array (``numpy`` or ``cupy``)
+
+    Returns
+    -------
+    send_buf: :obj: `numpy.ndarray` or `cupy.ndarray` or array-like
+        A  buffer containing the data and padded elements to be sent by this rank.
+    recv_buf : :obj: `numpy.ndarray` or `cupy.ndarray` or array-like
+        A buffer to gather data from all ranks.
+    displs : list, optional
+        Starting offsets in recv_buf for each rank's data, used when chunks have
+        variable sizes
+    recvcounts: :obj:`list`
+        A list of element counts from all ranks, where each entry corresponds to one rank.
+    """
+    ncp = get_module(engine)
+    recvcounts = [int(np.prod(shape)) for shape in send_buf_shapes]
+    recv_buf = ncp.zeros(sum(recvcounts), dtype=send_buf.dtype)
+    if len(set(send_buf_shapes)) == 1:
+        displs = None
+    else:
+        displs = [0]
+        for i in range(1, len(recvcounts)):
+            displs.append(displs[i - 1] + recvcounts[i - 1])
+    return ncp.ascontiguousarray(send_buf), recv_buf, displs, recvcounts

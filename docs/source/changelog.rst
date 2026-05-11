@@ -3,6 +3,50 @@
 Changelog
 =========
 
+Version 0.6.0
+-------------
+
+*Released on: 29/04/2026*
+
+* Introduced :func:`pylops_mpi.optimization.eigs.power_iteration` to estimate the maximum eigenvalue.
+* Added :func:`pylops_mpi.optimization.sparsity.ista` and the corresponding :class:`pylops_mpi.optimization.cls_sparsity.ISTA` class, an iterative shrinkage-thresholding algorithm.
+* Added :func:`pylops_mpi.optimization.sparsity.fista` and the corresponding :class:`pylops_mpi.optimization.cls_sparsity.FISTA` class, a fast variant of ISTA.
+* Included tutorial: "Reflectivity Inversion - 3D", with separate implementations for base, CuPy, and NCCL.
+* Added `empty_like` function to :class:`pylops_mpi.DistributedArray` and :class:`pylops_mpi.StackedDistributedArray`.
+* Introduced a `vdot` parameter in the `dot` method of :class:`pylops_mpi.DistributedArray` and :class:`pylops_mpi.StackedDistributedArray` to support vector dot products.
+
+Version 0.5.0
+-------------
+
+*Released on: 28/03/2026*
+
+* Performed fixes to support `numpy>=2.4`.
+* Added `redistribute` function to :class:`pylops_mpi.DistributedArray`.
+* Introduced MPI_Allgatherv in :func:`pylops_mpi.utils._mpi.mpi_allgather` for variable sized arrays.
+* Modified :func:`pylops_mpi.DistributedArray.norm` to correctly handle cases where distributed axis
+  differs from norm axis.
+
+
+Version 0.4.0
+-------------
+
+*Released on: 08/03/2026*
+
+* Added :class:`pylops_mpi.Distributed.DistributedMixIn` class with
+  communicator-agnostic calls to communication methods.
+* Added :mod:`pylops_mpi.utils._mpi` with implementations of MPI
+  communication methods.
+* Added `kind="summa"` implementation in 
+  :class:`pylops_mpi.basicoperators.MPIMatrixMult` operator.
+* Added `kind` paramter to all operators in :class:`pylops_mpi.basicoperators.MPILaplacian`
+* Added `cp.cuda.Device().synchronize()` before any MPI call when using
+  Cuda-Aware MPI.
+* Modified :func:`pylops_mpi.utils._nccl.initialize_nccl_comm` to 
+  handle nodes with more GPUs than ranks
+* Fixed bug in :func:`pylops_mpi.DistributedArray.__neg__` by
+  explicitely passing `base_comm_nccl` during internal creation 
+  of distributed array 
+
 
 Version 0.3.0
 -------------

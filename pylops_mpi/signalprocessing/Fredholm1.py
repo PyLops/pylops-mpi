@@ -132,7 +132,7 @@ class MPIFredholm1(MPILinearOperator):
                                        engine=y.engine)).ravel()
         return y
 
-    def _rmatvec(self, x: NDArray) -> NDArray:
+    def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
         if x.partition not in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
             raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
