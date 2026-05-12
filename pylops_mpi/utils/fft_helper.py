@@ -3,9 +3,7 @@ all = [
     "ifftshift_nd"
 ]
 
-import numpy as np
-
-from pylops.utils import InputDimsLike
+from pylops.utils import InputDimsLike, get_module
 
 from pylops_mpi import DistributedArray
 
@@ -39,21 +37,22 @@ def fftshift_nd(x: DistributedArray, axes: InputDimsLike = None):
         raise ValueError(
             f"fftshift_nd requires a 2D or higher array, but got ndim={x.ndim}. "
         )
+    ncp = get_module(x.engine)
     if axes is None:
         axes = tuple(range(x.ndim))
-    elif np.isscalar(axes):
+    elif ncp.isscalar(axes):
         axes = (axes,)
     local_axes = [ax for ax in axes if ax != x.axis]
     remote_axes = [ax for ax in axes if ax == x.axis]
     if local_axes:
         shifts = [x.global_shape[ax] // 2 for ax in local_axes]
-        x[:] = np.roll(x.local_array, shift=shifts, axis=local_axes)
+        x[:] = ncp.roll(x.local_array, shift=shifts, axis=local_axes)
     if remote_axes:
         new_axis = 1 if x.axis == 0 else 0
         # Redistribute to a new axis for computation
         x = x.redistribute(axis=new_axis)
         shifts = [x.global_shape[ax] // 2 for ax in remote_axes]
-        x[:] = np.roll(x.local_array, shift=shifts, axis=remote_axes)
+        x[:] = ncp.roll(x.local_array, shift=shifts, axis=remote_axes)
     return x
 
 
@@ -87,19 +86,20 @@ def ifftshift_nd(x: DistributedArray, axes: InputDimsLike = None):
         raise ValueError(
             f"ifftshift_nd requires a 2D or higher array, but got ndim={x.ndim}. "
         )
+    ncp = get_module(x.engine)
     if axes is None:
         axes = tuple(range(x.ndim))
-    elif np.isscalar(axes):
+    elif ncp.isscalar(axes):
         axes = (axes,)
     local_axes = [ax for ax in axes if ax != x.axis]
     dist_axes = [ax for ax in axes if ax == x.axis]
     if local_axes:
         shifts = [-(x.global_shape[ax] // 2) for ax in local_axes]
-        x[:] = np.roll(x.local_array, shift=shifts, axis=local_axes)
+        x[:] = ncp.roll(x.local_array, shift=shifts, axis=local_axes)
     if dist_axes:
         new_axis = 1 if x.axis == 0 else 0
         # Redistribute to a new axis for computation
         x = x.redistribute(axis=new_axis)
         shifts = [-(x.global_shape[ax] // 2) for ax in dist_axes]
-        x[:] = np.roll(x.local_array, shift=shifts, axis=dist_axes)
+        x[:] = ncp.roll(x.local_array, shift=shifts, axis=dist_axes)
     return x

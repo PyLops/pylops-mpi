@@ -7,14 +7,14 @@ import pytest
 
 if int(os.environ.get("TEST_CUPY_PYLOPS", 0)):
     import cupy as np
+    from cupy.testing import assert_array_almost_equal
     backend = "cupy"
 else:
     import numpy as np
-
+    from numpy.testing import assert_array_almost_equal
     backend = "numpy"
 
 from mpi4py import MPI
-from numpy.testing import assert_allclose
 
 from pylops.signalprocessing import FFT2D, FFTND
 
@@ -107,7 +107,7 @@ def test_FFT2d(par, ifftshift_before, fftshift_after):
     ff2d_mpi = MPIFFT2D(dims=par['dims'], axes=par['axes'], norm=par['norm'], real=par['real'],
                         ifftshift_before=ifftshift_before, fftshift_after=fftshift_after,
                         dtype=par['dtype'])
-    x = DistributedArray(global_shape=ff2d_mpi.shape[1], dtype=par['dtype'])
+    x = DistributedArray(global_shape=ff2d_mpi.shape[1], dtype=par['dtype'], engine=backend)
     x[:] = np.random.randn(*(x.local_shape)) + par['imag'] * np.random.randn(*(x.local_shape))
     x_global = x.asarray()
     # Forward
@@ -123,8 +123,8 @@ def test_FFT2d(par, ifftshift_before, fftshift_after):
         assert ff2d_mpi.shape == fft2d.shape
         y_np = fft2d @ x_global
         y_adj_np = fft2d.H @ y_np
-        assert_allclose(y, y_np, rtol=1e-5, atol=1e-8)
-        assert_allclose(y_adj, y_adj_np, rtol=1e-5, atol=1e-8)
+        assert_array_almost_equal(y, y_np, decimal=7)
+        assert_array_almost_equal(y_adj, y_adj_np, decimal=7)
 
 
 @pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6), (par7), (par8)])
@@ -145,7 +145,7 @@ def test_FFTND(par, ifftshift_before, fftshift_after):
     ffnd_mpi = MPIFFTND(dims=par['dims'], axes=par['axes'], norm=par['norm'], real=par['real'],
                         ifftshift_before=ifftshift_before, fftshift_after=fftshift_after,
                         dtype=par['dtype'])
-    x = DistributedArray(global_shape=ffnd_mpi.shape[1], dtype=par['dtype'])
+    x = DistributedArray(global_shape=ffnd_mpi.shape[1], dtype=par['dtype'], engine=backend)
     x[:] = np.random.randn(*(x.local_shape)) + par['imag'] * np.random.randn(*(x.local_shape))
     x_global = x.asarray()
     # Forward
@@ -165,6 +165,6 @@ def test_FFTND(par, ifftshift_before, fftshift_after):
         y_np = fftnd @ x_global
         y_adj_np = fftnd.H @ y_np
         y_div_np = fftnd / y_np
-        assert_allclose(y, y_np, rtol=1e-5, atol=1e-8)
-        assert_allclose(y_adj, y_adj_np, rtol=1e-5, atol=1e-8)
-        assert_allclose(y_div, y_div_np, rtol=1e-5, atol=1e-8)
+        assert_array_almost_equal(y, y_np, decimal=7)
+        assert_array_almost_equal(y_adj, y_adj_np, decimal=7)
+        assert_array_almost_equal(y_div, y_div_np, decimal=7)
