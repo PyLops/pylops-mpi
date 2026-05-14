@@ -42,3 +42,7 @@ exclude = ["pytests"]
 
 [tool.setuptools_scm]
 version_file = "pylops_mpi/version.py"
+
+[project.optional-dependencies]
+fft = ["mpi4py-fft"]
+all = ["mpi4py-fft"]

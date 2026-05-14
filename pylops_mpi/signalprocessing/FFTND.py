@@ -75,8 +75,6 @@ class MPIFFTND(_MPIBaseFFTND):
         different from ``complex128``.
     base_comm : :obj:`mpi4py.MPI.Comm`, optional
         MPI Base Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.
-    **kwargs_fft
-        Arbitrary keyword arguments to be passed to the selected fft method
 
     Attributes
     ----------
@@ -152,8 +150,7 @@ class MPIFFTND(_MPIBaseFFTND):
         ifftshift_before: bool = False,
         fftshift_after: bool = False,
         dtype: DTypeLike = "complex128",
-        base_comm: MPI.Comm = MPI.COMM_WORLD,
-        **kwargs_fft,
+        base_comm: MPI.Comm = MPI.COMM_WORLD
     ) -> None:
         super().__init__(
             dims=dims,
@@ -172,17 +169,16 @@ class MPIFFTND(_MPIBaseFFTND):
                 "To respect the passed dtype, data will be cast to {self.cdtype}.",
                 stacklevel=2,
             )
-
-        self._kwargs_fft = kwargs_fft
         if self.norm is _FFTNorms.NONE:
             self._scale = np.prod(self.nffts)
         elif self.norm is _FFTNorms.ONE_OVER_N:
             self._scale = 1.0 / np.prod(self.nffts)
         fft_dtype = self.rdtype if self.real else self.cdtype
         # Distribute only along axes[0]; all other axes are non-distributed (0=distributed, 1=not)
-        subcomm_dims = (np.arange(len(axes)) != axes[0]).astype(int)
-        subcomm = Subcomm(self.base_comm, dims=np.resize(subcomm_dims, len(dims)))
-        self.fft = PFFT(subcomm, self.dims, axes=self.axes, dtype=fft_dtype, collapse=True, **self._kwargs_fft)
+        subcomm_dims = np.ones(len(dims), dtype=int)
+        subcomm_dims[axes[0]] = 0
+        subcomm = Subcomm(base_comm, subcomm_dims)
+        self.fft = PFFT(subcomm, self.dims, axes=self.axes, dtype=fft_dtype, collapse=True)
 
     @reshaped
     def _matvec(self, x: DistributedArray) -> DistributedArray:
@@ -192,35 +188,39 @@ class MPIFFTND(_MPIBaseFFTND):
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER}"
                              f"Got  {x.partition} instead...")
-        ncp = get_array_module(x.local_array)
         if self.ifftshift_before.any():
             x = ifftshift_nd(x, axes=self.axes[self.ifftshift_before])
         if not self.clinear:
-            x[:] = ncp.real(x.local_array)
-        # Allocate distributed arrays for input and output
-        u_dist = newDistArray(self.fft, forward_output=False)
-        u_hat = newDistArray(self.fft, forward_output=True)
+            x[:] = np.real(x.local_array)
+        x_dist_pfft = newDistArray(self.fft, forward_output=False)
+        y_dist_pfft = newDistArray(self.fft, forward_output=True)
         # Redistribute input to match the axis decomposed by PFFT
         x = x.redistribute(axis=self.axes[0])
-        u_dist[:] = x.local_array
+        x_dist_pfft[:] = x.local_array
         # Perform the parallel forward FFT
-        self.fft.forward(u_dist, u_hat, normalize=False)
+        self.fft.forward(x_dist_pfft, y_dist_pfft, normalize=False)
 
         # Axis along which PFFT decomposes the output array across MPI processes
-        dist_axis = [i for i, s in enumerate(u_hat.subcomm) if s.Get_size() > 1]
+        dist_axis = [i for i, s in enumerate(y_dist_pfft.subcomm) if s.Get_size() > 1]
         y = DistributedArray(global_shape=self.dimsd, dtype=self.dtype, axis=dist_axis[0] if dist_axis else 0,
                              base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl, engine=x.engine)
-        y[:] = u_hat
+        y[:] = y_dist_pfft
         if self.real:
-            # Redistribute so that self.axes[-1] is not the one sliced
-            safe_axis = next(i for i in range(len(self.dims)) if i != self.axes[-1])
-            y = y.redistribute(axis=safe_axis)
-            y_local = y.local_array
-            # Apply scaling to obtain a correct adjoint for this operator
-            y_local = ncp.swapaxes(y_local, -1, self.axes[-1])
-            y_local[..., 1: 1 + (self.nffts[-1] - 1) // 2] *= ncp.sqrt(2)
-            y_local = ncp.swapaxes(y_local, self.axes[-1], -1)
-            y[:] = y_local
+            if y.axis == self.axes[-1]:
+                sizes = [loc_shape[self.axes[-1]] for loc_shape in y.local_shapes]
+                start = sum(sizes[:self.base_comm.rank])
+                stop = start + sizes[self.base_comm.rank]
+                # Local overlap with the global frequency slice [1:k]
+                g0, g1 = max(1, start), min(1 + (self.nffts[-1] - 1) // 2, stop)
+                if g1 > g0:
+                    sl = [slice(None)] * y.ndim
+                    sl[self.axes[-1]] = slice(g0 - start, g1 - start)
+                    y[tuple(sl)] *= np.sqrt(2)
+            else:
+                # Axis is local on this rank, so direct slicing
+                sl = [slice(None)] * y.ndim
+                sl[self.axes[-1]] = slice(1, 1 + (self.nffts[-1] - 1) // 2)
+                y[tuple(sl)] *= np.sqrt(2)
         if self.norm is _FFTNorms.ONE_OVER_N:
             y[:] *= self._scale
         y[:] = y.local_array.astype(self.cdtype)
@@ -236,42 +236,48 @@ class MPIFFTND(_MPIBaseFFTND):
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER}, "
                              f"Got  {x.partition} instead...")
-        ncp = get_array_module(x.local_array)
+        np = get_array_module(x.local_array)
         if self.fftshift_after.any():
             x = ifftshift_nd(x, axes=self.axes[self.fftshift_after])
         if self.real:
-            # Redistribute so that self.axes[-1] is not the one sliced
-            safe_axis = next(i for i in range(len(self.dims)) if i != self.axes[-1])
-            x = x.redistribute(axis=safe_axis)
-            # Apply scaling to obtain a correct adjoint for this operator
-            x_local = x.local_array
-            x_local = ncp.swapaxes(x_local, -1, self.axes[-1])
-            x_local[..., 1: 1 + (self.nffts[-1] - 1) // 2] /= ncp.sqrt(2)
-            x_local = ncp.swapaxes(x_local, self.axes[-1], -1)
-            x[:] = x_local
+            if x.axis == self.axes[-1]:
+                sizes = [loc_shape[self.axes[-1]] for loc_shape in x.local_shapes]
+                start = sum(sizes[:self.base_comm.rank])
+                stop = start + sizes[self.base_comm.rank]
+                # Local overlap with the global frequency slice [1:k]
+                g0, g1 = max(1, start), min(1 + (self.nffts[-1] - 1) // 2, stop)
+                if g1 > g0:
+                    sl = [slice(None)] * x.ndim
+                    sl[self.axes[-1]] = slice(g0 - start, g1 - start)
+                    x[tuple(sl)] /= np.sqrt(2)
+            else:
+                # Axis is local on this rank, so direct slicing
+                sl = [slice(None)] * x.ndim
+                sl[self.axes[-1]] = slice(1, 1 + (self.nffts[-1] - 1) // 2)
+                x[tuple(sl)] /= np.sqrt(2)
         # Allocate distributed arrays for input and output
-        u_dist = newDistArray(self.fft, forward_output=False)
-        u_hat = newDistArray(self.fft, forward_output=True)
+        y_dist_pfft = newDistArray(self.fft, forward_output=False)
+        x_dist_pfft = newDistArray(self.fft, forward_output=True)
         # Redistribute input to match the axis decomposed by PFFT
-        x_axis = [i for i, s in enumerate(u_hat.subcomm) if s.Get_size() > 1]
+        x_axis = [i for i, s in enumerate(x_dist_pfft.subcomm) if s.Get_size() > 1]
         x = x.redistribute(axis=x_axis[0] if x_axis else 0)
-        u_hat[:] = x.local_array
+        x_dist_pfft[:] = x.local_array
         # Perform the parallel backward FFT
-        self.fft.backward(u_hat, u_dist, normalize=True)
+        self.fft.backward(x_dist_pfft, y_dist_pfft, normalize=True)
 
         # Axis along which PFFT decomposes the output array across MPI processes
-        dist_axis = [i for i, s in enumerate(u_dist.subcomm) if s.Get_size() > 1]
+        dist_axis = [i for i, s in enumerate(y_dist_pfft.subcomm) if s.Get_size() > 1]
         y = DistributedArray(global_shape=self.dims, dtype=self.dtype, axis=dist_axis[0] if dist_axis else 0,
                              base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl, engine=x.engine)
-        y[:] = u_dist
+        y[:] = y_dist_pfft
         if self.norm is _FFTNorms.NONE:
             y[:] *= self._scale
         if self.nffts[0] > self.dims[self.axes[0]]:
-            y[:] = ncp.take(y.local_array, ncp.arange(self.dims[self.axes[0]]), axis=self.axes[0])
+            y[:] = np.take(y.local_array, np.arange(self.dims[self.axes[0]]), axis=self.axes[0])
         if self.nffts[1] > self.dims[self.axes[1]]:
-            y[:] = ncp.take(y.local_array, ncp.arange(self.dims[self.axes[1]]), axis=self.axes[1])
+            y[:] = np.take(y.local_array, np.arange(self.dims[self.axes[1]]), axis=self.axes[1])
         if not self.clinear:
-            y[:] = ncp.real(y.local_array)
+            y[:] = np.real(y.local_array)
         y[:] = y.local_array.astype(self.rdtype)
         if self.ifftshift_before.any():
             y = fftshift_nd(y, axes=self.axes[self.ifftshift_before])

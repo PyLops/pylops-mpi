@@ -134,8 +134,7 @@ class MPIFFT2D(MPIFFTND):
         ifftshift_before: bool = False,
         fftshift_after: bool = False,
         dtype: DTypeLike = "complex128",
-        base_comm: MPI.Comm = MPI.COMM_WORLD,
-        **kwargs_fft,
+        base_comm: MPI.Comm = MPI.COMM_WORLD
     ) -> None:
         # checks
         if len(dims) < 2:
@@ -145,8 +144,7 @@ class MPIFFT2D(MPIFFTND):
             msg = "FFT2D must be applied along exactly two dimensions"
             raise ValueError(msg)
         super().__init__(dims=dims, axes=axes, sampling=sampling, norm=norm, real=real, dtype=dtype,
-                         ifftshift_before=ifftshift_before, fftshift_after=fftshift_after, base_comm=base_comm,
-                         **kwargs_fft)
+                         ifftshift_before=ifftshift_before, fftshift_after=fftshift_after, base_comm=base_comm)
         self.f1, self.f2 = self.fs
         del self.fs
 
