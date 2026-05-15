@@ -174,11 +174,20 @@ class MPIFFTND(_MPIBaseFFTND):
         elif self.norm is _FFTNorms.ONE_OVER_N:
             self._scale = 1.0 / np.prod(self.nffts)
         fft_dtype = self.rdtype if self.real else self.cdtype
-        # Distribute only along axes[0]; all other axes are non-distributed (0=distributed, 1=not)
         subcomm_dims = np.ones(len(dims), dtype=int)
-        subcomm_dims[axes[0]] = 0
+        # axis=0 for the initial distribution by default, if the final axis is 0, distribute along axis 1 instead.
+        if axes[-1] == 0:
+            subcomm_dims[1] = 0
+        else:
+            subcomm_dims[0] = 0
         subcomm = Subcomm(base_comm, subcomm_dims)
-        self.fft = PFFT(subcomm, self.dims, axes=self.axes, dtype=fft_dtype, collapse=True)
+        self.fft = PFFT(subcomm, self.dims, axes=self.axes, dtype=fft_dtype)
+        self._pfft_in_axis = next(
+            i for i, s in enumerate(self.fft.pencil[False].subcomm) if s.Get_size() > 1
+        )
+        self._pfft_out_axis = next(
+            i for i, s in enumerate(self.fft.pencil[True].subcomm) if s.Get_size() > 1
+        )
 
     @reshaped
     def _matvec(self, x: DistributedArray) -> DistributedArray:
@@ -194,33 +203,17 @@ class MPIFFTND(_MPIBaseFFTND):
             x[:] = np.real(x.local_array)
         x_dist_pfft = newDistArray(self.fft, forward_output=False)
         y_dist_pfft = newDistArray(self.fft, forward_output=True)
-        # Redistribute input to match the axis decomposed by PFFT
-        x = x.redistribute(axis=self.axes[0])
+        # Redistribute input to match the input PFFT axis
+        x = x.redistribute(axis=self._pfft_in_axis)
         x_dist_pfft[:] = x.local_array
         # Perform the parallel forward FFT
         self.fft.forward(x_dist_pfft, y_dist_pfft, normalize=False)
 
-        # Axis along which PFFT decomposes the output array across MPI processes
-        dist_axis = [i for i, s in enumerate(y_dist_pfft.subcomm) if s.Get_size() > 1]
-        y = DistributedArray(global_shape=self.dimsd, dtype=self.dtype, axis=dist_axis[0] if dist_axis else 0,
+        y = DistributedArray(global_shape=self.dimsd, dtype=self.dtype, axis=self._pfft_out_axis,
                              base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl, engine=x.engine)
         y[:] = y_dist_pfft
         if self.real:
-            if y.axis == self.axes[-1]:
-                sizes = [loc_shape[self.axes[-1]] for loc_shape in y.local_shapes]
-                start = sum(sizes[:self.base_comm.rank])
-                stop = start + sizes[self.base_comm.rank]
-                # Local overlap with the global frequency slice [1:k]
-                g0, g1 = max(1, start), min(1 + (self.nffts[-1] - 1) // 2, stop)
-                if g1 > g0:
-                    sl = [slice(None)] * y.ndim
-                    sl[self.axes[-1]] = slice(g0 - start, g1 - start)
-                    y[tuple(sl)] *= np.sqrt(2)
-            else:
-                # Axis is local on this rank, so direct slicing
-                sl = [slice(None)] * y.ndim
-                sl[self.axes[-1]] = slice(1, 1 + (self.nffts[-1] - 1) // 2)
-                y[tuple(sl)] *= np.sqrt(2)
+            self._scale_real_fft(y, inverse=False)
         if self.norm is _FFTNorms.ONE_OVER_N:
             y[:] *= self._scale
         y[:] = y.local_array.astype(self.cdtype)
@@ -240,34 +233,17 @@ class MPIFFTND(_MPIBaseFFTND):
         if self.fftshift_after.any():
             x = ifftshift_nd(x, axes=self.axes[self.fftshift_after])
         if self.real:
-            if x.axis == self.axes[-1]:
-                sizes = [loc_shape[self.axes[-1]] for loc_shape in x.local_shapes]
-                start = sum(sizes[:self.base_comm.rank])
-                stop = start + sizes[self.base_comm.rank]
-                # Local overlap with the global frequency slice [1:k]
-                g0, g1 = max(1, start), min(1 + (self.nffts[-1] - 1) // 2, stop)
-                if g1 > g0:
-                    sl = [slice(None)] * x.ndim
-                    sl[self.axes[-1]] = slice(g0 - start, g1 - start)
-                    x[tuple(sl)] /= np.sqrt(2)
-            else:
-                # Axis is local on this rank, so direct slicing
-                sl = [slice(None)] * x.ndim
-                sl[self.axes[-1]] = slice(1, 1 + (self.nffts[-1] - 1) // 2)
-                x[tuple(sl)] /= np.sqrt(2)
+            self._scale_real_fft(x, inverse=True)
         # Allocate distributed arrays for input and output
         y_dist_pfft = newDistArray(self.fft, forward_output=False)
         x_dist_pfft = newDistArray(self.fft, forward_output=True)
-        # Redistribute input to match the axis decomposed by PFFT
-        x_axis = [i for i, s in enumerate(x_dist_pfft.subcomm) if s.Get_size() > 1]
-        x = x.redistribute(axis=x_axis[0] if x_axis else 0)
+        # Redistribute input to match the PFFT axis
+        x = x.redistribute(axis=self._pfft_out_axis)
         x_dist_pfft[:] = x.local_array
         # Perform the parallel backward FFT
         self.fft.backward(x_dist_pfft, y_dist_pfft, normalize=True)
 
-        # Axis along which PFFT decomposes the output array across MPI processes
-        dist_axis = [i for i, s in enumerate(y_dist_pfft.subcomm) if s.Get_size() > 1]
-        y = DistributedArray(global_shape=self.dims, dtype=self.dtype, axis=dist_axis[0] if dist_axis else 0,
+        y = DistributedArray(global_shape=self.dims, dtype=self.dtype, axis=self._pfft_in_axis,
                              base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl, engine=x.engine)
         y[:] = y_dist_pfft
         if self.norm is _FFTNorms.NONE:
@@ -282,6 +258,39 @@ class MPIFFTND(_MPIBaseFFTND):
         if self.ifftshift_before.any():
             y = fftshift_nd(y, axes=self.axes[self.ifftshift_before])
         return y
+
+    def _scale_real_fft(self, x: DistributedArray, inverse: bool = False) -> None:
+        """Apply scaling for real-valued FFTs.
+
+        Scales the non-DC positive frequency components along the final FFT axis
+        by ``sqrt(2)`` in forward mode and ``1/sqrt(2)`` in inverse mode.
+
+        When the final FFT axis is distributed across MPI ranks, only the local
+        portion overlapping with the global positive-frequency range is scaled.
+
+        Parameters
+        ----------
+        x : DistributedArray
+            Distributed FFT array to scale in-place.
+        inverse : bool, optional
+            Apply inverse scaling when ``True``. Default is ``False``.
+        """
+        scale = 1 / np.sqrt(2) if inverse else np.sqrt(2)
+        if x.axis == self.axes[-1]:
+            sizes = [loc_shape[self.axes[-1]] for loc_shape in x.local_shapes]
+            local_start = sum(sizes[:self.base_comm.rank])
+            local_stop = local_start + sizes[self.base_comm.rank]
+            freq_start, freq_stop = max(1, local_start), min(1 + (self.nffts[-1] - 1) // 2, local_stop)
+            # Local overlap with the global frequency slice [1:k]
+            if freq_stop > freq_start:
+                local_slice = [slice(None)] * x.ndim
+                local_slice[self.axes[-1]] = slice(freq_start - local_start, freq_stop - local_start)
+                x[tuple(local_slice)] *= scale
+        else:
+            # Axis is local on this rank, so direct slicing
+            freq_slice = [slice(None)] * x.ndim
+            freq_slice[self.axes[-1]] = slice(1, 1 + (self.nffts[-1] - 1) // 2)
+            x[tuple(freq_slice)] *= scale
 
     def __truediv__(self, y: DistributedArray) -> DistributedArray:
         y_div = self._rmatvec(y)
