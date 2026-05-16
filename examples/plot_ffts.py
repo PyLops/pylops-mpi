@@ -34,7 +34,6 @@ FFTop = pylops_mpi.signalprocessing.MPIFFT2D(
 
 D = FFTop * dist
 
-dinv = FFTop.H * D
 dinv = FFTop / D
 dinv = np.real(dinv.asarray()).reshape(nt, nx)
 
@@ -83,7 +82,6 @@ FFTop = pylops_mpi.signalprocessing.MPIFFTND(
 )
 
 D = FFTop * dist
-dinv = FFTop.H * D
 dinv = FFTop / D
 dinv = np.real(dinv.asarray()).reshape(nt, nx, ny)
 D_3d = D.asarray().reshape(nt, nx, ny)  # shape matches dims now

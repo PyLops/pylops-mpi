@@ -85,7 +85,7 @@ class MPIFFT2D(MPIFFTND):
     clinear : :obj:`bool`
         Operator is complex-linear. Is false when either ``real=True`` or when
         ``dtype`` is not a complex type.
-    fft : :obj:`mpi4py_fft.PFFT`
+    fft : :obj:`mpi4py_fft.mpifft.PFFT`
         Parallel FFT operator object handling the distributed transform across
         MPI processes. Configured with the base communicator, dimension
         decomposition, transform axes, and dtype.
@@ -122,6 +122,25 @@ class MPIFFT2D(MPIFFTND):
     algorithm known as Fast Fourier Transform. Note that when using ``norm="none"``,
     the adjoint is **not** the inverse of the forward mode; instead, the inverse
     requires an explicit :math:`1/N_F` scaling factor (applied in the adjoint/inverse).
+
+    **MPI Parallelization**
+
+    The distributed 2-D FFT relies on ``mpi4py_fft``'s
+    :class:`mpi4py_fft.mpifft.PFFT` (Parallel FFT) class. The global 2-D array is
+    decomposed across MPI ranks using a *slab decomposition* managed by
+    :class:`mpi4py_fft.pencil.Subcomm`, which distributes along a single
+    axis. By default, the input domain is distributed along
+    ``axis=0``; if ``axes[-1] == 0``, distribution shifts to ``axis=1``
+    to avoid a conflict between the transform and decomposition axes.
+
+    In the forward pass, the input is redistributed to match the axis
+    along which :attr:`fft` (a :class:`mpi4py_fft.mpifft.PFFT` instance)
+    expects its input, and :meth:`PFFT.forward` is called with
+    ``normalize=False``. In the adjoint pass, :meth:`PFFT.backward` is
+    called with ``normalize=True``, meaning ``PFFT`` divides by
+    :math:`N_x N_y` internally. All inter-rank data movement is
+    handled internally by ``mpi4py_fft``.
+
 
     """
     def __init__(

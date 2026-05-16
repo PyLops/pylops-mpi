@@ -94,7 +94,7 @@ class MPIFFTND(_MPIBaseFFTND):
     clinear : :obj:`bool`
         Operator is complex-linear. Is false when either ``real=True`` or when
         ``dtype`` is not a complex type.
-    fft : :obj:`mpi4py_fft.PFFT`
+    fft : :obj:`mpi4py_fft.mpifft.PFFT`
         Parallel FFT operator object handling the distributed transform across
         MPI processes. Configured with the base communicator, dimension
         decomposition, transform axes, and dtype.
@@ -138,6 +138,24 @@ class MPIFFTND(_MPIBaseFFTND):
     algorithm known as Fast Fourier Transform. Note that when using ``norm="none"``,
     the adjoint is **not** the inverse of the forward mode; instead, the inverse
     requires an explicit :math:`1/N_F` scaling factor (applied in the adjoint/inverse).
+
+    **MPI Parallelization**
+
+    The distributed N-dimensional FFT relies on ``mpi4py_fft``'s
+    :class:`mpi4py_fft.mpifft.PFFT` (Parallel FFT) class. The global array is
+    decomposed across MPI ranks using a *pencil decomposition* managed by
+    :class:`mpi4py_fft.pencil.Subcomm`, which distributes along a single
+    axis at a time. By default, the input domain is distributed along
+    ``axis=0``; if ``axes[-1] == 0``, distribution shifts to ``axis=1``
+    to avoid a conflict between the transform and decomposition axes.
+
+    In the forward pass, the input is redistributed to match the axis
+    along which :attr:`fft` (a :class:`mpi4py_fft.mpifft.PFFT` instance)
+    expects its input, and :meth:`PFFT.forward` is called with
+    ``normalize=False``. In the adjoint pass, :meth:`PFFT.backward` is
+    called with ``normalize=True``, meaning ``PFFT`` divides by
+    :math:`N_F` internally. All inter-rank data movement (pencil transfer) is
+    handled internally by ``mpi4py_fft``.
 
     """
     def __init__(
@@ -183,10 +201,10 @@ class MPIFFTND(_MPIBaseFFTND):
         subcomm = Subcomm(base_comm, subcomm_dims)
         self.fft = PFFT(subcomm, self.dims, axes=self.axes, dtype=fft_dtype)
         self._pfft_in_axis = next(
-            i for i, s in enumerate(self.fft.pencil[False].subcomm) if s.Get_size() > 1
+            (i for i, s in enumerate(self.fft.pencil[False].subcomm) if s.Get_size() > 1), 0
         )
         self._pfft_out_axis = next(
-            i for i, s in enumerate(self.fft.pencil[True].subcomm) if s.Get_size() > 1
+            (i for i, s in enumerate(self.fft.pencil[True].subcomm) if s.Get_size() > 1), 0
         )
 
     @reshaped
