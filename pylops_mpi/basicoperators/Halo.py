@@ -67,7 +67,7 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
     Apply haloing to all dimensions of a flattened, 1-dimensional
     :class:`pylops_mpi.DistributedArray` after local reshaping to a
     N-dimensional array.
-    
+
     The Halo operator is applied over a Cartesian process grid, where each
     rank owns a local block of the global N-dimensional array.
 
