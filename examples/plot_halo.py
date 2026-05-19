@@ -193,10 +193,10 @@ assert np.allclose(
 
 
 ###############################################################################
-# Let's move to something a bit more complicated. we assume to have a 
+# Let's move to something a bit more complicated. We assume to have a
 # 2-dimensional array that is chunked over both axes. Note that since we
-# partition the array over both axes, the number of ranks must be a power of 
-# 2 of an integer number. First, we simply want to multiply each element by 
+# partition the array over both axes, the number of ranks must be a power of
+# 2 of an integer number. First, we simply want to multiply each element by
 # a scalar; whilst this does not really require an halo, we will see how we
 # can create local :py:class:`pylops.basicoperators.Diagonal` operators of the
 # correct size.

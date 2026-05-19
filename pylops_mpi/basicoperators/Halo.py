@@ -64,19 +64,21 @@ def halo_block_split(global_shape: tuple, comm, grid_shape: tuple = None) -> tup
 class MPIHalo(DistributedMixIn, MPILinearOperator):
     r"""MPI Halo
 
-    Apply haloing to a flattened :class:`pylops_mpi.DistributedArray`. The
-    Halo operator is applied over a Cartesian process grid, where each rank
-    owns one local block of the global N-dimensional array.
+    Apply haloing to all dimensions of flattened
+    :class:`pylops_mpi.DistributedArray` after local reshaping.
+    The Halo operator is applied over a Cartesian process grid, where each
+    rank owns a local block of the global N-dimensional array.
 
     Parameters
     ----------
     dims : :obj:`tuple`
         Number of samples for each dimension.
     halo : :obj:`int` or :obj:`tuple`
-        Number of halo samples to add around local blocks. A scalar value
+        Number of halo samples to add around each local block. A scalar value
         applies the same halo to both sides of every axis. A tuple of length
         ``ndim`` applies a symmetric halo per axis. A tuple of length
-        ``2 * ndim`` specifies the halo before and after each axis.
+        ``2 * ndim`` specifies the halo to apply at the start and at the end
+        for each axis.
     proc_grid_shape : :obj:`tuple`
         Number of MPI ranks along each dimension.
     comm : :obj:`mpi4py.MPI.Comm`, optional
@@ -92,31 +94,38 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
     Notes
     -----
     The MPIHalo operator extends each rank's local array with a **halo** (ghost cells)
-    of width ``h`` along the haloed axes, providing the neighboring rank's data for
+    of width ``halo`` along the haloed axes, providing the neighboring rank's data for
     stencil-like operators. Ranks are arranged in an N-dimensional Cartesian grid as
     provided by ``proc_grid_shape``, whereby each rank owns a contiguous block of the
-    global array.The ``halo`` is normalised to a tuple of length ``2 * ndim``, containing
+    global array. The ``halo`` is normalised to a tuple of length ``2 * ndim``, containing
     one ``(minus, plus)`` halo-width pair for each axis. The tuple is flattened in
     axis order as
 
     .. math::
         (h_{0,-}, h_{0,+}, h_{1,-}, h_{1,+}, \ldots)
 
-    where ``h_{i,-}`` and ``h_{i,+}`` represent the halo widths on the negative and
-    positive side of axis ``i``, respectively. For convenience, ``halo`` may be
-    provided as a scalar when the same symmetric halo is required along all axes, or
-    as a tuple of length ``2 * ndim`` when explicit control is needed for each axis
-    direction. Ghost cells on the global boundary of an axis are zero by default.
+    where :math:`h_{i,-}`` and :math:`h_{i,+}`` represent the halo widths on the
+    negative and positive side of the i-th axis, respectively. For convenience,
+    ``halo`` may be provided as a scalar when the same symmetric halo is
+    required along all axes, or as a tuple of length ``ndim`` when symmetric halos
+    of different width are applied to different axis. Ghost cells on the global
+    boundary of an axis are zero by default.
 
     In the forward mode, each rank exchanges boundary slices with its left and
     right neighbors along each axis via ``MPI_Sendrecv``. Ranks at a global
     boundary have ``MPI.PROC_NULL`` as their neighbor on that side, so those
     ghost regions remain zero and no exchange is attempted. Once the exchange
-    is complete, the operator can be applied independently on each rank's extended
-    block, typically via :class:`pylops_mpi.basicoperators.MPIBlockDiag`.
+    is complete, local PyLops operators can be applied independently
+    on each rank's extended block, typically wrapped into a
+    :class:`pylops_mpi.basicoperators.MPIBlockDiag` operator.
 
-    In the adjoint mode, we perform the reverse where we extract the original
-    local domain by removing the ghost cells and returning the local core.
+    In the adjoint mode, the reverse operation is performed the original
+    local domain is extracted by removing the ghost cells.
+
+    Finally, note that the Halo operator is not linear operator per se; instead,
+    it is meant to sandwitch any linear operator to implement equivalent
+    behaviours to the serial version of such an operator.
+
     """
 
     def __init__(

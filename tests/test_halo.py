@@ -1,23 +1,31 @@
+"""Test the the Halo class
+    Designed to run with n processes
+    $ mpiexec -n 10 pytest test_halo.py --with-mpi
+"""
 import os
 
 if int(os.environ.get("TEST_CUPY_PYLOPS", 0)):
     import cupy as np
     from cupy.testing import assert_allclose
+
     backend = "cupy"
 else:
     import numpy as np
     from numpy.testing import assert_allclose
+
     backend = "numpy"
 from mpi4py import MPI
 import pytest
-import pylops
 
+import pylops
 import pylops_mpi
 from pylops_mpi.basicoperators import MPIHalo
 from pylops_mpi.utils.dottest import dottest
 
 np.random.seed(42)
-rank = MPI.COMM_WORLD.Get_rank()
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+size = comm.Get_size()
 if backend == "cupy":
     device_id = rank % np.cuda.runtime.getDeviceCount()
     np.cuda.Device(device_id).use()
@@ -25,8 +33,6 @@ if backend == "cupy":
 
 @pytest.mark.mpi(min_size=2)
 def test_halo():
-    comm = MPI.COMM_WORLD
-    size = comm.Get_size()
     nlocal = 16
     n = nlocal * size
     halo = 1
