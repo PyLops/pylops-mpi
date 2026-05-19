@@ -64,8 +64,10 @@ def halo_block_split(global_shape: tuple, comm, grid_shape: tuple = None) -> tup
 class MPIHalo(DistributedMixIn, MPILinearOperator):
     r"""MPI Halo
 
-    Apply haloing to all dimensions of flattened
-    :class:`pylops_mpi.DistributedArray` after local reshaping.
+    Apply haloing to all dimensions of a flattened, 1-dimensional
+    :class:`pylops_mpi.DistributedArray` after local reshaping to a
+    N-dimensional array.
+    
     The Halo operator is applied over a Cartesian process grid, where each
     rank owns a local block of the global N-dimensional array.
 
