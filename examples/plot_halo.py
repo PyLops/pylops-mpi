@@ -622,9 +622,15 @@ xadj = COp.H @ y
 # Let's display the results
 
 if rank == 0:
-    fig, axs = plt.subplots(2, 2, figsize=(14, 12))
-    axs[0, 0].imshow(y_dist, cmap="gray", vmin=1, vmax=1)
-    axs[0, 1].imshow(y_dist - y, cmap="gray", vmin=.1, vmax=.1)
-    axs[1, 0].imshow(xadj_dist, cmap="gray", vmin=1, vmax=1)
-    axs[1, 1].imshow(xadj_dist - xadj, cmap="gray", vmin=.1, vmax=.1)
+    fig, axs = plt.subplots(2, 2, sharex=True, sharey=True, figsize=(10, 8))
+    axs[0, 0].imshow(y_dist, cmap="gray", vmin=-1, vmax=1)
+    axs[0, 0].set_title("Forward")
+    axs[0, 1].imshow(y_dist - y, cmap="gray", vmin=-.1, vmax=.1)
+    axs[0, 1].set_title("Forward (distr. - serial)")
+    axs[1, 0].imshow(xadj_dist, cmap="gray", vmin=-1, vmax=1)
+    axs[1, 0].set_title("Adjoint")
+    axs[1, 1].imshow(xadj_dist - xadj, cmap="gray", vmin=-.1, vmax=.1)
+    axs[1, 1].set_title("Adjoint (distr. - serial)")
+    for ax in axs.flatten():
+        ax.axis("tight")
     fig.tight_layout()
