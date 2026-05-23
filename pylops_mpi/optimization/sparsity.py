@@ -1,6 +1,6 @@
-from typing import Optional, Dict, Any, Callable
+from typing import Any, Callable, Dict, Optional, Tuple
 
-from pylops.utils.typing import Tuple, NDArray
+from pylops.utils.typing import NDArray
 from pylops.optimization.callback import CostNanInfCallback, CostToInitialCallback, CostToDataCallback
 
 from pylops_mpi.DistributedArray import DistributedArray

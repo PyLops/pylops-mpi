@@ -1,14 +1,14 @@
 import time
 import logging
 from math import sqrt
-from typing import Optional, Dict, Any, Callable, Union
+from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 import numpy as np
 
 from pylops.optimization.basesolver import Solver
 from pylops.optimization.cls_sparsity import _halfthreshold, _hardthreshold, _softthreshold
 from pylops.utils import get_array_module, get_module_name, get_real_dtype
-from pylops.utils.typing import NDArray, Tuple
+from pylops.utils.typing import NDArray
 
 from pylops_mpi.DistributedArray import DistributedArray, StackedDistributedArray
 from pylops_mpi.LinearOperator import MPILinearOperator
