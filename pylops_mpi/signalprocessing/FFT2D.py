@@ -101,47 +101,33 @@ class MPIFFT2D(MPIFFTND):
 
     Notes
     -----
-    The FFT2D operator (using ``norm="none"``) applies the two-dimensional forward
-    Fourier transform to a signal :math:`d(y, x)` in forward mode:
+    The MPIFFT2D operator performs forward and adjoint passes on a
+    :class:`pylops_mpi.DistributedArray`, which is internally reshaped to the 2-dimensional layout
+    defined by ``dims``. The 2-dimensional FFT is then applied across MPI ranks using ``mpi4py_fft``'s
+    :class:`mpi4py_fft.mpifft.PFFT` class, with the global array decomposed via a pencil decomposition.
+    :class:`mpi4py_fft.pencil.Subcomm` selects the axis of distribution: ``axis=0`` by default,
+    shifting to ``axis=1`` if ``axes[-1] == 0`` to avoid a conflict between the transform and
+    decomposition axes.
+
+    In the forward pass, :meth:`PFFT.forward` is called with ``normalize=False``, computing:
 
     .. math::
         D(k_y, k_x) = \mathscr{F} (d) = \iint\limits_{-\infty}^\infty d(y, x) e^{-j2\pi k_yy}
         e^{-j2\pi k_xx} \,\mathrm{d}y \,\mathrm{d}x
 
-    Similarly, the two-dimensional inverse Fourier transform is applied to
-    the Fourier spectrum :math:`D(k_y, k_x)` in adjoint mode:
+    When ``norm="1/n"``, the result is additionally scaled by :math:`1/N_F`.
+
+    In the adjoint pass, :meth:`PFFT.backward` is called with ``normalize=True``, so ``PFFT``
+    internally divides by :math:`N_F = N_1 \cdot N_2`, computing:
 
     .. math::
         d(y,x) = \mathscr{F}^{-1} (D) = \frac{1}{N_F} \iint\limits_{-\infty}^\infty D(k_y, k_x) e^{j2\pi k_yy}
         e^{j2\pi k_xx} \,\mathrm{d}k_y  \,\mathrm{d}k_x
 
-    where :math:`N_F` is the number of samples in the Fourier domain given by the
-    product of the elements of ``nffts``.
-
-    Both operators are effectively discretized and solved by a fast iterative
-    algorithm known as Fast Fourier Transform. Note that when using ``norm="none"``,
-    the adjoint is **not** the inverse of the forward mode; instead, the inverse
-    requires an explicit :math:`1/N_F` scaling factor (applied in the adjoint/inverse).
-
-    **MPI Parallelization**
-
-    The distributed 2-D FFT relies on ``mpi4py_fft``'s
-    :class:`mpi4py_fft.mpifft.PFFT` (Parallel FFT) class. The global 2-D array is
-    decomposed across MPI ranks using a *slab decomposition* managed by
-    :class:`mpi4py_fft.pencil.Subcomm`, which distributes along a single
-    axis. By default, the input domain is distributed along
-    ``axis=0``; if ``axes[-1] == 0``, distribution shifts to ``axis=1``
-    to avoid a conflict between the transform and decomposition axes.
-
-    In the forward pass, the input is redistributed to match the axis
-    along which :attr:`fft` (a :class:`mpi4py_fft.mpifft.PFFT` instance)
-    expects its input, and :meth:`PFFT.forward` is called with
-    ``normalize=False``. In the adjoint pass, :meth:`PFFT.backward` is
-    called with ``normalize=True``, meaning ``PFFT`` divides by
-    :math:`N_x N_y` internally. All inter-rank data movement is
-    handled internally by ``mpi4py_fft``.
-
-
+    When ``norm="none"``, the adjoint multiplies by :math:`N_F` to cancel this internal scaling,
+    returning a true unscaled adjoint. The result is then flattened back to a 1D
+    :class:`pylops_mpi.DistributedArray`. All inter-rank data movement is handled internally by
+    ``mpi4py_fft``.
     """
     def __init__(
         self,
