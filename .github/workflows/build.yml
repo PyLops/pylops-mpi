@@ -36,12 +36,24 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Install fftw libraries
+        run: |
+          case $(uname) in
+            Linux)
+              sudo apt update
+              sudo apt install -y -q libfftw3-dev
+              ;;
+            Darwin)
+              export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
+              brew install fftw
+              ;;
+          esac
       - name: Installing Dependencies
         run: |
           python -m pip install --upgrade pip setuptools
           if [ -f requirements.txt ]; then pip install -r requirements-dev.txt; fi
       - name: Install pylops-mpi
-        run: pip install .
+        run: pip install .[all]
       - name: Testing using pytest-mpi
         run: |
           if [ "${{ matrix.mpi }}" = "openmpi" ]; then
