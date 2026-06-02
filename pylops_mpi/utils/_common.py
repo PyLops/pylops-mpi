@@ -17,30 +17,32 @@ def _float_scalar(value) -> float:
 
 # TODO: return type annotation for both cupy and numpy
 def _prepare_allgather_inputs(send_buf, send_buf_shapes, engine):
-    r""" Prepare send_buf and recv_buf for NCCL allgather (nccl_allgather)
+    r"""Prepare send_buf and recv_buf for buffered allgather
 
-    Buffered Allgather (MPI and NCCL) requires the sending buffer to have the same size for every device.
+    Buffered Allgather (MPI and NCCL) requires the sending buffer to have the
+    same size for every rank/device.
     Therefore, padding is required when the array is not evenly partitioned across
-    all the ranks. The padding is applied such that the each dimension of the sending buffers
+    all the ranks. The padding is applied such that each dimension of the sending buffers
     is equal to the max size of that dimension across all ranks.
 
-    Similarly, each receiver buffer (recv_buf) is created with size equal to :math:n_rank \cdot send_buf.size
+    Similarly, each receiver buffer (recv_buf) is created with size equal to
+    :math:`n_rank \cdot send_buf.size`
 
     Parameters
     ----------
-    send_buf : :obj: `numpy.ndarray` or `cupy.ndarray` or array-like
-        The data buffer from the local GPU to be sent for allgather.
-    send_buf_shapes: :obj:`list`
-        A list of shapes for each GPU send_buf (used to calculate padding size)
+    send_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray` or array-like
+        The data buffer from the local rank/device to be sent for allgather.
+    send_buf_shapes : :obj:`list`
+        A list of shapes for each rank/device send_buf (used to calculate padding size)
     engine : :obj:`str`
         Engine used to store array (``numpy`` or ``cupy``)
 
     Returns
     -------
-    send_buf: :obj:`cupy.ndarray`
+    send_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
         A buffer containing the data and padded elements to be sent by this rank.
-    recv_buf : :obj:`cupy.ndarray`
-        An empty, padded buffer to gather data from all GPUs.
+    recv_buf : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+        An empty, padded buffer to gather data from all ranks.
     """
     ncp = get_module(engine)
     sizes_each_dim = list(zip(*send_buf_shapes))
@@ -60,25 +62,35 @@ def _prepare_allgather_inputs(send_buf, send_buf_shapes, engine):
 
 
 def _unroll_allgather_recv(recv_buf, padded_send_buf_shape, send_buf_shapes, displs=None) -> list:
-    r"""Unrolll recv_buf after Buffered Allgather (MPI and NCCL)
+    r"""Unroll recv_buf after Buffered Allgather (MPI and NCCL)
 
-    Remove the padded elements in recv_buff, extract an individual array from each device and return them as a list of arrays
-    Each GPU may send array with a different shape, so the return type has to be a list of array
-    instead of the concatenated array.
+    Depending on the provided parameters, the function:
+    - uses ``displs`` and element counts to extract variable-sized chunks.
+    - removes padding and reshapes each chunk using ``padded_send_buf_shape``.
+
+    Each rank may send an array with a different shape, so the return type is a list of arrays
+    instead of a concatenated array.
 
     Parameters
     ----------
     recv_buf: :obj:`cupy.ndarray` or array-like
-        The data buffer returned from nccl_allgather call
-    padded_send_buf_shape: :obj:`tuple`:int
-        The size of send_buf after padding used in nccl_allgather
+        The data buffer returned from the allgather call
     send_buf_shapes: :obj:`list`
-        A list of original shapes for each GPU send_buf prior to padding
+        A list of original shapes of each rank's send_buf before any padding.
+    padded_send_buf_shape : tuple
+        Shape of each rank's data as stored in ``recv_buf``. This should match
+        the layout used during allgather: use the padded send buffer shape when
+        padding is applied (e.g., NCCL), or the original send buffer shape when
+        no padding is used.
+    displs : list, optional
+        Starting offsets in recv_buf for each rank's data, used when chunks have
+        variable sizes (e.g., mpi_allgather with displacements).
 
     Returns
     -------
-    chunks: :obj:`list`
-        A list of `cupy.ndarray` from each GPU with the padded element removed
+    chunks : list of ndarray
+        List of arrays (NumPy or CuPy, depending on ``engine``), one per rank,
+        reconstructed to their original shapes with any padding removed.
     """
     ndev = len(send_buf_shapes)
     if displs is not None:

@@ -1,4 +1,5 @@
 import math
+from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
 from mpi4py import MPI
@@ -8,7 +9,11 @@ from pylops_mpi import DistributedArray, MPILinearOperator, Partition
 from pylops_mpi.Distributed import DistributedMixIn
 
 
-def halo_block_split(global_shape: tuple, comm, grid_shape: tuple = None) -> tuple:
+def halo_block_split(
+    global_shape: tuple,
+    comm: MPI.Comm,
+    grid_shape: Optional[tuple] = None,
+) -> tuple:
     r"""Split a global array over a Cartesian process grid.
 
     Compute the local slice owned by the calling rank when ``global_shape`` is
@@ -133,11 +138,11 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
     def __init__(
         self,
         dims: tuple,
-        halo,
-        proc_grid_shape: tuple = None,
+        halo: Union[int, tuple],
+        proc_grid_shape: Optional[tuple] = None,
         comm: MPI.Comm = MPI.COMM_WORLD,
-        dtype=np.float64,
-    ):
+        dtype: Any = np.float64,
+    ) -> None:
         self.global_dims = tuple(dims)
         self.ndim = len(dims)
 
@@ -163,7 +168,12 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
         )
         super().__init__(shape=self.shape, dtype=np.dtype(dtype), base_comm=comm)
 
-    def _parse_halo(self, h):
+    def _parse_halo(self, h: Union[int, tuple]) -> tuple:
+        """Normalize halo input to a 2 * ndim tuple of per-side widths for each axis of the N-dimensional array.
+
+        Accepts a scalar, a tuple of length-1, one value per axis (the same value is assigned to both sides),
+        or explicit minus/plus pairs for each axis.
+        """
         if isinstance(h, (int, np.int64, np.int32)):
             halo = (h,) * (2 * self.ndim)
             trimmed = list(halo)
@@ -185,7 +195,8 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
             raise ValueError(f"Invalid halo length {len(h)} for ndim={self.ndim}")
         return halo
 
-    def _build_topo(self):
+    def _build_topo(self) -> Tuple[MPI.Comm, Dict[Tuple[str, int], int]]:
+        """Create the Cartesian communicator and map neighboring ranks on the distribution axis."""
         cart_comm = self.comm.Create_cart(
             self.proc_grid_shape,
             periods=[False] * self.ndim,
@@ -198,7 +209,8 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
             neigh[("+", ax)] = after
         return cart_comm, neigh
 
-    def _calc_local_dims(self):
+    def _calc_local_dims(self) -> tuple:
+        """Compute this rank's local block shape before halo padding."""
         rank = self.cart_comm.Get_rank()
         coords = self.cart_comm.Get_coords(rank)
         local = []
@@ -211,14 +223,16 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
             local.append(end - start)
         return tuple(local)
 
-    def _calc_local_extent(self):
+    def _calc_local_extent(self) -> tuple:
+        """Compute this rank's local block shape after halo padding."""
         ext = []
         for ax in range(self.ndim):
             minus_halo, plus_halo = self.halo[2 * ax], self.halo[2 * ax + 1]
             ext.append(self.local_dims[ax] + minus_halo + plus_halo)
         return tuple(ext)
 
-    def _exchange_along_axis(self, ncp, arr, axis, before, after, engine):
+    def _exchange_along_axis(self, ncp: Any, arr: Any, axis: int, before: int, after: int, engine: str) -> None:
+        """Exchange boundary/halo slices with neighboring ranks along one axis."""
         minus_nbr, plus_nbr = self.neigh[("-", axis)], self.neigh[("+", axis)]
         # slice definitions
         slicer = [slice(None)] * self.ndim
@@ -259,7 +273,7 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
             )
             arr[tuple(rcv_s)] = rcv
 
-    def _matvec(self, x):
+    def _matvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
         if x.partition != Partition.SCATTER:
             raise ValueError(
@@ -295,7 +309,7 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
         y[:] = halo_arr.ravel()
         return y
 
-    def _rmatvec(self, x):
+    def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         if x.partition != Partition.SCATTER:
             raise ValueError(
                 f"x should have partition={Partition.SCATTER} Got {x.partition} instead..."
