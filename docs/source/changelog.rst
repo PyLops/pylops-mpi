@@ -3,6 +3,13 @@
 Changelog
 =========
 
+Version 0.6.1
+-------------
+
+*Released on: 23/05/2026*
+
+* Fixed import error in :mod:`pylops_mpi.optimization.cls_sparsity` and :mod:`pylops_mpi.optimization.sparsity`.
+
 Version 0.6.0
 -------------
 

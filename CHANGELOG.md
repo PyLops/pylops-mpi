@@ -1,3 +1,6 @@
+# 0.6.1
+* Fixed import error in `pylops_mpi.optimization.cls_sparsity` and `pylops_mpi.optimization.sparsity`.
+
 # 0.6.0
 * Introduced `pylops_mpi.optimization.eigs.power_iteration` to estimate the maximum eigenvalue.
 * Added `pylops_mpi.optimization.sparsity.ista` and the corresponding `pylops_mpi.optimization.cls_sparsity.ISTA` class, implementing the iterative shrinkage-thresholding algorithm.
