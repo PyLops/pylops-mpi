@@ -70,9 +70,7 @@ class MPIStackedLinearOperator(ABC):
 
         M, N = self.shape
         if isinstance(x, StackedDistributedArray):
-            stacked_shape = (
-                np.sum(np.fromiter((a.global_shape[0] for a in x.distarrays), dtype=np.int64)),
-            )
+            stacked_shape = (np.sum([a.global_shape for a in x.distarrays]), )
             if stacked_shape != (N, ):
                 raise ValueError("dimension mismatch")
         if isinstance(x, DistributedArray) and x.global_shape != (N,):
@@ -105,9 +103,7 @@ class MPIStackedLinearOperator(ABC):
 
         M, N = self.shape
         if isinstance(x, StackedDistributedArray):
-            stacked_shape = (
-                np.sum(np.fromiter((a.global_shape[0] for a in x.distarrays), dtype=np.int64)),
-            )
+            stacked_shape = (np.sum([a.global_shape for a in x.distarrays]), )
             if stacked_shape != (M, ):
                 raise ValueError("dimension mismatch")
         if isinstance(x, DistributedArray) and x.global_shape != (M,):
