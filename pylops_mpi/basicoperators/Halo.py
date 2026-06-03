@@ -149,7 +149,13 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
         self.comm = comm
         self.dtype = dtype
 
+        if proc_grid_shape is None:
+            proc_grid_shape = (1,) * (self.ndim - 1) + (self.comm.Get_size(),)
         self.proc_grid_shape = tuple(proc_grid_shape)
+        if math.prod(self.proc_grid_shape) != self.comm.Get_size():
+            raise ValueError(
+                f"grid_shape {self.proc_grid_shape} does not match comm size {self.comm.Get_size()}"
+            )
 
         self.cart_comm, self.neigh = self._build_topo()
         self.halo = self._parse_halo(halo)
@@ -231,6 +237,48 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
             ext.append(self.local_dims[ax] + minus_halo + plus_halo)
         return tuple(ext)
 
+    def _validate_local_array_shape(
+        self, x: DistributedArray, expected_shape: tuple, name: str
+    ) -> None:
+        """Raise if a distributed input does not match this rank's expected local shape."""
+        local_shapes = self.cart_comm.allgather(
+            (x.local_array.size, int(np.prod(expected_shape)), expected_shape)
+        )
+        for rank, (actual_size, expected_size, shape) in enumerate(local_shapes):
+            if actual_size != expected_size:
+                raise ValueError(
+                    "MPIHalo input local shapes do not match the Cartesian block "
+                    f"decomposition: rank {rank}: {name} local array has size "
+                    f"{actual_size}, expected {expected_size} for local shape {shape}"
+                )
+
+    def _validate_exchange_widths(self) -> None:
+        """Raise if the requested halos cannot be exchanged with one-hop neighbors."""
+        rank_info = self.cart_comm.allgather((self.halo, self.local_dims, self.neigh))
+        for rank, (halo, local_dims, neigh) in enumerate(rank_info):
+            for ax in range(self.ndim):
+                local_dim = local_dims[ax]
+                sides = (
+                    ("minus", halo[2 * ax]    , neigh[("-", ax)], 2 * ax + 1, "plus"),
+                    ("plus" , halo[2 * ax + 1], neigh[("+", ax)], 2 * ax      , "minus"),
+                )
+                for side, halo_width, nbr, neighbor_idx, neighbor_side in sides:
+                    if nbr == MPI.PROC_NULL: continue
+                    if halo_width > local_dim:
+                        raise ValueError(
+                            f"MPIHalo halo widths are not supported by the current one-hop exchange:"
+                            f" rank {rank}, axis {ax}: {side} halo width "
+                            f"{halo_width} exceeds local block size {local_dim}"
+                        )
+                    neighbor_width = rank_info[nbr][0][neighbor_idx]
+                    if halo_width != neighbor_width:
+                        raise ValueError(
+                            f"MPIHalo halo widths are not supported by the current one-hop exchange:"
+                            f" rank {rank}, axis {ax}: {side} halo width "
+                            f"{halo_width} does not match neighbor {neighbor_side} "
+                            f"halo width {neighbor_width}"
+                        )
+
     def _exchange_along_axis(self, ncp: Any, arr: Any, axis: int, before: int, after: int, engine: str) -> None:
         """Exchange boundary/halo slices with neighboring ranks along one axis."""
         minus_nbr, plus_nbr = self.neigh[("-", axis)], self.neigh[("+", axis)]
@@ -280,6 +328,9 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
                 f"x should have partition={Partition.SCATTER} Got {x.partition} instead..."
             )
 
+        self._validate_local_array_shape(x, self.local_dims, "x")
+        self._validate_exchange_widths()
+
         y = DistributedArray(
             global_shape=self.shape[0],
             partition=Partition.SCATTER,
@@ -314,6 +365,8 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
             raise ValueError(
                 f"x should have partition={Partition.SCATTER} Got {x.partition} instead..."
             )
+        self._validate_local_array_shape(x, self.local_extent, "x")
+
         res = DistributedArray(
             global_shape=self.shape[1],
             partition=Partition.SCATTER,
