@@ -97,11 +97,13 @@ class MPIFFT2D(MPIFFTND):
     Raises
     ------
     ValueError
+        - If ``dims`` has less than two elements.
+        - If ``axes`` does not have exactly two elements.
         - If ``norm`` is not one of "none", or "1/n".
 
     Notes
     -----
-    The MPIFFT2D operator performs forward and adjoint passes on a
+    The MPIFFT2D operator applies the forward and inverse 2-dimensional Fast Fourier transform to a
     :class:`pylops_mpi.DistributedArray`, which is internally reshaped to the 2-dimensional layout
     defined by ``dims``. The 2-dimensional FFT is then applied across MPI ranks using ``mpi4py_fft``'s
     :class:`mpi4py_fft.mpifft.PFFT` class, with the global array decomposed via a pencil decomposition.

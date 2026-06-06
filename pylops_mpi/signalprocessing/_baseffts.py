@@ -83,8 +83,6 @@ class _MPIBaseFFTND(MPILinearOperator):
             )
             raise ValueError(msg)
 
-        # Check if the user provided nfft smaller than n. See _BaseFFT for
-        # details
         nfftshort = [
             nfft < dims[direction]
             for direction, nfft in zip(self.axes, self.nffts, strict=True)

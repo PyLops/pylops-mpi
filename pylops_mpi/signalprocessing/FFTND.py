@@ -5,7 +5,7 @@ from mpi4py import MPI
 import numpy as np
 
 from pylops.signalprocessing._baseffts import _FFTNorms
-from pylops.utils import DTypeLike, InputDimsLike, get_array_module
+from pylops.utils import DTypeLike, InputDimsLike
 
 from pylops_mpi.utils.decorators import reshaped
 from pylops_mpi.DistributedArray import DistributedArray, Partition
@@ -110,7 +110,7 @@ class MPIFFTND(_MPIBaseFFTND):
 
     Notes
     -----
-    The MPIFFTND operator performs forward and adjoint passes on a
+    The MPIFFTND operator applies the forward and inverse N-dimensional Fast Fourier transform to a
     :class:`pylops_mpi.DistributedArray`, which is internally reshaped to the N-dimensional layout
     defined by ``dims``. The N-dimensional FFT is then applied across MPI ranks using ``mpi4py_fft``'s
     :class:`mpi4py_fft.mpifft.PFFT` class, with the global array decomposed via a pencil decomposition.
@@ -179,16 +179,22 @@ class MPIFFTND(_MPIBaseFFTND):
             self._scale = 1.0 / np.prod(self.nffts)
         fft_dtype = self.rdtype if self.real else self.cdtype
         subcomm_dims = np.ones(len(dims), dtype=int)
-        # axis=0 for the initial distribution by default, if the final axis is 0, distribute along axis 1 instead.
+        # axis=0 for the initial distribution by default
+        # if the final axis over which FFT is applied is axis=0, the input array is first redistributed over axis=1
+        # prior to applying FFT.
         if axes[-1] == 0:
             subcomm_dims[1] = 0
         else:
             subcomm_dims[0] = 0
         subcomm = Subcomm(base_comm, subcomm_dims)
         self.fft = PFFT(subcomm, self.dims, axes=self.axes, dtype=fft_dtype)
+
+        # Inspect the input pencil (pre-transform layout) to find which axis PFFT actually distributed across ranks.
         self._pfft_in_axis = next(
             (i for i, s in enumerate(self.fft.pencil[False].subcomm) if s.Get_size() > 1), 0
         )
+        # Inspect the output pencil (post-transform layout) for the same. PFFT performs internal redistributions
+        # during the transform, so the output distribution axis may differ from the input
         self._pfft_out_axis = next(
             (i for i, s in enumerate(self.fft.pencil[True].subcomm) if s.Get_size() > 1), 0
         )
@@ -233,7 +239,6 @@ class MPIFFTND(_MPIBaseFFTND):
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER}, "
                              f"Got  {x.partition} instead...")
-        np = get_array_module(x.local_array)
         if self.fftshift_after.any():
             x = ifftshift_nd(x, axes=self.axes[self.fftshift_after])
         if self.real:
