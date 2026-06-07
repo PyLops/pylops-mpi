@@ -6,7 +6,7 @@ import numpy as np
 
 from pylops.signalprocessing._baseffts import _FFTNorms
 from pylops.utils import InputDimsLike, DTypeLike, get_normalize_axis_index, get_real_dtype, get_complex_dtype
-from pylops.utils._internal import _value_or_sized_to_array, _raise_on_wrong_dtype, _value_or_sized_to_tuple
+from pylops.utils._internal import _value_or_sized_to_array, _raise_on_wrong_dtype
 
 from pylops_mpi.DistributedArray import DistributedArray
 from pylops_mpi.LinearOperator import MPILinearOperator
@@ -19,7 +19,6 @@ class _MPIBaseFFTND(MPILinearOperator):
         self,
         dims: int | InputDimsLike,
         axes: int | InputDimsLike | None = None,
-        nffts: int | InputDimsLike | None = None,
         sampling: float | Sequence[float] = 1.0,
         norm: str = "none",
         real: bool = False,
@@ -43,16 +42,7 @@ class _MPIBaseFFTND(MPILinearOperator):
                 stacklevel=2,
             )
 
-        nffts = _value_or_sized_to_array(nffts, repeat=self.naxes)
-        if len(nffts[np.equal(nffts, None)]) > 0:  # Found None(s) in nffts
-            nffts[np.equal(nffts, None)] = np.array(
-                [dims[d] for d, n in zip(axes, nffts, strict=True) if n is None]
-            )
-            nffts = nffts.astype(np.array(dims).dtype)
-        _raise_on_wrong_dtype(nffts, np.integer, "nffts")
-        self.nffts = _value_or_sized_to_tuple(
-            nffts
-        )  # tuple is strictly needed for cupy
+        self.nffts = tuple(int(dims[d]) for d in self.axes)
 
         sampling = _value_or_sized_to_array(sampling, repeat=self.naxes)
         if np.issubdtype(sampling.dtype, np.integer):  # Promote to float64 if integer
@@ -69,41 +59,18 @@ class _MPIBaseFFTND(MPILinearOperator):
         )
         _raise_on_wrong_dtype(self.fftshift_after, bool, "fftshift_after")
         if (
-            self.naxes != len(self.nffts)
-            or self.naxes != len(self.sampling)
+            self.naxes != len(self.sampling)
             or self.naxes != len(self.ifftshift_before)
             or self.naxes != len(self.fftshift_after)
         ):
             msg = (
-                "`axes`, `nffts`, `sampling`, `ifftshift_before` and "
-                "`fftshift_after` must the have same number of elements. Received "
-                f"{self.naxes}, {len(self.nffts)}, {len(self.sampling)}, "
+                "`axes`, `sampling`, `ifftshift_before` and "
+                "`fftshift_after` must have the same number of elements. Received "
+                f"{self.naxes}, {len(self.sampling)}, "
                 f"{len(self.ifftshift_before)} and {len(self.fftshift_after)}, "
                 "respectively."
             )
             raise ValueError(msg)
-
-        nfftshort = [
-            nfft < dims[direction]
-            for direction, nfft in zip(self.axes, self.nffts, strict=True)
-        ]
-        self.doifftpad = any(nfftshort)
-        if self.doifftpad:
-            self.ifftpad = [(0, 0)] * self.ndim
-            for idir, (direction, nfshort) in enumerate(
-                zip(self.axes, nfftshort, strict=True)
-            ):
-                if nfshort:
-                    self.ifftpad[direction] = (
-                        0,
-                        dims[direction] - self.nffts[idir],
-                    )
-            warnings.warn(
-                f"nffts in directions {np.where(nfftshort)[0]} have been selected to be smaller than the size of the original signal. "
-                "This is rarely intended behavior as the original signal will be truncated prior to applying fft, "
-                f"if this is the required behaviour ignore this message.",
-                stacklevel=2,
-            )
 
         if norm == "none":
             self.norm = _FFTNorms.NONE

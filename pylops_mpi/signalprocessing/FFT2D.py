@@ -103,13 +103,20 @@ class MPIFFT2D(MPIFFTND):
 
     Notes
     -----
-    The MPIFFT2D operator applies the forward and inverse 2-dimensional Fast Fourier transform to a
-    :class:`pylops_mpi.DistributedArray`, which is internally reshaped to the 2-dimensional layout
-    defined by ``dims``. The 2-dimensional FFT is then applied across MPI ranks using ``mpi4py_fft``'s
-    :class:`mpi4py_fft.mpifft.PFFT` class, with the global array decomposed via a pencil decomposition.
-    :class:`mpi4py_fft.pencil.Subcomm` selects the axis of distribution: ``axis=0`` by default,
-    shifting to ``axis=1`` if ``axes[-1] == 0`` to avoid a conflict between the transform and
-    decomposition axes.
+    The MPIFFT2D operator applies the forward and inverse 2-dimensional FFT to a
+    :class:`pylops_mpi.DistributedArray`, accepted as a 1D flattened array and reshaped internally
+    to the layout defined by ``dims``. The distributed FFT transform is performed by
+    :class:`mpi4py_fft.mpifft.PFFT` via :class:`mpi4py_fft.pencil.Subcomm`. Since the 1D input is
+    always distributed along ``axis=0`` after reshaping, PFFT is configured to distribute along
+    ``axis=0`` by default. The exception is when ``axes[-1] == 0``: PFFT requires the final
+    transform axis to be local on each rank, so the distribution is shifted to ``axis=1`` and the
+    input is redistributed accordingly before the transform. After the transform, the output is
+    flattened back to 1D.
+
+    The class uses PFFT's two internal pencil layouts: ``pencil[False]`` for forward-input/backward-output and
+    ``pencil[True]`` for forward-output/backward-input. During initialization, it records the distributed axes
+    of these layouts as ``_pfft_in_axis`` and ``_pfft_out_axis``, and redistributes the input
+    :class:`pylops_mpi.DistributedArray` as needed before each transform.
 
     In the forward pass, :meth:`PFFT.forward` is called with ``normalize=False``, computing:
 

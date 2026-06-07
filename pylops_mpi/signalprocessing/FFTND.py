@@ -110,13 +110,20 @@ class MPIFFTND(_MPIBaseFFTND):
 
     Notes
     -----
-    The MPIFFTND operator applies the forward and inverse N-dimensional Fast Fourier transform to a
-    :class:`pylops_mpi.DistributedArray`, which is internally reshaped to the N-dimensional layout
-    defined by ``dims``. The N-dimensional FFT is then applied across MPI ranks using ``mpi4py_fft``'s
-    :class:`mpi4py_fft.mpifft.PFFT` class, with the global array decomposed via a pencil decomposition.
-    :class:`mpi4py_fft.pencil.Subcomm` selects the axis of distribution: ``axis=0`` by default,
-    shifting to ``axis=1`` if ``axes[-1] == 0`` to avoid a conflict between the transform and
-    decomposition axes.
+    The MPIFFTND operator applies the forward and inverse N-dimensional FFT to a
+    :class:`pylops_mpi.DistributedArray`, accepted as a 1D flattened array and reshaped internally
+    to the layout defined by ``dims``. The distributed FFT transform is performed by
+    :class:`mpi4py_fft.mpifft.PFFT` via :class:`mpi4py_fft.pencil.Subcomm`. Since the 1D input is
+    always distributed along ``axis=0`` after reshaping, PFFT is configured to distribute along
+    ``axis=0`` by default. The exception is when ``axes[-1] == 0``: PFFT requires the final
+    transform axis to be local on each rank, so the distribution is shifted to ``axis=1`` and the
+    input is redistributed accordingly before the transform. After the transform, the output is
+    flattened back to 1D.
+
+    The class uses PFFT's two internal pencil layouts: ``pencil[False]`` for forward-input/backward-output and
+    ``pencil[True]`` for forward-output/backward-input. During initialization, it records the distributed axes
+    of these layouts as ``_pfft_in_axis`` and ``_pfft_out_axis``, and redistributes the input
+    :class:`pylops_mpi.DistributedArray` as needed before each transform.
 
     In the forward pass, :meth:`PFFT.forward` is called with ``normalize=False``, computing:
 
@@ -189,12 +196,16 @@ class MPIFFTND(_MPIBaseFFTND):
         subcomm = Subcomm(base_comm, subcomm_dims)
         self.fft = PFFT(subcomm, self.dims, axes=self.axes, dtype=fft_dtype)
 
-        # Inspect the input pencil (pre-transform layout) to find which axis PFFT actually distributed across ranks.
+        # PFFT uses two internal layouts (pencils): one before and one after the transform. The two layouts can differ
+        # because PFFT may redistribute data mid-transform to align the active FFT axis with the distributed axis.
+        # pencil[False] is the forward-input / backward-output layout.
+        # pencil[True] is the forward-output / backward-input layout.
+
+        # Distributed axis in the pre-transform (pencil[False]) layout.
         self._pfft_in_axis = next(
             (i for i, s in enumerate(self.fft.pencil[False].subcomm) if s.Get_size() > 1), 0
         )
-        # Inspect the output pencil (post-transform layout) for the same. PFFT performs internal redistributions
-        # during the transform, so the output distribution axis may differ from the input
+        # Distributed axis in the post-transform (pencil[True]) layout.
         self._pfft_out_axis = next(
             (i for i, s in enumerate(self.fft.pencil[True].subcomm) if s.Get_size() > 1), 0
         )
@@ -257,10 +268,6 @@ class MPIFFTND(_MPIBaseFFTND):
         y[:] = y_dist_pfft
         if self.norm is _FFTNorms.NONE:
             y[:] *= self._scale
-        if self.nffts[0] > self.dims[self.axes[0]]:
-            y[:] = np.take(y.local_array, np.arange(self.dims[self.axes[0]]), axis=self.axes[0])
-        if self.nffts[1] > self.dims[self.axes[1]]:
-            y[:] = np.take(y.local_array, np.arange(self.dims[self.axes[1]]), axis=self.axes[1])
         if not self.clinear:
             y[:] = np.real(y.local_array)
         y[:] = y.local_array.astype(self.rdtype)
