@@ -107,4 +107,3 @@ axs[1][1].set_title("Error")
 axs[1][1].axis("tight")
 
 fig.tight_layout()
-plt.show()
