@@ -79,6 +79,13 @@ using `pip`:
 
    Replace `12x` with your CUDA version (e.g., `11x` for CUDA 11.x).
 
+Install fft dependencies (optional)
+===================================
+Similarly, to use the FFT classes with distributed arrays, install PyLops-MPI with the ``fft`` extra:
+
+.. code-block:: bash
+
+   >> pip install pylops-mpi[fft]
 
 .. _UserInstall:
 
@@ -93,6 +100,12 @@ command in your terminal to install the PyPI distribution:
    >> pip install pylops-mpi
 
 Note that when installing via `pip`, only *required* dependencies are installed.
+
+Alternatively, optional dependencies can be installed individually via:
+
+.. code-block:: bash
+
+   >> pip install pylops-mpi[all]
 
 
 .. _DevInstall:
@@ -168,6 +181,12 @@ The `Makefile` is pre-configured with CUDA 12.x. If you use this version, run
 Otherwise, you can change the command in `Makefile` to an appropriate CUDA version
 i.e., If you use CUDA 11.x, change ``cupy-cuda12x`` and ``nvidia-nccl-cu12`` to 
 ``cupy-cuda11x`` and ``nvidia-nccl-cu11`` and run the command.
+
+If you want to be able to use FFT classes with distributed arrays, run:
+
+.. code-block:: bash
+
+   >> make dev-install_fft
 
 Run tests
 =========

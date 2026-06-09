@@ -71,7 +71,8 @@ Signal Processing
    :toctree: generated/
 
     MPIFredholm1
-
+    MPIFFT2D
+    MPIFFTND
 
 Wave-Equation processing
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -107,7 +108,7 @@ Basic
     cgls
 
 Sparsity
-~~~~~
+~~~~~~~~
 
 .. currentmodule:: pylops_mpi.optimization.cls_sparsity
 

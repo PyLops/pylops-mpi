@@ -43,6 +43,10 @@ dev-install_conda:
 dev-install_conda_nccl:
 	conda env create -f environment-dev.yml && conda activate pylops_mpi && conda install -c conda-forge cupy nccl && pip install -e .
 
+dev-install_fft:
+	make pipcheck
+	$(PIP) install -r requirements-dev.txt && $(PIP) install -e ".[fft]"
+
 lint:
 	flake8 pylops_mpi/ tests/ examples/ tutorials/
 
