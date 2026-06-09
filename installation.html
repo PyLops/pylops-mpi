@@ -557,6 +557,13 @@ using <cite>pip</cite>:</p>
 <p>Replace <cite>12x</cite> with your CUDA version (e.g., <cite>11x</cite> for CUDA 11.x).</p>
 </div>
 </section>
+<section id="install-fft-dependencies-optional">
+<h3>Install fft dependencies (optional)<a class="headerlink" href="#install-fft-dependencies-optional" title="Link to this heading">#</a></h3>
+<p>Similarly, to use the FFT classes with distributed arrays, install PyLops-MPI with the <code class="docutils literal notranslate"><span class="pre">fft</span></code> extra:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>pylops-mpi<span class="o">[</span>fft<span class="o">]</span>
+</pre></div>
+</div>
+</section>
 </section>
 <section id="step-by-step-installation-for-users">
 <span id="userinstall"></span><h2>Step-by-step installation for users<a class="headerlink" href="#step-by-step-installation-for-users" title="Link to this heading">#</a></h2>
@@ -566,6 +573,10 @@ command in your terminal to install the PyPI distribution:</p>
 </pre></div>
 </div>
 <p>Note that when installing via <cite>pip</cite>, only <em>required</em> dependencies are installed.</p>
+<p>Alternatively, optional dependencies can be installed individually via:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>pylops-mpi<span class="o">[</span>all<span class="o">]</span>
+</pre></div>
+</div>
 </section>
 <section id="step-by-step-installation-for-developers">
 <span id="devinstall"></span><h2>Step-by-step installation for developers<a class="headerlink" href="#step-by-step-installation-for-developers" title="Link to this heading">#</a></h2>
@@ -620,6 +631,10 @@ you must first check the CUDA version of your system:</p>
 <p>Otherwise, you can change the command in <cite>Makefile</cite> to an appropriate CUDA version
 i.e., If you use CUDA 11.x, change <code class="docutils literal notranslate"><span class="pre">cupy-cuda12x</span></code> and <code class="docutils literal notranslate"><span class="pre">nvidia-nccl-cu12</span></code> to
 <code class="docutils literal notranslate"><span class="pre">cupy-cuda11x</span></code> and <code class="docutils literal notranslate"><span class="pre">nvidia-nccl-cu11</span></code> and run the command.</p>
+<p>If you want to be able to use FFT classes with distributed arrays, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>make<span class="w"> </span>dev-install_fft
+</pre></div>
+</div>
 </section>
 </section>
 <section id="run-tests">
@@ -734,6 +749,7 @@ Apart from ensuring that docstrings are properly formatted, they can aid in catc
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#verify-mpi-installation">Verify MPI Installation</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#install-cuda-aware-mpi-optional">Install CUDA-Aware MPI (optional)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#install-nccl-optional">Install NCCL (optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#install-fft-dependencies-optional">Install fft dependencies (optional)</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-by-step-installation-for-users">Step-by-step installation for users</a></li>

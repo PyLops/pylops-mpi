@@ -1,0 +1,47 @@
+﻿pylops\_mpi.signalprocessing.MPIFFT2D
+=====================================
+
+.. currentmodule:: pylops_mpi.signalprocessing
+
+.. autoclass:: MPIFFT2D
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~MPIFFT2D.__init__
+        ~MPIFFT2D.adjoint
+        ~MPIFFT2D.conj
+        ~MPIFFT2D.dot
+        ~MPIFFT2D.matvec
+        ~MPIFFT2D.rmatvec
+        ~MPIFFT2D.transpose
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.signalprocessing.MPIFFT2D.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+

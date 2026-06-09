@@ -1,0 +1,47 @@
+﻿pylops\_mpi.signalprocessing.MPIFFTND
+=====================================
+
+.. currentmodule:: pylops_mpi.signalprocessing
+
+.. autoclass:: MPIFFTND
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~MPIFFTND.__init__
+        ~MPIFFTND.adjoint
+        ~MPIFFTND.conj
+        ~MPIFFTND.dot
+        ~MPIFFTND.matvec
+        ~MPIFFTND.rmatvec
+        ~MPIFFTND.transpose
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.signalprocessing.MPIFFTND.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+
