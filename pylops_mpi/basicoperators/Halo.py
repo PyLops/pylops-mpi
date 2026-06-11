@@ -162,6 +162,24 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
 
         self.local_dims = self._calc_local_dims()
         self.local_extent = self._calc_local_extent()
+        self._validate_exchange_widths()
+        # For uneven global dimensions, MPIHalo's Cartesian block sizes differ
+        # from DistributedArray's default flat split. Store those sizes so
+        # _rmatvec can build an adjoint output with the same local ownership
+        # as the original Halo input.
+        comm_group = self.comm.Get_group()
+        cart_group = self.cart_comm.Get_group()
+        for rank in range(self.comm.Get_size()):
+            cart_rank = MPI.Group.Translate_ranks(comm_group, [rank], cart_group)[0]
+            coords = self.cart_comm.Get_coords(cart_rank)
+            local_size = 1
+            for gdim, coord, grid_procs in zip(self.global_dims, coords, self.proc_grid_shape):
+                block_size = math.ceil(gdim / grid_procs)
+                start = coord * block_size
+                end = min(start + block_size, gdim)
+                local_size *= end - start
+            self._local_dim_sizes.append(local_size)
+
         self._local_extent_sizes = self._allgather(
             self.comm,
             None,
@@ -188,7 +206,10 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
                     trimmed[2 * ax] = 0
                 if trimmed[2 * ax + 1] and self.neigh[("+", ax)] == MPI.PROC_NULL:
                     trimmed[2 * ax + 1] = 0
-            return tuple(trimmed)
+            halo = tuple(trimmed)
+            if any(h < 0 for h in halo):
+                raise ValueError("Halo widths must be non-negative")
+            return halo
 
         h = tuple(h)
         if len(h) == 1:
@@ -199,6 +220,8 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
             halo = h
         else:
             raise ValueError(f"Invalid halo length {len(h)} for ndim={self.ndim}")
+        if any(h < 0 for h in halo):
+            raise ValueError("Halo widths must be non-negative")
         return halo
 
     def _build_topo(self) -> Tuple[MPI.Comm, Dict[Tuple[str, int], int]]:
@@ -253,31 +276,44 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
                 )
 
     def _validate_exchange_widths(self) -> None:
-        """Raise if the requested halos cannot be exchanged with one-hop neighbors."""
-        rank_info = self.cart_comm.allgather((self.halo, self.local_dims, self.neigh))
-        for rank, (halo, local_dims, neigh) in enumerate(rank_info):
-            for ax in range(self.ndim):
-                local_dim = local_dims[ax]
-                sides = (
-                    ("minus", halo[2 * ax]    , neigh[("-", ax)], 2 * ax + 1, "plus"),
-                    ("plus" , halo[2 * ax + 1], neigh[("+", ax)], 2 * ax      , "minus"),
-                )
-                for side, halo_width, nbr, neighbor_idx, neighbor_side in sides:
-                    if nbr == MPI.PROC_NULL: continue
-                    if halo_width > local_dim:
-                        raise ValueError(
-                            f"MPIHalo halo widths are not supported by the current one-hop exchange:"
-                            f" rank {rank}, axis {ax}: {side} halo width "
-                            f"{halo_width} exceeds local block size {local_dim}"
-                        )
-                    neighbor_width = rank_info[nbr][0][neighbor_idx]
-                    if halo_width != neighbor_width:
-                        raise ValueError(
-                            f"MPIHalo halo widths are not supported by the current one-hop exchange:"
-                            f" rank {rank}, axis {ax}: {side} halo width "
-                            f"{halo_width} does not match neighbor {neighbor_side} "
-                            f"halo width {neighbor_width}"
-                        )
+        """
+        Raise if the requested halos cannot be exchanged with one-hop neighbors.
+        For example:
+            - Halo width Larger than local block size or that of the remote neighbors.
+        """
+        width_error = 1
+        mismatch_error = 2
+        local_error = 0
+        for ax in range(self.ndim):
+            before, after = self.halo[2 * ax], self.halo[2 * ax + 1]
+            minus_nbr, plus_nbr = self.neigh[("-", ax)], self.neigh[("+", ax)]
+            local_dim = self.local_dims[ax]
+
+            if before > local_dim and minus_nbr != MPI.PROC_NULL:
+                local_error |= width_error
+            if after > local_dim and plus_nbr != MPI.PROC_NULL:
+                local_error |= width_error
+
+            plus_neighbor_before = self.cart_comm.sendrecv(
+                before, dest=minus_nbr, source=plus_nbr
+            )
+            minus_neighbor_after = self.cart_comm.sendrecv(after, dest=plus_nbr, source=minus_nbr)
+            if plus_nbr != MPI.PROC_NULL and after != plus_neighbor_before:
+                local_error |= mismatch_error
+            if minus_nbr != MPI.PROC_NULL and before != minus_neighbor_after:
+                local_error |= mismatch_error
+
+        global_error = self.cart_comm.allreduce(local_error, op=MPI.BOR)
+        if global_error & width_error:
+            raise ValueError(
+                "MPIHalo halo widths are not supported by the current one-hop "
+                "exchange: halo width exceeds local block size"
+            )
+        if global_error & mismatch_error:
+            raise ValueError(
+                "MPIHalo halo widths are not supported by the current one-hop "
+                "exchange: halo width does not match neighbor halo width"
+            )
 
     def _exchange_along_axis(self, ncp: Any, arr: Any, axis: int, before: int, after: int, engine: str) -> None:
         """Exchange boundary/halo slices with neighboring ranks along one axis."""
@@ -329,7 +365,6 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
             )
 
         self._validate_local_array_shape(x, self.local_dims, "x")
-        self._validate_exchange_widths()
 
         y = DistributedArray(
             global_shape=self.shape[0],
@@ -370,6 +405,7 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
         res = DistributedArray(
             global_shape=self.shape[1],
             partition=Partition.SCATTER,
+            local_shapes=self._local_dim_sizes,
             base_comm=x.base_comm,
             base_comm_nccl=x.base_comm_nccl,
             engine=x.engine,
