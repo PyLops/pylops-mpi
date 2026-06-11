@@ -163,6 +163,7 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
         self.local_dims = self._calc_local_dims()
         self.local_extent = self._calc_local_extent()
         self._validate_exchange_widths()
+        self._local_dim_sizes = []
         # For uneven global dimensions, MPIHalo's Cartesian block sizes differ
         # from DistributedArray's default flat split. Store those sizes so
         # _rmatvec can build an adjoint output with the same local ownership
