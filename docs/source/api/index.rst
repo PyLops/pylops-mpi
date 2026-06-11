@@ -74,7 +74,8 @@ Signal Processing
 
     MPIFredholm1
     MPINonStationaryConvolve1D
-
+    MPIFFT2D
+    MPIFFTND
 
 Wave-Equation processing
 ~~~~~~~~~~~~~~~~~~~~~~~~
