@@ -55,7 +55,7 @@ def _expected_haloed_block(global_array, dims, proc_grid_shape, halo):
         local_dims[ax] + halo[2 * ax] + halo[2 * ax + 1]
         for ax in range(len(local_dims))
     )
-    expected = np.zeros(expected_shape, dtype=np.float64)
+    expected = np.zeros(expected_shape, dtype=global_array.dtype)
 
     source_slices = []
     target_slices = []
@@ -75,6 +75,100 @@ def _expected_haloed_block(global_array, dims, proc_grid_shape, halo):
     expected[tuple(target_slices)] = global_array[tuple(source_slices)]
 
     return expected
+
+
+@pytest.mark.mpi(min_size=2)
+def test_halo_invalid_grid_shape():
+    with pytest.raises(ValueError, match="does not match comm size"):
+        MPIHalo(
+            dims=(16 * size,),
+            halo=1,
+            proc_grid_shape=(size + 1,),
+            comm=comm,
+            dtype=np.float64,
+        )
+
+
+@pytest.mark.mpi(min_size=2)
+def test_halo_invalid_halo_shape():
+    with pytest.raises(ValueError, match="Invalid halo length"):
+        MPIHalo(
+            dims=(16 * size,),
+            halo=(1, 2, 3),
+            proc_grid_shape=(size,),
+            comm=comm,
+            dtype=np.float64,
+        )
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("halo", [-1, (-1,), (1, -1)])
+def test_halo_invalid_negative_halo(halo):
+    with pytest.raises(ValueError, match="non-negative"):
+        MPIHalo(
+            dims=(16 * size,),
+            halo=halo,
+            proc_grid_shape=(size,),
+            comm=comm,
+            dtype=np.float64,
+        )
+
+
+@pytest.mark.mpi(min_size=2)
+def test_halo_rejects_halo_wider_than_local_block():
+    dims = (4 * size,)
+    with pytest.raises(ValueError, match="exceeds local block size"):
+        MPIHalo(
+            dims=dims,
+            halo=5,
+            proc_grid_shape=(size,),
+            comm=comm,
+            dtype=np.float64,
+        )
+
+
+@pytest.mark.mpi(min_size=2)
+def test_halo_invalid_asymmetric_distributed_halo():
+    dims = (16 * size,)
+    with pytest.raises(ValueError, match="does not match neighbor"):
+        MPIHalo(
+            dims=dims,
+            halo=(1, 2),
+            proc_grid_shape=(size,),
+            comm=comm,
+            dtype=np.float64,
+        )
+
+
+@pytest.mark.mpi(min_size=2)
+def test_halo_rejects_broadcast_input():
+    dims = (16 * size,)
+    halo_op = MPIHalo(
+        dims=dims,
+        halo=1,
+        proc_grid_shape=(size,),
+        comm=comm,
+        dtype=np.float64,
+    )
+    x_dist = pylops_mpi.DistributedArray(
+        global_shape=math.prod(dims),
+        base_comm=comm,
+        partition=pylops_mpi.Partition.BROADCAST,
+        engine=backend,
+        dtype=np.float64,
+    )
+    y_dist = pylops_mpi.DistributedArray(
+        global_shape=halo_op.shape[0],
+        base_comm=comm,
+        partition=pylops_mpi.Partition.BROADCAST,
+        engine=backend,
+        dtype=np.float64,
+    )
+
+    with pytest.raises(ValueError, match=f"{pylops_mpi.Partition.SCATTER}"):
+        halo_op @ x_dist
+    with pytest.raises(ValueError, match=f"{pylops_mpi.Partition.SCATTER}"):
+        halo_op.H @ y_dist
 
 
 @pytest.mark.mpi(min_size=2)
@@ -247,102 +341,9 @@ def test_halo_tuple_boundary_zeros_match_scalar(par):
 
 
 @pytest.mark.mpi(min_size=2)
-def test_halo_invalid_grid_shape():
-    with pytest.raises(ValueError, match="does not match comm size"):
-        MPIHalo(
-            dims=(16 * size,),
-            halo=1,
-            proc_grid_shape=(size + 1,),
-            comm=comm,
-            dtype=np.float64,
-        )
-
-
-@pytest.mark.mpi(min_size=2)
-def test_halo_invalid_halo_shape():
-    with pytest.raises(ValueError, match="Invalid halo length"):
-        MPIHalo(
-            dims=(16 * size,),
-            halo=(1, 2, 3),
-            proc_grid_shape=(size,),
-            comm=comm,
-            dtype=np.float64,
-        )
-
-
-@pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("halo", [-1, (-1,), (1, -1)])
-def test_halo_invalid_negative_halo(halo):
-    with pytest.raises(ValueError, match="non-negative"):
-        MPIHalo(
-            dims=(16 * size,),
-            halo=halo,
-            proc_grid_shape=(size,),
-            comm=comm,
-            dtype=np.float64,
-        )
-
-
-@pytest.mark.mpi(min_size=2)
-def test_halo_rejects_halo_wider_than_local_block():
-    dims = (4 * size,)
-    with pytest.raises(ValueError, match="exceeds local block size"):
-        MPIHalo(
-            dims=dims,
-            halo=5,
-            proc_grid_shape=(size,),
-            comm=comm,
-            dtype=np.float64,
-        )
-
-
-@pytest.mark.mpi(min_size=2)
-def test_halo_invalid_asymmetric_distributed_halo():
-    dims = (16 * size,)
-    with pytest.raises(ValueError, match="does not match neighbor"):
-        MPIHalo(
-            dims=dims,
-            halo=(1, 2),
-            proc_grid_shape=(size,),
-            comm=comm,
-            dtype=np.float64,
-        )
-
-
-@pytest.mark.mpi(min_size=2)
-def test_halo_rejects_broadcast_input():
-    dims = (16 * size,)
-    halo_op = MPIHalo(
-        dims=dims,
-        halo=1,
-        proc_grid_shape=(size,),
-        comm=comm,
-        dtype=np.float64,
-    )
-    x_dist = pylops_mpi.DistributedArray(
-        global_shape=math.prod(dims),
-        base_comm=comm,
-        partition=pylops_mpi.Partition.BROADCAST,
-        engine=backend,
-        dtype=np.float64,
-    )
-    y_dist = pylops_mpi.DistributedArray(
-        global_shape=halo_op.shape[0],
-        base_comm=comm,
-        partition=pylops_mpi.Partition.BROADCAST,
-        engine=backend,
-        dtype=np.float64,
-    )
-
-    with pytest.raises(ValueError, match=f"{pylops_mpi.Partition.SCATTER}"):
-        halo_op @ x_dist
-    with pytest.raises(ValueError, match=f"{pylops_mpi.Partition.SCATTER}"):
-        halo_op.H @ y_dist
-
-
-@pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6)])
-def test_halo_first_derivative(par):
+@pytest.mark.parametrize("dtype", [np.float64, np.complex128])
+def test_halo_first_derivative(par, dtype):
     dims, proc_grid_shape = par["dims"], par["proc_grid_shape"]
     axis = proc_grid_shape.index(size)
     n = math.prod(dims)
@@ -353,7 +354,7 @@ def test_halo_first_derivative(par):
         halo=halo,
         proc_grid_shape=proc_grid_shape,
         comm=comm,
-        dtype=np.float64,
+        dtype=dtype,
     )
 
     x_dist = pylops_mpi.DistributedArray(
@@ -361,7 +362,7 @@ def test_halo_first_derivative(par):
         base_comm=comm,
         partition=pylops_mpi.Partition.SCATTER,
         engine=backend,
-        dtype=np.float64,
+        dtype=dtype,
     )
 
     y_dist = pylops_mpi.DistributedArray(
@@ -369,11 +370,17 @@ def test_halo_first_derivative(par):
         base_comm=comm,
         partition=pylops_mpi.Partition.SCATTER,
         engine=backend,
-        dtype=np.float64,
+        dtype=dtype,
     )
 
-    model_global = np.arange(n, dtype=np.float64).reshape(dims)
-    data_global = (np.arange(n, dtype=np.float64).reshape(dims) + 1.0) / n
+    base = np.arange(n, dtype=np.float64).reshape(dims)
+    model_global = base
+    data_global = (base + 1.0) / n
+    if np.dtype(dtype).kind == "c":
+        model_global = model_global + 1j * (base + 1.0)
+        data_global = data_global + 1j * ((base + 2.0) / n)
+    model_global = model_global.astype(dtype)
+    data_global = data_global.astype(dtype)
     local_slices = halo_block_split(dims, comm, proc_grid_shape)
     x_dist[:] = model_global[local_slices].ravel()
     y_dist[:] = data_global[local_slices].ravel()
@@ -385,20 +392,22 @@ def test_halo_first_derivative(par):
         if before == MPI.PROC_NULL: expected_halo[2 * ax]    = 0
         if after == MPI.PROC_NULL: expected_halo[2 * ax + 1] = 0
 
-    local_extent = _expected_haloed_block(
-        np.zeros(dims, dtype=np.float64),
-        dims,
-        proc_grid_shape,
-        tuple(expected_halo),
-    ).shape
+    local_dims = tuple(
+        (dims[ax] if sl.stop is None else sl.stop) - sl.start
+        for ax, sl in enumerate(local_slices)
+    )
+    local_extent = tuple(
+        local_dims[ax] + expected_halo[2 * ax] + expected_halo[2 * ax + 1]
+        for ax in range(len(dims))
+    )
 
     DOp = pylops.FirstDerivative(
         dims=local_extent,
         axis=axis,
         kind="forward",
-        dtype=np.float64,
+        dtype=dtype,
     )
-    DOp_dist = pylops_mpi.MPIBlockDiag([DOp], base_comm=comm, dtype=np.float64)
+    DOp_dist = pylops_mpi.MPIBlockDiag([DOp], base_comm=comm, dtype=dtype)
     Op_dist = halo_op.H @ DOp_dist @ halo_op
 
     dottest(Op_dist, x_dist, y_dist, n, n)
@@ -410,7 +419,7 @@ def test_halo_first_derivative(par):
         dims=dims,
         axis=axis,
         kind="forward",
-        dtype=np.float64,
+        dtype=dtype,
     )
     y_serial = (DOp_serial @ model_global.ravel()).reshape(dims)
     y_adj_serial = (DOp_serial.H @ model_global.ravel()).reshape(dims)
