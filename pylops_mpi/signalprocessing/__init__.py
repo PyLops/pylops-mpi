@@ -21,7 +21,7 @@ from .FFTND import *
 
 __all__ = [
     "MPIFredholm1",
-    "MPINonStationaryConvolve1D"
+    "MPINonStationaryConvolve1D",
     "MPIFFT2D",
     "MPIFFTND",
 ]
