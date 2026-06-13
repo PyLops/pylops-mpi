@@ -1,0 +1,47 @@
+﻿pylops\_mpi.basicoperators.MPIHalo
+==================================
+
+.. currentmodule:: pylops_mpi.basicoperators
+
+.. autoclass:: MPIHalo
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~MPIHalo.__init__
+        ~MPIHalo.adjoint
+        ~MPIHalo.conj
+        ~MPIHalo.dot
+        ~MPIHalo.matvec
+        ~MPIHalo.rmatvec
+        ~MPIHalo.transpose
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.basicoperators.MPIHalo.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+

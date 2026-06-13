@@ -132,6 +132,23 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="This operator is specifically designed to extend pylops-mpi&#x27;s capabilities in terms of chunking of N-dimensional distributed arrays when solving inverse problems with  pylops-mpi&#x27;s operators and solvers. As a matter of fact, whilst :pypylops_mpi.DistributedArray allows one to create N-dimensional array  distributed over a given axis (defined via the axis paramater), only  1-dimensional distributed arrays can be used with pylops-mpi&#x27;s operators and solvers. ">
+
+.. only:: html
+
+  .. image:: /gallery/images/thumb/sphx_glr_plot_halo_thumb.png
+    :alt:
+
+  :doc:`/gallery/plot_halo`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Halo</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the use of the :pypylops_mpi.MPILinearOperator to wrap PyLops Operators. PyLops operators can be converted into :pypylops_mpi.MPILinearOperator using the :pypylops_mpi.asmpilinearoperator method. Additionally, the example showcases how to use these wrapped PyLops operators with other operators provided by PyLops-MPI.">
 
 .. only:: html
@@ -161,6 +178,23 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">Multi-Dimensional Convolution</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This operator is effectively equivalent to PyLops&#x27; :pypylops.signalprocessing.NonStationaryConvolve1D, however both the input array and the filters will be distibuted. What makes this operator interesting is that we need to handle convolutions at the edges between different ranks and to do that we will halo the input array of a number of samples equal to the distance between two filters and we will also borrow the filtering from the next/previous rank. This is internally achieved by means of the :pypylops_mpi.basicoperators.MPIHalo operator.">
+
+.. only:: html
+
+  .. image:: /gallery/images/thumb/sphx_glr_plot_nonstatconv_thumb.png
+    :alt:
+
+  :doc:`/gallery/plot_nonstatconv`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Non-Stationary Convolution</div>
     </div>
 
 
@@ -214,8 +248,10 @@ Here is a collection of examples that demonstrate the usage of PyLops-MPI operat
    /gallery/plot_matrixmult
    /gallery/plot_summamatrixmult
    /gallery/plot_ffts
+   /gallery/plot_halo
    /gallery/plot_mpilinop
    /gallery/plot_mdc
+   /gallery/plot_nonstatconv
    /gallery/plot_stacked_array
    /gallery/plot_stacking
 

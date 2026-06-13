@@ -1,0 +1,12 @@
+﻿pylops\_mpi.signalprocessing.MPINonStationaryConvolve1D
+=======================================================
+
+.. currentmodule:: pylops_mpi.signalprocessing
+
+.. autofunction:: MPINonStationaryConvolve1D
+
+.. include:: backreferences/pylops_mpi.signalprocessing.MPINonStationaryConvolve1D.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>

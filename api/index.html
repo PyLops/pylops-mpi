@@ -445,6 +445,7 @@
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIVStack.html">pylops_mpi.basicoperators.MPIVStack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIStackedVStack.html">pylops_mpi.basicoperators.MPIStackedVStack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIHStack.html">pylops_mpi.basicoperators.MPIHStack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIHalo.html">pylops_mpi.basicoperators.MPIHalo</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIFirstDerivative.html">pylops_mpi.basicoperators.MPIFirstDerivative</a></li>
@@ -454,6 +455,7 @@
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.signalprocessing.MPIFredholm1.html">pylops_mpi.signalprocessing.MPIFredholm1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.signalprocessing.MPINonStationaryConvolve1D.html">pylops_mpi.signalprocessing.MPINonStationaryConvolve1D</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.signalprocessing.MPIFFT2D.html">pylops_mpi.signalprocessing.MPIFFT2D</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.signalprocessing.MPIFFTND.html">pylops_mpi.signalprocessing.MPIFFTND</a></li>
 </ul>
@@ -607,6 +609,9 @@ large-scale linear algebra operations, inversions and computations.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIHStack.html#pylops_mpi.basicoperators.MPIHStack" title="pylops_mpi.basicoperators.MPIHStack"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIHStack</span></code></a>(ops[, base_comm, dtype])</p></td>
 <td><p>MPI HStack Operator</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.basicoperators.MPIHalo.html#pylops_mpi.basicoperators.MPIHalo" title="pylops_mpi.basicoperators.MPIHalo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIHalo</span></code></a>(dims, halo[, proc_grid_shape, comm, ...])</p></td>
+<td><p>MPI Halo</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -638,10 +643,13 @@ large-scale linear algebra operations, inversions and computations.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.signalprocessing.MPIFredholm1.html#pylops_mpi.signalprocessing.MPIFredholm1" title="pylops_mpi.signalprocessing.MPIFredholm1"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIFredholm1</span></code></a>(G[, nz, saveGt, usematmul, ...])</p></td>
 <td><p>Fredholm integral of first kind.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/pylops_mpi.signalprocessing.MPIFFT2D.html#pylops_mpi.signalprocessing.MPIFFT2D" title="pylops_mpi.signalprocessing.MPIFFT2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIFFT2D</span></code></a>(dims[, axes, sampling, norm, real, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/pylops_mpi.signalprocessing.MPINonStationaryConvolve1D.html#pylops_mpi.signalprocessing.MPINonStationaryConvolve1D" title="pylops_mpi.signalprocessing.MPINonStationaryConvolve1D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPINonStationaryConvolve1D</span></code></a>(dims, hs, ih[, ...])</p></td>
+<td><p>1D non-stationary convolution operator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.signalprocessing.MPIFFT2D.html#pylops_mpi.signalprocessing.MPIFFT2D" title="pylops_mpi.signalprocessing.MPIFFT2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIFFT2D</span></code></a>(dims[, axes, sampling, norm, real, ...])</p></td>
 <td><p>Two-dimensional Fast-Fourier Transform.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.signalprocessing.MPIFFTND.html#pylops_mpi.signalprocessing.MPIFFTND" title="pylops_mpi.signalprocessing.MPIFFTND"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIFFTND</span></code></a>(dims[, axes, sampling, norm, real, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/pylops_mpi.signalprocessing.MPIFFTND.html#pylops_mpi.signalprocessing.MPIFFTND" title="pylops_mpi.signalprocessing.MPIFFTND"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIFFTND</span></code></a>(dims[, axes, sampling, norm, real, ...])</p></td>
 <td><p>N-dimensional Fast-Fourier Transform.</p></td>
 </tr>
 </tbody>

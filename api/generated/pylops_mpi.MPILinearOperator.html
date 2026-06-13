@@ -445,6 +445,7 @@
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MPIVStack.html">pylops_mpi.basicoperators.MPIVStack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MPIStackedVStack.html">pylops_mpi.basicoperators.MPIStackedVStack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MPIHStack.html">pylops_mpi.basicoperators.MPIHStack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MPIHalo.html">pylops_mpi.basicoperators.MPIHalo</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.basicoperators.MPIFirstDerivative.html">pylops_mpi.basicoperators.MPIFirstDerivative</a></li>
@@ -454,6 +455,7 @@
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.signalprocessing.MPIFredholm1.html">pylops_mpi.signalprocessing.MPIFredholm1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.signalprocessing.MPINonStationaryConvolve1D.html">pylops_mpi.signalprocessing.MPINonStationaryConvolve1D</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.signalprocessing.MPIFFT2D.html">pylops_mpi.signalprocessing.MPIFFT2D</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.signalprocessing.MPIFFTND.html">pylops_mpi.signalprocessing.MPIFFTND</a></li>
 </ul>
@@ -626,6 +628,9 @@ instead as this can also handle distributed arrays with subcommunicators.</p>
 </div><div class="sphx-glr-thumbcontainer" tooltip="Fourier Transform"><img alt="" src="../../_images/sphx_glr_plot_ffts_thumb.png" />
 <p><a class="reference internal" href="../../gallery/plot_ffts.html"><span class="doc">Fourier Transform</span></a></p>
   <div class="sphx-glr-thumbnail-title">Fourier Transform</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This operator is specifically designed to extend pylops-mpi&#x27;s capabilities in terms of chunking of N-dimensional distributed arrays when solving inverse problems with  pylops-mpi&#x27;s operators and solvers. As a matter of fact, whilst :pypylops_mpi.DistributedArray allows one to create N-dimensional array  distributed over a given axis (defined via the axis paramater), only  1-dimensional distributed arrays can be used with pylops-mpi&#x27;s operators and solvers. "><img alt="" src="../../_images/sphx_glr_plot_halo_thumb.png" />
+<p><a class="reference internal" href="../../gallery/plot_halo.html"><span class="doc">Halo</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Halo</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the use of the :pypylops_mpi.MPILinearOperator to wrap PyLops Operators. PyLops operators can be converted into :pypylops_mpi.MPILinearOperator using the :pypylops_mpi.asmpilinearoperator method. Additionally, the example showcases how to use these wrapped PyLops operators with other operators provided by PyLops-MPI."><img alt="" src="../../_images/sphx_glr_plot_mpilinop_thumb.png" />
 <p><a class="reference internal" href="../../gallery/plot_mpilinop.html"><span class="doc">MPILinearOperator</span></a></p>
   <div class="sphx-glr-thumbnail-title">MPILinearOperator</div>
