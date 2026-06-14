@@ -1,0 +1,132 @@
+r"""
+Proximal operators
+==================
+
+"""
+import numpy as np
+from mpi4py import MPI
+from matplotlib import pyplot as plt
+
+import pylops
+import pyproximal
+
+import pylops_mpi
+
+np.random.seed(42)
+plt.close("all")
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+size = comm.Get_size()
+
+n = 10
+
+# L1 norm
+arr = pylops_mpi.DistributedArray(global_shape=n * size,
+                                  partition=pylops_mpi.Partition.SCATTER)
+
+arr[:] = rank * np.arange(n)
+
+l1 = pyproximal.L1(sigma=2.0)
+l1d = pylops_mpi.proximal.MPIProxOperator(l1)
+f = l1d(arr)
+prox = l1d.prox(arr, .1)
+proxdlocal = prox.asarray()
+
+dprox = l1d.proxdual(arr, .1)
+dproxdlocal = dprox.asarray()
+
+arrlocal = arr.asarray()
+if rank == 0:
+    flocal = l1(arrlocal)
+    proxlocal = l1.prox(arrlocal, .1)
+    dproxlocal = l1.proxdual(arrlocal, .1)
+    print("||x||_1: ", f, flocal)
+    print("prox_||x||_1: ", all(proxdlocal == proxlocal))
+    print("proxd_||x||_1: ", all(dproxdlocal == dproxlocal))
+
+# Box norm
+arr = pylops_mpi.DistributedArray(global_shape=n * size,
+                                  partition=pylops_mpi.Partition.SCATTER)
+
+arr[:] = 3 * np.ones(n)
+if rank == 0:
+     arr[n//2] = 20
+
+box = pyproximal.Box(lower=1., upper=5.)
+boxd = pylops_mpi.proximal.MPIProxOperator(box)
+f = boxd(arr)
+prox = boxd.prox(arr, .1)
+proxdlocal = prox.asarray()
+
+dprox = boxd.proxdual(arr, .1)
+dproxdlocal = dprox.asarray()
+
+arrlocal = arr.asarray()
+if rank == 0:
+    flocal = box(arrlocal)
+    proxlocal = box.prox(arrlocal, .1)
+    dproxlocal = box.proxdual(arrlocal, .1)
+    print("Box(x): ", f, flocal)
+    print("prox_Box ", all(proxdlocal == proxlocal))
+    print("proxd_Box ", all(dproxdlocal == dproxlocal))
+
+
+# L2 norm ||x||_2^2
+arr = pylops_mpi.DistributedArray(global_shape=n * size,
+                                  partition=pylops_mpi.Partition.SCATTER)
+
+arr[:] = rank * np.arange(n)
+
+l2 = pyproximal.L2(sigma=2.0)
+l2d = pylops_mpi.proximal.MPIL2(sigma=2.0)
+f = l2d(arr)
+prox = l2d.prox(arr, .1)
+proxdlocal = prox.asarray()
+grad = l2d.grad(arr)
+graddlocal = grad.asarray()
+
+arrlocal = arr.asarray()
+if rank == 0:
+    flocal = l2(arrlocal)
+    proxlocal = l2.prox(arrlocal, .1)
+    gradlocal = l2.grad(arrlocal)
+    print("||x||_2^2: ", f, flocal)
+    print("prox_||x||_2^2: ", all(proxdlocal == proxlocal))
+    print("grad_||x||_2^2: ", all(graddlocal == gradlocal))
+
+# L2 norm ||Op * x - d||_2^2
+solver="cgls"
+Op = pylops.FirstDerivative(n * size, sampling=0.001)
+Opd = pylops_mpi.MPIFirstDerivative(n * size, sampling=0.001)
+# Op = pylops.Diagonal(np.ones(n * size))
+# Opd = pylops_mpi.MPIBlockDiag([pylops.Diagonal(np.ones(n)),])
+  
+b = pylops_mpi.DistributedArray(global_shape=n * size,
+                                partition=pylops_mpi.Partition.SCATTER)
+
+b[:] = rank * np.ones(n)
+blocal = b.asarray()
+
+x0 = arr.zeros_like()
+x0local = x0.asarray()
+
+l2 = pyproximal.L2(
+    Op=Op, b=blocal, sigma=2.0,
+    solver=solver, x0=x0local, kwargs_solver=dict(show=True))
+l2d = pylops_mpi.proximal.MPIL2(
+    Op=Opd, b=b, sigma=2.0,
+    solver=solver, x0=x0, kwargs_solver=dict(show=True))
+f = l2d(arr)
+prox = l2d.prox(arr, .1)
+proxdlocal = prox.asarray()
+grad = l2d.grad(arr)
+graddlocal = grad.asarray()
+
+arrlocal = arr.asarray()
+if rank == 0:
+    flocal = l2(arrlocal)
+    proxlocal = l2.prox(arrlocal, .1)
+    gradlocal = l2.grad(arrlocal)
+    print("||x||_2^2: ", f, flocal)
+    print("prox_||x||_2^2: ", all(proxdlocal == proxlocal), np.linalg.norm(proxdlocal - proxlocal))
+    print("grad_||x||_2^2: ", all(graddlocal == gradlocal))
