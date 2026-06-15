@@ -1,6 +1,6 @@
 """
 Proximal Operators using MPI
-========================================
+============================
 
 The subpackage proximal extends the pyproximal.proximal module providing
 custom (non-separable) proximal operator using MPI, which cannot be

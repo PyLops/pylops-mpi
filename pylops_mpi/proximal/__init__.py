@@ -21,6 +21,7 @@ and in pylops_mpi.proximal.optimization.primaldual:
 
 from .ProxOperator import *
 from .proximal import *
+from .optimization import *
 
 
 __all__ = [

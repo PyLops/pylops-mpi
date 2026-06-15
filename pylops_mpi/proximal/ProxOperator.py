@@ -4,7 +4,7 @@ from typing import Any, Callable
 from pyproximal import ProxOperator
 from pylops.utils.backend import get_module
 
-from pylops_mpi import DistributedArray
+from pylops_mpi import DistributedArray, Partition
 
 
 _call_reduce_op = dict(
@@ -67,17 +67,21 @@ class MPIProxOperator:
         # Compute local function evaluation
         f = self.proxop(x.local_array)
 
-        # Create receiver buffer
-        ncp = get_module(x.engine)
-        recv_buf = ncp.empty(shape=1, dtype=ncp.float64)
+        if Partition.SCATTER:
+            # Create receiver buffer
+            ncp = get_module(x.engine)
+            recv_buf = ncp.empty(shape=1, dtype=ncp.float64)
 
-        # Reduce local function evaluations into final evaluation
-        reduce_op = _call_reduce_op[str(type(self.proxop).__name__)]
-        recv_buf = x._allreduce_subcomm(x.sub_comm, x.base_comm_nccl,
-                                        ncp.asarray(f), recv_buf,
-                                        reduce_op,
-                                        engine=x.engine)
-        return recv_buf[0]
+            # Reduce local function evaluations into final evaluation
+            reduce_op = _call_reduce_op[str(type(self.proxop).__name__)]
+            recv_buf = x._allreduce_subcomm(x.sub_comm, x.base_comm_nccl,
+                                            ncp.asarray(f), recv_buf,
+                                            reduce_op,
+                                            engine=x.engine)
+            return recv_buf[0]
+        else:
+            # For broadcasted arrays, simply return the local f
+            return f
 
     def prox(self, x: DistributedArray, tau: float, **kwargs: Any) -> DistributedArray:
         """Proximal operator applied to a vector
