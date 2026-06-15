@@ -1,7 +1,8 @@
+from typing import Any, Callable, Dict, Optional, Tuple, Union
+import sys
 import time
 import logging
 from math import sqrt
-from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 import numpy as np
 
@@ -110,6 +111,7 @@ class ISTA(Solver):
         print(strpar1)
         print("-" * 80)
         print(head1)
+        sys.stdout.flush()
 
     def _print_step(
             self,
@@ -129,6 +131,7 @@ class ISTA(Solver):
             + f"{costdata:10.3e}   {costdata + costreg:9.3e}  {xupdate:10.3e}"
         )
         print(msg)
+        sys.stdout.flush()
 
     def memory_usage(
             self,
@@ -250,10 +253,10 @@ class ISTA(Solver):
                     **self.eigsdict
                 )[0]
             )
-            print("maxeieur", maxeig)
             self.alpha = float(1.0 / maxeig)
         self.thresh = eps * self.alpha * 0.5
         x = x0.copy()
+        self.rank = x.rank
 
         # create variable to track residual
         if monitorres:
@@ -263,7 +266,7 @@ class ISTA(Solver):
         # create variables to track the residual norm and iterations
         self.cost = []
         self.iiter = 0
-        if show:
+        if show and self.rank == 0:
             self._print_setup()
         return x
 
@@ -338,7 +341,7 @@ class ISTA(Solver):
         costreg = self.eps * x.norm(ord=1).item()
         self.cost.append(float(costdata + costreg))
         self.iiter += 1
-        if show:
+        if show and self.rank == 0:
             self._print_step(x, costdata, costreg, xupdate)
         return x, xupdate
 
@@ -404,7 +407,7 @@ class ISTA(Solver):
         self.tend = time.time()
         self.telapsed = self.tend - self.tstart
         self.cost = np.array(self.cost)
-        if show:
+        if show and self.rank == 0:
             self._print_finalize()
 
     def solve(
@@ -657,7 +660,7 @@ class FISTA(ISTA):
         self.cost.append(float(costdata + costreg))
 
         self.iiter += 1
-        if show:
+        if show and self.rank == 0:
             self._print_step(x, costdata, costreg, xupdate)
         return x, z, xupdate
 

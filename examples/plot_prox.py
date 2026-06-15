@@ -115,7 +115,7 @@ l2 = pyproximal.L2(
     solver=solver, x0=x0local, kwargs_solver=dict(show=True))
 l2d = pylops_mpi.proximal.MPIL2(
     Op=Opd, b=b, sigma=2.0,
-    solver=solver, x0=x0, kwargs_solver=dict(show=True))
+    solver=solver, x0=x0, kwargs_solver=dict(show=True if rank==0 else False))
 f = l2d(arr)
 prox = l2d.prox(arr, .1)
 proxdlocal = prox.asarray()
@@ -130,3 +130,44 @@ if rank == 0:
     print("||x||_2^2: ", f, flocal)
     print("prox_||x||_2^2: ", all(proxdlocal == proxlocal), np.linalg.norm(proxdlocal - proxlocal))
     print("grad_||x||_2^2: ", all(graddlocal == gradlocal))
+
+
+
+# Proximal gradient
+arr = pylops_mpi.DistributedArray(global_shape=n,
+                                  partition=pylops_mpi.Partition.BROADCAST)
+arr[:] = 0.0
+arr[n//4] = 1.0
+arr[n//2] = -0.5
+
+Op = pylops.MatrixMult(np.random.normal(0, 1, (n-2, n,)))
+Opd = pylops_mpi.MPILinearOperator(Op)
+
+b = Opd @ arr
+blocal = b.asarray()
+
+l2d = pylops_mpi.proximal.MPIL2(
+    Op=Opd, b=b, solver=solver, x0=arr.zeros_like())
+l1 = pyproximal.L1(sigma=8e-1)
+l1d = pylops_mpi.proximal.MPIProxOperator(l1)
+
+arrpg = pylops_mpi.proximal.optimization.primal.ProximalGradient(
+        l2d, l1d, x0=arr.zeros_like(), tau=1e-2, niter=400,
+        show=True
+    )
+arrpgdlocal = arrpg.asarray()
+
+arrlocal = arr.asarray()
+if rank == 0:
+    l2local = pyproximal.L2(
+        Op=Op, b=blocal,
+        solver=solver)
+    l1local = pyproximal.L1(sigma=8e-1)
+
+    arrpglocal = pyproximal.optimization.primal.ProximalGradient(
+        l2local, l1local, x0=np.zeros(n), tau=1e-2, niter=400, show=True
+    )  
+
+    print('PG true', arrlocal)
+    print('PG distr', arrpgdlocal)
+    print('PG local', arrpglocal)
