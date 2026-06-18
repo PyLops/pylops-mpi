@@ -988,6 +988,18 @@ class StackedDistributedArray:
             self.global_shape = tuple([g1 + g2 for g1, g2 in \
                 zip(self.global_shape, distarrays[iarr].global_shape)])
 
+    @property
+    def engine(self):
+        """Engine
+
+        Find engine by inspecting the first :class:`pylops_mpi.DistributedArray`
+        among ``distarrays`` (some may be nested
+        :class:`pylops_mpi.StackedDistributedArray`, which expose this same
+        property).
+        """
+        return next(distarr.engine for distarr in self.distarrays
+                    if isinstance(distarr, (DistributedArray, StackedDistributedArray)))
+
     def __getitem__(self, index):
         return self.distarrays[index]
 
@@ -1015,7 +1027,7 @@ class StackedDistributedArray:
             Global Array gathered at all ranks
 
         """
-        ncp = get_module(self.distarrays[0].engine)
+        ncp = get_module(self.engine)
         return ncp.hstack([distarr.asarray().ravel() for distarr in self.distarrays])
 
     def _check_stacked_size(self, stacked_array):
@@ -1137,7 +1149,7 @@ class StackedDistributedArray:
         ord : :obj:`int`, optional
             Order of the norm.
         """
-        ncp = get_module(self.distarrays[0].engine)
+        ncp = get_module(self.engine)
         norms = ncp.hstack([distarray.norm(ord) for distarray in self.distarrays])
         ord = 2 if ord is None else ord
         if ord in ['fro', 'nuc']:

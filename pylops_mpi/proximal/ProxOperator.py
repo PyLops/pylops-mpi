@@ -48,8 +48,11 @@ class MPIProxOperator:
         self.hasgrad = prox.hasgrad
 
     def __repr__(self) -> str:
-        return f"<{type(self).__name__} ({type(self.proxop).__name__})>"
-
+        if hasattr(self, "proxop"):
+            return f"<{type(self).__name__} ({type(self.proxop).__name__})>"
+        else:
+            return f"<{type(self).__name__}>"
+    
     def __call__(self, x: DistributedArray) -> DistributedArray:
         """Functional evaluation of the oprator.
 

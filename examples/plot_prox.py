@@ -179,16 +179,16 @@ arrlocal = np.ones((ny, nx))
 arrlocal[ny//2-5:ny//2+5, nx//2-5:nx//2+5] = 2
 arr = pylops_mpi.DistributedArray(global_shape=ny * nx,
                                   partition=pylops_mpi.Partition.SCATTER)
-arr[:] = arrlocal[ny//4 * rank: ny//4 * (rank +1)].flatten()
+arr[:] = arrlocal[ny//size * rank: ny//size * (rank +1)].flatten()
 
 Op = pylops.Diagonal(np.ones(ny*nx))
-Opd = pylops_mpi.MPIBlockDiag([pylops.Diagonal(np.ones(ny*nx//4)),])
+Opd = pylops_mpi.MPIBlockDiag([pylops.Diagonal(np.ones(ny*nx//size)),])
 
 b = Opd @ arr
 blocal = b.asarray()
 
 Iop = pylops.Identity(ny*nx)
-Iopd = pylops_mpi.MPIBlockDiag([pylops.Identity(ny*nx//4),])
+Iopd = pylops_mpi.MPIBlockDiag([pylops.Identity(ny*nx//size),])
 
 L = 8.0  # maxeig(Gop^H Gop)
 
@@ -223,10 +223,10 @@ arrlocal = np.ones((ny, nx))
 arrlocal[ny//2-5:ny//2+5, nx//2-5:nx//2+5] = 2
 arr = pylops_mpi.DistributedArray(global_shape=ny * nx,
                                   partition=pylops_mpi.Partition.SCATTER)
-arr[:] = arrlocal[ny//4 * rank: ny//4 * (rank +1)].flatten()
+arr[:] = arrlocal[ny//size * rank: ny//size * (rank +1)].flatten()
 
 Op = pylops.Diagonal(np.ones(ny*nx))
-Opd = pylops_mpi.MPIBlockDiag([pylops.Diagonal(np.ones(ny*nx//4)),])
+Opd = pylops_mpi.MPIBlockDiag([pylops.Diagonal(np.ones(ny*nx//size)),])
 
 b = Opd @ arr
 blocal = b.asarray()
