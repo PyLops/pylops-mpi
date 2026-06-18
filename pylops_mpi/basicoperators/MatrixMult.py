@@ -334,10 +334,9 @@ class _MPIBlockMatrixMult(DistributedMixIn, MPILinearOperator):
         self._rank_col_lens = self._allgather(self.base_comm, None, self._local_ncols)
         total_ncols = np.sum(self._rank_col_lens)
 
-        self.dims = (self.K, total_ncols)
-        self.dimsd = (self.N, total_ncols)
-        shape = (int(np.prod(self.dimsd)), int(np.prod(self.dims)))
-        super().__init__(shape=shape, dtype=np.dtype(dtype), base_comm=base_comm)
+        dims = (self.K, total_ncols)
+        dimsd = (self.N, total_ncols)
+        super().__init__(dims=dims, dimsd=dimsd, dtype=np.dtype(dtype), base_comm=base_comm)
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
@@ -604,10 +603,9 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
         if saveAt:
             self.At = self.A.T.conj()
 
-        self.dims = (self.K, self.M)
-        self.dimsd = (self.N, self.M)
-        shape = (int(np.prod(self.dimsd)), int(np.prod(self.dims)))
-        super().__init__(shape=shape, dtype=np.dtype(dtype), base_comm=base_comm)
+        dims = (self.K, self.M)
+        dimsd = (self.N, self.M)
+        super().__init__(dims=dims, dimsd=dimsd, dtype=np.dtype(dtype), base_comm=base_comm)
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)

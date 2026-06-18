@@ -114,9 +114,10 @@ class MPIBlockDiag(MPILinearOperator):
         self.local_shapes_n = base_comm.allgather((self.nops, ))
         self.nnops = np.insert(np.cumsum(nops), 0, 0)
         self.mmops = np.insert(np.cumsum(mops), 0, 0)
-        shape = (base_comm.allreduce(self.nops), base_comm.allreduce(self.mops))
+        dimsd = (base_comm.allreduce(self.nops), )
+        dims = (base_comm.allreduce(self.mops), )
         dtype = _get_dtype(ops) if dtype is None else np.dtype(dtype)
-        super().__init__(shape=shape, dtype=dtype, base_comm=base_comm)
+        super().__init__(dims=dims, dimsd=dimsd, dtype=dtype, base_comm=base_comm)
 
     @reshaped(forward=True, stacking=True)
     def _matvec(self, x: DistributedArray) -> DistributedArray:

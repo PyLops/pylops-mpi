@@ -29,24 +29,40 @@ class MPIStackedLinearOperator(ABC):
     Parameters
     ----------
     shape : :obj:`tuple(int, int)`, optional
-        Shape of the MPIStackedLinearOperator. Defaults to ``None``.
+        Shape of the MPIStackedLinearOperator. If not provided, obtained from ``dims`` and ``dimsd``.
+    dims : :obj:`tuple(int, ..., int)`, optional
+        Dimensions of model. If not provided, ``(self.shape[1],)`` is used.
+    dimsd : :obj:`tuple(int, ..., int)`, optional
+        Dimensions of data. If not provided, ``(self.shape[0],)`` is used.
     dtype : :obj:`str`, optional
         Type of elements in input array. Defaults to ``None``.
     base_comm : :obj:`mpi4py.MPI.Comm`, optional
         MPI Base Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.
     """
 
-    def __init__(self, shape: Optional[ShapeLike] = None,
-                 dtype: Optional[DTypeLike] = None,
-                 base_comm: MPI.Comm = MPI.COMM_WORLD):
-        if shape:
-            self.shape = shape
-        if dtype:
-            self.dtype = dtype
+    def __init__(
+        self,
+        shape: Optional[ShapeLike] = None,
+        dims: Optional[ShapeLike] = None,
+        dimsd: Optional[ShapeLike] = None,
+        dtype: Optional[DTypeLike] = None,
+        base_comm: MPI.Comm = MPI.COMM_WORLD
+    ):
+        # Infer shape from dims/dimsd if not provided
+        if shape is None:
+            if dims is None or dimsd is None:
+                raise ValueError(
+                    "Must provide either 'shape' or both 'dims' and 'dimsd'"
+                )
+            shape = (int(np.prod(dimsd)), int(np.prod(dims)))
+        self.shape = shape
+        self.dims = (shape[1],) if dims is None else dims
+        self.dimsd = (shape[0],) if dimsd is None else dimsd
+        self.dtype = dtype
         # For MPI
         self.base_comm = base_comm
-        self.size = self.base_comm.Get_size()
-        self.rank = self.base_comm.Get_rank()
+        self.size = base_comm.Get_size()
+        self.rank = base_comm.Get_rank()
 
     def matvec(self, x: Union[DistributedArray, StackedDistributedArray]) -> Union[DistributedArray, StackedDistributedArray]:
         """Matrix-vector multiplication.

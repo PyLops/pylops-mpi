@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import numpy as np
 from mpi4py import MPI
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 from scipy.sparse._sputils import isintlike
 from scipy.sparse.linalg._interface import _get_dtype
@@ -26,15 +28,19 @@ class MPILinearOperator:
     Note that whilst this operator could also be used with different
     :obj:`pylops.LinearOperator` across ranks, and with a
     :class:`pylops_mpi.DistributedArray` with ``Partition.SCATTER``, it is however
-    reccomended to use the :class:`pylops_mpi.basicoperators.MPIBlockDiag` operator
+    recommended to use the :class:`pylops_mpi.basicoperators.MPIBlockDiag` operator
     instead as this can also handle distributed arrays with subcommunicators.
 
     Parameters
     ----------
-    Op : :obj:`pylops.LinearOperator`, optional
-        PyLops Linear Operator to wrap. Defaults to ``None``.
+    Op : :obj:`pylops.LinearOperator` or :obj:`pylops_mpi.MPILinearOperator`, optional
+        If other arguments are provided, they will overwrite those obtained from ``Op``. Defaults to ``None``.
     shape : :obj:`tuple(int, int)`, optional
-        Shape of the MPI Linear Operator. Defaults to ``None``.
+        Shape of the MPI Linear Operator. If not provided, obtained from ``dims`` and ``dimsd``.
+    dims : :obj:`tuple(int, ..., int)`, optional
+        Dimensions of model. If not provided, ``(self.shape[1],)`` is used.
+    dimsd : :obj:`tuple(int, ..., int)`, optional
+        Dimensions of data. If not provided, ``(self.shape[0],)`` is used.
     dtype : :obj:`str`, optional
         Type of elements in input array. Defaults to ``None``.
     base_comm : :obj:`mpi4py.MPI.Comm`, optional
@@ -42,20 +48,38 @@ class MPILinearOperator:
 
     """
 
-    def __init__(self, Op: Optional[LinearOperator] = None, shape: Optional[ShapeLike] = None,
-                 dtype: Optional[DTypeLike] = None, base_comm: MPI.Comm = MPI.COMM_WORLD):
-        if Op:
+    def __init__(
+        self,
+        Op: Optional[Union[LinearOperator, MPILinearOperator]] = None,
+        shape: Optional[ShapeLike] = None,
+        dims: Optional[ShapeLike] = None,
+        dimsd: Optional[ShapeLike] = None,
+        dtype: Optional[DTypeLike] = None,
+        base_comm: MPI.Comm = MPI.COMM_WORLD
+    ):
+        if Op is not None:
             self.Op = Op
-            dtype = self.Op.dtype if dtype is None else dtype
-            shape = self.Op.shape if shape is None else shape
-        if shape:
-            self.shape = shape
-        if dtype:
-            self.dtype = dtype
+            dtype = Op.dtype if dtype is None else dtype
+            shape = Op.shape if shape is None else shape
+            # Optional arguments
+            dims = getattr(Op, "dims", None) if dims is None else dims
+            dimsd = getattr(Op, "dimsd", None) if dimsd is None else dimsd
+
+        # Infer shape from dims/dimsd if not provided
+        if shape is None:
+            if dims is None or dimsd is None:
+                raise ValueError(
+                    "Must provide either 'shape' or both 'dims' and 'dimsd'"
+                )
+            shape = (int(np.prod(dimsd)), int(np.prod(dims)))
+        self.shape = shape
+        self.dims = (shape[1],) if dims is None else dims
+        self.dimsd = (shape[0],) if dimsd is None else dimsd
+        self.dtype = dtype
         # For MPI
         self.base_comm = base_comm
-        self.size = self.base_comm.Get_size()
-        self.rank = self.base_comm.Get_rank()
+        self.size = base_comm.Get_size()
+        self.rank = base_comm.Get_rank()
 
     def matvec(self, x: DistributedArray) -> DistributedArray:
         """Matrix-vector multiplication.

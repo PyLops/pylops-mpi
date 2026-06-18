@@ -113,9 +113,10 @@ class MPIVStack(DistributedMixIn, MPILinearOperator):
             raise ValueError("Operators have different number of columns")
         self.mops = int(mops[0])
         self.nnops = np.insert(np.cumsum(nops), 0, 0)
-        shape = (base_comm.allreduce(self.nops), self.mops)
+        dimsd = (base_comm.allreduce(self.nops), )
+        dims = (self.mops, )
         dtype = _get_dtype(self.ops) if dtype is None else np.dtype(dtype)
-        super().__init__(shape=shape, dtype=dtype, base_comm=base_comm)
+        super().__init__(dims=dims, dimsd=dimsd, dtype=dtype, base_comm=base_comm)
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
