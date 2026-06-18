@@ -38,7 +38,7 @@ be written as
         \mathbf{ai}_{2}  \\
         \vdots     \\
         \mathbf{ai}_{N}
-    \end{bmatrix}
+    \end{bmatrix} \rightarrow \mathbf{d} = \mathbf{G} \mathbf{ai}
 
 where :math:`\mathbf{G}_i` is a post-stack modelling operator, :math:`\mathbf{d}_i`
 is the data, and :math:`\mathbf{ai}_i` is the input model for the i-th portion of the model.
@@ -56,6 +56,7 @@ from mpi4py import MPI
 from pylops.utils.wavelets import ricker
 from pylops.basicoperators import Transpose
 from pylops.avo.poststack import PoststackLinearModelling
+from pyproximal.proximal import L1
 
 import pylops_mpi
 
@@ -129,7 +130,7 @@ d_0_dist = BDiag @ mback3d_dist
 d_0 = d_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
-# We perform 2 different kinds of inversions:
+# We perform 3 different kinds of inversions:
 #
 # * Inversion calculated iteratively using the :py:class:`pylops_mpi.optimization.cls_basic.CGLS` solver.
 #
@@ -174,6 +175,13 @@ d_0 = d_dist.asarray().reshape((ny, nx, nz))
 # where :math:`\mathbf{L}` is the :py:class:`pylops_mpi.basicoperators.MPILaplacian` operator
 # which is used to apply second derivative along all three axes, :math:`\mathbf{N}` is an operator computing the
 # normal equations, and :math:`\mathbf{d}^{Norm}` is the data of the normal equation operator used for inversion.
+#
+# * Inversion with anisotropic Total Variation (TV)
+#
+# .. math::
+#   \| \mathbf{d} + \mathbf{G} \mathbf{ai} \|_2^2 + \epsilon \| \boldsymbol \nabla \mathbf{ai} \|_1
+#
+# where :math:`\boldsymbol \nabla` is the :py:class:`pylops_mpi.basicoperators.MPIGradient` operator.
 
 # Inversion using CGLS solver
 minv3d_iter_dist = pylops_mpi.optimization.basic.cgls(BDiag, d_dist, x0=mback3d_dist, niter=100, show=True)[0]
@@ -204,6 +212,22 @@ minv3d_reg_dist = pylops_mpi.optimization.basic.cgls(
 minv3d_reg = minv3d_reg_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
+
+# Inversion with TV
+Gopd = pylops_mpi.MPIGradient(
+    dims=(ny, nx, nz), sampling=1., edge=False, kind="forward")
+
+l1 = L1(sigma=1e-2)
+l1d = pylops_mpi.proximal.MPIProxOperator(l1)
+
+L = 12.0  # maxeig(Gopd^H Gopd)
+minv3d_tv_dist = pylops_mpi.proximal.optimization.primal.ADMML2(
+        l1d, BDiag, d_dist, Gopd, x0=mback3d_dist, tau=.99/L, niter=40,
+        show=True, kwargs_solver=dict(niter=20),
+    )[0]
+minv3d_tv = minv3d_tv_dist.asarray().reshape((ny, nx, nz))
+
+###############################################################################
 # Finally, we display the modeling and inversion results
 
 if rank == 0:
@@ -216,7 +240,7 @@ if rank == 0:
     print('Distr == Local', np.allclose(d, d0))
 
     # Visualize
-    fig, axs = plt.subplots(nrows=6, ncols=3, figsize=(9, 14), constrained_layout=True)
+    fig, axs = plt.subplots(nrows=7, ncols=3, figsize=(9, 14), constrained_layout=True)
     axs[0][0].imshow(m3d[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
     axs[0][0].set_title("Model x-z")
     axs[0][0].axis("tight")
@@ -275,6 +299,16 @@ if rank == 0:
     axs[5][1].axis('tight')
     axs[5][2].imshow(minv3d_reg[:, :, 220].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
     axs[5][2].set_title('Regularized Inverted Model iter x-y')
+    axs[5][2].axis('tight')
+
+    axs[5][0].imshow(minv3d_tv[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+    axs[5][0].set_title("TV-Regularized Inverted Model iter x-z")
+    axs[5][0].axis("tight")
+    axs[5][1].imshow(minv3d_tv[:, 200, :].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
+    axs[5][1].set_title('TV-Regularized Inverted Model iter y-z')
+    axs[5][1].axis('tight')
+    axs[5][2].imshow(minv3d_tv[:, :, 220].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
+    axs[5][2].set_title('TV-Regularized Inverted Model iter x-y')
     axs[5][2].axis('tight')
 
 ###############################################################################

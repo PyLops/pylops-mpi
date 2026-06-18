@@ -5,15 +5,18 @@ from math import sqrt
 from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
+from pylops.basicoperators import Identity
 from pylops.optimization.leastsquares import regularized_inversion
 from pylops.utils.backend import get_array_module, to_numpy
 from pylops.utils.typing import NDArray
 
 from pyproximal.proximal import L2
+from pyproximal.optimization.primal import _x0z0_init
 
-from pylops_mpi import DistributedArray
+from pylops_mpi import DistributedArray, StackedDistributedArray
+from pylops_mpi.basicoperators import MPIBlockDiag, MPIStackedVStack
+from pylops_mpi.optimization.basic import cg, cgls
 from pylops_mpi.proximal.ProxOperator import MPIProxOperator
-
 
 if TYPE_CHECKING:
     from pylops_mpi.linearoperator import MPILinearOperator
@@ -32,9 +35,9 @@ def ProximalGradient(
     niterback: int = 100,
     acceleration: str | None = None,
     tol: float | None = None,
-    callback: Callable[[NDArray], None] | None = None,
+    callback: Callable[[DistributedArray], None] | None = None,
     show: bool = False,
-) -> NDArray:
+) -> DistributedArray:
     r"""Proximal gradient (optionally accelerated)
 
     """
@@ -66,8 +69,8 @@ def ProximalGradient(
             ""
             "niterback = %d\tacceleration = %s\n"
             % (
-                type(proxf),
-                type(proxg),
+                proxf,
+                proxg,
                 str(tau),
                 backtracking,
                 beta,
@@ -172,5 +175,87 @@ def ProximalGradient(
     if show and rank == 0:
         print("\nTotal time (s) = %.2f" % (time.time() - tstart))
         print("---------------------------------------------------------\n")
+        sys.stdout.flush()
     return x
+
+
+
+def ADMML2(
+    proxg: MPIProxOperator,
+    Op: "MPILinearOperator",
+    b: DistributedArray,
+    A: "MPILinearOperator",
+    x0: DistributedArray,
+    tau: float,
+    niter: int = 10,
+    z0: DistributedArray | None = None,
+    gfirst: bool = False,
+    callback: Callable[[DistributedArray], None] | None = None,
+    show: bool = False,
+    kwargs_solver: dict[str, Any] = {},
+) -> tuple[DistributedArray, DistributedArray]:
+    r"""Alternating Direction Method of Multipliers for L2 misfit term
+
+    """
+    rank = x0.rank
+    
+    # initialize variables
+    x, z = _x0z0_init(x0, z0, A, Opname="A")
+    u = z.zeros_like()
+
+    if show and rank == 0:
+        tstart = time.time()
+        print(
+            "ADMM\n"
+            "---------------------------------------------------------\n"
+            "Proximal operator (g): %s\n"
+            "tau = %10e\tniter = %d\n" % (proxg, tau, niter)
+        )
+        head = "   Itn       x[0]          f           g       J = f + g"
+        print(head)
+        sys.stdout.flush()
+
+    # run iterations
+    sqrttau = 1.0 / sqrt(tau)
+    for iiter in range(niter):
+        if gfirst:
+            Ax = A @ x
+            z = proxg.prox(Ax + u, tau)
+
+            # solve augumented system
+            Opreg = MPIStackedVStack([Op, sqrttau * A])
+            breg = StackedDistributedArray([b, sqrttau * (z - u)])
+            x = cgls(Opreg, breg, x0=x, **kwargs_solver)[0]
+        else:
+            # solve augumented system
+            Opreg = MPIStackedVStack([Op, sqrttau * A])
+            breg = StackedDistributedArray([b, sqrttau * (z - u)])
+            x = cgls(Opreg, breg, x0=x, **kwargs_solver)[0]
+
+            Ax = A @ x
+            z = proxg.prox(Ax + u, tau)
+        u = u + Ax - z
+
+        # run callback
+        if callback is not None:
+            callback(x)
+
+        if show:
+            if iiter < 10 or niter - iiter < 10 or iiter % (niter // 10) == 0:
+                pf, pg = 0.5 * (Op @ x - b).norm() ** 2, proxg(Ax)
+                if rank == 0:
+                    msg = "%6g  %12.5e  %10.3e  %10.3e  %10.3e" % (
+                        iiter + 1,
+                        np.real(to_numpy(x[0])),
+                        pf,
+                        pg,
+                        pf + pg,
+                    )
+                    print(msg)
+                    sys.stdout.flush()
+    if show and rank == 0:
+        print("\nTotal time (s) = %.2f" % (time.time() - tstart))
+        print("---------------------------------------------------------\n")
+        sys.stdout.flush()
+    return x, z
 

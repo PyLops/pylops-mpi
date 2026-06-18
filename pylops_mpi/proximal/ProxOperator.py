@@ -8,8 +8,9 @@ from pylops_mpi import DistributedArray, Partition
 
 
 _call_reduce_op = dict(
-    Box=MPI.LAND,
-    L1=MPI.SUM,
+    Box=(MPI.LAND, all),
+    L0=(MPI.SUM, sum),
+    L1=(MPI.SUM, sum),
 )
 
 
@@ -46,6 +47,9 @@ class MPIProxOperator:
         self.proxop = prox
         self.hasgrad = prox.hasgrad
 
+    def __repr__(self) -> str:
+        return f"<{type(self).__name__} ({type(self.proxop).__name__})>"
+
     def __call__(self, x: DistributedArray) -> DistributedArray:
         """Functional evaluation of the oprator.
 
@@ -64,39 +68,40 @@ class MPIProxOperator:
             Function evaluation
 
         """
-        # Compute local function evaluation
-        f = self.proxop(x.local_array)
+        if isinstance(x, DistributedArray):
+            # Compute local function evaluation
+            f = self.proxop(x.local_array)
 
-        if Partition.SCATTER:
-            # Create receiver buffer
-            ncp = get_module(x.engine)
-            recv_buf = ncp.empty(shape=1, dtype=ncp.float64)
+            if x.partition == Partition.SCATTER:
+                # Create receiver buffer
+                ncp = get_module(x.engine)
 
-            # Reduce local function evaluations into final evaluation
-            reduce_op = _call_reduce_op[str(type(self.proxop).__name__)]
-            recv_buf = x._allreduce_subcomm(x.sub_comm, x.base_comm_nccl,
-                                            ncp.asarray(f), recv_buf,
-                                            reduce_op,
-                                            engine=x.engine)
-            return recv_buf[0]
-        else:
-            # For broadcasted arrays, simply return the local f
+                # Reduce local function evaluations into final evaluation
+                reduce_op = _call_reduce_op[str(type(self.proxop).__name__)][0]
+                recv_buf = x._allreduce_subcomm(x.sub_comm, x.base_comm_nccl,
+                                                ncp.asarray(f),
+                                                op=reduce_op,
+                                                engine=x.engine)
+                return recv_buf
+            else:
+                # For broadcasted arrays, simply return the local f
+                return f
+        else:  # StackedDistributedArray
+            reduce_op = _call_reduce_op[str(type(self.proxop).__name__)][1]
+            fs = [self(x[iarr]) for iarr in range(x.narrays)]
+            f =  reduce_op(fs)
             return f
-
+            
     def prox(self, x: DistributedArray, tau: float, **kwargs: Any) -> DistributedArray:
         """Proximal operator applied to a vector
         """
-        y = DistributedArray(global_shape=x.global_shape,
-                             base_comm=x.base_comm,
-                             base_comm_nccl=x.base_comm_nccl,
-                             partition=x.partition,
-                             axis=x.axis,
-                             local_shapes=x.local_shapes,
-                             mask=x.mask,
-                             engine=x.engine,
-                             dtype=x.dtype)
-        y[:] = self.proxop.prox(x.local_array, tau)
-
+        if isinstance(x, DistributedArray):
+            y = x.empty_like()
+            y[:] = self.proxop.prox(x.local_array, tau)
+        else:  # StackedDistributedArray
+            y = x.empty_like()
+            for iarr in range(x.narrays):
+                y[iarr][:] = self.proxop.prox(x[iarr].local_array, tau)
         return y
 
     def proxdual(self, x: DistributedArray, tau: float, **kwargs: Any) -> DistributedArray:

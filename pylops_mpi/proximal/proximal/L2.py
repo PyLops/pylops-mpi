@@ -3,7 +3,6 @@ from mpi4py import MPI
 from typing import TYPE_CHECKING, Any, Callable
 
 from pylops.basicoperators import Identity
-from pylops.utils.backend import get_module
 from pyproximal.ProxOperator import _check_tau
 
 from pylops_mpi import DistributedArray, StackedDistributedArray

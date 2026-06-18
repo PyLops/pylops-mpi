@@ -171,3 +171,96 @@ if rank == 0:
     print('PG true', arrlocal)
     print('PG distr', arrpgdlocal)
     print('PG local', arrpglocal)
+
+
+# ADMML2 with stacked operator
+ny, nx = 40, 40
+arrlocal = np.ones((ny, nx))
+arrlocal[ny//2-5:ny//2+5, nx//2-5:nx//2+5] = 2
+arr = pylops_mpi.DistributedArray(global_shape=ny * nx,
+                                  partition=pylops_mpi.Partition.SCATTER)
+arr[:] = arrlocal[ny//4 * rank: ny//4 * (rank +1)].flatten()
+
+Op = pylops.Diagonal(np.ones(ny*nx))
+Opd = pylops_mpi.MPIBlockDiag([pylops.Diagonal(np.ones(ny*nx//4)),])
+
+b = Opd @ arr
+blocal = b.asarray()
+
+Iop = pylops.Identity(ny*nx)
+Iopd = pylops_mpi.MPIBlockDiag([pylops.Identity(ny*nx//4),])
+
+L = 8.0  # maxeig(Gop^H Gop)
+
+l1 = pyproximal.L1(sigma=8e-1)
+l1d = pylops_mpi.proximal.MPIProxOperator(l1)
+
+x0distr = arr.zeros_like()
+arradmm = pylops_mpi.proximal.optimization.primal.ADMML2(
+        l1d, Opd, b, Iopd, x0=x0distr, tau=.99/L, niter=5,
+        show=True, kwargs_solver=dict(niter=20),
+    )[0]
+arradmmdlocal = arradmm.asarray()
+
+arrlocal = arr.asarray()
+if rank == 0:
+
+    l1local = pyproximal.L1(sigma=8e-1)
+
+    arradmmlocal = pyproximal.optimization.primal.ADMML2(
+        l1local, Op, blocal, Iop, x0=np.zeros(ny*nx), 
+        tau=.99/L, niter=5, show=True, iter_lim=20,
+    )[0]
+
+    print('ADMML2 true', arrlocal)
+    print('ADMML2 distr', arradmmdlocal)
+    print('ADMML2 local', arradmmlocal)
+
+
+# ADMML2 with stacked operator for A
+ny, nx = 40, 40
+arrlocal = np.ones((ny, nx))
+arrlocal[ny//2-5:ny//2+5, nx//2-5:nx//2+5] = 2
+arr = pylops_mpi.DistributedArray(global_shape=ny * nx,
+                                  partition=pylops_mpi.Partition.SCATTER)
+arr[:] = arrlocal[ny//4 * rank: ny//4 * (rank +1)].flatten()
+
+Op = pylops.Diagonal(np.ones(ny*nx))
+Opd = pylops_mpi.MPIBlockDiag([pylops.Diagonal(np.ones(ny*nx//4)),])
+
+b = Opd @ arr
+blocal = b.asarray()
+
+Gopd = pylops_mpi.MPIGradient(
+    dims=(ny, nx), sampling=1., edge=False, kind="forward")
+
+L = 8.0  # maxeig(Gop^H Gop)
+
+l1 = pyproximal.L1(sigma=8e-1)
+l1d = pylops_mpi.proximal.MPIProxOperator(l1)
+
+x0distr = arr.zeros_like()
+arradmm = pylops_mpi.proximal.optimization.primal.ADMML2(
+        l1d, Opd, b, Gopd, x0=x0distr, tau=.99/L, niter=5,
+        show=True, kwargs_solver=dict(niter=5),
+    )[0]
+arradmmdlocal = arradmm.asarray()
+
+arrlocal = arr.asarray()
+if rank == 0:
+
+    Gop = pylops.Gradient(
+        dims=(ny, nx), sampling=1., edge=False, kind="forward",
+        )
+    l1local = pyproximal.L1(sigma=8e-1)
+
+    arradmmlocal = pyproximal.optimization.primal.ADMML2(
+        l1local, Op, blocal, Gop, x0=np.zeros(ny*nx), 
+        tau=.99/L, niter=5, show=True, iter_lim=5,
+    )[0]
+
+    print('ADMML2 true', arrlocal)
+    print('ADMML2 distr', arradmmdlocal)
+    print('ADMML2 local', arradmmlocal)
+    print(arradmmdlocal - arradmmlocal)
+
