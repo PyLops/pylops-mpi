@@ -4,7 +4,7 @@ import numpy as np
 from mpi4py import MPI
 from pylops.utils import ShapeLike, DTypeLike
 
-from scipy.sparse._sputils import isintlike
+from scipy.sparse._sputils import isintlike, isshape
 from scipy.sparse.linalg._interface import _get_dtype
 
 from pylops_mpi.DistributedArray import DistributedArray, StackedDistributedArray
@@ -49,20 +49,109 @@ class MPIStackedLinearOperator(ABC):
         base_comm: MPI.Comm = MPI.COMM_WORLD
     ):
         # Infer shape from dims/dimsd if not provided
-        if shape is None:
-            if dims is None or dimsd is None:
-                raise ValueError(
-                    "Must provide either 'shape' or both 'dims' and 'dimsd'"
-                )
-            shape = (int(np.prod(dimsd)), int(np.prod(dims)))
-        self.shape = shape
-        self.dims = (shape[1],) if dims is None else dims
-        self.dimsd = (shape[0],) if dimsd is None else dimsd
-        self.dtype = dtype
+        if shape is not None:
+            self.shape = shape
+        if dims is not None:
+            self.dims = dims
+        if dimsd is not None:
+            self.dimsd = dimsd
+        if dtype is not None:
+            self.dtype = dtype
         # For MPI
         self.base_comm = base_comm
         self.size = base_comm.Get_size()
         self.rank = base_comm.Get_rank()
+
+    @property
+    def shape(self):
+        _shape = getattr(self, "_shape", None)
+        if _shape is None:  # Cannot find shape, falling back on dims and dimsd
+            dims = getattr(self, "_dims", None)
+            dimsd = getattr(self, "_dimsd", None)
+            if dims is None or dimsd is None:  # Cannot find both dims and dimsd, error
+                msg = (
+                    f"'{self.__class__.__name__}' object has no attribute 'shape' "
+                    "nor both fallback attributes ('dims', 'dimsd')"
+                )
+                raise AttributeError(msg)
+            _shape = (int(np.prod(dimsd)), int(np.prod(dims)))
+            self._shape = _shape  # Update to not redo everything above on next call
+        return _shape
+
+    @shape.setter
+    def shape(self, new_shape: ShapeLike) -> None:
+        new_shape = tuple(new_shape)
+        if not isshape(new_shape):
+            msg = f"Invalid shape; must be 2-d tuple of integers, got {new_shape}"
+            raise ValueError(msg)
+        dims = getattr(self, "_dims", None)
+        dimsd = getattr(self, "_dimsd", None)
+        if dims is not None and dimsd is not None:  # Found dims and dimsd
+            if np.prod(dimsd) != new_shape[0] and np.prod(dims) != new_shape[1]:
+                msg = "New shape incompatible with dims and dimsd"
+                raise ValueError(msg)
+            elif np.prod(dimsd) != new_shape[0]:
+                msg = "New shape incompatible with dimsd"
+                raise ValueError(msg)
+            elif np.prod(dims) != new_shape[1]:
+                msg = "New shape incompatible with dims"
+                raise ValueError(msg)
+        self._shape = new_shape
+
+    @property
+    def dims(self):
+        _dims = getattr(self, "_dims", None)
+        if _dims is None:
+            shape = getattr(self, "_shape", None)
+            if shape is None:
+                msg = (
+                    f"'{self.__class__.__name__}' object has no "
+                    "attributes 'dims' or 'shape'"
+                )
+                raise AttributeError(msg)
+            _dims = (shape[1],)
+        return _dims
+
+    @dims.setter
+    def dims(self, new_dims: ShapeLike) -> None:
+        new_dims = tuple(new_dims)
+        shape = getattr(self, "_shape", None)
+        if shape is None:  # shape not set yet
+            self._dims = new_dims
+        else:
+            if np.prod(new_dims) == self.shape[1]:
+                self._dims = new_dims
+            else:
+                msg = "dims incompatible with shape[1]"
+                raise ValueError(msg)
+
+    @property
+    def dimsd(self):
+        _dimsd = getattr(self, "_dimsd", None)
+        if _dimsd is None:
+            shape = getattr(self, "_shape", None)
+            if shape is None:
+                msg = (
+                    f"'{self.__class__.__name__}' object has "
+                    "no attributes 'dimsd' or 'shape'"
+                )
+                raise AttributeError(msg)
+            _dimsd = (shape[0],)
+        return _dimsd
+
+    @dimsd.setter
+    def dimsd(self, new_dimsd: ShapeLike) -> None:
+        print("This is ", new_dimsd)
+        new_dimsd = tuple(new_dimsd)
+        shape = getattr(self, "_shape", None)
+        if shape is None:  # shape not set yet
+            self._dimsd = new_dimsd
+        else:
+            if np.prod(new_dimsd) == self.shape[0]:
+                self._dimsd = new_dimsd
+            else:
+                msg = "dimsd incompatible with shape[0]"
+                raise ValueError(msg)
 
     def matvec(self, x: Union[DistributedArray, StackedDistributedArray]) -> Union[DistributedArray, StackedDistributedArray]:
         """Matrix-vector multiplication.
