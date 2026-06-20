@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Optional, Union, Callable
 from abc import abstractmethod, ABC
 import numpy as np
@@ -141,7 +143,6 @@ class MPIStackedLinearOperator(ABC):
 
     @dimsd.setter
     def dimsd(self, new_dimsd: ShapeLike) -> None:
-        print("This is ", new_dimsd)
         new_dimsd = tuple(new_dimsd)
         shape = getattr(self, "_shape", None)
         if shape is None:  # shape not set yet
@@ -236,9 +237,19 @@ class MPIStackedLinearOperator(ABC):
 
         """
         if isinstance(x, MPIStackedLinearOperator):
-            return _ProductStackedLinearOperator(self, x)
+            Op = _ProductStackedLinearOperator(self, x)
+            self._copy_attributes(
+                Op,
+                exclude=['dims']
+            )
+            Op.dims = x.dims
+            return Op
         elif np.isscalar(x):
-            return _ScaledStackedLinearOperator(self, x)
+            Op = _ScaledStackedLinearOperator(self, x)
+            self._copy_attributes(
+                Op
+            )
+            return Op
         else:
             if x is None or (isinstance(x, DistributedArray) and x.ndim == 1):
                 return self.matvec(x)
@@ -280,7 +291,11 @@ class MPIStackedLinearOperator(ABC):
 
     def __rmul__(self, x):
         if np.isscalar(x):
-            return _ScaledStackedLinearOperator(self, x)
+            Op = _ScaledStackedLinearOperator(self, x)
+            self._copy_attributes(
+                Op
+            )
+            return Op
         else:
             return NotImplemented
 
@@ -295,22 +310,48 @@ class MPIStackedLinearOperator(ABC):
         return self.__rmul__(x)
 
     def __pow__(self, p):
-        return _PowerLinearOperator(self, p)
+        Op = _PowerLinearOperator(self, p)
+        self._copy_attributes(
+            Op
+        )
+        return Op
 
     def __add__(self, x):
-        return _SumStackedLinearOperator(self, x)
+        Op = _SumStackedLinearOperator(self, x)
+        self._copy_attributes(
+            Op
+        )
+        return Op
 
     def __neg__(self):
-        return _ScaledStackedLinearOperator(self, -1)
+        Op = _ScaledStackedLinearOperator(self, -1)
+        self._copy_attributes(
+            Op
+        )
+        return Op
 
     def __sub__(self, x):
         return self.__add__(-x)
 
     def _adjoint(self):
-        return _AdjointStackedLinearOperator(self)
+        Op = _AdjointStackedLinearOperator(self)
+        self._copy_attributes(
+            Op,
+            exclude=['dims', 'dimsd']
+        )
+        Op.dims = self.dimsd
+        Op.dimsd = self.dims
+        return Op
 
     def _transpose(self):
-        return _TransposedStackedLinearOperator(self)
+        Op = _TransposedStackedLinearOperator(self)
+        self._copy_attributes(
+            Op,
+            exclude=['dims', 'dimsd']
+        )
+        Op.dims = self.dimsd
+        Op.dimsd = self.dims
+        return Op
 
     def conj(self):
         """Complex conjugate operator
@@ -330,6 +371,20 @@ class MPIStackedLinearOperator(ABC):
         else:
             dt = f"dtype={self.dtype}"
         return f"<{M}x{N} {self.__class__.__name__} with {dt}>"
+
+    def _copy_attributes(
+        self,
+        dest: MPIStackedLinearOperator,
+        exclude: list[str] | None = None,
+    ) -> None:
+        """Copy attributes from one MPIStackedLinearOperator to another"""
+        attrs = ["dims", "dimsd"]
+        if exclude is not None:
+            for item in exclude:
+                attrs.remove(item)
+        for attr in attrs:
+            if hasattr(self, attr):
+                setattr(dest, attr, getattr(self, attr))
 
 
 class _AdjointStackedLinearOperator(MPIStackedLinearOperator):

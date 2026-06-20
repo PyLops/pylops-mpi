@@ -171,9 +171,9 @@ class MPIStackedBlockDiag(MPIStackedLinearOperator):
                  dtype: Optional[DTypeLike] = None):
         self.ops = ops
         dtype = _get_dtype(self.ops) if dtype is None else np.dtype(dtype)
-        shape = (int(sum(op.shape[0] for op in ops)),
-                 int(sum(op.shape[1] for op in ops)))
-        super().__init__(shape=shape, dtype=dtype, base_comm=base_comm)
+        dims = (int(sum(op.shape[1] for op in ops)), )
+        dimsd = (int(sum(op.shape[0] for op in ops)), )
+        super().__init__(dims=dims, dimsd=dimsd, dtype=dtype, base_comm=base_comm)
 
     def _matvec(self, x: StackedDistributedArray) -> StackedDistributedArray:
         y1 = []

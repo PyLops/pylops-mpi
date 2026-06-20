@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 from mpi4py import MPI
 from typing import Callable, Optional
@@ -254,9 +256,19 @@ class MPILinearOperator:
 
         """
         if isinstance(x, MPILinearOperator):
-            return _ProductLinearOperator(self, x)
+            Op = _ProductLinearOperator(self, x)
+            self._copy_attributes(
+                Op,
+                exclude=['dims']
+            )
+            Op.dims = x.dims
+            return Op
         elif np.isscalar(x):
-            return _ScaledLinearOperator(self, x)
+            Op = _ScaledLinearOperator(self, x)
+            self._copy_attributes(
+                Op
+            )
+            return Op
         else:
             if x is None or x.ndim == 1:
                 return self.matvec(x)
@@ -297,7 +309,11 @@ class MPILinearOperator:
 
     def __rmul__(self, x):
         if np.isscalar(x):
-            return _ScaledLinearOperator(self, x)
+            Op = _ScaledLinearOperator(self, x)
+            self._copy_attributes(
+                Op
+            )
+            return Op
         else:
             return NotImplemented
 
@@ -312,22 +328,48 @@ class MPILinearOperator:
         return self.__rmul__(x)
 
     def __pow__(self, p):
-        return _PowerLinearOperator(self, p)
+        Op = _PowerLinearOperator(self, p)
+        self._copy_attributes(
+            Op
+        )
+        return Op
 
     def __add__(self, x):
-        return _SumLinearOperator(self, x)
+        Op = _SumLinearOperator(self, x)
+        self._copy_attributes(
+            Op
+        )
+        return Op
 
     def __neg__(self):
-        return _ScaledLinearOperator(self, -1)
+        Op = _ScaledLinearOperator(self, -1)
+        self._copy_attributes(
+            Op
+        )
+        return Op
 
     def __sub__(self, x):
         return self.__add__(-x)
 
     def _adjoint(self):
-        return _AdjointLinearOperator(self)
+        Op = _AdjointLinearOperator(self)
+        self._copy_attributes(
+            Op,
+            exclude=['dims', 'dimsd']
+        )
+        Op.dims = self.dimsd
+        Op.dimsd = self.dims
+        return Op
 
     def _transpose(self):
-        return _TransposedLinearOperator(self)
+        Op = _TransposedLinearOperator(self)
+        self._copy_attributes(
+            Op,
+            exclude=['dims', 'dimsd']
+        )
+        Op.dims = self.dimsd
+        Op.dimsd = self.dims
+        return Op
 
     def conj(self):
         """Complex conjugate operator
@@ -339,6 +381,20 @@ class MPILinearOperator:
 
         """
         return _ConjLinearOperator(self)
+
+    def _copy_attributes(
+        self,
+        dest: MPILinearOperator,
+        exclude: list[str] | None = None,
+    ) -> None:
+        """Copy attributes from one MPILinearOperator to another"""
+        attrs = ["dims", "dimsd"]
+        if exclude is not None:
+            for item in exclude:
+                attrs.remove(item)
+        for attr in attrs:
+            if hasattr(self, attr):
+                setattr(dest, attr, getattr(self, attr))
 
     def __repr__(self):
         M, N = self.shape
