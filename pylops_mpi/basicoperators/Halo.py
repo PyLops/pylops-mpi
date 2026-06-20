@@ -190,7 +190,7 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
         dimsd = (self._allreduce(
             comm,
             None,
-            np.prod(np.array(self.local_extent))
+            np.prod(self.local_extent)
         ), )
         super().__init__(dims=dims, dimsd=dimsd, dtype=np.dtype(dtype), base_comm=comm)
 
