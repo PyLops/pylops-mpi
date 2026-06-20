@@ -24,6 +24,7 @@ from pylops_mpi import (
     DistributedArray,
     MPILinearOperator,
     MPIBlockDiag,
+    MPIFirstDerivative,
     MPIVStack,
     Partition
 )
@@ -376,3 +377,38 @@ def test_adj_mpilinop(par):
         FullOp = VStack @ Fop
         y_np = FullOp.H @ x_global
         assert_allclose(y, y_np.flatten(), rtol=1e-9)
+
+
+@pytest.mark.parametrize("par", [(par1), (par2), (par1j), (par2j)])
+def test_copy_dims_dimsd(par):
+    """Apply various overloaded operators (.H, -, +, *) and ensure that the
+    dims and dimsd properties are propagated
+    """
+    Dy = MPIFirstDerivative((par["ny"], par["nx"]))
+    Dx = MPIFirstDerivative((par["ny"], par["nx"]))
+    dims = (par["ny"], par["nx"])
+    dimsd = (par["ny"], par["nx"])
+
+    # negate
+    assert (-Dx).dims == dims
+    assert (-Dx).dimsd == dimsd
+    # multiply by scalar
+    assert (2 * Dx).dims == dims
+    assert (2 * Dx).dimsd == dimsd
+    assert (Dx * 2).dims == dims
+    assert (Dx * 2).dimsd == dimsd
+    # +
+    assert (Dx + Dy).dims == dims
+    assert (Dx + Dy).dimsd == dimsd
+    # -
+    assert (Dx - 2 * Dy).dims == dims
+    assert (Dx - 2 * Dy).dimsd == dimsd
+    # **
+    assert (Dx**3).dims == dims
+    assert (Dx**3).dimsd == dimsd
+    # Hermitian
+    assert Dx.H.dims == dimsd
+    assert Dx.H.dimsd == dims
+    # Transpose
+    assert Dx.T.dims == dimsd
+    assert Dx.T.dimsd == dims
