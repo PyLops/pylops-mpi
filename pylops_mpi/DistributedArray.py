@@ -982,11 +982,39 @@ class StackedDistributedArray:
         self.rank = base_comm.Get_rank()
         self.size = base_comm.Get_size()
 
+        # Define global shape as sum as shapes
+        self.global_shape = distarrays[0].global_shape
+        for iarr in range(1, self.narrays):
+            self.global_shape = tuple([g1 + g2 for g1, g2 in \
+                zip(self.global_shape, distarrays[iarr].global_shape)])
+
+    @property
+    def engine(self):
+        """Engine
+
+        Find engine by inspecting the first :class:`pylops_mpi.DistributedArray`
+        among ``distarrays`` (some may be nested
+        :class:`pylops_mpi.StackedDistributedArray`, which expose this same
+        property).
+        """
+        return next(distarr.engine for distarr in self.distarrays
+                    if isinstance(distarr, (DistributedArray, StackedDistributedArray)))
+
     def __getitem__(self, index):
         return self.distarrays[index]
 
     def __setitem__(self, index, value):
-        self.distarrays[index][:] = value
+        target = self.distarrays[index]
+        if isinstance(target, StackedDistributedArray):
+            # nested StackedDistributedArray: assign each sub-array in turn
+            for iarr in range(target.narrays):
+                target[iarr] = value[iarr]
+        elif isinstance(value, DistributedArray):
+            # plain DistributedArray: assign the local array
+            target[:] = value[:]
+        else:
+            # plain DistributedArray assigned from an array-like / scalar
+            target[:] = value
 
     def asarray(self):
         """Global view of the array
@@ -999,7 +1027,7 @@ class StackedDistributedArray:
             Global Array gathered at all ranks
 
         """
-        ncp = get_module(self.distarrays[0].engine)
+        ncp = get_module(self.engine)
         return ncp.hstack([distarr.asarray().ravel() for distarr in self.distarrays])
 
     def _check_stacked_size(self, stacked_array):
@@ -1017,7 +1045,10 @@ class StackedDistributedArray:
     def __neg__(self):
         arr = self.copy()
         for iarr in range(self.narrays):
-            arr[iarr][:] = -arr[iarr][:]
+            if isinstance(arr[iarr], StackedDistributedArray):
+                arr[iarr] = -arr[iarr]
+            else:
+                arr[iarr][:] = -arr[iarr][:]
         return arr
 
     def __add__(self, x):
@@ -1044,7 +1075,10 @@ class StackedDistributedArray:
         self._check_stacked_size(stacked_array)
         SumArray = self.copy()
         for iarr in range(self.narrays):
-            SumArray[iarr][:] = (self[iarr] + stacked_array[iarr])[:]
+            if isinstance(stacked_array[iarr], StackedDistributedArray):
+                SumArray[iarr] = (self[iarr] + stacked_array[iarr])
+            else:
+                SumArray[iarr][:] = (self[iarr] + stacked_array[iarr])[:]
         return SumArray
 
     def iadd(self, stacked_array):
@@ -1052,7 +1086,10 @@ class StackedDistributedArray:
         """
         self._check_stacked_size(stacked_array)
         for iarr in range(self.narrays):
-            self[iarr][:] = (self[iarr] + stacked_array[iarr])[:]
+            if isinstance(self[iarr], StackedDistributedArray):
+                self[iarr] = (self[iarr] + stacked_array[iarr])
+            else:
+                self[iarr][:] = (self[iarr] + stacked_array[iarr])[:]
         return self
 
     def multiply(self, stacked_array):
@@ -1063,13 +1100,19 @@ class StackedDistributedArray:
         ProductArray = self.copy()
 
         if isinstance(stacked_array, StackedDistributedArray):
-            # multiply two DistributedArray
+            # multiply two StackedDistributedArray
             for iarr in range(self.narrays):
-                ProductArray[iarr][:] = (self[iarr] * stacked_array[iarr])[:]
+                if isinstance(self[iarr], StackedDistributedArray):
+                    ProductArray[iarr] = (self[iarr] * stacked_array[iarr])
+                else:
+                    ProductArray[iarr][:] = (self[iarr] * stacked_array[iarr])[:]
         else:
             # multiply with scalar
             for iarr in range(self.narrays):
-                ProductArray[iarr][:] = (self[iarr] * stacked_array)[:]
+                if isinstance(self[iarr], StackedDistributedArray):
+                    ProductArray[iarr] = (self[iarr] * stacked_array)
+                else:
+                    ProductArray[iarr][:] = (self[iarr] * stacked_array)[:]
         return ProductArray
 
     def dot(self, stacked_array, vdot: bool = False):
@@ -1106,8 +1149,8 @@ class StackedDistributedArray:
         ord : :obj:`int`, optional
             Order of the norm.
         """
-        ncp = get_module(self.distarrays[0].engine)
-        norms = ncp.array([distarray.norm(ord) for distarray in self.distarrays])
+        ncp = get_module(self.engine)
+        norms = ncp.hstack([distarray.norm(ord) for distarray in self.distarrays])
         ord = 2 if ord is None else ord
         if ord in ['fro', 'nuc']:
             raise ValueError(f"norm-{ord} not possible for vectors")
@@ -1135,6 +1178,20 @@ class StackedDistributedArray:
         """
         arr = StackedDistributedArray([distarray.copy() for distarray in self.distarrays])
         return arr
+
+    def zeros_like(self):
+        """Creates a zero like StackedDistributedArray
+        """
+        dists = []
+        for iarr in range(self.narrays):
+            distarray = self.distarrays[iarr]
+            dist = DistributedArray(global_shape=distarray.global_shape, base_comm=distarray.base_comm,
+                                    base_comm_nccl=distarray.base_comm_nccl, partition=distarray.partition,
+                                    axis=distarray.axis, local_shapes=distarray.local_shapes, mask=distarray.mask,
+                                    engine=distarray.engine, dtype=distarray.dtype)
+            dist[:] = 0.
+            dists.append(dist)
+        return StackedDistributedArray(distarrays=dists)
 
     def empty_like(self):
         """Creates an empty like StackedDistributedArray with uninitialized values
