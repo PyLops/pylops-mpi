@@ -325,3 +325,39 @@ def test_product(par):
         Pop = StackedBDiag_1 * StackedBDiag_2
         assert_allclose(Pop_x_np, Pop @ x_global, rtol=1e-14)
         assert_allclose(Pop_y_np, Pop.H @ y_global, rtol=1e-14)
+
+
+@pytest.mark.parametrize("par", [(par1), (par2), (par1j), (par2j)])
+def test_copy_dims_dimsd(par):
+    """Apply various overloaded operators (.H, -, +, *) and ensure that the
+    dims and dimsd properties are propagated
+    """
+    Dx = pylops_mpi.MPIFirstDerivative((par["ny"], par["nx"]))
+    Dy = pylops_mpi.MPIFirstDerivative((par["nx"], par["ny"]))
+    dims_stack = (2 * par["ny"] * par['nx'], )
+    dimsd_stack = (2 * par["ny"] * par['nx'],)
+    Stack = pylops_mpi.MPIStackedBlockDiag(ops=[Dx, Dy])
+
+    # negate
+    assert (-Stack).dims == dims_stack
+    assert (-Stack).dimsd == dimsd_stack
+    # multiply by scalar
+    assert (2 * Stack).dims == dims_stack
+    assert (2 * Stack).dimsd == dimsd_stack
+    assert (Stack * 2).dims == dims_stack
+    assert (Stack * 2).dimsd == dimsd_stack
+    # +
+    assert (Stack + Stack).dims == dims_stack
+    assert (Stack + Stack).dimsd == dimsd_stack
+    # -
+    assert (5 * Stack - 3 * Stack).dims == dims_stack
+    assert (5 * Stack - 3 * Stack).dimsd == dimsd_stack
+    # **
+    assert (Stack**3).dims == dims_stack
+    assert (Stack**3).dimsd == dimsd_stack
+    # Hermitian
+    assert Stack.H.dims == dimsd_stack
+    assert Stack.H.dimsd == dims_stack
+    # Transpose
+    assert Stack.T.dims == dimsd_stack
+    assert Stack.T.dimsd == dims_stack

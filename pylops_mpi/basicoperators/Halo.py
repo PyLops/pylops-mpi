@@ -186,12 +186,13 @@ class MPIHalo(DistributedMixIn, MPILinearOperator):
             None,
             int(np.prod(self.local_extent)),
         )
-
-        self.shape = (
-            int(np.sum(self._local_extent_sizes)),
-            int(np.prod(self.global_dims)),
-        )
-        super().__init__(shape=self.shape, dtype=np.dtype(dtype), base_comm=comm)
+        dims = self.global_dims
+        dimsd = (self._allreduce(
+            comm,
+            None,
+            np.prod(self.local_extent)
+        ), )
+        super().__init__(dims=dims, dimsd=dimsd, dtype=np.dtype(dtype), base_comm=comm)
 
     def _parse_halo(self, h: Union[int, tuple]) -> tuple:
         """Normalize halo input to a 2 * ndim tuple of per-side widths for each axis of the N-dimensional array.

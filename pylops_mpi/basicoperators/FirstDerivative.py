@@ -89,9 +89,8 @@ class MPIFirstDerivative(MPILinearOperator):
                  order: int = 3,
                  base_comm: MPI.Comm = MPI.COMM_WORLD,
                  dtype: DTypeLike = np.float64):
-        self.dims = _value_or_sized_to_tuple(dims)
-        shape = (int(np.prod(dims)),) * 2
-        super().__init__(shape=shape, dtype=np.dtype(dtype), base_comm=base_comm)
+        dims = _value_or_sized_to_tuple(dims)
+        super().__init__(dims=dims, dimsd=dims, dtype=np.dtype(dtype), base_comm=base_comm)
         self.sampling = sampling
         self.kind = kind
         self.edge = edge
