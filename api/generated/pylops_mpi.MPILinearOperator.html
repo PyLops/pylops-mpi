@@ -31,8 +31,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
@@ -44,10 +44,10 @@
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e45f66c9" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../_static/scripts/fontawesome.js?digest=0790524f97105ba85085"></script>
+  <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
@@ -554,7 +554,7 @@
 <h1>pylops_mpi.MPILinearOperator<a class="headerlink" href="#pylops-mpi-mpilinearoperator" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="pylops_mpi.MPILinearOperator">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pylops_mpi.</span></span><span class="sig-name descname"><span class="pre">MPILinearOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Op</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;mpi4py.MPI.Intracomm</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/LinearOperator.html#MPILinearOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.MPILinearOperator" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pylops_mpi.</span></span><span class="sig-name descname"><span class="pre">MPILinearOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Op</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimsd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;mpi4py.MPI.Intracomm</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/LinearOperator.html#MPILinearOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.MPILinearOperator" title="Link to this definition">#</a></dt>
 <dd><p>MPI-enabled PyLops Linear Operator</p>
 <p>Common interface for performing matrix-vector products in distributed fashion.</p>
 <p>In practice, this class provides methods to perform matrix-vector and
@@ -566,14 +566,18 @@ and the creation of the output <a class="reference internal" href="pylops_mpi.Di
 <p>Note that whilst this operator could also be used with different
 <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.LinearOperator.html#pylops.LinearOperator" title="(in PyLops dev)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops.LinearOperator</span></code></a> across ranks, and with a
 <a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a> with <code class="docutils literal notranslate"><span class="pre">Partition.SCATTER</span></code>, it is however
-reccomended to use the <a class="reference internal" href="pylops_mpi.basicoperators.MPIBlockDiag.html#pylops_mpi.basicoperators.MPIBlockDiag" title="pylops_mpi.basicoperators.MPIBlockDiag"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIBlockDiag</span></code></a> operator
+recommended to use the <a class="reference internal" href="pylops_mpi.basicoperators.MPIBlockDiag.html#pylops_mpi.basicoperators.MPIBlockDiag" title="pylops_mpi.basicoperators.MPIBlockDiag"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.basicoperators.MPIBlockDiag</span></code></a> operator
 instead as this can also handle distributed arrays with subcommunicators.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
-<dt><strong>Op</strong><span class="classifier"><a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.LinearOperator.html#pylops.LinearOperator" title="(in PyLops dev)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops.LinearOperator</span></code></a>, optional</span></dt><dd><p>PyLops Linear Operator to wrap. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<dt><strong>Op</strong><span class="classifier"><a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.LinearOperator.html#pylops.LinearOperator" title="(in PyLops dev)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops.LinearOperator</span></code></a>, optional</span></dt><dd><p>If other arguments are provided, they will overwrite those obtained from <code class="docutils literal notranslate"><span class="pre">Op</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 </dd>
-<dt><strong>shape</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple(int,</span> <span class="pre">int)</span></code>, optional</span></dt><dd><p>Shape of the MPI Linear Operator. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<dt><strong>shape</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple(int,</span> <span class="pre">int)</span></code>, optional</span></dt><dd><p>Shape of the MPI Linear Operator. If not provided, obtained from <code class="docutils literal notranslate"><span class="pre">dims</span></code> and <code class="docutils literal notranslate"><span class="pre">dimsd</span></code>.</p>
+</dd>
+<dt><strong>dims</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple(int,</span> <span class="pre">...,</span> <span class="pre">int)</span></code>, optional</span></dt><dd><p>Dimensions of model. If not provided, <code class="docutils literal notranslate"><span class="pre">(self.shape[1],)</span></code> is used.</p>
+</dd>
+<dt><strong>dimsd</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple(int,</span> <span class="pre">...,</span> <span class="pre">int)</span></code>, optional</span></dt><dd><p>Dimensions of data. If not provided, <code class="docutils literal notranslate"><span class="pre">(self.shape[0],)</span></code> is used.</p>
 </dd>
 <dt><strong>dtype</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Type of elements in input array. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 </dd>
@@ -585,7 +589,7 @@ instead as this can also handle distributed arrays with subcommunicators.</p>
 <p class="rubric">Methods</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code>([Op, shape, dtype, base_comm])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code>([Op, shape, dims, dimsd, dtype, ...])</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">adjoint</span></code>()</p></td>
@@ -717,8 +721,8 @@ instead as this can also handle distributed arrays with subcommunicators.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -752,7 +756,7 @@ instead as this can also handle distributed arrays with subcommunicators.</p>
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.18.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
 </p></div>
       
     </div>

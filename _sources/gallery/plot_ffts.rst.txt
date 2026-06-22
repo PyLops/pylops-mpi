@@ -176,7 +176,7 @@ three-dimensional signal using :py:class:`pylops_mpi.signalprocessing.MPIFFTND`.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 1.417 seconds)
+   **Total running time of the script:** (0 minutes 1.074 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_ffts.py:

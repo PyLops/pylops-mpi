@@ -30,8 +30,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../_static/styles/theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
-<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+  <link href="../../../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
@@ -43,10 +43,10 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e45f66c9" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../_static/scripts/fontawesome.js?digest=0790524f97105ba85085"></script>
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
-<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
@@ -585,9 +585,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">local_shapes_n</span> <span class="o">=</span> <span class="n">base_comm</span><span class="o">.</span><span class="n">allgather</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nops</span><span class="p">,</span> <span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nnops</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">nops</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mmops</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">mops</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">base_comm</span><span class="o">.</span><span class="n">allreduce</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nops</span><span class="p">),</span> <span class="n">base_comm</span><span class="o">.</span><span class="n">allreduce</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mops</span><span class="p">))</span>
+        <span class="n">dimsd</span> <span class="o">=</span> <span class="p">(</span><span class="n">base_comm</span><span class="o">.</span><span class="n">allreduce</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nops</span><span class="p">),</span> <span class="p">)</span>
+        <span class="n">dims</span> <span class="o">=</span> <span class="p">(</span><span class="n">base_comm</span><span class="o">.</span><span class="n">allreduce</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mops</span><span class="p">),</span> <span class="p">)</span>
         <span class="n">dtype</span> <span class="o">=</span> <span class="n">_get_dtype</span><span class="p">(</span><span class="n">ops</span><span class="p">)</span> <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">base_comm</span><span class="o">=</span><span class="n">base_comm</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dims</span><span class="o">=</span><span class="n">dims</span><span class="p">,</span> <span class="n">dimsd</span><span class="o">=</span><span class="n">dimsd</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">base_comm</span><span class="o">=</span><span class="n">base_comm</span><span class="p">)</span>
 
     <span class="nd">@reshaped</span><span class="p">(</span><span class="n">forward</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stacking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
@@ -644,9 +645,9 @@
                  <span class="n">dtype</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DTypeLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ops</span> <span class="o">=</span> <span class="n">ops</span>
         <span class="n">dtype</span> <span class="o">=</span> <span class="n">_get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span> <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
-        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">)),</span>
-                 <span class="nb">int</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">)))</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">base_comm</span><span class="o">=</span><span class="n">base_comm</span><span class="p">)</span>
+        <span class="n">dims</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">)),</span> <span class="p">)</span>
+        <span class="n">dimsd</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">)),</span> <span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dims</span><span class="o">=</span><span class="n">dims</span><span class="p">,</span> <span class="n">dimsd</span><span class="o">=</span><span class="n">dimsd</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">base_comm</span><span class="o">=</span><span class="n">base_comm</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">StackedDistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StackedDistributedArray</span><span class="p">:</span>
         <span class="n">y1</span> <span class="o">=</span> <span class="p">[]</span>
@@ -689,8 +690,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085"></script>
-<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085"></script>
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -724,7 +725,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.18.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
 </p></div>
       
     </div>

@@ -31,8 +31,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
@@ -44,10 +44,10 @@
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e45f66c9" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../_static/scripts/fontawesome.js?digest=0790524f97105ba85085"></script>
+  <script defer src="../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
@@ -654,7 +654,7 @@ as input.</p>
 solver.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Inverse</span>
 <span class="c1"># Initializing x0 to zeroes</span>
-<span class="n">x0</span> <span class="o">=</span> <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">DistributedArray</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#tuple" title="builtins.tuple" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">VStack</span><span class="o">.</span><span class="n">shape</span></a><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">partition</span><span class="o">=</span><span class="n">pylops_mpi</span><span class="o">.</span><span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="p">)</span>
+<span class="n">x0</span> <span class="o">=</span> <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">DistributedArray</span><span class="p">(</span><span class="n">VStack</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">partition</span><span class="o">=</span><span class="n">pylops_mpi</span><span class="o">.</span><span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="p">)</span>
 <span class="n">x0</span><span class="p">[:]</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="n">minv_dist</span> <span class="o">=</span> <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">cgls</span><span class="p">(</span><span class="n">VStack</span><span class="p">,</span> <span class="n">d_dist</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">minv</span></a> <span class="o">=</span> <span class="n">minv_dist</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nx</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nz</span></a><span class="p">))</span>
@@ -680,25 +680,25 @@ damp = 0.000000e+00     tol = 1.000000e-04      niter = 100
      9        2.9706e-03         4.2731e+01     4.2731e+01
     10       -4.7021e-03         3.8118e+01     3.8118e+01
     11       -5.2286e-03         3.4431e+01     3.4431e+01
-    21       -3.1301e-03         1.5333e+01     1.5333e+01
+    21       -3.1305e-03         1.5333e+01     1.5333e+01
     31       -4.8777e-03         9.8278e+00     9.8278e+00
-    41       -6.7090e-03         6.7097e+00     6.7097e+00
-    51       -7.8116e-03         5.3456e+00     5.3456e+00
-    61       -1.0077e-02         4.6400e+00     4.6400e+00
-    71       -9.5381e-03         3.9842e+00     3.9842e+00
-    81       -1.2688e-02         3.4837e+00     3.4837e+00
-    91       -1.4067e-02         3.0773e+00     3.0773e+00
-    92       -1.3811e-02         3.0344e+00     3.0344e+00
-    93       -1.3524e-02         2.9971e+00     2.9971e+00
-    94       -1.3427e-02         2.9849e+00     2.9849e+00
-    95       -1.3153e-02         2.9508e+00     2.9508e+00
-    96       -1.3048e-02         2.9274e+00     2.9274e+00
-    97       -1.2826e-02         2.9036e+00     2.9036e+00
-    98       -1.2701e-02         2.8752e+00     2.8752e+00
-    99       -1.2493e-02         2.8489e+00     2.8489e+00
-   100       -1.2364e-02         2.8256e+00     2.8256e+00
+    41       -6.3845e-03         6.8582e+00     6.8582e+00
+    51       -7.8539e-03         5.3510e+00     5.3510e+00
+    61       -1.0072e-02         4.6404e+00     4.6404e+00
+    71       -9.5400e-03         3.9842e+00     3.9842e+00
+    81       -1.2782e-02         3.4685e+00     3.4685e+00
+    91       -1.4205e-02         3.1071e+00     3.1071e+00
+    92       -1.4036e-02         3.0712e+00     3.0712e+00
+    93       -1.3773e-02         3.0286e+00     3.0286e+00
+    94       -1.3422e-02         2.9861e+00     2.9861e+00
+    95       -1.3252e-02         2.9563e+00     2.9563e+00
+    96       -1.3040e-02         2.9362e+00     2.9362e+00
+    97       -1.2860e-02         2.9046e+00     2.9046e+00
+    98       -1.2687e-02         2.8757e+00     2.8757e+00
+    99       -1.2546e-02         2.8528e+00     2.8528e+00
+   100       -1.2389e-02         2.8342e+00     2.8342e+00
 
-Iterations = 100        Total time (s) = 1.36
+Iterations = 100        Total time (s) = 1.27
 -----------------------------------------------------------------
 </pre></div>
 </div>
@@ -746,7 +746,7 @@ Iterations = 100        Total time (s) = 1.36
 <li><img src="../_images/sphx_glr_lsm_005.png" srcset="../_images/sphx_glr_lsm_005.png" alt="$d$, $d_{adj}$, $d_{inv}$" class = "sphx-glr-multi-img"/></li>
 </ul>
 <p>To run this tutorial with our NCCL backend, refer to <a class="reference external" href="https://github.com/PyLops/pylops-mpi/blob/main/tutorials_nccl/lsm_nccl.py">Least-squares Migration with NCCL tutorial</a> in the repository.</p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 2.992 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 2.979 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-lsm-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/d5dae76a02f3b395d667034f44fd5555/lsm.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">lsm.ipynb</span></code></a></p>
@@ -807,8 +807,8 @@ Iterations = 100        Total time (s) = 1.36
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../_static/scripts/bootstrap.js?digest=0790524f97105ba85085"></script>
-<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -842,7 +842,7 @@ Iterations = 100        Total time (s) = 1.36
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.18.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
 </p></div>
       
     </div>
