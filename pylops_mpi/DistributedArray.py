@@ -273,11 +273,12 @@ class DistributedArray(DistributedMixIn):
 
     @property
     def engine(self):
-        """Engine of the Distributed array
+        """Engine of the Distributed Array
 
         Returns
         -------
         engine : :obj:`str`
+            Engine
         """
         return self._engine
 
@@ -963,8 +964,11 @@ class StackedDistributedArray:
     r"""Stacked DistributedArrays
 
     Stack DistributedArray objects and power them with basic mathematical operations.
-    This class allows one to work with a series of distributed arrays to avoid having to create
-    a single distributed array with some special internal sorting.
+    This class allows one to work with a series of distributed arrays to avoid
+    having to create a single distributed array with some special internal sorting.
+
+    .. note:: All :class:`pylops_mpi.DistributedArray` objects passed to
+        ``distarrays`` must share the same engine (``numpy`` or ``cupy``).
 
     Parameters
     ----------
@@ -973,6 +977,11 @@ class StackedDistributedArray:
     base_comm : :obj:`mpi4py.MPI.Comm`, optional
         Base MPI Communicator.
         Defaults to ``mpi4py.MPI.COMM_WORLD``.
+
+    Raises
+    ------
+    ValueError
+        Stacked distributed arrays have different engine
     """
 
     def __init__(self, distarrays: List, base_comm: MPI.Comm = MPI.COMM_WORLD):
@@ -982,24 +991,21 @@ class StackedDistributedArray:
         self.rank = base_comm.Get_rank()
         self.size = base_comm.Get_size()
 
+        # Ensure all stacked arrays share the same engine
+        engines = [distarr.engine for distarr in distarrays]
+        if any(engine != engines[0] for engine in engines[1:]):
+            raise ValueError(f"Stacked arrays have mismatching engines: {engines}")
+
         # Define global shape as sum as shapes
-        self.global_shape = distarrays[0].global_shape
+        self._global_shape = distarrays[0].global_shape
         for iarr in range(1, self.narrays):
-            self.global_shape = \
+            self._global_shape = \
                 tuple([g1 + g2 for g1, g2 in
-                       zip(self.global_shape, distarrays[iarr].global_shape)])
+                       zip(self._global_shape, distarrays[iarr].global_shape)])
 
-    @property
-    def engine(self):
-        """Engine
-
-        Find engine by inspecting the first :class:`pylops_mpi.DistributedArray`
-        among ``distarrays`` (some may be nested
-        :class:`pylops_mpi.StackedDistributedArray`, which expose this same
-        property).
-        """
-        return next(distarr.engine for distarr in self.distarrays
-                    if isinstance(distarr, (DistributedArray, StackedDistributedArray)))
+    def __repr__(self) -> str:
+        repr_dist = "\n".join([distarray.__repr__() for distarray in self.distarrays])
+        return f"<StackedDistributedArray with {self.narrays} distributed arrays: \n" + repr_dist
 
     def __getitem__(self, index):
         return self.distarrays[index]
@@ -1017,15 +1023,43 @@ class StackedDistributedArray:
             # plain DistributedArray assigned from an array-like / scalar
             target[:] = value
 
+    @property
+    def global_shape(self):
+        """Global Shape of the stacked array
+
+        Returns
+        -------
+        global_shape : :obj:`tuple`
+        """
+        return self._global_shape
+
+    @property
+    def engine(self):
+        """Engine of the Stacked Distributed Array
+
+        All stacked arrays share the same engine (enforced at creation time).
+        A nested :class:`pylops_mpi.StackedDistributedArray` exposes this same
+        property, so this resolves recursively until it reaches a
+        :class:`pylops_mpi.DistributedArray`.
+
+        Returns
+        -------
+        engine : :obj:`str`
+            Engine
+
+        """
+        return self.distarrays[0].engine
+
     def asarray(self) -> NDArray:
         """Global view of the array
 
-        Gather all the distributed arrays
+        Gather all the distributed arrays and return
+        a flattened version
 
         Returns
         -------
         final_array : :obj:`numpy.ndarray`
-            Global Array gathered at all ranks
+            Global Array gathered at all ranks and flattened
 
         """
         ncp = get_module(self.engine)
@@ -1206,7 +1240,3 @@ class StackedDistributedArray:
                                     engine=distarray.engine, dtype=distarray.dtype)
             dists.append(dist)
         return StackedDistributedArray(distarrays=dists)
-
-    def __repr__(self) -> str:
-        repr_dist = "\n".join([distarray.__repr__() for distarray in self.distarrays])
-        return f"<StackedDistributedArray with {self.narrays} distributed arrays: \n" + repr_dist
