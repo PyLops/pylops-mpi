@@ -49,7 +49,6 @@ par3j = {'global_shape': (200, 201, 101),
          'dtype': np.complex128, 'axis': 2}
 
 
-
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1),])
 def test_wrong_engine(par):
@@ -317,16 +316,13 @@ def test_stacked_nested_math(par):
     l0norm = stacked_array1.norm(0)
     l1norm = stacked_array1.norm(1)
     l2norm = stacked_array1.norm(2)
+    linfnorm = stacked_array1.norm(np.inf)
 
-    # TODO (tharitt): FAIL with CuPy + MPI for inf norm - see test_distributedarray.py
-    # test_distributed_nrom(par) as well
-#     linfnorm = stacked_array1.norm(np.inf)
     assert_allclose(l0norm, np.linalg.norm(stacked_array1.asarray().flatten(), 0),
                     rtol=1e-14)
     assert_allclose(l1norm, np.linalg.norm(stacked_array1.asarray().flatten(), 1),
                     rtol=1e-14)
     assert_allclose(l2norm, np.linalg.norm(stacked_array1.asarray(), 2),
                     rtol=1e-10)  # needed to raise it due to how partial norms are combined (with power applied)
-    # TODO (tharitt): FAIL at inf norm - see above
-#     assert_allclose(linfnorm, np.linalg.norm(stacked_array1.asarray().flatten(), np.inf),
-#                     rtol=1e-14)
+    assert_allclose(linfnorm, np.linalg.norm(stacked_array1.asarray().flatten(), np.inf),
+                    rtol=1e-14)
