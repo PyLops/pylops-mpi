@@ -240,7 +240,7 @@ if rank == 0:
     print('Distr == Local', np.allclose(d, d0))
 
     # Visualize
-    fig, axs = plt.subplots(nrows=7, ncols=3, figsize=(9, 14), constrained_layout=True)
+    fig, axs = plt.subplots(nrows=7, ncols=3, figsize=(9, 17), constrained_layout=True)
     axs[0][0].imshow(m3d[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
     axs[0][0].set_title("Model x-z")
     axs[0][0].axis("tight")
@@ -301,15 +301,15 @@ if rank == 0:
     axs[5][2].set_title('Regularized Inverted Model iter x-y')
     axs[5][2].axis('tight')
 
-    axs[5][0].imshow(minv3d_tv[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
-    axs[5][0].set_title("TV-Regularized Inverted Model iter x-z")
-    axs[5][0].axis("tight")
-    axs[5][1].imshow(minv3d_tv[:, 200, :].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
-    axs[5][1].set_title('TV-Regularized Inverted Model iter y-z')
-    axs[5][1].axis('tight')
-    axs[5][2].imshow(minv3d_tv[:, :, 220].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
-    axs[5][2].set_title('TV-Regularized Inverted Model iter x-y')
-    axs[5][2].axis('tight')
+    axs[6][0].imshow(minv3d_tv[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+    axs[6][0].set_title("TV-Regularized Inverted Model iter x-z")
+    axs[6][0].axis("tight")
+    axs[6][1].imshow(minv3d_tv[:, 200, :].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
+    axs[6][1].set_title('TV-Regularized Inverted Model iter y-z')
+    axs[6][1].axis('tight')
+    axs[6][2].imshow(minv3d_tv[:, :, 220].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
+    axs[6][2].set_title('TV-Regularized Inverted Model iter x-y')
+    axs[6][2].axis('tight')
 
 ###############################################################################
 # To run this tutorial with our NCCL backend, refer to `Post Stack Inversion with NCCL
