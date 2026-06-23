@@ -14,6 +14,7 @@ The minimal set of dependencies for the PyLops-MPI project is:
 * `Matplotlib <https://matplotlib.org/>`_
 * `MPI4py <https://mpi4py.readthedocs.io/en/stable/>`_
 * `PyLops <https://pylops.readthedocs.io/en/stable/>`_
+* `PyProximal <https://pyproximal.readthedocs.io/en/stable/>`_
 
 Additionally, to use the CUDA-aware MPI engine, the following additional 
 dependencies are required:
