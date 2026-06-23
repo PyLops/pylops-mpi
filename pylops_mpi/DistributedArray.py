@@ -863,13 +863,13 @@ class DistributedArray(DistributedMixIn):
         x = local_array.copy()
         arr[:] = x
         return arr
-    
+
     def reshape(self, local_shape, axis=0):
         """Return a reshaped DistributedArray
 
         Parameters
         ----------
-        
+
         Returns
         -------
         arr : :obj:`pylops_mpi.DistributedArray`
@@ -890,7 +890,7 @@ class DistributedArray(DistributedMixIn):
         x = local_array.copy()
         arr[:] = x
         return arr
-    
+
     def empty_like(self):
         """Creates an empty like DistributedArray with uninitialized values
         """
