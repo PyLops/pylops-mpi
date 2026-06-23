@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from typing import Optional, Union, Callable
 from abc import abstractmethod, ABC
 import numpy as np
 from mpi4py import MPI
 from pylops.utils import ShapeLike, DTypeLike
 
-from scipy.sparse._sputils import isintlike
+from scipy.sparse._sputils import isintlike, isshape
 from scipy.sparse.linalg._interface import _get_dtype
 
 from pylops_mpi.DistributedArray import DistributedArray, StackedDistributedArray
@@ -29,24 +31,128 @@ class MPIStackedLinearOperator(ABC):
     Parameters
     ----------
     shape : :obj:`tuple(int, int)`, optional
-        Shape of the MPIStackedLinearOperator. Defaults to ``None``.
+        Shape of the MPIStackedLinearOperator. If not provided, obtained from ``dims`` and ``dimsd``.
+    dims : :obj:`tuple(int, ..., int)`, optional
+        Dimensions of model. If not provided, ``(self.shape[1],)`` is used.
+    dimsd : :obj:`tuple(int, ..., int)`, optional
+        Dimensions of data. If not provided, ``(self.shape[0],)`` is used.
     dtype : :obj:`str`, optional
         Type of elements in input array. Defaults to ``None``.
     base_comm : :obj:`mpi4py.MPI.Comm`, optional
         MPI Base Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.
     """
 
-    def __init__(self, shape: Optional[ShapeLike] = None,
-                 dtype: Optional[DTypeLike] = None,
-                 base_comm: MPI.Comm = MPI.COMM_WORLD):
-        if shape:
+    def __init__(
+        self,
+        shape: Optional[ShapeLike] = None,
+        dims: Optional[ShapeLike] = None,
+        dimsd: Optional[ShapeLike] = None,
+        dtype: Optional[DTypeLike] = None,
+        base_comm: MPI.Comm = MPI.COMM_WORLD
+    ):
+        # Infer shape from dims/dimsd if not provided
+        if shape is not None:
             self.shape = shape
-        if dtype:
+        if dims is not None:
+            self.dims = dims
+        if dimsd is not None:
+            self.dimsd = dimsd
+        if dtype is not None:
             self.dtype = dtype
         # For MPI
         self.base_comm = base_comm
-        self.size = self.base_comm.Get_size()
-        self.rank = self.base_comm.Get_rank()
+        self.size = base_comm.Get_size()
+        self.rank = base_comm.Get_rank()
+
+    @property
+    def shape(self):
+        _shape = getattr(self, "_shape", None)
+        if _shape is None:  # Cannot find shape, falling back on dims and dimsd
+            dims = getattr(self, "_dims", None)
+            dimsd = getattr(self, "_dimsd", None)
+            if dims is None or dimsd is None:  # Cannot find both dims and dimsd, error
+                msg = (
+                    f"'{self.__class__.__name__}' object has no attribute 'shape' "
+                    "nor both fallback attributes ('dims', 'dimsd')"
+                )
+                raise AttributeError(msg)
+            _shape = (int(np.prod(dimsd)), int(np.prod(dims)))
+            self._shape = _shape  # Update to not redo everything above on next call
+        return _shape
+
+    @shape.setter
+    def shape(self, new_shape: ShapeLike) -> None:
+        new_shape = tuple(new_shape)
+        if not isshape(new_shape):
+            msg = f"Invalid shape; must be 2-d tuple of integers, got {new_shape}"
+            raise ValueError(msg)
+        dims = getattr(self, "_dims", None)
+        dimsd = getattr(self, "_dimsd", None)
+        if dims is not None and dimsd is not None:  # Found dims and dimsd
+            if np.prod(dimsd) != new_shape[0] and np.prod(dims) != new_shape[1]:
+                msg = "New shape incompatible with dims and dimsd"
+                raise ValueError(msg)
+            elif np.prod(dimsd) != new_shape[0]:
+                msg = "New shape incompatible with dimsd"
+                raise ValueError(msg)
+            elif np.prod(dims) != new_shape[1]:
+                msg = "New shape incompatible with dims"
+                raise ValueError(msg)
+        self._shape = new_shape
+
+    @property
+    def dims(self):
+        _dims = getattr(self, "_dims", None)
+        if _dims is None:
+            shape = getattr(self, "_shape", None)
+            if shape is None:
+                msg = (
+                    f"'{self.__class__.__name__}' object has no "
+                    "attributes 'dims' or 'shape'"
+                )
+                raise AttributeError(msg)
+            _dims = (shape[1],)
+        return _dims
+
+    @dims.setter
+    def dims(self, new_dims: ShapeLike) -> None:
+        new_dims = tuple(new_dims)
+        shape = getattr(self, "_shape", None)
+        if shape is None:  # shape not set yet
+            self._dims = new_dims
+        else:
+            if np.prod(new_dims) == self.shape[1]:
+                self._dims = new_dims
+            else:
+                msg = "dims incompatible with shape[1]"
+                raise ValueError(msg)
+
+    @property
+    def dimsd(self):
+        _dimsd = getattr(self, "_dimsd", None)
+        if _dimsd is None:
+            shape = getattr(self, "_shape", None)
+            if shape is None:
+                msg = (
+                    f"'{self.__class__.__name__}' object has "
+                    "no attributes 'dimsd' or 'shape'"
+                )
+                raise AttributeError(msg)
+            _dimsd = (shape[0],)
+        return _dimsd
+
+    @dimsd.setter
+    def dimsd(self, new_dimsd: ShapeLike) -> None:
+        new_dimsd = tuple(new_dimsd)
+        shape = getattr(self, "_shape", None)
+        if shape is None:  # shape not set yet
+            self._dimsd = new_dimsd
+        else:
+            if np.prod(new_dimsd) == self.shape[0]:
+                self._dimsd = new_dimsd
+            else:
+                msg = "dimsd incompatible with shape[0]"
+                raise ValueError(msg)
 
     def matvec(self, x: Union[DistributedArray, StackedDistributedArray]) -> Union[DistributedArray, StackedDistributedArray]:
         """Matrix-vector multiplication.
@@ -131,9 +237,19 @@ class MPIStackedLinearOperator(ABC):
 
         """
         if isinstance(x, MPIStackedLinearOperator):
-            return _ProductStackedLinearOperator(self, x)
+            Op = _ProductStackedLinearOperator(self, x)
+            self._copy_attributes(
+                Op,
+                exclude=['dims']
+            )
+            Op.dims = x.dims
+            return Op
         elif np.isscalar(x):
-            return _ScaledStackedLinearOperator(self, x)
+            Op = _ScaledStackedLinearOperator(self, x)
+            self._copy_attributes(
+                Op
+            )
+            return Op
         else:
             if x is None or (isinstance(x, DistributedArray) and x.ndim == 1):
                 return self.matvec(x)
@@ -175,7 +291,11 @@ class MPIStackedLinearOperator(ABC):
 
     def __rmul__(self, x):
         if np.isscalar(x):
-            return _ScaledStackedLinearOperator(self, x)
+            Op = _ScaledStackedLinearOperator(self, x)
+            self._copy_attributes(
+                Op
+            )
+            return Op
         else:
             return NotImplemented
 
@@ -190,22 +310,48 @@ class MPIStackedLinearOperator(ABC):
         return self.__rmul__(x)
 
     def __pow__(self, p):
-        return _PowerLinearOperator(self, p)
+        Op = _PowerLinearOperator(self, p)
+        self._copy_attributes(
+            Op
+        )
+        return Op
 
     def __add__(self, x):
-        return _SumStackedLinearOperator(self, x)
+        Op = _SumStackedLinearOperator(self, x)
+        self._copy_attributes(
+            Op
+        )
+        return Op
 
     def __neg__(self):
-        return _ScaledStackedLinearOperator(self, -1)
+        Op = _ScaledStackedLinearOperator(self, -1)
+        self._copy_attributes(
+            Op
+        )
+        return Op
 
     def __sub__(self, x):
         return self.__add__(-x)
 
     def _adjoint(self):
-        return _AdjointStackedLinearOperator(self)
+        Op = _AdjointStackedLinearOperator(self)
+        self._copy_attributes(
+            Op,
+            exclude=['dims', 'dimsd']
+        )
+        Op.dims = self.dimsd
+        Op.dimsd = self.dims
+        return Op
 
     def _transpose(self):
-        return _TransposedStackedLinearOperator(self)
+        Op = _TransposedStackedLinearOperator(self)
+        self._copy_attributes(
+            Op,
+            exclude=['dims', 'dimsd']
+        )
+        Op.dims = self.dimsd
+        Op.dimsd = self.dims
+        return Op
 
     def conj(self):
         """Complex conjugate operator
@@ -225,6 +371,20 @@ class MPIStackedLinearOperator(ABC):
         else:
             dt = f"dtype={self.dtype}"
         return f"<{M}x{N} {self.__class__.__name__} with {dt}>"
+
+    def _copy_attributes(
+        self,
+        dest: MPIStackedLinearOperator,
+        exclude: list[str] | None = None,
+    ) -> None:
+        """Copy attributes from one MPIStackedLinearOperator to another"""
+        attrs = ["dims", "dimsd"]
+        if exclude is not None:
+            for item in exclude:
+                attrs.remove(item)
+        for attr in attrs:
+            if hasattr(self, attr):
+                setattr(dest, attr, getattr(self, attr))
 
 
 class _AdjointStackedLinearOperator(MPIStackedLinearOperator):

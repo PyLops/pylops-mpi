@@ -1,3 +1,35 @@
+# 0.6.1
+* Fixed import error in `pylops_mpi.optimization.cls_sparsity` and `pylops_mpi.optimization.sparsity`.
+
+# 0.6.0
+* Introduced `pylops_mpi.optimization.eigs.power_iteration` to estimate the maximum eigenvalue.
+* Added `pylops_mpi.optimization.sparsity.ista` and the corresponding `pylops_mpi.optimization.cls_sparsity.ISTA` class, implementing the iterative shrinkage-thresholding algorithm.
+* Added `pylops_mpi.optimization.sparsity.fista` and the corresponding `pylops_mpi.optimization.cls_sparsity.FISTA` class, a fast variant of ISTA.
+* Included tutorial: "Reflectivity Inversion - 3D", with separate implementations for base, CuPy, and NCCL.
+* Added `empty_like` function to `pylops_mpi.DistributedArray` and `pylops_mpi.StackedDistributedArray`.
+* Introduced a `vdot` parameter in the `dot` method of `pylops_mpi.DistributedArray` and `pylops_mpi.StackedDistributedArray` to support vector dot products.
+
+# 0.5.0
+* Performed fixes to support `numpy>=2.4`.
+* Added `redistribute` function to `pylops_mpi.DistributedArray`.
+* Introduced MPI_Allgatherv in `pylops_mpi.utils._mpi.mpi_allgather` for variable sized arrays.
+* Modified `pylops_mpi.DistributedArray.norm` to correctly handle cases where distributed axis differs from norm axis.
+
+# 0.4.0
+* Added `pylops_mpi.Distributed.DistributedMixIn` class with
+  communicator-agnostic calls to communication methods.
+* Added `pylops_mpi.utils._mpi` with implementations of MPI
+  communication methods.
+* Added `kind="summa"` implementation in 
+  `pylops_mpi.basicoperators.MPIMatrixMult` operator.
+* Added `kind` paramter to all operators in `pylops_mpi.basicoperators.MPILaplacian`
+* Added `cp.cuda.Device().synchronize()` before any MPI call when using
+  Cuda-Aware MPI.
+* Modified `pylops_mpi.utils._nccl.initialize_nccl_comm` to 
+  handle nodes with more GPUs than ranks.
+* Fixed bug in `pylops_mpi.DistributedArray.__neg__` by
+  explicitely passing `base_comm_nccl` during internal creation 
+  of distributed array .
 
 # 0.3.0
 * Added `pylops_mpi.basicoperators.MPIMatrixMult` operator.

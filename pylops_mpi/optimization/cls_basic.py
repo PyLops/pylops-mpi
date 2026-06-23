@@ -92,7 +92,7 @@ class CG(Solver):
         self.r = self.y - self.Op.matvec(x)
         self.rank = x.rank
         self.c = self.r.copy()
-        self.kold = float(np.abs(self.r.dot(self.r.conj())))
+        self.kold = float(np.abs(self.r.dot(self.r.conj())).item())
 
         # create variables to track the residual norm and iterations
         self.cost: List = []
@@ -127,10 +127,10 @@ class CG(Solver):
         """
         Opc = self.Op.matvec(self.c)
         cOpc = np.abs(self.c.dot(Opc.conj()))
-        a = float(self.kold / cOpc)
+        a = float((self.kold / cOpc).item())
         x += a * self.c
         self.r -= a * Opc
-        k = float(np.abs(self.r.dot(self.r.conj())))
+        k = float(np.abs(self.r.dot(self.r.conj())).item())
         b = float(k / self.kold)
         self.c = self.r + b * self.c
         self.kold = k
@@ -349,13 +349,13 @@ class CGLS(Solver):
         self.rank = x.rank
         self.c = r.copy()
         self.q = self.Op.matvec(self.c)
-        self.kold = float(np.abs(r.dot(r.conj())))
+        self.kold = float(np.abs(r.dot(r.conj())).item())
 
         # create variables to track the residual norm and iterations
         self.cost = []
         self.cost1 = []
-        self.cost.append(float(self.s.norm()))
-        self.cost1.append(np.sqrt(float(self.cost[0] ** 2 + damp * np.abs(x.dot(x.conj())))))
+        self.cost.append(float(self.s.norm().item()))
+        self.cost1.append(np.sqrt(float(self.cost[0] ** 2 + damp * np.abs(x.dot(x.conj())).item())))
         self.iiter = 0
 
         # print setup
@@ -386,19 +386,19 @@ class CGLS(Solver):
 
         """
 
-        a = float(np.abs(self.kold / (self.q.dot(self.q.conj()) + self.damp * self.c.dot(self.c.conj()))))
+        a = float(np.abs(self.kold / (self.q.dot(self.q.conj()) + self.damp * self.c.dot(self.c.conj()))).item())
         x += a * self.c
         self.s -= a * self.q
         damped_x = self.damp * x
         r = self.Op.rmatvec(self.s) - damped_x
-        k = float(np.abs(r.dot(r.conj())))
+        k = float(np.abs(r.dot(r.conj())).item())
         b = float(k / self.kold)
         self.c = r + b * self.c
         self.q = self.Op.matvec(self.c)
         self.kold = k
         self.iiter += 1
-        self.cost.append(float(self.s.norm()))
-        self.cost1.append(np.sqrt(float(self.cost[self.iiter] ** 2 + self.damp * np.abs(x.dot(x.conj())))))
+        self.cost.append(float(self.s.norm().item()))
+        self.cost1.append(np.sqrt(float(self.cost[self.iiter] ** 2 + self.damp * np.abs(x.dot(x.conj())).item())))
         if show and self.rank == 0:
             self._print_step(x)
         return x

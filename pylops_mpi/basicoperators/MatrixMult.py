@@ -100,7 +100,7 @@ def local_block_split(global_shape: Tuple[int, int],
     Returns
     -------
     Tuple[slice, slice]
-        Two `slice` objects `(row_slice, col_slice)` representing the sub‐block
+        Two `slice` objects `(row_slice, col_slice)` representing the sub-block
         of the global array owned by this rank.
 
     Raises
@@ -334,16 +334,22 @@ class _MPIBlockMatrixMult(DistributedMixIn, MPILinearOperator):
         self._rank_col_lens = self._allgather(self.base_comm, None, self._local_ncols)
         total_ncols = np.sum(self._rank_col_lens)
 
-        self.dims = (self.K, total_ncols)
-        self.dimsd = (self.N, total_ncols)
-        shape = (int(np.prod(self.dimsd)), int(np.prod(self.dims)))
-        super().__init__(shape=shape, dtype=np.dtype(dtype), base_comm=base_comm)
+        dims = (self.K, total_ncols)
+        dimsd = (self.N, total_ncols)
+        super().__init__(dims=dims, dimsd=dimsd, dtype=np.dtype(dtype), base_comm=base_comm)
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
         if x.partition != Partition.SCATTER:
             raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
-        output_dtype = np.result_type(self.dtype, x.dtype)
+        output_dtype = ncp.result_type(self.dtype, x.dtype)
+        if ncp.issubdtype(output_dtype, ncp.complexfloating):
+            if x.engine == "numpy" and ncp.dtype(output_dtype) == ncp.dtype(ncp.complex128):
+                acc_dtype = ncp.promote_types(output_dtype, ncp.longdouble)
+            else:
+                acc_dtype = ncp.promote_types(output_dtype, ncp.float64)
+        else:
+            acc_dtype = output_dtype
         y = DistributedArray(
             global_shape=(self.N * self.dimsd[1]),
             local_shapes=[(self.N * c) for c in self._rank_col_lens],
@@ -357,12 +363,13 @@ class _MPIBlockMatrixMult(DistributedMixIn, MPILinearOperator):
 
         my_own_cols = self._rank_col_lens[self.rank]
         x_arr = x.local_array.reshape((self.dims[0], my_own_cols))
-        X_local = x_arr.astype(output_dtype)
+        X_local = x_arr.astype(acc_dtype, copy=False)
+        A_local = self.A.astype(acc_dtype, copy=False)
         row_comm_nccl = self._row_comm_nccl if x.engine == "cupy" else None
         Y_tiles = self._allgather(
             self._row_comm,
             row_comm_nccl,
-            ncp.matmul(self.A, X_local),
+            ncp.matmul(A_local, X_local).astype(output_dtype, copy=False),
             engine=x.engine,
         )
         Y_local = ncp.vstack(Y_tiles)
@@ -378,13 +385,20 @@ class _MPIBlockMatrixMult(DistributedMixIn, MPILinearOperator):
         #       so result_type(real_A, x.dtype) = x.dtype (if x is complex) or real (if x is real)
         # - If A is complex: A^H is complex,
         #       so result will be complex regardless of x
-        if np.iscomplexobj(self.A):
-            output_dtype = np.result_type(self.dtype, x.dtype)
+        if ncp.iscomplexobj(self.A):
+            output_dtype = ncp.result_type(self.dtype, x.dtype)
         else:
             # Real matrix: A^T @ x preserves input type complexity
-            output_dtype = x.dtype if np.iscomplexobj(x.local_array) else self.dtype
+            output_dtype = x.dtype if ncp.iscomplexobj(x.local_array) else self.dtype
             # But still need to check type promotion for precision
-            output_dtype = np.result_type(self.dtype, output_dtype)
+            output_dtype = ncp.result_type(self.dtype, output_dtype)
+        if ncp.issubdtype(output_dtype, ncp.complexfloating):
+            if x.engine == "numpy" and ncp.dtype(output_dtype) == ncp.dtype(ncp.complex128):
+                acc_dtype = ncp.promote_types(output_dtype, ncp.longdouble)
+            else:
+                acc_dtype = ncp.promote_types(output_dtype, ncp.float64)
+        else:
+            acc_dtype = output_dtype
 
         y = DistributedArray(
             global_shape=(self.K * self.dimsd[1]),
@@ -397,10 +411,10 @@ class _MPIBlockMatrixMult(DistributedMixIn, MPILinearOperator):
             base_comm_nccl=x.base_comm_nccl
         )
 
-        x_arr = x.local_array.reshape((self.N, self._local_ncols)).astype(output_dtype)
+        x_arr = x.local_array.reshape((self.N, self._local_ncols)).astype(acc_dtype, copy=False)
         X_tile = x_arr[self._row_start:self._row_end, :]
-        A_local = self.At if hasattr(self, "At") else self.A.T.conj()
-        Y_local = ncp.matmul(A_local, X_tile)
+        A_local = (self.At if hasattr(self, "At") else self.A.T.conj()).astype(acc_dtype, copy=False)
+        Y_local = ncp.matmul(A_local, X_tile).astype(output_dtype, copy=False)
         row_comm_nccl = self._row_comm_nccl if x.engine == "cupy" else None
         y_layer = self._allreduce(
             self._row_comm,
@@ -589,10 +603,9 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
         if saveAt:
             self.At = self.A.T.conj()
 
-        self.dims = (self.K, self.M)
-        self.dimsd = (self.N, self.M)
-        shape = (int(np.prod(self.dimsd)), int(np.prod(self.dims)))
-        super().__init__(shape=shape, dtype=np.dtype(dtype), base_comm=base_comm)
+        dims = (self.K, self.M)
+        dimsd = (self.N, self.M)
+        super().__init__(dims=dims, dimsd=dimsd, dtype=np.dtype(dtype), base_comm=base_comm)
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
@@ -600,6 +613,13 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
             raise ValueError(f"x should have partition={Partition.SCATTER} Got {x.partition} instead...")
 
         output_dtype = np.result_type(self.dtype, x.dtype)
+        if np.issubdtype(output_dtype, np.complexfloating):
+            if x.engine == "numpy" and np.dtype(output_dtype) == np.dtype(np.complex128):
+                acc_dtype = np.promote_types(output_dtype, np.longdouble)
+            else:
+                acc_dtype = np.promote_types(output_dtype, np.float64)
+        else:
+            acc_dtype = output_dtype
         # Calculate local shapes for block distribution
         bn = self._N_padded // self._P_prime  # block size in N dimension
         bm = self._M_padded // self._P_prime  # block size in M dimension
@@ -626,7 +646,7 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
         local_k = bk if self._row_id != self._P_prime - 1 else self.K - (self._P_prime - 1) * bk
 
         # Reshape x.local_array to its 2D block form
-        x_block = x.local_array.reshape((local_k, local_m))
+        x_block = x.local_array.reshape((local_k, local_m)).astype(acc_dtype, copy=False)
 
         # Pad the block to the full padded size if necessary
         pad_k = bk - local_k
@@ -635,10 +655,11 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
         if pad_k > 0 or pad_m > 0:
             x_block = ncp.pad(x_block, [(0, pad_k), (0, pad_m)], mode='constant')
 
-        Y_local = ncp.zeros((self.A.shape[0], bm), dtype=output_dtype)
+        A_acc = self.A.astype(acc_dtype, copy=False)
+        Y_local = ncp.zeros((self.A.shape[0], bm), dtype=acc_dtype)
 
         for k in range(self._P_prime):
-            Atemp = self.A.copy() if self._col_id == k else ncp.empty_like(self.A)
+            Atemp = A_acc.copy() if self._col_id == k else ncp.empty_like(A_acc)
             Xtemp = x_block.copy() if self._row_id == k else ncp.empty_like(x_block)
             row_comm_nccl = self._row_comm_nccl if x.engine == "cupy" else None
             col_comm_nccl = self._col_comm_nccl if x.engine == "cupy" else None
@@ -646,7 +667,7 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
             Xtemp = self._bcast(self._col_comm, col_comm_nccl, Xtemp, root=k, engine=x.engine)
             Y_local += ncp.dot(Atemp, Xtemp)
 
-        Y_local_unpadded = Y_local[:local_n, :local_m]
+        Y_local_unpadded = Y_local[:local_n, :local_m].astype(output_dtype, copy=False)
         y[:] = Y_local_unpadded.flatten()
         return y
 
@@ -675,7 +696,15 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
             # Real matrix: A^T @ x preserves input type complexity
             output_dtype = x.dtype if np.iscomplexobj(x.local_array) else self.dtype
             # But still need to check type promotion for precision
-            output_dtype = np.result_type(self.dtype, output_dtype)
+            output_dtype = ncp.result_type(self.dtype, output_dtype)
+
+        if ncp.issubdtype(output_dtype, ncp.complexfloating):
+            if x.engine == "numpy" and ncp.dtype(output_dtype) == ncp.dtype(np.complex128):
+                acc_dtype = ncp.promote_types(output_dtype, ncp.longdouble)
+            else:
+                acc_dtype = ncp.promote_types(output_dtype, ncp.float64)
+        else:
+            acc_dtype = output_dtype
 
         y = DistributedArray(
             global_shape=(self.K * self.M),
@@ -696,7 +725,7 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
         local_n = bn if self._row_id != self._P_prime - 1 else self.N - (self._P_prime - 1) * bn
 
         # Reshape x.local_array to its 2D block form
-        x_block = x.local_array.reshape((local_n, local_m))
+        x_block = x.local_array.reshape((local_n, local_m)).astype(acc_dtype, copy=False)
 
         # Pad the block to the full padded size if necessary
         pad_n = bn - local_n
@@ -705,8 +734,8 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
         if pad_n > 0 or pad_m > 0:
             x_block = ncp.pad(x_block, [(0, pad_n), (0, pad_m)], mode='constant')
 
-        A_local = self.At if hasattr(self, "At") else self.A.T.conj()
-        Y_local = ncp.zeros((self.A.shape[1], bm), dtype=output_dtype)
+        A_local = (self.At if hasattr(self, "At") else self.A.T.conj()).astype(acc_dtype, copy=False)
+        Y_local = ncp.zeros((self.A.shape[1], bm), dtype=acc_dtype)
         base_comm_nccl = self.base_comm_nccl if x.engine == "cupy" else None
         for k in range(self._P_prime):
             Xtemp = x_block.copy() if self._row_id == k else ncp.empty_like(x_block)
@@ -731,7 +760,7 @@ class _MPISummaMatrixMult(DistributedMixIn, MPILinearOperator):
                                         source=srcA, tag=tagA, engine=x.engine)
             Y_local += ncp.dot(ATtemp, Xtemp)
 
-        Y_local_unpadded = Y_local[:local_k, :local_m]
+        Y_local_unpadded = Y_local[:local_k, :local_m].astype(output_dtype, copy=False)
         y[:] = Y_local_unpadded.flatten()
         return y
 

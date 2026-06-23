@@ -29,7 +29,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Mathematics",
 ]
 dependencies = [
-    "numpy >= 1.15.0",
+    "numpy>=1.15.0",
     "scipy >= 1.4.0",
     "pylops >= 2.0",
     "mpi4py",
@@ -42,3 +42,7 @@ exclude = ["pytests"]
 
 [tool.setuptools_scm]
 version_file = "pylops_mpi/version.py"
+
+[project.optional-dependencies]
+fft = ["mpi4py-fft"]
+all = ["mpi4py-fft"]

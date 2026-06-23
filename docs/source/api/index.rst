@@ -48,6 +48,8 @@ Basic Operators
     MPIVStack
     MPIStackedVStack
     MPIHStack
+    MPIHalo
+    
 
 Derivatives
 ~~~~~~~~~~~
@@ -71,7 +73,9 @@ Signal Processing
    :toctree: generated/
 
     MPIFredholm1
-
+    MPINonStationaryConvolve1D
+    MPIFFT2D
+    MPIFFTND
 
 Wave-Equation processing
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -106,6 +110,24 @@ Basic
     cg
     cgls
 
+Sparsity
+~~~~~~~~
+
+.. currentmodule:: pylops_mpi.optimization.cls_sparsity
+
+.. autosummary::
+   :toctree: generated/
+
+    ISTA
+    FISTA
+
+.. currentmodule:: pylops_mpi.optimization.sparsity
+
+.. autosummary::
+   :toctree: generated/
+
+    ista
+    fista
 
 Utils
 -----

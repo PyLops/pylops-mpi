@@ -81,16 +81,15 @@ class MPIGradient(MPIStackedLinearOperator):
                  base_comm: MPI.Comm = MPI.COMM_WORLD,
                  dtype: DTypeLike = "float64",
                  ):
-        self.dims = _value_or_sized_to_tuple(dims)
-        ndims = len(self.dims)
-        sampling = _value_or_sized_to_tuple(sampling, repeat=ndims)
+        dims = _value_or_sized_to_tuple(dims)
+        sampling = _value_or_sized_to_tuple(sampling, repeat=len(dims))
         self.sampling = sampling
         self.edge = edge
         self.kind = kind
         self.base_comm = base_comm
         self.dtype = np.dtype(dtype)
-        self.Op = self._calc_stack_op(ndims)
-        super().__init__(shape=self.Op.shape, dtype=dtype, base_comm=base_comm)
+        self.Op = self._calc_stack_op(dims, base_comm)
+        super().__init__(dims=dims, dimsd=self.Op.dimsd, dtype=dtype, base_comm=base_comm)
 
     def _matvec(self, x: DistributedArray) -> StackedDistributedArray:
         return self.Op._matvec(x)
@@ -98,14 +97,14 @@ class MPIGradient(MPIStackedLinearOperator):
     def _rmatvec(self, x: StackedDistributedArray) -> DistributedArray:
         return self.Op._rmatvec(x)
 
-    def _calc_stack_op(self, ndims):
-        local_dims = local_split(tuple(self.dims), self.base_comm, Partition.SCATTER, axis=0)
+    def _calc_stack_op(self, dims: tuple, base_comm: MPI.Comm):
+        local_dims = local_split(dims, base_comm, Partition.SCATTER, axis=0)
         grad_ops = []
-        Op1 = MPIFirstDerivative(dims=self.dims, sampling=self.sampling[0],
+        Op1 = MPIFirstDerivative(dims=dims, sampling=self.sampling[0],
                                  kind=self.kind, edge=self.edge,
                                  dtype=self.dtype)
         grad_ops.append(Op1)
-        for iax in range(1, ndims):
+        for iax in range(1, len(dims)):
             diag = MPIBlockDiag([
                 FirstDerivative(
                     dims=local_dims,

@@ -6,7 +6,7 @@ of a first part showing how to model a 3D synthetic post-stack seismic data from
 subsurface acoustic impedance in a distributed manner, following by a second part when inversion
 is carried out.
 
-This tutorial builds on the :py:func:`pylops.avo.poststack.PoststackLinearModelling`
+This tutorial builds on the :py:class:`pylops.avo.poststack.PoststackLinearModelling`
 operator to model 1d post-stack seismic traces 1d profiles of the subsurface acoustic impedence
 by means of the following equation
 
@@ -199,7 +199,8 @@ d0_dist[:] = 0.
 dstack_dist = pylops_mpi.StackedDistributedArray([d_dist, d0_dist])
 
 dnorm_dist = BDiag.H @ d_dist
-minv3d_reg_dist = pylops_mpi.optimization.basic.cgls(StackOp, dstack_dist, x0=mback3d_dist, niter=100, show=False)[0]
+minv3d_reg_dist = pylops_mpi.optimization.basic.cgls(
+    StackOp, dstack_dist, x0=mback3d_dist, niter=100, show=False)[0]
 minv3d_reg = minv3d_reg_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
@@ -210,11 +211,9 @@ if rank == 0:
     # as the one running only on rank0
     PPop0 = PoststackLinearModelling(wav, nt0=nz, spatdims=(ny, nx))
     d0 = (PPop0 @ m3d.transpose(2, 0, 1)).transpose(1, 2, 0)
-    d0_0 = (PPop0 @ m3d.transpose(2, 0, 1)).transpose(1, 2, 0)
 
     # Check the two distributed implementations give the same modelling results
     print('Distr == Local', np.allclose(d, d0))
-    print('Smooth Distr == Local', np.allclose(d_0, d0_0))
 
     # Visualize
     fig, axs = plt.subplots(nrows=6, ncols=3, figsize=(9, 14), constrained_layout=True)
@@ -279,4 +278,6 @@ if rank == 0:
     axs[5][2].axis('tight')
 
 ###############################################################################
-# To run this tutorial with our NCCL backend, refer to `Post Stack Inversion with NCCL tutorial <https://github.com/PyLops/pylops-mpi/blob/main/tutorials_nccl/poststack_nccl.py>`_ in the repository.
+# To run this tutorial with our NCCL backend, refer to `Post Stack Inversion with NCCL
+# tutorial <https://github.com/PyLops/pylops-mpi/blob/main/tutorials_nccl/poststack_nccl.py>`_
+# in the repository.
