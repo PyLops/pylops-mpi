@@ -122,3 +122,4 @@ Visit the official docs to learn more about pylops-mpi.
 * Yuxi Hong, hongyx11
 * Matteo Ravasi, mrava87
 * Tharit Tangkijwanichakul, tharittk
+* 
