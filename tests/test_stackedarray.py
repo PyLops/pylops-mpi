@@ -40,11 +40,11 @@ par2j = {'global_shape': (501, 500),
          'partition': Partition.BROADCAST, 'dtype': np.complex128,
          'axis': 0}
 
-par3 = {'global_shape': (200, 201, 101),
+par3 = {'global_shape': (100, 101, 51),
         'partition': Partition.SCATTER,
         'dtype': np.float64, 'axis': 1}
 
-par3j = {'global_shape': (200, 201, 101),
+par3j = {'global_shape': (100, 101, 51),
          'partition': Partition.SCATTER,
          'dtype': np.complex128, 'axis': 2}
 
