@@ -506,9 +506,9 @@ to download the full example code.</p>
 <span id="sphx-glr-gallery-plot-stacked-array-py"></span><h1>Stacked Array<a class="headerlink" href="#stacked-array" title="Link to this heading">#</a></h1>
 <p>This example shows how to use the <a class="reference internal" href="../api/generated/pylops_mpi.StackedDistributedArray.html#pylops_mpi.StackedDistributedArray" title="pylops_mpi.StackedDistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.StackedDistributedArray</span></code></a>.
 This class provides a way to combine and act on multiple <a class="reference internal" href="../api/generated/pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>
-within the same program. This is very useful in scenarios where an array can be logically
-divided in subarrays and each of them lends naturally to distribution across multiple processes in
-a parallel computing environment.</p>
+and <a class="reference internal" href="../api/generated/pylops_mpi.StackedDistributedArray.html#pylops_mpi.StackedDistributedArray" title="pylops_mpi.StackedDistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.StackedDistributedArray</span></code></a> within the same program. This is very useful
+in scenarios where an array can be logically divided in subarrays and each of them lends naturally
+to distribution across multiple processes in a parallel computing environment.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
@@ -686,7 +686,7 @@ distributed array</p>
 StackedVStack xadj &lt;DistributedArray with global shape=(np.int64(10),), local shape=(np.int64(10),), dtype=float64, processes=[0])&gt;  [370. 370. 370. 370. 370. 370. 370. 370. 370. 370.] (10,)
 </pre></div>
 </div>
-<p>Finally, let’s solve now an inverse problem using stacked arrays instead
+<p>Let’s solve now an inverse problem using stacked arrays instead
 of distributed arrays</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">x0</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 <span class="n">x0</span><span class="p">[:]</span> <span class="o">=</span> <span class="mf">0.</span>
@@ -700,7 +700,68 @@ of distributed arrays</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>xinv_array [1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.016 seconds)</p>
+<p>Finally, let’s move a step further and combine multiple a
+<a class="reference internal" href="../api/generated/pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a> with a
+<a class="reference internal" href="../api/generated/pylops_mpi.StackedDistributedArray.html#pylops_mpi.StackedDistributedArray" title="pylops_mpi.StackedDistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.StackedDistributedArray</span></code></a>, leading to a nested
+<a class="reference internal" href="../api/generated/pylops_mpi.StackedDistributedArray.html#pylops_mpi.StackedDistributedArray" title="pylops_mpi.StackedDistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.StackedDistributedArray</span></code></a></p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">subarr1_</span> <span class="o">=</span> <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">size</span></a> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span>
+                                       <span class="n">partition</span><span class="o">=</span><span class="n">pylops_mpi</span><span class="o">.</span><span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="p">,</span>
+                                       <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">subarr2_</span> <span class="o">=</span> <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">size</span></a> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span>
+                                       <span class="n">partition</span><span class="o">=</span><span class="n">pylops_mpi</span><span class="o">.</span><span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="p">,</span>
+                                       <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">subarr3_</span> <span class="o">=</span> <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">size</span></a> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+                                       <span class="n">partition</span><span class="o">=</span><span class="n">pylops_mpi</span><span class="o">.</span><span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="p">,</span>
+                                       <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># Filling the local arrays</span>
+<span class="n">subarr1_</span><span class="p">[:],</span> <span class="n">subarr2_</span><span class="p">[:],</span> <span class="n">subarr3_</span><span class="p">[:]</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span>
+<span class="n">arr12</span> <span class="o">=</span> <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">StackedDistributedArray</span><span class="p">([</span><span class="n">subarr1_</span><span class="p">,</span> <span class="n">subarr2_</span><span class="p">])</span>
+<span class="n">arr3</span> <span class="o">=</span> <span class="n">pylops_mpi</span><span class="o">.</span><span class="n">StackedDistributedArray</span><span class="p">([</span><span class="n">arr12</span><span class="p">,</span> <span class="n">subarr3_</span><span class="p">])</span>
+<span class="k">if</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rank</span></a> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Stacked array:&#39;</span><span class="p">,</span> <span class="n">arr3</span><span class="p">)</span>
+
+<span class="c1"># Extract and print full array</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">full_arr3</span></a> <span class="o">=</span> <span class="n">arr3</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span>
+<span class="k">if</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rank</span></a> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Full array:&#39;</span><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">full_arr3</span></a><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Stacked array: &lt;StackedDistributedArray with 2 distributed arrays:
+&lt;StackedDistributedArray with 2 distributed arrays:
+&lt;DistributedArray with global shape=(np.int64(10),), local shape=(10,), dtype=&lt;class &#39;numpy.float64&#39;&gt;, processes=[0])&gt;
+&lt;DistributedArray with global shape=(np.int64(4),), local shape=(4,), dtype=&lt;class &#39;numpy.float64&#39;&gt;, processes=[0])&gt;
+&lt;DistributedArray with global shape=(np.int64(2),), local shape=(2,), dtype=&lt;class &#39;numpy.float64&#39;&gt;, processes=[0])&gt;
+Full array: [5. 5. 5. 5. 5. 5. 5. 5. 5. 5. 6. 6. 6. 6. 7. 7.]
+</pre></div>
+</div>
+<p>Basic operations can still be applied on this nested Stacked Distributed
+array</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Negation</span>
+<span class="n">neg_arr</span> <span class="o">=</span> <span class="o">-</span><span class="n">arr3</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">full_neg_arr</span></a> <span class="o">=</span> <span class="n">neg_arr</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span>
+<span class="k">if</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rank</span></a> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Negated full array:&#39;</span><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">full_neg_arr</span></a><span class="p">)</span>
+
+<span class="c1"># Element-wise Addition</span>
+<span class="n">sum_arr</span> <span class="o">=</span> <span class="n">arr3</span> <span class="o">+</span> <span class="n">arr3</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">full_sum_arr</span></a> <span class="o">=</span> <span class="n">sum_arr</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span>
+<span class="k">if</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rank</span></a> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Summed full array:&#39;</span><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">full_sum_arr</span></a><span class="p">)</span>
+
+<span class="c1"># Element-wise Subtraction</span>
+<span class="n">sub_arr</span> <span class="o">=</span> <span class="n">arr3</span> <span class="o">-</span> <span class="n">arr3</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">full_sub_arr</span></a> <span class="o">=</span> <span class="n">sub_arr</span><span class="o">.</span><span class="n">asarray</span><span class="p">()</span>
+<span class="k">if</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rank</span></a> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Subtracted full array:&#39;</span><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">full_sub_arr</span></a><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Negated full array: [-5. -5. -5. -5. -5. -5. -5. -5. -5. -5. -6. -6. -6. -6. -7. -7.]
+Summed full array: [10. 10. 10. 10. 10. 10. 10. 10. 10. 10. 12. 12. 12. 12. 14. 14.]
+Subtracted full array: [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.017 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-gallery-plot-stacked-array-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/ebaf2650b017800d8a38733a44fc1d32/plot_stacked_array.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_stacked_array.ipynb</span></code></a></p>

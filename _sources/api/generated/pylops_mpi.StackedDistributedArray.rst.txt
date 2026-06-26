@@ -19,6 +19,7 @@
         ~StackedDistributedArray.iadd
         ~StackedDistributedArray.multiply
         ~StackedDistributedArray.norm
+        ~StackedDistributedArray.zeros_like
 
 
 

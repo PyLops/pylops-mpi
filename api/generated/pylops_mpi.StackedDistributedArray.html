@@ -557,8 +557,13 @@
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pylops_mpi.</span></span><span class="sig-name descname"><span class="pre">StackedDistributedArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distarrays</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_comm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;mpi4py.MPI.Intracomm</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/DistributedArray.html#StackedDistributedArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.StackedDistributedArray" title="Link to this definition">#</a></dt>
 <dd><p>Stacked DistributedArrays</p>
 <p>Stack DistributedArray objects and power them with basic mathematical operations.
-This class allows one to work with a series of distributed arrays to avoid having to create
-a single distributed array with some special internal sorting.</p>
+This class allows one to work with a series of distributed arrays to avoid
+having to create a single distributed array with some special internal sorting.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>All <a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a> objects passed to
+<code class="docutils literal notranslate"><span class="pre">distarrays</span></code> must share the same engine (<code class="docutils literal notranslate"><span class="pre">numpy</span></code> or <code class="docutils literal notranslate"><span class="pre">cupy</span></code>).</p>
+</div>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
@@ -566,6 +571,12 @@ a single distributed array with some special internal sorting.</p>
 </dd>
 <dt><strong>base_comm</strong><span class="classifier"><a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/reference/mpi4py.MPI.Comm.html#mpi4py.MPI.Comm" title="(in MPI for Python v4.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpi4py.MPI.Comm</span></code></a>, optional</span></dt><dd><p>Base MPI Communicator.
 Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.MPI.COMM_WORLD</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError</dt><dd><p>Stacked distributed arrays have different engine</p>
 </dd>
 </dl>
 </dd>
@@ -602,6 +613,9 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm</span></code>([ord])</p></td>
 <td><p>numpy.linalg.norm method on stacked Distributed arrays</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">zeros_like</span></code>()</p></td>
+<td><p>Creates a zero like StackedDistributedArray</p></td>
 </tr>
 </tbody>
 </table>
