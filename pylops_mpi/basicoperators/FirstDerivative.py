@@ -129,12 +129,14 @@ class MPIFirstDerivative(MPILinearOperator):
         # If Partition.BROADCAST, then convert to Partition.SCATTER
         if x.partition is Partition.BROADCAST:
             x = DistributedArray.to_dist(x=x.local_array, base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl)
+        self._dims_dimsd_local = (self.dimsd[0] // x.size, *self.dimsd[1:])
         return self._hmatvec(x)
 
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         # If Partition.BROADCAST, then convert to Partition.SCATTER
         if x.partition is Partition.BROADCAST:
             x = DistributedArray.to_dist(x=x.local_array, base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl)
+        self._dims_dimsd_local = (self.dims[0] // x.size, *self.dims[1:])
         return self._hrmatvec(x)
 
     @reshaped

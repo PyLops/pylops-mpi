@@ -57,26 +57,36 @@ def reshaped(
                     and f.__name__ != "__truediv__"
                 )
                 local_shapes = None
-                global_shape = getattr(self, "dims") if fwd else getattr(self, "dimsd", getattr(self, "dims"))
-            arr = DistributedArray(global_shape=global_shape,
-                                   base_comm=x.base_comm,
-                                   base_comm_nccl=x.base_comm_nccl,
-                                   local_shapes=local_shapes, axis=0,
-                                   engine=x.engine, dtype=x.dtype)
-            arr_local_shapes = np.asarray(arr.base_comm.allgather(np.prod(arr.local_shape)))
-            x_local_shapes = np.asarray(x.base_comm.allgather(np.prod(x.local_shape)))
-            # Calculate num_ghost_cells required for each rank
-            dif = np.cumsum(arr_local_shapes - x_local_shapes)
-            # Calculate cells_front(0 means no ghost cells)
-            cells_front = abs(min(0, dif[self.rank - 1]))
-            # Calculate cells_back(0 means no ghost cells)
-            cells_back = max(0, dif[self.rank])
-            ghosted_array = x.add_ghost_cells(cells_front=cells_front, cells_back=cells_back)
-            # Fill the redistributed array
-            index = max(0, dif[self.rank - 1])
-            arr[:] = ghosted_array[index: arr_local_shapes[self.rank] + index].reshape(arr.local_shape)
+                global_shape = getattr(self, "dims") if fwd else getattr(self, "dimsd")
+            x_dim = x.ndim
+            # Reuse existing distribution if it already matches the target layout
+            if (
+                (local_shapes is None or x.local_shapes == local_shapes)
+                and x.global_shape == global_shape
+                and x.axis == 0
+            ):
+                arr = x
+            else:
+                x = x.redistribute(axis=0)
+                arr = DistributedArray(global_shape=global_shape,
+                                       base_comm=x.base_comm,
+                                       base_comm_nccl=x.base_comm_nccl,
+                                       local_shapes=local_shapes, axis=0,
+                                       engine=x.engine, dtype=x.dtype)
+                arr_local_shapes = np.asarray(arr.base_comm.allgather(np.prod(arr.local_shape)))
+                x_local_shapes = np.asarray(x.base_comm.allgather(np.prod(x.local_shape)))
+                # Calculate num_ghost_cells required for each rank
+                dif = np.cumsum(arr_local_shapes - x_local_shapes)
+                # Calculate cells_front(0 means no ghost cells)
+                cells_front = abs(min(0, dif[self.rank - 1]))
+                # Calculate cells_back(0 means no ghost cells)
+                cells_back = max(0, dif[self.rank])
+                ghosted_array = x.add_ghost_cells(cells_front=cells_front, cells_back=cells_back)
+                # Fill the redistributed array
+                index = max(0, dif[self.rank - 1])
+                arr[:] = ghosted_array[index: arr_local_shapes[self.rank] + index].reshape(arr.local_shape)
             y: DistributedArray = f(self, arr)
-            if len(y.global_shape) > 1:
+            if x_dim == 1 and len(y.global_shape) > 1:
                 # Make sure y is distributed along axis=0 before applying ravel
                 y = y.redistribute(axis=0).ravel()
             return y

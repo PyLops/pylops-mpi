@@ -864,6 +864,33 @@ class DistributedArray(DistributedMixIn):
         arr[:] = x
         return arr
 
+    def reshape(self, local_shape, axis=0):
+        """Return a reshaped DistributedArray
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        arr : :obj:`pylops_mpi.DistributedArray`
+            Reshaped N-D DistributedArray
+        """
+        local_shapes = self.base_comm.allgather(local_shape)
+        global_shape = list(local_shapes[0])
+        global_shape[axis] = np.sum([ls[axis] for ls in local_shapes])
+        arr = DistributedArray(global_shape=tuple(global_shape),
+                               base_comm=self.base_comm,
+                               base_comm_nccl=self.base_comm_nccl,
+                               local_shapes=local_shapes,
+                               mask=self.mask,
+                               partition=self.partition,
+                               engine=self.engine,
+                               dtype=self.dtype)
+        local_array = self.local_array.reshape(local_shapes[self.rank])
+        x = local_array.copy()
+        arr[:] = x
+        return arr
+
     def empty_like(self):
         """Creates an empty like DistributedArray with uninitialized values
         """
