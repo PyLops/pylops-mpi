@@ -1,6 +1,6 @@
 from enum import Enum
 from numbers import Integral
-from typing import Any, List, Optional, Tuple, Union, NewType
+from typing import Any, List, NewType, Optional, Self, Tuple, Union
 
 import numpy as np
 from mpi4py import MPI
@@ -273,11 +273,12 @@ class DistributedArray(DistributedMixIn):
 
     @property
     def engine(self):
-        """Engine of the Distributed array
+        """Engine of the Distributed Array
 
         Returns
         -------
         engine : :obj:`str`
+            Engine
         """
         return self._engine
 
@@ -963,8 +964,11 @@ class StackedDistributedArray:
     r"""Stacked DistributedArrays
 
     Stack DistributedArray objects and power them with basic mathematical operations.
-    This class allows one to work with a series of distributed arrays to avoid having to create
-    a single distributed array with some special internal sorting.
+    This class allows one to work with a series of distributed arrays to avoid
+    having to create a single distributed array with some special internal sorting.
+
+    .. note:: All :class:`pylops_mpi.DistributedArray` objects passed to
+        ``distarrays`` must share the same engine (``numpy`` or ``cupy``).
 
     Parameters
     ----------
@@ -973,6 +977,11 @@ class StackedDistributedArray:
     base_comm : :obj:`mpi4py.MPI.Comm`, optional
         Base MPI Communicator.
         Defaults to ``mpi4py.MPI.COMM_WORLD``.
+
+    Raises
+    ------
+    ValueError
+        Stacked distributed arrays have different engine
     """
 
     def __init__(self, distarrays: List, base_comm: MPI.Comm = MPI.COMM_WORLD):
@@ -982,27 +991,81 @@ class StackedDistributedArray:
         self.rank = base_comm.Get_rank()
         self.size = base_comm.Get_size()
 
+        # Ensure all stacked arrays share the same engine
+        engines = [distarr.engine for distarr in distarrays]
+        if any(engine != engines[0] for engine in engines[1:]):
+            raise ValueError(f"Stacked arrays have mismatching engines: {engines}")
+
+        # Define global shape as sum as shapes
+        self._global_shape = distarrays[0].global_shape
+        for iarr in range(1, self.narrays):
+            self._global_shape = \
+                tuple([g1 + g2 for g1, g2 in
+                       zip(self._global_shape, distarrays[iarr].global_shape)])
+
+    def __repr__(self) -> str:
+        repr_dist = "\n".join([distarray.__repr__() for distarray in self.distarrays])
+        return f"<StackedDistributedArray with {self.narrays} distributed arrays: \n" + repr_dist
+
     def __getitem__(self, index):
         return self.distarrays[index]
 
     def __setitem__(self, index, value):
-        self.distarrays[index][:] = value
+        target = self.distarrays[index]
+        if isinstance(target, StackedDistributedArray):
+            # nested StackedDistributedArray: assign each sub-array in turn
+            for iarr in range(target.narrays):
+                target[iarr] = value[iarr]
+        elif isinstance(value, DistributedArray):
+            # plain DistributedArray: assign the local array
+            target[:] = value[:]
+        else:
+            # plain DistributedArray assigned from an array-like / scalar
+            target[:] = value
 
-    def asarray(self):
+    @property
+    def global_shape(self):
+        """Global Shape of the stacked array
+
+        Returns
+        -------
+        global_shape : :obj:`tuple`
+        """
+        return self._global_shape
+
+    @property
+    def engine(self):
+        """Engine of the Stacked Distributed Array
+
+        All stacked arrays share the same engine (enforced at creation time).
+        A nested :class:`pylops_mpi.StackedDistributedArray` exposes this same
+        property, so this resolves recursively until it reaches a
+        :class:`pylops_mpi.DistributedArray`.
+
+        Returns
+        -------
+        engine : :obj:`str`
+            Engine
+
+        """
+        return self.distarrays[0].engine
+
+    def asarray(self) -> NDArray:
         """Global view of the array
 
-        Gather all the distributed arrays
+        Gather all the distributed arrays and return
+        a flattened version
 
         Returns
         -------
         final_array : :obj:`numpy.ndarray`
-            Global Array gathered at all ranks
+            Global Array gathered at all ranks and flattened
 
         """
-        ncp = get_module(self.distarrays[0].engine)
+        ncp = get_module(self.engine)
         return ncp.hstack([distarr.asarray().ravel() for distarr in self.distarrays])
 
-    def _check_stacked_size(self, stacked_array):
+    def _check_stacked_size(self, stacked_array: Self) -> None:
         """Check that arrays have consistent size
 
         """
@@ -1017,7 +1080,10 @@ class StackedDistributedArray:
     def __neg__(self):
         arr = self.copy()
         for iarr in range(self.narrays):
-            arr[iarr][:] = -arr[iarr][:]
+            if isinstance(arr[iarr], StackedDistributedArray):
+                arr[iarr] = -arr[iarr]
+            else:
+                arr[iarr][:] = -arr[iarr][:]
         return arr
 
     def __add__(self, x):
@@ -1038,24 +1104,30 @@ class StackedDistributedArray:
     def __rmul__(self, x):
         return self.multiply(x)
 
-    def add(self, stacked_array):
+    def add(self, stacked_array: Self) -> Self:
         """Stacked Distributed Addition of arrays
         """
         self._check_stacked_size(stacked_array)
         SumArray = self.copy()
         for iarr in range(self.narrays):
-            SumArray[iarr][:] = (self[iarr] + stacked_array[iarr])[:]
+            if isinstance(stacked_array[iarr], StackedDistributedArray):
+                SumArray[iarr] = (self[iarr] + stacked_array[iarr])
+            else:
+                SumArray[iarr][:] = (self[iarr] + stacked_array[iarr])[:]
         return SumArray
 
-    def iadd(self, stacked_array):
+    def iadd(self, stacked_array: Self) -> Self:
         """Stacked Distributed In-Place Addition of arrays
         """
         self._check_stacked_size(stacked_array)
         for iarr in range(self.narrays):
-            self[iarr][:] = (self[iarr] + stacked_array[iarr])[:]
+            if isinstance(self[iarr], StackedDistributedArray):
+                self[iarr] = (self[iarr] + stacked_array[iarr])
+            else:
+                self[iarr][:] = (self[iarr] + stacked_array[iarr])[:]
         return self
 
-    def multiply(self, stacked_array):
+    def multiply(self, stacked_array: float | int | Self) -> Self:
         """Stacked Distributed Multiplication of arrays
         """
         if isinstance(stacked_array, StackedDistributedArray):
@@ -1063,16 +1135,22 @@ class StackedDistributedArray:
         ProductArray = self.copy()
 
         if isinstance(stacked_array, StackedDistributedArray):
-            # multiply two DistributedArray
+            # multiply two StackedDistributedArray
             for iarr in range(self.narrays):
-                ProductArray[iarr][:] = (self[iarr] * stacked_array[iarr])[:]
+                if isinstance(self[iarr], StackedDistributedArray):
+                    ProductArray[iarr] = (self[iarr] * stacked_array[iarr])
+                else:
+                    ProductArray[iarr][:] = (self[iarr] * stacked_array[iarr])[:]
         else:
             # multiply with scalar
             for iarr in range(self.narrays):
-                ProductArray[iarr][:] = (self[iarr] * stacked_array)[:]
+                if isinstance(self[iarr], StackedDistributedArray):
+                    ProductArray[iarr] = (self[iarr] * stacked_array)
+                else:
+                    ProductArray[iarr][:] = (self[iarr] * stacked_array)[:]
         return ProductArray
 
-    def dot(self, stacked_array, vdot: bool = False):
+    def dot(self, stacked_array: Self, vdot: bool = False) -> Self:
         """
         Compute the distributed dot product between this array and another
         distributed array.
@@ -1098,7 +1176,7 @@ class StackedDistributedArray:
             dotprod += self[iarr].dot(stacked_array[iarr], vdot=vdot)
         return dotprod
 
-    def norm(self, ord: Optional[int] = None):
+    def norm(self, ord: Optional[int] = None) -> bool | float:
         """numpy.linalg.norm method on stacked Distributed arrays
 
         Parameters
@@ -1106,8 +1184,8 @@ class StackedDistributedArray:
         ord : :obj:`int`, optional
             Order of the norm.
         """
-        ncp = get_module(self.distarrays[0].engine)
-        norms = ncp.array([distarray.norm(ord) for distarray in self.distarrays])
+        ncp = get_module(self.engine)
+        norms = ncp.hstack([distarray.norm(ord) for distarray in self.distarrays])
         ord = 2 if ord is None else ord
         if ord in ['fro', 'nuc']:
             raise ValueError(f"norm-{ord} not possible for vectors")
@@ -1124,19 +1202,33 @@ class StackedDistributedArray:
             norm = ncp.power(ncp.sum(ncp.power(norms, ord)), 1. / ord)
         return norm
 
-    def conj(self):
+    def conj(self) -> Self:
         """Distributed conj() method
         """
         ConjArray = StackedDistributedArray([distarray.conj() for distarray in self.distarrays])
         return ConjArray
 
-    def copy(self):
+    def copy(self) -> Self:
         """Creates a copy of the DistributedArray
         """
         arr = StackedDistributedArray([distarray.copy() for distarray in self.distarrays])
         return arr
 
-    def empty_like(self):
+    def zeros_like(self) -> Self:
+        """Creates a zero like StackedDistributedArray
+        """
+        dists = []
+        for iarr in range(self.narrays):
+            distarray = self.distarrays[iarr]
+            dist = DistributedArray(global_shape=distarray.global_shape, base_comm=distarray.base_comm,
+                                    base_comm_nccl=distarray.base_comm_nccl, partition=distarray.partition,
+                                    axis=distarray.axis, local_shapes=distarray.local_shapes, mask=distarray.mask,
+                                    engine=distarray.engine, dtype=distarray.dtype)
+            dist[:] = 0.
+            dists.append(dist)
+        return StackedDistributedArray(distarrays=dists)
+
+    def empty_like(self) -> Self:
         """Creates an empty like StackedDistributedArray with uninitialized values
         """
         dists = []
@@ -1148,7 +1240,3 @@ class StackedDistributedArray:
                                     engine=distarray.engine, dtype=distarray.dtype)
             dists.append(dist)
         return StackedDistributedArray(distarrays=dists)
-
-    def __repr__(self):
-        repr_dist = "\n".join([distarray.__repr__() for distarray in self.distarrays])
-        return f"<StackedDistributedArray with {self.narrays} distributed arrays: \n" + repr_dist

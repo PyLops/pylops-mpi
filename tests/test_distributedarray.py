@@ -343,7 +343,7 @@ def test_distributed_maskednorm(par):
     if par['axis'] != 0:
         x = np.swapaxes(x, 0, par['axis'])
     arr = DistributedArray.to_dist(x=x, mask=mask, axis=par['axis'])
-    # TODO (tharitt): Fail with CuPy + MPI
+
     assert_allclose(
         arr.norm(ord=1, axis=par['norm_axis']),
         np.linalg.norm(par['x'], ord=1, axis=par['norm_axis']) / (nsub if par['axis'] == par['norm_axis'] else 1),
