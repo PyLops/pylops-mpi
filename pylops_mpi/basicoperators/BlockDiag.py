@@ -109,37 +109,57 @@ class MPIBlockDiag(MPILinearOperator):
             nops[iop] = oper.shape[0]
             mops[iop] = oper.shape[1]
         self.mops = mops.sum()
-        self.local_shapes_m = base_comm.allgather((self.mops, ))
         self.nops = nops.sum()
-        self.local_shapes_n = base_comm.allgather((self.nops, ))
+        dimsd = [d for dimsd in base_comm.allgather([op.dimsd for op in self.ops]) for d in dimsd]
+        if len(set(dimsd)) == 1:
+            self.local_shapes_n = [(len(ops), *dimsd[0]) for _ in range(base_comm.size)]
+            dimsd = (base_comm.allreduce(len(ops)), *dimsd[0])
+        else:
+            self.local_shapes_n = base_comm.allgather((self.nops, ))
+            dimsd = (base_comm.allreduce(self.nops),)
+        dims = [d for dims in base_comm.allgather([op.dims for op in self.ops]) for d in dims]
+        if len(set(dims)) == 1:
+            self.local_shapes_m = [(len(ops), *dims[0]) for _ in range(base_comm.size)]
+            dims = (base_comm.allreduce(len(ops)), *dims[0])
+        else:
+            self.local_shapes_m = base_comm.allgather((self.mops, ))
+            dims = (base_comm.allreduce(self.mops),)
         self.nnops = np.insert(np.cumsum(nops), 0, 0)
         self.mmops = np.insert(np.cumsum(mops), 0, 0)
-        dimsd = (base_comm.allreduce(self.nops), )
-        dims = (base_comm.allreduce(self.mops), )
         dtype = _get_dtype(ops) if dtype is None else np.dtype(dtype)
         super().__init__(dims=dims, dimsd=dimsd, dtype=dtype, base_comm=base_comm)
 
     @reshaped(forward=True, stacking=True)
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
-        y = DistributedArray(global_shape=self.shape[0], base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl, local_shapes=self.local_shapes_n,
-                             mask=self.mask, engine=x.engine, dtype=self.dtype)
+        y = DistributedArray(global_shape=self.dimsd, base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl,
+                             local_shapes=self.local_shapes_n, mask=self.mask, engine=x.engine, dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
-            y1.append(oper.matvec(x.local_array[self.mmops[iop]:
-                                                self.mmops[iop + 1]]))
+            arr = x.local_array.flatten()[self.mmops[iop]:self.mmops[iop + 1]]
+            op_output = oper.matvec(arr)
+            if len(self.dimsd) > 1:
+                shape_rank = list(self.local_shapes_n[self.rank])
+                shape_rank[0] //= len(self.ops)
+                op_output = op_output.reshape(shape_rank)
+            y1.append(op_output)
         y[:] = ncp.concatenate(y1)
         return y
 
     @reshaped(forward=False, stacking=True)
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
-        y = DistributedArray(global_shape=self.shape[1], base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl, local_shapes=self.local_shapes_m,
-                             mask=self.mask, engine=x.engine, dtype=self.dtype)
+        y = DistributedArray(global_shape=self.dims, base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl,
+                             local_shapes=self.local_shapes_m, mask=self.mask, engine=x.engine, dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
-            y1.append(oper.rmatvec(x.local_array[self.nnops[iop]:
-                                                 self.nnops[iop + 1]]))
+            arr = x.local_array.flatten()[self.nnops[iop]:self.nnops[iop + 1]]
+            op_output = oper.rmatvec(arr)
+            if len(self.dims) > 1:
+                shape_rank = list(self.local_shapes_m[self.rank])
+                shape_rank[0] //= len(self.ops)
+                op_output = op_output.reshape(shape_rank)
+            y1.append(op_output)
         y[:] = ncp.concatenate(y1)
         return y
 

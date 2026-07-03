@@ -46,19 +46,17 @@ def reshaped(
                 raise ValueError(f"x should have partition={Partition.SCATTER}, {x.partition} != {Partition.SCATTER}")
             if stacking and forward:
                 local_shapes = getattr(self, "local_shapes_m")
-                global_shape = x.global_shape
             elif stacking and not forward:
                 local_shapes = getattr(self, "local_shapes_n")
-                global_shape = x.global_shape
             else:
-                fwd = (
-                    "rmat" not in f.__name__
-                    and f.__name__ != "div"
-                    and f.__name__ != "__truediv__"
-                )
                 local_shapes = None
-                global_shape = getattr(self, "dims") if fwd else getattr(self, "dimsd")
+            fwd = (
+                "rmat" not in f.__name__
+                and f.__name__ != "div"
+                and f.__name__ != "__truediv__"
+            )
             x_dim = x.ndim
+            global_shape = getattr(self, "dims") if fwd else getattr(self, "dimsd")
             # Reuse existing distribution if it already matches the target layout
             if (
                 (local_shapes is None or x.local_shapes == local_shapes)

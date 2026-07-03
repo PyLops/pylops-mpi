@@ -106,7 +106,6 @@ class MPIVStack(DistributedMixIn, MPILinearOperator):
         for iop, oper in enumerate(self.ops):
             nops[iop] = oper.shape[0]
         self.nops = nops.sum()
-        self.local_shapes_n = base_comm.allgather((self.nops, ))
         mops = [oper.shape[1] for oper in self.ops]
         mops = np.concatenate(base_comm.allgather(mops), axis=0)
         if len(set(mops)) > 1:
@@ -114,7 +113,12 @@ class MPIVStack(DistributedMixIn, MPILinearOperator):
         self.mops = int(mops[0])
         self.nnops = np.insert(np.cumsum(nops), 0, 0)
         dimsd = (base_comm.allreduce(self.nops), )
-        dims = (self.mops, )
+        dims = [d for dims in base_comm.allgather([op.dims for op in self.ops]) for d in dims]
+        self.local_shapes_n = base_comm.allgather((self.nops,))
+        if len(set(dims)) == 1:
+            dims = dims[0]
+        else:
+            dims = (self.mops,)
         dtype = _get_dtype(self.ops) if dtype is None else np.dtype(dtype)
         super().__init__(dims=dims, dimsd=dimsd, dtype=dtype, base_comm=base_comm)
 
@@ -124,18 +128,22 @@ class MPIVStack(DistributedMixIn, MPILinearOperator):
             raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
                              f"Got  {x.partition} instead...")
         # the output y should use NCCL if the operand x uses it
-        y = DistributedArray(global_shape=self.shape[0], base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl, local_shapes=self.local_shapes_n,
-                             engine=x.engine, dtype=self.dtype)
+        y = DistributedArray(global_shape=self.dimsd,
+                             base_comm=x.base_comm,
+                             base_comm_nccl=x.base_comm_nccl,
+                             local_shapes=self.local_shapes_n,
+                             engine=x.engine,
+                             dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
-            y1.append(oper.matvec(x.local_array))
+            y1.append(oper.matvec(x.local_array.flatten()))
         y[:] = ncp.concatenate(y1)
         return y
 
     @reshaped(forward=False, stacking=True)
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
-        y = DistributedArray(global_shape=self.shape[1],
+        y = DistributedArray(global_shape=self.dims,
                              base_comm=x.base_comm,
                              base_comm_nccl=x.base_comm_nccl,
                              partition=Partition.BROADCAST,
@@ -143,10 +151,10 @@ class MPIVStack(DistributedMixIn, MPILinearOperator):
                              dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
-            y1.append(oper.rmatvec(x.local_array[self.nnops[iop]: self.nnops[iop + 1]]))
+            y1.append(oper.rmatvec(x.local_array.flatten()[self.nnops[iop]: self.nnops[iop + 1]]))
         y1 = ncp.sum(ncp.vstack(y1), axis=0)
         y[:] = self._allreduce(x.base_comm, x.base_comm_nccl,
-                               y1, op=MPI.SUM, engine=x.engine)
+                               y1, op=MPI.SUM, engine=x.engine).reshape(self.dims)
         return y
 
 

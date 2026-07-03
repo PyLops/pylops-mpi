@@ -279,6 +279,8 @@ class MPILinearOperator:
             is_dims_shaped = x.global_shape == self.dims
             if is_dims_shaped or x.ndim == 1:
                 y = self.matvec(x)
+                if x.ndim == 1 and y.ndim > 1:
+                    y = y.redistribute(axis=0).ravel()
                 return y
             else:
                 msg = (

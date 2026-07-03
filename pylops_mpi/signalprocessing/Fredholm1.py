@@ -109,7 +109,7 @@ class MPIFredholm1(MPILinearOperator):
         if x.partition not in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
             raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
                              f"Got  {x.partition} instead...")
-        y = DistributedArray(global_shape=self.shape[0],
+        y = DistributedArray(global_shape=self.dimsd,
                              base_comm=x.base_comm,
                              base_comm_nccl=x.base_comm_nccl,
                              partition=x.partition,
@@ -127,7 +127,7 @@ class MPIFredholm1(MPILinearOperator):
                 y1[isl] = ncp.dot(self.G[isl], x[isl])
         # gather results
         y[:] = ncp.vstack(y._allgather(y.base_comm, y.base_comm_nccl, y1,
-                                       engine=y.engine)).ravel()
+                                       engine=y.engine))
         return y
 
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
@@ -135,7 +135,7 @@ class MPIFredholm1(MPILinearOperator):
         if x.partition not in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
             raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
                              f"Got  {x.partition} instead...")
-        y = DistributedArray(global_shape=self.shape[1],
+        y = DistributedArray(global_shape=self.dims,
                              base_comm=x.base_comm,
                              base_comm_nccl=x.base_comm_nccl,
                              partition=x.partition,
@@ -165,5 +165,5 @@ class MPIFredholm1(MPILinearOperator):
 
         # gather results
         y[:] = ncp.vstack(y._allgather(y.base_comm, y.base_comm_nccl, y1,
-                                       engine=y.engine)).ravel()
+                                       engine=y.engine))
         return y
