@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Callable
 from pylops.basicoperators import Identity
 from pyproximal.ProxOperator import _check_tau
 
-from pylops_mpi import DistributedArray, StackedDistributedArray
+from pylops_mpi import DistributedArray, StackedDistributedArray, Partition
 from pylops_mpi.basicoperators import MPIBlockDiag, MPIStackedVStack
 from pylops_mpi.optimization.basic import cg, cgls
 from pylops_mpi.proximal import MPIProxOperator
@@ -149,10 +149,16 @@ class MPIL2(MPIProxOperator):
                 if self.q is not None:
                     y -= tau * self.alpha * self.q
             if self.normaleqs:
-                Op1 = MPIBlockDiag([Identity(x.local_shape, dtype=self.Op.dtype, )]) + float(
-                    tau * self.sigma
-                ) * (self.Op.H * self.Op)
-                x = cg(Op1, y, niter=niter, x0=self.x0, **self.kwargs_solver)[0]
+                if x.partition == Partition.SCATTER:
+                    Op1 = MPIBlockDiag([Identity(x.local_shape, dtype=self.Op.dtype, )]) + float(
+                        tau * self.sigma
+                    ) * (self.Op.H * self.Op)
+                    x = cg(Op1, y, niter=niter, x0=self.x0, **self.kwargs_solver)[0]
+                else:
+                    # TODO: handle case of x BROADCAST
+                    raise NotImplementedError(
+                        "L2 proximal operator currently "
+                        f"not supporter for {x.partition} partition")
             else:
                 y = x
                 if self.q is not None:

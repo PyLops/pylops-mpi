@@ -2,6 +2,10 @@ r"""
 Proximal operators
 ==================
 
+This example demonstrates the use of the :py:module:`pylops_mpi.proximal`
+module, and more specifically how to create and apply PyProximal operators
+to distributed array.
+
 """
 import numpy as np
 from mpi4py import MPI
@@ -18,17 +22,27 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-n = 10
+###############################################################################
+# Let's start with so-called separable proximal operators. These are functionals
+# whose proximal operator can be computed in a element-wise fashion. As such,
+# no special implementation is required for the distributed counterpart of
+# those operators. Instead, we can simply wrap the PyProximal operator into
+# a :py:class:`pylops_mpi.proximal.MPIProxOperator`.
+#
+# We take the :py:class:`pyproximal.proximal.L1` norm as an example.
 
-# L1 norm
+n = 10
 arr = pylops_mpi.DistributedArray(global_shape=n * size,
                                   partition=pylops_mpi.Partition.SCATTER)
-
 arr[:] = rank * np.arange(n)
 
-l1 = pyproximal.L1(sigma=2.0)
+l1 = pyproximal.proximal.L1(sigma=2.0)
 l1d = pylops_mpi.proximal.MPIProxOperator(l1)
+
+# Call
 f = l1d(arr)
+
+# Proximal
 prox = l1d.prox(arr, .1)
 proxdlocal = prox.asarray()
 

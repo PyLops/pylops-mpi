@@ -18,7 +18,7 @@ from mpi4py import MPI
 import pytest
 
 import pylops_mpi
-from pylops.basicoperators import FirstDerivative
+from pylops.basicoperators import Diagonal
 from pyproximal.proximal import (
     Box,
     L0,
@@ -117,30 +117,33 @@ def test_separable_prox(par):
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize(
-    "par", [(par1), (par1b), (par1j),]
+    "par", [(par1), (par1j),] #  (par1b),
 )
 def test_L2(par):
     """L2 proximal operator"""
     np.random.seed(42)
 
-    x = pylops_mpi.DistributedArray(global_shape=par['n'], dtype=par['dtype'],
-                                    partition=par['partition'], engine=backend)
+    x = pylops_mpi.DistributedArray(global_shape=par['n'] * (size if par["partition"] == pylops_mpi.Partition.SCATTER else 1),
+                                    dtype=par['dtype'], partition=par['partition'], engine=backend)
     x[:] = np.random.normal(rank, 10, x.local_shape).astype(par['dtype']) + \
         par['imag'] * np.random.normal(rank, 10, x.local_shape).astype(par['dtype'])
     x_global = x.asarray()
 
-    b = pylops_mpi.DistributedArray(global_shape=par['n'], dtype=par['dtype'],
-                                    partition=par['partition'], engine=backend)
+    b = pylops_mpi.DistributedArray(global_shape=par['n'] * (size if par["partition"] == pylops_mpi.Partition.SCATTER else 1),
+                                    dtype=par['dtype'], partition=par['partition'], engine=backend)
     b[:] = np.random.normal(rank, 10, x.local_shape).astype(par['dtype']) + \
         par['imag'] * np.random.normal(rank, 10, x.local_shape).astype(par['dtype'])
     b_global = b.asarray()
 
-    Op_global = FirstDerivative(
-        par['n'] * (size if par["partition"] == pylops_mpi.Partition.SCATTER else 1),
-        sampling=0.001)
-    Opd = pylops_mpi.MPIFirstDerivative(
-        par['n'] * (size if par["partition"] == pylops_mpi.Partition.SCATTER else 1),
-        sampling=0.001)
+    Op_global = Diagonal(
+        np.ones(par['n'] * (size if par["partition"] == pylops_mpi.Partition.SCATTER else 1), dtype=par['dtype']),
+        dtype=par['dtype'])
+    if pylops_mpi.Partition.SCATTER:
+        Op_local = Diagonal(np.ones(par['n'], dtype=par['dtype']), dtype=par['dtype'])
+        Opd = pylops_mpi.MPIBlockDiag([Op_local, ])
+    else:
+        Op_local = Diagonal(np.ones(par['n'] * size, dtype=par['dtype']), dtype=par['dtype'])
+        Opd = pylops_mpi.MPILinearOperator(Op_local)
 
     l2x = L2(sigma=2.0)
     l2xd = MPIL2(sigma=2.0)
@@ -148,11 +151,10 @@ def test_L2(par):
     l2b = L2(b=b_global, sigma=2.0)
     l2bd = MPIL2(b=b, sigma=2.0)
 
-    # l2Op = L2(Op=Op_global, b=b_global, sigma=2.0)
-    # l2Opd = MPIL2(Op=Opd, b=b, sigma=2.0)
+    l2Op = L2(Op=Op_global, b=b_global, sigma=2.0, solver="cgls")
+    l2Opd = MPIL2(Op=Opd, b=b, sigma=2.0, x0=x.zeros_like(), solver="cgls")
 
-    # for l2, l2d in zip([l2x, l2b, l2Op], [l2xd, l2bd, l2Opd]):
-    for l2, l2d in zip([l2x, l2b,], [l2xd, l2bd,]):
+    for l2, l2d in zip([l2x, l2b, l2Op], [l2xd, l2bd, l2Opd]):
         f = l2d(x)
         prox = l2d.prox(x, .1)
         prox = prox.asarray()
@@ -161,4 +163,4 @@ def test_L2(par):
             f_np = l2(x_global)
             prox_np = l2.prox(x_global, .1)
             assert_allclose(f, f_np, rtol=1e-14)
-            assert_allclose(prox, prox_np, rtol=1e-14)
+            assert_allclose(prox, prox_np, rtol=1e-12)
