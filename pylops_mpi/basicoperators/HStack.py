@@ -97,7 +97,7 @@ class MPIHStack(MPILinearOperator):
             raise ValueError("Operators have different number of rows")
         hops = [oper.H for oper in self.ops]
         self.HStack = MPIVStack(ops=hops, base_comm=base_comm, dtype=dtype).H
-        super().__init__(shape=self.HStack.shape, dtype=self.HStack.dtype, base_comm=base_comm)
+        super().__init__(dims=self.HStack.dims, dimsd=self.HStack.dimsd, dtype=self.HStack.dtype, base_comm=base_comm)
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         return self.HStack.matvec(x)

@@ -40,13 +40,37 @@ par2j = {'global_shape': (501, 500),
          'partition': Partition.BROADCAST, 'dtype': np.complex128,
          'axis': 0}
 
-par3 = {'global_shape': (200, 201, 101),
+par3 = {'global_shape': (100, 101, 51),
         'partition': Partition.SCATTER,
         'dtype': np.float64, 'axis': 1}
 
-par3j = {'global_shape': (200, 201, 101),
+par3j = {'global_shape': (100, 101, 51),
          'partition': Partition.SCATTER,
          'dtype': np.complex128, 'axis': 2}
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par1),])
+def test_wrong_engine(par):
+    """Test that an error is raised if a stacked distributed array
+    is created from distributed arrays with different engine"""
+    # Create stacked array
+    distributed_array0 = DistributedArray(global_shape=par['global_shape'],
+                                          partition=par['partition'],
+                                          dtype=par['dtype'], axis=par['axis'],
+                                          engine=backend)
+    distributed_array1 = DistributedArray(global_shape=par['global_shape'],
+                                          partition=par['partition'],
+                                          dtype=par['dtype'], axis=par['axis'],
+                                          engine=backend)
+
+    # Force engine (done this way as passing it during creation would
+    # raise an error if not numpy/cupy and cupy cannot be chosen for 
+    # CPU tests)
+    distributed_array0._engine = "foo"
+    
+    with pytest.raises(ValueError, match="Stacked arrays have "):
+        _ = StackedDistributedArray([distributed_array0, distributed_array1])
 
 
 @pytest.mark.mpi(min_size=2)
@@ -68,12 +92,21 @@ def test_creation(par):
 
     stacked_arrays = StackedDistributedArray([distributed_array0, distributed_array1])
     assert isinstance(stacked_arrays, StackedDistributedArray)
+    assert stacked_arrays.global_shape == tuple(gs * 2 for gs in par['global_shape'])
     assert_allclose(stacked_arrays[0].local_array,
                     np.zeros(shape=distributed_array0.local_shape,
                              dtype=par['dtype']), rtol=1e-14)
     assert_allclose(stacked_arrays[1].local_array,
                     np.ones(shape=distributed_array1.local_shape,
                             dtype=par['dtype']), rtol=1e-14)
+
+    # Asarray
+    stacked_arrays_local = stacked_arrays.asarray()
+    stacked_arrays_local_bench = np.hstack([
+        np.zeros(shape=distributed_array0.global_shape, dtype=par['dtype']).ravel(),
+        np.ones(shape=distributed_array1.global_shape, dtype=par['dtype']).ravel(),
+        ])
+    assert_allclose(stacked_arrays_local, stacked_arrays_local_bench, rtol=1e-14)
 
     # Modify array in place
     distributed_array0[:] = 2
@@ -145,10 +178,10 @@ def test_stacked_math(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par1j), (par2),
-                                 (par2j), (par3), (par3j)])
-def test_creation_nested(par):
-    """Test creation of nested stacked distributed arrays"""
+@pytest.mark.parametrize("par", [(par1),])
+def test_wrong_engine_nested(par):
+    """Test that an error is raised if a nested stacked distributed array
+    is created from distributed arrays with different engine"""
     # Create stacked array
     distributed_array0 = DistributedArray(global_shape=par['global_shape'],
                                           partition=par['partition'],
@@ -162,6 +195,35 @@ def test_creation_nested(par):
                                           partition=par['partition'],
                                           dtype=par['dtype'], axis=par['axis'],
                                           engine=backend)
+
+    # Force engine (done this way as passing it during creation would
+    # raise an error if not numpy/cupy and cupy cannot be chosen for 
+    # CPU tests)
+    distributed_array2._engine = "foo"
+    stacked_arrays_01 = StackedDistributedArray([distributed_array0, distributed_array1])
+    
+    with pytest.raises(ValueError, match="Stacked arrays have "):
+        _ = StackedDistributedArray([stacked_arrays_01, distributed_array2])
+    
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2),
+                                 (par2j), (par3), (par3j)])
+def test_creation_nested(par):
+    """Test creation of nested stacked distributed arrays"""
+    # Create stacked array
+    distributed_array0 = DistributedArray(global_shape=par['global_shape'],
+                                          partition=par['partition'],
+                                          dtype=par['dtype'], axis=par['axis'],
+                                          engine=backend)
+    distributed_array1 = DistributedArray(global_shape=par['global_shape'],
+                                          partition=par['partition'],
+                                          dtype=par['dtype'], axis=par['axis'],
+                                          engine=backend)
+    distributed_array2 = DistributedArray(global_shape=[gs * 2 for gs in par['global_shape']],
+                                          partition=par['partition'],
+                                          dtype=par['dtype'], axis=par['axis'],
+                                          engine=backend)
     distributed_array0[:] = 0
     distributed_array1[:] = 1
     distributed_array2[:] = 2
@@ -169,20 +231,34 @@ def test_creation_nested(par):
     stacked_arrays_01 = StackedDistributedArray([distributed_array0, distributed_array1])
     stacked_arrays = StackedDistributedArray([stacked_arrays_01, distributed_array2])
     assert isinstance(stacked_arrays, StackedDistributedArray)
+    assert stacked_arrays.global_shape == tuple(gs * 4 for gs in par['global_shape'])
     assert_allclose(stacked_arrays[0][0].local_array,
                     np.zeros(shape=distributed_array0.local_shape,
                              dtype=par['dtype']), rtol=1e-14)
     assert_allclose(stacked_arrays[0][1].local_array,
-                    np.ones(shape=distributed_array0.local_shape,
+                    np.ones(shape=distributed_array1.local_shape,
                              dtype=par['dtype']), rtol=1e-14)
     assert_allclose(stacked_arrays[1].local_array,
-                    2 * np.ones(shape=distributed_array1.local_shape,
+                    2 * np.ones(shape=distributed_array2.local_shape,
                                 dtype=par['dtype']), rtol=1e-14)
 
+    # Asarray
+    stacked_arrays_local = stacked_arrays.asarray()
+    stacked_arrays_local_bench = np.hstack([
+        np.zeros(shape=distributed_array0.global_shape, dtype=par['dtype']).ravel(),
+        np.ones(shape=distributed_array1.global_shape, dtype=par['dtype']).ravel(),
+        2 * np.ones(shape=distributed_array2.global_shape, dtype=par['dtype']).ravel(),
+        ])
+    assert_allclose(stacked_arrays_local, stacked_arrays_local_bench, rtol=1e-14)
+    
     # Modify array in place
     distributed_array0[:] = 2
     assert_allclose(stacked_arrays[0][0].local_array,
                     2 * np.ones(shape=distributed_array0.local_shape,
+                                dtype=par['dtype']), rtol=1e-14)
+    distributed_array2[:] = 4
+    assert_allclose(stacked_arrays[1].local_array,
+                    4 * np.ones(shape=distributed_array2.local_shape,
                                 dtype=par['dtype']), rtol=1e-14)
 
 
@@ -240,16 +316,13 @@ def test_stacked_nested_math(par):
     l0norm = stacked_array1.norm(0)
     l1norm = stacked_array1.norm(1)
     l2norm = stacked_array1.norm(2)
+    linfnorm = stacked_array1.norm(np.inf)
 
-    # TODO (tharitt): FAIL with CuPy + MPI for inf norm - see test_distributedarray.py
-    # test_distributed_nrom(par) as well
-#     linfnorm = stacked_array1.norm(np.inf)
     assert_allclose(l0norm, np.linalg.norm(stacked_array1.asarray().flatten(), 0),
                     rtol=1e-14)
     assert_allclose(l1norm, np.linalg.norm(stacked_array1.asarray().flatten(), 1),
                     rtol=1e-14)
     assert_allclose(l2norm, np.linalg.norm(stacked_array1.asarray(), 2),
                     rtol=1e-10)  # needed to raise it due to how partial norms are combined (with power applied)
-    # TODO (tharitt): FAIL at inf norm - see above
-#     assert_allclose(linfnorm, np.linalg.norm(stacked_array1.asarray().flatten(), np.inf),
-#                     rtol=1e-14)
+    assert_allclose(linfnorm, np.linalg.norm(stacked_array1.asarray().flatten(), np.inf),
+                    rtol=1e-14)

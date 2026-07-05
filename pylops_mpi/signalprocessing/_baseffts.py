@@ -123,7 +123,7 @@ class _MPIBaseFFTND(MPILinearOperator):
         self.rdtype = get_real_dtype(dtype) if self.real else np.dtype(dtype)
         self.cdtype = get_complex_dtype(dtype)
         self.clinear = False if self.real or np.issubdtype(dtype, np.floating) else True
-        super().__init__(dtype=self.cdtype, shape=(int(np.prod(dimsd)), int(np.prod(dims))), base_comm=base_comm)
+        super().__init__(dtype=self.cdtype, dimsd=dimsd, dims=dims, base_comm=base_comm)
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         msg = "_BaseFFT does not provide _matvec. It must be implemented separately."

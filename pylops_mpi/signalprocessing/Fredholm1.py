@@ -95,11 +95,9 @@ class MPIFredholm1(MPILinearOperator):
         self.islstart = np.insert(np.cumsum(self.nsls)[:-1], 0, 0)
         self.islend = np.cumsum(self.nsls)
         self.rank = base_comm.Get_rank()
-        self.dims = (nslstot, self.ny, self.nz)
-        self.dimsd = (nslstot, self.nx, self.nz)
-        shape = (np.prod(self.dimsd),
-                 np.prod(self.dims))
-        super().__init__(shape=shape, dtype=np.dtype(dtype), base_comm=base_comm)
+        dims = (nslstot, self.ny, self.nz)
+        dimsd = (nslstot, self.nx, self.nz)
+        super().__init__(dims=dims, dimsd=dimsd, dtype=np.dtype(dtype), base_comm=base_comm)
 
         self.G = G
         if saveGt:

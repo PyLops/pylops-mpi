@@ -3,9 +3,9 @@ Stacked Array
 =============
 This example shows how to use the :py:class:`pylops_mpi.StackedDistributedArray`.
 This class provides a way to combine and act on multiple :py:class:`pylops_mpi.DistributedArray`
-within the same program. This is very useful in scenarios where an array can be logically
-divided in subarrays and each of them lends naturally to distribution across multiple processes in
-a parallel computing environment.
+and :py:class:`pylops_mpi.StackedDistributedArray` within the same program. This is very useful
+in scenarios where an array can be logically divided in subarrays and each of them lends naturally
+to distribution across multiple processes in a parallel computing environment.
 """
 
 from matplotlib import pyplot as plt
@@ -144,7 +144,7 @@ if rank == 0:
     print('StackedVStack xadj', xadj, xadj_arr, xadj_arr.shape)
 
 ###############################################################################
-# Finally, let's solve now an inverse problem using stacked arrays instead
+# Let's solve now an inverse problem using stacked arrays instead
 # of distributed arrays
 x0 = x.copy()
 x0[:] = 0.
@@ -153,3 +153,53 @@ xinv_array = xinv.asarray()
 
 if rank == 0:
     print('xinv_array', xinv_array)
+
+###############################################################################
+# Finally, let's move a step further and combine multiple a 
+# :py:class:`pylops_mpi.DistributedArray` with a 
+# :py:class:`pylops_mpi.StackedDistributedArray`, leading to a nested
+# :py:class:`pylops_mpi.StackedDistributedArray`
+
+subarr1_ = pylops_mpi.DistributedArray(global_shape=size * 10,
+                                       partition=pylops_mpi.Partition.SCATTER,
+                                       axis=0)
+subarr2_ = pylops_mpi.DistributedArray(global_shape=size * 4,
+                                       partition=pylops_mpi.Partition.SCATTER,
+                                       axis=0)
+subarr3_ = pylops_mpi.DistributedArray(global_shape=size * 2,
+                                       partition=pylops_mpi.Partition.SCATTER,
+                                       axis=0)
+
+# Filling the local arrays
+subarr1_[:], subarr2_[:], subarr3_[:] = 5, 6, 7
+arr12 = pylops_mpi.StackedDistributedArray([subarr1_, subarr2_])
+arr3 = pylops_mpi.StackedDistributedArray([arr12, subarr3_])
+if rank == 0:
+    print('Stacked array:', arr3)
+
+# Extract and print full array
+full_arr3 = arr3.asarray()
+if rank == 0:
+    print('Full array:', full_arr3)
+
+###############################################################################
+# Basic operations can still be applied on this nested Stacked Distributed
+# array
+
+# Negation
+neg_arr = -arr3
+full_neg_arr = neg_arr.asarray()
+if rank == 0:
+    print('Negated full array:', full_neg_arr)
+
+# Element-wise Addition
+sum_arr = arr3 + arr3
+full_sum_arr = sum_arr.asarray()
+if rank == 0:
+    print('Summed full array:', full_sum_arr)
+
+# Element-wise Subtraction
+sub_arr = arr3 - arr3
+full_sub_arr = sub_arr.asarray()
+if rank == 0:
+    print('Subtracted full array:', full_sub_arr)

@@ -65,6 +65,14 @@ while the ``base_comm`` is set to ``MPI.COMM_WORLD`` if not provided.
         dtype = _get_dtype(ops) if dtype is None else np.dtype(dtype)
         super().__init__(shape=shape, dtype=dtype, base_comm=base_comm)
 
+Every :py:class:`pylops_mpi.MPILinearOperator` class is equipped with ``dims`` and ``dimsd``, in
+addition to the required ``dtype``, ``shape``, and ``base_comm``. Note that ``dims`` and ``dimsd`` can
+be defined independently of ``shape``, which will then be automatically assigned within the
+``super`` method.
+
+See the docs of :py:class:`pylops_mpi.MPILinearOperator` for more information about what these
+attributes mean.
+
 Forward mode (``_matvec``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 We can then move onto writing the *forward mode* in the method ``_matvec``. In other words, we will need to write

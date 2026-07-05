@@ -5,6 +5,7 @@ from mpi4py import MPI
 from pylops.utils.typing import DTypeLike, InputDimsLike
 from pylops.basicoperators import SecondDerivative
 from pylops.utils.backend import get_normalize_axis_index
+from pylops.utils._internal import _value_or_sized_to_tuple
 
 from pylops_mpi import DistributedArray, MPILinearOperator, Partition
 from pylops_mpi.DistributedArray import local_split
@@ -74,7 +75,7 @@ class MPILaplacian(MPILinearOperator):
                  kind: str = "centered",
                  base_comm: MPI.Comm = MPI.COMM_WORLD,
                  dtype: DTypeLike = np.float64):
-        self.dims = dims
+        dims = _value_or_sized_to_tuple(dims)
         axes = tuple(get_normalize_axis_index()(ax, len(dims)) for ax in axes)
         if not (len(axes) == len(weights) == len(sampling)):
             raise ValueError("axes, weights, and sampling have different size")
@@ -84,9 +85,8 @@ class MPILaplacian(MPILinearOperator):
         self.edge = edge
         self.kind = kind
         self.dtype = np.dtype(dtype)
-        self.base_comm = base_comm
-        self.Op = self._calc_l2op()
-        super().__init__(shape=self.Op.shape, dtype=self.dtype, base_comm=self.base_comm)
+        self.Op = self._calc_l2op(dims, base_comm)
+        super().__init__(dims=dims, dimsd=self.Op.dimsd, dtype=self.dtype, base_comm=base_comm)
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         return self.Op @ x
@@ -94,10 +94,10 @@ class MPILaplacian(MPILinearOperator):
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         return self.Op.H @ x
 
-    def _calc_l2op(self):
-        local_dims = local_split(tuple(self.dims), self.base_comm, Partition.SCATTER, axis=0)
+    def _calc_l2op(self, dims: tuple, base_comm: MPI.Comm):
+        local_dims = local_split(tuple(dims), base_comm, Partition.SCATTER, axis=0)
         if self.axes[0] == 0:
-            l2op = self.weights[0] * MPISecondDerivative(dims=self.dims,
+            l2op = self.weights[0] * MPISecondDerivative(dims=dims,
                                                          sampling=self.sampling[0],
                                                          kind=self.kind,
                                                          edge=self.edge,
@@ -111,7 +111,7 @@ class MPILaplacian(MPILinearOperator):
                                                                         dtype=self.dtype)])
         for ax, samp, weight in zip(self.axes[1:], self.sampling[1:], self.weights[1:]):
             if ax == 0:
-                l2op += weight * MPISecondDerivative(dims=self.dims,
+                l2op += weight * MPISecondDerivative(dims=dims,
                                                      sampling=samp,
                                                      kind=self.kind,
                                                      edge=self.edge,
