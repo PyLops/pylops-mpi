@@ -119,7 +119,7 @@ class MPIL2(MPIProxOperator):
             f = (self.sigma / 2.0) * (x.norm() ** 2)
         if self.q is not None:
             f += self.alpha * self.q.dot(x)
-        return float(f)
+        return float(f.item())
     
 
     def _increment_count(func: Callable[..., Any]) -> Callable[..., Any]:
