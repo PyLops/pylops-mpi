@@ -1,5 +1,5 @@
 from mpi4py import MPI
-from typing import Any, Callable
+from typing import Any
 
 from pyproximal import ProxOperator
 from pylops.utils.backend import get_module
@@ -30,7 +30,7 @@ class MPIProxOperator:
     ----------
     prox : :obj:`pyproximal.ProxOperator`
         PyProximal Proximal Operator to wrap.
-    
+
     """
 
     def __init__(
@@ -52,7 +52,7 @@ class MPIProxOperator:
             return f"<{type(self).__name__} ({type(self.proxop).__name__})>"
         else:
             return f"<{type(self).__name__}>"
-    
+
     def __call__(self, x: DistributedArray) -> DistributedArray:
         """Functional evaluation of the oprator.
 
@@ -92,9 +92,9 @@ class MPIProxOperator:
         else:  # StackedDistributedArray
             reduce_op = _call_reduce_op[str(type(self.proxop).__name__)][1]
             fs = [self(x[iarr]) for iarr in range(x.narrays)]
-            f =  reduce_op(fs)
+            f = reduce_op(fs)
             return f
-            
+
     def prox(self, x: DistributedArray, tau: float, **kwargs: Any) -> DistributedArray:
         """Proximal operator applied to a vector
         """

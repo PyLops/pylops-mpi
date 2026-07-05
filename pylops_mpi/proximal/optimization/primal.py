@@ -2,20 +2,17 @@ import sys
 import time
 from collections.abc import Callable
 from math import sqrt
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from pylops.basicoperators import Identity
-from pylops.optimization.leastsquares import regularized_inversion
-from pylops.utils.backend import get_array_module, to_numpy
+from pylops.utils.backend import to_numpy
 from pylops.utils.typing import NDArray
 
-from pyproximal.proximal import L2
 from pyproximal.optimization.primal import _x0z0_init
 
 from pylops_mpi import DistributedArray, StackedDistributedArray
-from pylops_mpi.basicoperators import MPIBlockDiag, MPIStackedVStack
-from pylops_mpi.optimization.basic import cg, cgls
+from pylops_mpi.basicoperators import MPIStackedVStack
+from pylops_mpi.optimization.basic import cgls
 from pylops_mpi.proximal.ProxOperator import MPIProxOperator
 
 if TYPE_CHECKING:
@@ -45,7 +42,7 @@ def ProximalGradient(
     
     # TODO: implement backtracking
     backtracking = False
-    
+
     # check if epgs is a vector
     epsg = np.asarray(epsg, dtype=float)
     if epsg.size == 1:
@@ -179,7 +176,6 @@ def ProximalGradient(
     return x
 
 
-
 def ADMML2(
     proxg: MPIProxOperator,
     Op: "MPILinearOperator",
@@ -198,7 +194,7 @@ def ADMML2(
 
     """
     rank = x0.rank
-    
+
     # initialize variables
     x, z = _x0z0_init(x0, z0, A, Opname="A")
     u = z.zeros_like()
@@ -258,4 +254,3 @@ def ADMML2(
         print("---------------------------------------------------------\n")
         sys.stdout.flush()
     return x, z
-

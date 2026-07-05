@@ -1,5 +1,4 @@
 from math import sqrt
-from mpi4py import MPI
 from typing import TYPE_CHECKING, Any, Callable
 
 from pylops.basicoperators import Identity
@@ -101,7 +100,7 @@ class MPIL2(MPIProxOperator):
                 "Available options are 'cg' or 'cgls'."
             )
             raise ValueError(msg)
-        
+
         # create data term
         if (
             self.Op is not None
@@ -120,7 +119,6 @@ class MPIL2(MPIProxOperator):
         if self.q is not None:
             f += self.alpha * self.q.dot(x)
         return float(f.item())
-    
 
     def _increment_count(func: Callable[..., Any]) -> Callable[..., Any]:
         """Increment counter"""
