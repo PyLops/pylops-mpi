@@ -140,6 +140,10 @@ class DistributedArray(DistributedMixIn):
         Engine used to store array (``numpy`` or ``cupy``)
     dtype : :obj:`str`, optional
         Type of elements in input array. Defaults to ``numpy.float64``.
+    local_array : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`, optional
+        Existing local array to use as the underlying storage instead of
+        allocating a new one. The shape of the local_array must match the local
+        shape at that rank.
     """
 
     def __init__(self, global_shape: Union[Tuple, Integral],
@@ -149,7 +153,8 @@ class DistributedArray(DistributedMixIn):
                  local_shapes: Optional[List[Union[Tuple, Integral]]] = None,
                  mask: Optional[List[Integral]] = None,
                  engine: Optional[str] = "numpy",
-                 dtype: Optional[DTypeLike] = np.float64):
+                 dtype: Optional[DTypeLike] = np.float64,
+                 local_array: Optional[NDArray] = None):
         if isinstance(global_shape, Integral):
             global_shape = (global_shape,)
         if len(global_shape) <= axis:
@@ -179,7 +184,18 @@ class DistributedArray(DistributedMixIn):
                                                                                      partition, axis)
 
         self._engine = engine
-        self._local_array = get_module(engine).empty(shape=self.local_shape, dtype=self.dtype)
+        if local_array is None:
+            self._local_array = get_module(engine).empty(
+                shape=self.local_shape,
+                dtype=self.dtype,
+            )
+        else:
+            if local_array.shape != self.local_shape:
+                raise ValueError(
+                    f"local_array has shape {local_array.shape}, "
+                    f"expected {self.local_shape}"
+                )
+            self._local_array = local_array
 
     def __getitem__(self, index):
         return self.local_array[index]
@@ -851,6 +867,7 @@ class DistributedArray(DistributedMixIn):
             Flattened 1-D DistributedArray
         """
         local_shapes = [(np.prod(local_shape, axis=-1), ) for local_shape in self.local_shapes]
+        local_array = np.ravel(self.local_array, order=order)
         arr = DistributedArray(global_shape=np.prod(self.global_shape),
                                base_comm=self.base_comm,
                                base_comm_nccl=self.base_comm_nccl,
@@ -858,10 +875,8 @@ class DistributedArray(DistributedMixIn):
                                mask=self.mask,
                                partition=self.partition,
                                engine=self.engine,
-                               dtype=self.dtype)
-        local_array = np.ravel(self.local_array, order=order)
-        x = local_array.copy()
-        arr[:] = x
+                               dtype=self.dtype,
+                               local_array=local_array)
         return arr
 
     def reshape(self, local_shape, axis=0):
@@ -878,6 +893,7 @@ class DistributedArray(DistributedMixIn):
         local_shapes = self.base_comm.allgather(local_shape)
         global_shape = list(local_shapes[0])
         global_shape[axis] = np.sum([ls[axis] for ls in local_shapes])
+        local_array = self.local_array.reshape(local_shapes[self.rank])
         arr = DistributedArray(global_shape=tuple(global_shape),
                                base_comm=self.base_comm,
                                base_comm_nccl=self.base_comm_nccl,
@@ -885,10 +901,8 @@ class DistributedArray(DistributedMixIn):
                                mask=self.mask,
                                partition=self.partition,
                                engine=self.engine,
-                               dtype=self.dtype)
-        local_array = self.local_array.reshape(local_shapes[self.rank])
-        x = local_array.copy()
-        arr[:] = x
+                               dtype=self.dtype,
+                               local_array=local_array)
         return arr
 
     def empty_like(self):

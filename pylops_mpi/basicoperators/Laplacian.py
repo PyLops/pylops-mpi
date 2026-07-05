@@ -117,7 +117,6 @@ class MPILaplacian(MPILinearOperator):
                                                      edge=self.edge,
                                                      dtype=self.dtype)
             else:
-                print("local dims", local_dims)
                 l2op += weight * MPIBlockDiag(ops=[SecondDerivative(dims=local_dims,
                                                                     axis=ax,
                                                                     sampling=samp,

@@ -186,7 +186,7 @@ class MPILinearOperator:
 
         """
         M, N = self.shape
-        if np.prod(x.global_shape) != (N,):
+        if x.global_shape != (N,):
             raise ValueError("dimension mismatch")
 
         return self._matvec(x)
@@ -224,7 +224,7 @@ class MPILinearOperator:
 
         M, N = self.shape
 
-        if np.prod(x.global_shape) != (M,):
+        if x.global_shape != (M,):
             raise ValueError("dimension mismatch")
 
         return self._rmatvec(x)
@@ -277,11 +277,10 @@ class MPILinearOperator:
                 )
                 raise ValueError(msg)
             is_dims_shaped = x.global_shape == self.dims
-            if is_dims_shaped or x.ndim == 1:
-                y = self.matvec(x)
-                if x.ndim == 1 and y.ndim > 1:
-                    y = y.redistribute(axis=0).ravel()
-                return y
+            if is_dims_shaped:
+                x = x.redistribute(axis=0).ravel()
+            if x.ndim == 1:
+                return self.matvec(x)
             else:
                 msg = (
                     "Wrong shape.\nExpects either a 1d array or, an ndarray of "

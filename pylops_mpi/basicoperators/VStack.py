@@ -128,12 +128,8 @@ class MPIVStack(DistributedMixIn, MPILinearOperator):
             raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
                              f"Got  {x.partition} instead...")
         # the output y should use NCCL if the operand x uses it
-        y = DistributedArray(global_shape=self.dimsd,
-                             base_comm=x.base_comm,
-                             base_comm_nccl=x.base_comm_nccl,
-                             local_shapes=self.local_shapes_n,
-                             engine=x.engine,
-                             dtype=self.dtype)
+        y = DistributedArray(global_shape=self.shape[0], base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl,
+                             local_shapes=self.local_shapes_n, engine=x.engine, dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
             y1.append(oper.matvec(x.local_array.flatten()))
@@ -143,7 +139,7 @@ class MPIVStack(DistributedMixIn, MPILinearOperator):
     @reshaped(forward=False, stacking=True)
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
-        y = DistributedArray(global_shape=self.dims,
+        y = DistributedArray(global_shape=self.shape[1],
                              base_comm=x.base_comm,
                              base_comm_nccl=x.base_comm_nccl,
                              partition=Partition.BROADCAST,
@@ -154,7 +150,7 @@ class MPIVStack(DistributedMixIn, MPILinearOperator):
             y1.append(oper.rmatvec(x.local_array.flatten()[self.nnops[iop]: self.nnops[iop + 1]]))
         y1 = ncp.sum(ncp.vstack(y1), axis=0)
         y[:] = self._allreduce(x.base_comm, x.base_comm_nccl,
-                               y1, op=MPI.SUM, engine=x.engine).reshape(self.dims)
+                               y1, op=MPI.SUM, engine=x.engine)
         return y
 
 

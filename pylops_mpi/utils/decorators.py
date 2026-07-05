@@ -4,6 +4,7 @@ from typing import Callable, Optional
 import numpy as np
 
 from pylops_mpi import DistributedArray, Partition
+from pylops_mpi.DistributedArray import local_split
 
 
 def reshaped(
@@ -46,45 +47,42 @@ def reshaped(
                 raise ValueError(f"x should have partition={Partition.SCATTER}, {x.partition} != {Partition.SCATTER}")
             if stacking and forward:
                 local_shapes = getattr(self, "local_shapes_m")
+                global_shape = x.global_shape
             elif stacking and not forward:
                 local_shapes = getattr(self, "local_shapes_n")
+                global_shape = x.global_shape
             else:
-                local_shapes = None
-            fwd = (
-                "rmat" not in f.__name__
-                and f.__name__ != "div"
-                and f.__name__ != "__truediv__"
+                fwd = (
+                    "rmat" not in f.__name__
+                    and f.__name__ != "div"
+                    and f.__name__ != "__truediv__"
+                )
+                global_shape = getattr(self, "dims") if fwd else getattr(self, "dimsd")
+                local_shapes = self.base_comm.allgather(local_split(global_shape, self.base_comm, Partition.SCATTER, 0))
+            arr_local_shapes = np.array([np.prod(shape) for shape in local_shapes])
+            x_local_shapes = np.asarray(x.base_comm.allgather(np.prod(x.local_shape)))
+            # Calculate num_ghost_cells required for each rank
+            dif = np.cumsum(arr_local_shapes - x_local_shapes)
+            # Calculate cells_front(0 means no ghost cells)
+            cells_front = abs(min(0, dif[self.rank - 1]))
+            # Calculate cells_back(0 means no ghost cells)
+            cells_back = max(0, dif[self.rank])
+            ghosted_array = x.add_ghost_cells(cells_front=cells_front, cells_back=cells_back)
+            # Fill the redistributed array
+            index = max(0, dif[self.rank - 1])
+            local_array = ghosted_array[index:index + arr_local_shapes[self.rank]].reshape(local_shapes[self.rank])
+            arr = DistributedArray(
+                global_shape=global_shape,
+                base_comm=x.base_comm,
+                base_comm_nccl=x.base_comm_nccl,
+                local_shapes=local_shapes,
+                engine=x.engine,
+                dtype=x.dtype,
+                local_array=local_array,
+                axis=0
             )
-            x_dim = x.ndim
-            global_shape = getattr(self, "dims") if fwd else getattr(self, "dimsd")
-            # Reuse existing distribution if it already matches the target layout
-            if (
-                (local_shapes is None or x.local_shapes == local_shapes)
-                and x.global_shape == global_shape
-                and x.axis == 0
-            ):
-                arr = x
-            else:
-                x = x.redistribute(axis=0)
-                arr = DistributedArray(global_shape=global_shape,
-                                       base_comm=x.base_comm,
-                                       base_comm_nccl=x.base_comm_nccl,
-                                       local_shapes=local_shapes, axis=0,
-                                       engine=x.engine, dtype=x.dtype)
-                arr_local_shapes = np.asarray(arr.base_comm.allgather(np.prod(arr.local_shape)))
-                x_local_shapes = np.asarray(x.base_comm.allgather(np.prod(x.local_shape)))
-                # Calculate num_ghost_cells required for each rank
-                dif = np.cumsum(arr_local_shapes - x_local_shapes)
-                # Calculate cells_front(0 means no ghost cells)
-                cells_front = abs(min(0, dif[self.rank - 1]))
-                # Calculate cells_back(0 means no ghost cells)
-                cells_back = max(0, dif[self.rank])
-                ghosted_array = x.add_ghost_cells(cells_front=cells_front, cells_back=cells_back)
-                # Fill the redistributed array
-                index = max(0, dif[self.rank - 1])
-                arr[:] = ghosted_array[index: arr_local_shapes[self.rank] + index].reshape(arr.local_shape)
             y: DistributedArray = f(self, arr)
-            if x_dim == 1 and len(y.global_shape) > 1:
+            if len(y.global_shape) > 1:
                 # Make sure y is distributed along axis=0 before applying ravel
                 y = y.redistribute(axis=0).ravel()
             return y
