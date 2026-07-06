@@ -280,7 +280,12 @@ class MPILinearOperator:
             if is_dims_shaped:
                 x = x.redistribute(axis=0).ravel()
             if x.ndim == 1:
-                return self.matvec(x)
+                y = self.matvec(x)
+                if is_dims_shaped and get_ndarray_multiplication():
+                    _local_dims_dimsd_axis = getattr(self, "_local_dims_dimsd_axis", None)
+                    if _local_dims_dimsd_axis:
+                        y = y.reshape(_local_dims_dimsd_axis[0], axis=_local_dims_dimsd_axis[1])
+                return y
             else:
                 msg = (
                     "Wrong shape.\nExpects either a 1d array or, an ndarray of "
@@ -372,6 +377,8 @@ class MPILinearOperator:
         )
         Op.dims = self.dimsd
         Op.dimsd = self.dims
+        if getattr(self, "_local_dims_dimsd_axis", None) is not None:
+            Op._local_dims_dimsd_axis = self._local_dims_dimsd_axis
         return Op
 
     def _transpose(self):

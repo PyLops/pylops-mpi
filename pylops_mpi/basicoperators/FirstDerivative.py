@@ -11,7 +11,7 @@ from pylops_mpi import (
     MPILinearOperator,
     Partition
 )
-
+from pylops_mpi.DistributedArray import local_split
 from pylops_mpi.utils.decorators import reshaped
 
 
@@ -90,6 +90,7 @@ class MPIFirstDerivative(MPILinearOperator):
                  base_comm: MPI.Comm = MPI.COMM_WORLD,
                  dtype: DTypeLike = np.float64):
         dims = _value_or_sized_to_tuple(dims)
+        self._local_dims_dimsd_axis = (local_split(dims, base_comm, Partition.SCATTER, axis=0), 0)
         super().__init__(dims=dims, dimsd=dims, dtype=np.dtype(dtype), base_comm=base_comm)
         self.sampling = sampling
         self.kind = kind
