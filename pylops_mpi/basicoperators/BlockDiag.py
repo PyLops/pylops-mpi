@@ -1,7 +1,8 @@
+from typing import Optional, Sequence, List
+from types import SimpleNamespace
 import numpy as np
 from scipy.sparse.linalg._interface import _get_dtype
 from mpi4py import MPI
-from typing import Optional, Sequence, List
 from numbers import Integral
 
 from pylops import LinearOperator
@@ -112,13 +113,17 @@ class MPIBlockDiag(MPILinearOperator):
         self.nops = nops.sum()
         dimsd = [d for dimsd in base_comm.allgather([op.dimsd for op in self.ops]) for d in dimsd]
         if len(set(dimsd)) == 1:
+            self._local_dimsd = SimpleNamespace(dim=(len(ops), *dimsd[0]), axis=0)
             dimsd = (base_comm.allreduce(len(ops)), *dimsd[0])
         else:
+            self._local_dimsd = SimpleNamespace(dim=(self.nops, ), axis=0)
             dimsd = (base_comm.allreduce(self.nops),)
         dims = [d for dims in base_comm.allgather([op.dims for op in self.ops]) for d in dims]
         if len(set(dims)) == 1:
+            self._local_dims = SimpleNamespace(dim=(len(ops), *dims[0]), axis=0)
             dims = (base_comm.allreduce(len(ops)), *dims[0])
         else:
+            self._local_dims = SimpleNamespace(dim=(self.mops, ), axis=0)
             dims = (base_comm.allreduce(self.mops),)
         self.local_shapes_m = base_comm.allgather((self.mops, ))
         self.local_shapes_n = base_comm.allgather((self.nops,))

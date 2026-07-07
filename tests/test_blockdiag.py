@@ -73,6 +73,44 @@ def test_blockdiag(par):
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
+def test_blockdiag_(par):
+    size = MPI.COMM_WORLD.Get_size()
+    rank = MPI.COMM_WORLD.Get_rank()
+    Op = pylops.MatrixMult(A=((rank + 1) * np.ones(shape=(par['ny'], par['nx']))).astype(par['dtype']))
+    BDiag_MPI = pylops_mpi.MPIBlockDiag(ops=[Op, ])
+
+    x = pylops_mpi.DistributedArray(global_shape=BDiag_MPI.dims, dtype=par['dtype'], engine=backend)
+    x[:] = np.ones(shape=x.local_shape, dtype=par['dtype'])
+    x_global = x.asarray()
+
+    y = pylops_mpi.DistributedArray(global_shape=BDiag_MPI.dimsd, dtype=par['dtype'], engine=backend)
+    y[:] = np.ones(shape=y.local_shape, dtype=par['dtype'])
+    y_global = y.asarray()
+
+    # Forward
+    x_mat = BDiag_MPI @ x
+    # Adjoint
+    y_rmat = BDiag_MPI.H @ y
+    assert isinstance(x_mat, pylops_mpi.DistributedArray)
+    assert isinstance(y_rmat, pylops_mpi.DistributedArray)
+    # Dot test
+    dottest(BDiag_MPI, x, y, size * par['ny'], size * par['nx'])
+
+    x_mat_mpi = x_mat.asarray()
+    y_rmat_mpi = y_rmat.asarray()
+
+    if rank == 0:
+        ops = [pylops.MatrixMult((i + 1) * np.ones(shape=(par['ny'], par['nx'])).astype(par['dtype'])) for i in range(size)]
+        BDiag = pylops.BlockDiag(ops=ops)
+
+        x_mat_np = BDiag @ x_global
+        y_rmat_np = BDiag.H @ y_global
+        assert_allclose(x_mat_mpi, x_mat_np, rtol=1e-14)
+        assert_allclose(y_rmat_mpi, y_rmat_np, rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
 def test_stacked_blockdiag(par):
     """Tests for MPIStackedBlogDiag"""
     size = MPI.COMM_WORLD.Get_size()

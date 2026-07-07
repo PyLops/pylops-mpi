@@ -259,9 +259,11 @@ class MPILinearOperator:
             Op = _ProductLinearOperator(self, x)
             self._copy_attributes(
                 Op,
-                exclude=['dims']
+                exclude=['dims', '_local_dims']
             )
             Op.dims = x.dims
+            if getattr(x, "_local_dims", None) is not None:
+                Op._local_dims = x._local_dims
             return Op
         elif np.isscalar(x):
             Op = _ScaledLinearOperator(self, x)
@@ -282,9 +284,9 @@ class MPILinearOperator:
             if x.ndim == 1:
                 y = self.matvec(x)
                 if is_dims_shaped and get_ndarray_multiplication():
-                    _local_dims_dimsd_axis = getattr(self, "_local_dims_dimsd_axis", None)
-                    if _local_dims_dimsd_axis:
-                        y = y.reshape(_local_dims_dimsd_axis[0], axis=_local_dims_dimsd_axis[1])
+                    _local_dimsd = getattr(self, "_local_dimsd", None)
+                    if _local_dimsd:
+                        y = y.reshape(_local_dimsd.dim, axis=_local_dimsd.axis)
                 return y
             else:
                 msg = (
@@ -373,22 +375,28 @@ class MPILinearOperator:
         Op = _AdjointLinearOperator(self)
         self._copy_attributes(
             Op,
-            exclude=['dims', 'dimsd']
+            exclude=['dims', 'dimsd', '_local_dims', '_local_dimsd']
         )
         Op.dims = self.dimsd
         Op.dimsd = self.dims
-        if getattr(self, "_local_dims_dimsd_axis", None) is not None:
-            Op._local_dims_dimsd_axis = self._local_dims_dimsd_axis
+        if getattr(self, "_local_dims", None) is not None:
+            Op._local_dimsd = self._local_dims
+        if getattr(self, "_local_dimsd", None) is not None:
+            Op._local_dims = self._local_dimsd
         return Op
 
     def _transpose(self):
         Op = _TransposedLinearOperator(self)
         self._copy_attributes(
             Op,
-            exclude=['dims', 'dimsd']
+            exclude=['dims', 'dimsd', '_local_dims', '_local_dimsd']
         )
         Op.dims = self.dimsd
         Op.dimsd = self.dims
+        if getattr(self, "_local_dims", None) is not None:
+            Op._local_dimsd = self._local_dims
+        if getattr(self, "_local_dimsd", None) is not None:
+            Op._local_dims = self._local_dimsd
         return Op
 
     def conj(self):
@@ -408,7 +416,7 @@ class MPILinearOperator:
         exclude: list[str] | None = None,
     ) -> None:
         """Copy attributes from one MPILinearOperator to another"""
-        attrs = ["dims", "dimsd"]
+        attrs = ["dims", "dimsd", "_local_dims", "_local_dimsd"]
         if exclude is not None:
             for item in exclude:
                 attrs.remove(item)

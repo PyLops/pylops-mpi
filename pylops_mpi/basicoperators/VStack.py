@@ -1,7 +1,8 @@
+from typing import Sequence, Optional
+from types import SimpleNamespace
 import numpy as np
 from scipy.sparse.linalg._interface import _get_dtype
 from mpi4py import MPI
-from typing import Sequence, Optional
 
 from pylops import LinearOperator
 from pylops.utils import DTypeLike
@@ -119,6 +120,8 @@ class MPIVStack(DistributedMixIn, MPILinearOperator):
             dims = dims[0]
         else:
             dims = (self.mops,)
+        self._local_dimsd = SimpleNamespace(dim=(self.nops, ), axis=0)
+        self._local_dims = SimpleNamespace(dim=dims, axis=0)
         dtype = _get_dtype(self.ops) if dtype is None else np.dtype(dtype)
         super().__init__(dims=dims, dimsd=dimsd, dtype=dtype, base_comm=base_comm)
 
@@ -132,7 +135,7 @@ class MPIVStack(DistributedMixIn, MPILinearOperator):
                              local_shapes=self.local_shapes_n, engine=x.engine, dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
-            y1.append(oper.matvec(x.local_array.flatten()))
+            y1.append(oper.matvec(x.local_array))
         y[:] = ncp.concatenate(y1)
         return y
 
@@ -147,7 +150,7 @@ class MPIVStack(DistributedMixIn, MPILinearOperator):
                              dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
-            y1.append(oper.rmatvec(x.local_array.flatten()[self.nnops[iop]: self.nnops[iop + 1]]))
+            y1.append(oper.rmatvec(x.local_array[self.nnops[iop]: self.nnops[iop + 1]]))
         y1 = ncp.sum(ncp.vstack(y1), axis=0)
         y[:] = self._allreduce(x.base_comm, x.base_comm_nccl,
                                y1, op=MPI.SUM, engine=x.engine)

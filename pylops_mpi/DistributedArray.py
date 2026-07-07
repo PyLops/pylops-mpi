@@ -892,7 +892,8 @@ class DistributedArray(DistributedMixIn):
         """
         local_shapes = self.base_comm.allgather(local_shape)
         global_shape = list(local_shapes[0])
-        global_shape[axis] = np.sum([ls[axis] for ls in local_shapes])
+        if self.partition is Partition.SCATTER:
+            global_shape[axis] = np.sum([ls[axis] for ls in local_shapes])
         local_array = self.local_array.reshape(local_shapes[self.rank])
         arr = DistributedArray(global_shape=tuple(global_shape),
                                base_comm=self.base_comm,
