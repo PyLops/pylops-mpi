@@ -81,8 +81,8 @@ def dottest(
     if (nr, nc) != Op.shape:
         raise AssertionError("Provided nr and nc do not match operator shape")
 
-    y = Op.matvec(u)  # Op * u
-    x = Op.rmatvec(v)  # Op'* v
+    y = Op * u  # Op * u
+    x = Op.H * v  # Op'* v
 
     yy = np.vdot(y.asarray(), v.asarray())  # (Op  * u)' * v
     xx = np.vdot(u.asarray(), x.asarray())  # u' * (Op' * v)

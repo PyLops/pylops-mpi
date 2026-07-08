@@ -1,7 +1,8 @@
+from typing import Sequence, Optional
+from types import SimpleNamespace
 import numpy as np
 from scipy.sparse.linalg._interface import _get_dtype
 from mpi4py import MPI
-from typing import Sequence, Optional
 
 from pylops import LinearOperator
 from pylops.utils import DTypeLike
@@ -106,7 +107,6 @@ class MPIVStack(DistributedMixIn, MPILinearOperator):
         for iop, oper in enumerate(self.ops):
             nops[iop] = oper.shape[0]
         self.nops = nops.sum()
-        self.local_shapes_n = base_comm.allgather((self.nops, ))
         mops = [oper.shape[1] for oper in self.ops]
         mops = np.concatenate(base_comm.allgather(mops), axis=0)
         if len(set(mops)) > 1:
@@ -114,7 +114,14 @@ class MPIVStack(DistributedMixIn, MPILinearOperator):
         self.mops = int(mops[0])
         self.nnops = np.insert(np.cumsum(nops), 0, 0)
         dimsd = (base_comm.allreduce(self.nops), )
-        dims = (self.mops, )
+        dims = [d for dims in base_comm.allgather([op.dims for op in self.ops]) for d in dims]
+        self.local_shapes_n = base_comm.allgather((self.nops,))
+        if len(set(dims)) == 1:
+            dims = dims[0]
+        else:
+            dims = (self.mops,)
+        self._local_dimsd = SimpleNamespace(dim=(self.nops, ), axis=0)
+        self._local_dims = SimpleNamespace(dim=dims, axis=0)
         dtype = _get_dtype(self.ops) if dtype is None else np.dtype(dtype)
         super().__init__(dims=dims, dimsd=dimsd, dtype=dtype, base_comm=base_comm)
 
@@ -124,8 +131,8 @@ class MPIVStack(DistributedMixIn, MPILinearOperator):
             raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
                              f"Got  {x.partition} instead...")
         # the output y should use NCCL if the operand x uses it
-        y = DistributedArray(global_shape=self.shape[0], base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl, local_shapes=self.local_shapes_n,
-                             engine=x.engine, dtype=self.dtype)
+        y = DistributedArray(global_shape=self.shape[0], base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl,
+                             local_shapes=self.local_shapes_n, engine=x.engine, dtype=self.dtype)
         y1 = []
         for iop, oper in enumerate(self.ops):
             y1.append(oper.matvec(x.local_array))

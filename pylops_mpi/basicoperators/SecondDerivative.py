@@ -1,4 +1,5 @@
 from typing import Callable, Union
+from types import SimpleNamespace
 import numpy as np
 from mpi4py import MPI
 
@@ -8,6 +9,7 @@ from pylops.utils._internal import _value_or_sized_to_tuple
 
 from pylops_mpi import DistributedArray, MPILinearOperator, Partition
 from pylops_mpi.utils.decorators import reshaped
+from pylops_mpi.DistributedArray import local_split
 
 
 class MPISecondDerivative(MPILinearOperator):
@@ -81,6 +83,7 @@ class MPISecondDerivative(MPILinearOperator):
             dtype: DTypeLike = np.float64,
     ) -> None:
         dims = _value_or_sized_to_tuple(dims)
+        self._local_dims = self._local_dimsd = SimpleNamespace(dim=local_split(dims, base_comm, Partition.SCATTER, axis=0), axis=0)
         super().__init__(dims=dims, dimsd=dims, dtype=np.dtype(dtype), base_comm=base_comm)
         self.sampling = sampling
         self.kind = kind

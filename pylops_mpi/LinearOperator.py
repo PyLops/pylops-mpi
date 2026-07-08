@@ -7,7 +7,7 @@ from typing import Callable, Optional
 from scipy.sparse._sputils import isintlike, isshape
 from scipy.sparse.linalg._interface import _get_dtype
 
-from pylops import LinearOperator
+from pylops import LinearOperator, get_ndarray_multiplication
 from pylops.utils import DTypeLike, ShapeLike
 
 from pylops_mpi import DistributedArray
@@ -259,9 +259,11 @@ class MPILinearOperator:
             Op = _ProductLinearOperator(self, x)
             self._copy_attributes(
                 Op,
-                exclude=['dims']
+                exclude=['dims', '_local_dims']
             )
             Op.dims = x.dims
+            if getattr(x, "_local_dims", None) is not None:
+                Op._local_dims = x._local_dims
             return Op
         elif np.isscalar(x):
             Op = _ScaledLinearOperator(self, x)
@@ -270,11 +272,29 @@ class MPILinearOperator:
             )
             return Op
         else:
-            if x is None or x.ndim == 1:
-                return self.matvec(x)
+            if not get_ndarray_multiplication() and x.ndim >= 2:
+                msg = (
+                    "Operator can only be applied to 1D vectors. "
+                    "Enable ndarray multiplication with pylops.set_ndarray_multiplication(True)."
+                )
+                raise ValueError(msg)
+            is_dims_shaped = x.global_shape == self.dims
+            if is_dims_shaped:
+                x = x.redistribute(axis=0).ravel()
+            if x.ndim == 1:
+                y = self.matvec(x)
+                if is_dims_shaped and get_ndarray_multiplication():
+                    _local_dimsd = getattr(self, "_local_dimsd", None)
+                    if _local_dimsd:
+                        y = y.reshape(_local_dimsd.dim, axis=_local_dimsd.axis)
+                return y
             else:
-                raise ValueError('expected 1-d DistributedArray, got %r'
-                                 % x.global_shape)
+                msg = (
+                    "Wrong shape.\nExpects either a 1d array or, an ndarray of "
+                    f"size `dims` when `dims` and `dimsd` both are available.\n"
+                    f"Instead, received an array of shape {x.global_shape}."
+                )
+                raise ValueError(msg)
 
     def adjoint(self):
         """Adjoint MPI LinearOperator
@@ -339,6 +359,10 @@ class MPILinearOperator:
         self._copy_attributes(
             Op
         )
+        if len(self.dims) == 1:
+            Op.dims = x.dims
+        if len(self.dimsd) == 1:
+            Op.dimsd = x.dimsd
         return Op
 
     def __neg__(self):
@@ -355,20 +379,28 @@ class MPILinearOperator:
         Op = _AdjointLinearOperator(self)
         self._copy_attributes(
             Op,
-            exclude=['dims', 'dimsd']
+            exclude=['dims', 'dimsd', '_local_dims', '_local_dimsd']
         )
         Op.dims = self.dimsd
         Op.dimsd = self.dims
+        if getattr(self, "_local_dims", None) is not None:
+            Op._local_dimsd = self._local_dims
+        if getattr(self, "_local_dimsd", None) is not None:
+            Op._local_dims = self._local_dimsd
         return Op
 
     def _transpose(self):
         Op = _TransposedLinearOperator(self)
         self._copy_attributes(
             Op,
-            exclude=['dims', 'dimsd']
+            exclude=['dims', 'dimsd', '_local_dims', '_local_dimsd']
         )
         Op.dims = self.dimsd
         Op.dimsd = self.dims
+        if getattr(self, "_local_dims", None) is not None:
+            Op._local_dimsd = self._local_dims
+        if getattr(self, "_local_dimsd", None) is not None:
+            Op._local_dims = self._local_dimsd
         return Op
 
     def conj(self):
@@ -388,7 +420,7 @@ class MPILinearOperator:
         exclude: list[str] | None = None,
     ) -> None:
         """Copy attributes from one MPILinearOperator to another"""
-        attrs = ["dims", "dimsd"]
+        attrs = ["dims", "dimsd", "_local_dims", "_local_dimsd"]
         if exclude is not None:
             for item in exclude:
                 attrs.remove(item)
