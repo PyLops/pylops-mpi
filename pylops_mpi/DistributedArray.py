@@ -879,16 +879,15 @@ class DistributedArray(DistributedMixIn):
                                local_array=local_array)
         return arr
 
-    def reshape(self, local_shape, axis=0):
+    def reshape(self, local_shape: Tuple, axis: Optional[int] = 0):
         """Return a reshaped DistributedArray
 
         Parameters
         ----------
-
-        Returns
-        -------
-        arr : :obj:`pylops_mpi.DistributedArray`
-            Reshaped N-D DistributedArray
+        local_shape : :obj:`tuple`
+            Shape of the local array on each MPI rank.
+        axis : :obj:`int`, optional
+            Distribution axis in the reshaped global array. Defaults to ``0``.
         """
         local_shapes = self.base_comm.allgather(local_shape)
         global_shape = list(local_shapes[0])
