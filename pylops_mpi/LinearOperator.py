@@ -359,6 +359,10 @@ class MPILinearOperator:
         self._copy_attributes(
             Op
         )
+        if len(self.dims) == 1:
+            Op.dims = x.dims
+        if len(self.dimsd) == 1:
+            Op.dimsd = x.dimsd
         return Op
 
     def __neg__(self):
