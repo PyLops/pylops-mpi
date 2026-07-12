@@ -188,7 +188,7 @@ class DistributedArray(DistributedMixIn):
         if local_array is None:
             self._local_array = get_module(self._engine).empty(
                 shape=self.local_shape,
-                dtype=dtype,
+                dtype=self.dtype,
             )
         else:
             if local_array.shape != self.local_shape:
