@@ -39,8 +39,6 @@ def ProximalGradient(
     """
     rank = x0.rank
     
-    backtracking = False
-
     # check if epgs is a vector
     epsg = np.asarray(epsg, dtype=float)
     if epsg.size == 1:
@@ -59,7 +57,7 @@ def ProximalGradient(
             "---------------------------------------------------------\n"
             "Proximal operator (f): %s\n"
             "Proximal operator (g): %s\n"
-            "tau = %s\tbacktrack = %s\tbeta = %10e\n"
+            "tau = %s\tbeta = %10e\n"
             "epsg = %s\tniter = %d\ttol = %s\n"
             ""
             "niterback = %d\tacceleration = %s\n"
@@ -67,7 +65,6 @@ def ProximalGradient(
                 proxf,
                 proxg,
                 str(tau),
-                backtracking,
                 beta,
                 epsg_print,
                 niter,
