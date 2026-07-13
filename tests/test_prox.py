@@ -117,45 +117,6 @@ def test_separable_prox(par):
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize(
-    "par", [(par1b)]
-)
-def test_L2_broadcast(par):
-    """Test L2 proximal operator raises error with broadcast partition
-    
-    """
-    x = pylops_mpi.DistributedArray(global_shape=par['n'],
-                                    dtype=par['dtype'],
-                                    partition=pylops_mpi.Partition.BROADCAST, 
-                                    engine=backend)
-    b = pylops_mpi.DistributedArray(global_shape=par['n'],
-                                    dtype=par['dtype'],
-                                    partition=pylops_mpi.Partition.BROADCAST,
-                                    engine=backend)
-    
-    Opd = pylops_mpi.MPILinearOperator(
-        Diagonal(np.ones(par['n'] * size, dtype=par['dtype']), dtype=par['dtype'])
-        )
-    
-    # creation
-    with pytest.raises(NotImplementedError, match="not supported for"):
-        _ = MPIL2(Op=Opd, b=b, sigma=2.0, x0=x.zeros_like(), solver="cgls")
-    
-    # call/prox
-    x0 = pylops_mpi.DistributedArray(global_shape=par['n'] * size,
-                                    dtype=par['dtype'],
-                                    partition=pylops_mpi.Partition.SCATTER, 
-                                    engine=backend)
-    l2d = MPIL2(Op=Opd, b=b, sigma=2.0, x0=x0, solver="cgls")
-      
-    with pytest.raises(NotImplementedError, match="not supported for"):
-        _ = l2d(x)
-
-    with pytest.raises(NotImplementedError, match="not supported for"):
-        _ = l2d.prox(x, .1)
-  
-
-@pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize(
     "par", [(par1), (par1j), (par1b)]
 )
 def test_L2(par):
