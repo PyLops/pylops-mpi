@@ -16,4 +16,5 @@ from .primal import *
 
 __all__ = [
     "ProximalGradient",
+    "ADMML2",
 ]

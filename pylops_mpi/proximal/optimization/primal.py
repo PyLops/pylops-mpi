@@ -25,7 +25,6 @@ def ProximalGradient(
     x0: DistributedArray,
     epsg: float | NDArray = 1.0,
     tau: float | None = None,
-    # backtracking: bool = False,
     beta: float = 0.5,
     eta: float = 1.0,
     niter: int = 10,
@@ -40,7 +39,6 @@ def ProximalGradient(
     """
     rank = x0.rank
     
-    # TODO: implement backtracking
     backtracking = False
 
     # check if epgs is a vector
@@ -82,10 +80,6 @@ def ProximalGradient(
         print(head)
         sys.stdout.flush()
 
-    # if tau is None:
-    #     backtracking = True
-    #     tau = 1.0
-
     # initialize model
     t = 1.0
     x = x0.copy()
@@ -98,26 +92,12 @@ def ProximalGradient(
         xold = x.copy()
 
         # proximal step
-        if not backtracking:
-            if eta == 1.0:
-                x = proxg.prox(y - tau * proxf.grad(y), epsg[iiter] * tau)
-            else:
-                x = x + eta * (
-                    proxg.prox(x - tau * proxf.grad(x), epsg[iiter] * tau) - x
-                )
+        if eta == 1.0:
+            x = proxg.prox(y - tau * proxf.grad(y), epsg[iiter] * tau)
         else:
-            pass
-            # x, tau = _backtracking(
-            #     y, tau, proxf, proxg, epsg[iiter], beta=beta, niterback=niterback
-            # )
-            # if eta != 1.0:
-            #     x = x + eta * (
-            #         proxg.prox(x - tau * proxf.grad(x), epsg[iiter] * tau) - x
-            #     )
-
-        # update internal parameters for bilinear operator
-        # if isinstance(proxf, BilinearOperator):
-        #     proxf.updatexy(x)
+            x = x + eta * (
+                proxg.prox(x - tau * proxf.grad(x), epsg[iiter] * tau) - x
+            )
 
         # update y
         if acceleration == "vandenberghe":
