@@ -199,8 +199,8 @@ minv3d_ne_dist = pylops_mpi.optimization.basic.cg(NormEqOp, dnorm_dist, x0=mback
 minv3d_ne = minv3d_ne_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
-
 # Regularized inversion with regularized equations
+
 StackOp = pylops_mpi.MPIStackedVStack([BDiag, np.sqrt(epsR) * LapOp])
 d0_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz)
 d0_dist[:] = 0.
@@ -212,8 +212,8 @@ minv3d_reg_dist = pylops_mpi.optimization.basic.cgls(
 minv3d_reg = minv3d_reg_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
+# TV-Regularized inversion
 
-# Inversion with TV
 Gopd = pylops_mpi.MPIGradient(
     dims=(ny, nx, nz), sampling=1., edge=False, kind="forward")
 
@@ -240,7 +240,8 @@ if rank == 0:
     print('Distr == Local', np.allclose(d, d0))
 
     # Visualize
-    fig, axs = plt.subplots(nrows=7, ncols=3, figsize=(9, 17), constrained_layout=True)
+    fig, axs = plt.subplots(nrows=7, ncols=3, figsize=(12, 18),
+                            constrained_layout=True)
     axs[0][0].imshow(m3d[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
     axs[0][0].set_title("Model x-z")
     axs[0][0].axis("tight")

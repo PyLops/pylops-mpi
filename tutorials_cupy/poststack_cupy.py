@@ -15,6 +15,7 @@ from mpi4py import MPI
 from pylops.utils.wavelets import ricker
 from pylops.basicoperators import Transpose
 from pylops.avo.poststack import PoststackLinearModelling
+from pyproximal.proximal import L1
 
 import pylops_mpi
 
@@ -116,8 +117,8 @@ minv3d_iter_dist = pylops_mpi.optimization.basic.cgls(BDiag, d_dist,
 minv3d_iter = minv3d_iter_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
-
 # Regularized inversion with normal equations
+
 epsR = 1e2
 LapOp = pylops_mpi.MPILaplacian(dims=(ny, nx, nz), axes=(0, 1, 2), 
                                 weights=(1, 1, 1),
@@ -131,8 +132,8 @@ minv3d_ne_dist = pylops_mpi.optimization.basic.cg(NormEqOp, dnorm_dist,
 minv3d_ne = minv3d_ne_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
-
 # Regularized inversion with regularized equations
+
 StackOp = pylops_mpi.MPIStackedVStack([BDiag, np.sqrt(epsR) * LapOp])
 d0_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz, engine="cupy")
 d0_dist[:] = 0.
@@ -143,6 +144,24 @@ minv3d_reg_dist = pylops_mpi.optimization.basic.cgls(StackOp, dstack_dist,
                                                      x0=mback3d_dist, 
                                                      niter=100, show=True)[0]
 minv3d_reg = minv3d_reg_dist.asarray().reshape((ny, nx, nz))
+
+
+###############################################################################
+# TV-Regularized inversion
+
+Gopd = pylops_mpi.MPIGradient(
+    dims=(ny, nx, nz), sampling=1., edge=False, kind="forward")
+
+L = 12.0  # maxeig(Gop^H Gop)
+
+l1 = L1(sigma=1e-2)
+l1d = pylops_mpi.proximal.MPIProxOperator(l1)
+
+minv3d_admm_dist = pylops_mpi.proximal.optimization.primal.ADMML2(
+        l1d, BDiag, d_dist, Gopd, x0=mback3d_dist, tau=.99/L, niter=40,
+        show=True, kwargs_solver=dict(niter=20),
+    )[0]
+minv3d_admm = minv3d_admm_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
 # Finally we visualize the results. Note that the array must be copied back 
@@ -158,7 +177,8 @@ if rank == 0:
     print('Distr == Local', np.allclose(cp.asnumpy(d), d0, atol=1e-6))
     
     # Visualize
-    fig, axs = plt.subplots(nrows=6, ncols=3, figsize=(9, 14), constrained_layout=True)
+    fig, axs = plt.subplots(nrows=7, ncols=3, figsize=(12, 18),
+                            constrained_layout=True)
     axs[0][0].imshow(m3d[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
     axs[0][0].set_title("Model x-z")
     axs[0][0].axis("tight")
@@ -203,18 +223,28 @@ if rank == 0:
     axs[4][0].set_title("Normal Equations Inverted Model iter x-z")
     axs[4][0].axis("tight")
     axs[4][1].imshow(minv3d_ne[:, 200, :].T.get(), cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
-    axs[4][1].set_title('Normal Equations Inverted Model iter y-z')
+    axs[4][1].set_title("Normal Equations Inverted Model iter y-z")
     axs[4][1].axis('tight')
     axs[4][2].imshow(minv3d_ne[:, :, 220].T.get(), cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
-    axs[4][2].set_title('Normal Equations Inverted Model iter x-y')
+    axs[4][2].set_title("Normal Equations Inverted Model iter x-y")
     axs[4][2].axis('tight')
 
     axs[5][0].imshow(minv3d_reg[5, :, :].T.get(), cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
     axs[5][0].set_title("Regularized Inverted Model iter x-z")
     axs[5][0].axis("tight")
     axs[5][1].imshow(minv3d_reg[:, 200, :].T.get(), cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
-    axs[5][1].set_title('Regularized Inverted Model iter y-z')
+    axs[5][1].set_title("Regularized Inverted Model iter y-z")
     axs[5][1].axis('tight')
     axs[5][2].imshow(minv3d_reg[:, :, 220].T.get(), cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
-    axs[5][2].set_title('Regularized Inverted Model iter x-y')
+    axs[5][2].set_title("Regularized Inverted Model iter x-y")
     axs[5][2].axis('tight')
+
+    axs[6][0].imshow(minv3d_admm[5, :, :].T.get(), cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+    axs[6][0].set_title("TV-Regularized Inverted Model iter x-z")
+    axs[6][0].axis("tight")
+    axs[6][1].imshow(minv3d_admm[:, 200, :].T.get(), cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
+    axs[6][1].set_title("TV-Regularized Inverted Model iter y-z")
+    axs[6][1].axis('tight')
+    axs[6][2].imshow(minv3d_admm[:, :, 220].T.get(), cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
+    axs[6][2].set_title("TV-Regularized Inverted Model iter x-y")
+    axs[6][2].axis('tight')
