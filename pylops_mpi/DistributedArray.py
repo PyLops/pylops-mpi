@@ -827,16 +827,17 @@ class DistributedArray(DistributedMixIn):
     def conj(self):
         """Distributed conj() method
         """
+        local_array = self.local_array.conj()
         conj = DistributedArray(global_shape=self.global_shape,
                                 base_comm=self.base_comm,
                                 base_comm_nccl=self.base_comm_nccl,
                                 partition=self.partition,
                                 axis=self.axis,
+                                local_array=local_array,
                                 local_shapes=self.local_shapes,
                                 mask=self.mask,
                                 engine=self.engine,
                                 dtype=self.dtype)
-        conj[:] = self.local_array.conj()
         return conj
 
     def copy(self):
