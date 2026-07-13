@@ -18,6 +18,16 @@ class MPIL2(MPIProxOperator):
 
     Implement a distributed version of the L2 norm proximal operator.
 
+    .. note::
+
+        This operator does not support input arrays with
+        ``pylops_mpi.Partition.BROADCAST`` or 
+        ``pylops_mpi.Partition.UNSAFE_BROADCAST`` partition when
+        ``Op`` and ``b`` are not ``None`` because it does not make
+        sense to have both the model and data replicated across
+        ranks.
+
+
     Parameters
     ----------
     Op : :obj:`pylops_mpi.MPILinearOperator`, optional
@@ -38,7 +48,7 @@ class MPIL2(MPIProxOperator):
         counter which keeps track of how many times the ``prox`` method has
         been invoked before and returns the ``niter`` to be used.
     x0 : :obj:`pylops_mpi.DistributedArray`, optional
-        Initial vector. If ``Op`` is not None, this must be passed.
+        Initial vector. If ``Op`` is not ``None``, this must be passed.
     warm : :obj:`bool`, optional
         Warm start (``True``) or not (``False``). Uses estimate from previous
         call of ``prox`` method.
@@ -73,6 +83,13 @@ class MPIL2(MPIProxOperator):
     ) -> None:
         if Op is not None and x0 is None:
             raise ValueError("x0 must be passed when Op is not None")
+        # check partition
+        if Op is not None and x0.partition != Partition.SCATTER:
+            raise NotImplementedError(
+                "L2 proximal operator not "
+                f"supported for inputs with {x0.partition} "
+                "partition"
+            )
         self.Op = Op
         self.hasgrad = True
 
@@ -110,6 +127,14 @@ class MPIL2(MPIProxOperator):
             self.OpTb = self.sigma * self.Op.H @ self.b
 
     def __call__(self, x: DistributedArray) -> DistributedArray:
+        # check partition
+        if self.Op is not None and self.b is not None and x.partition != Partition.SCATTER:
+            raise NotImplementedError(
+                "L2 proximal operator not "
+                f"supported for inputs with {x.partition} "
+                "partition"
+            )
+        
         if self.Op is not None and self.b is not None:
             f = (self.sigma / 2.0) * ((self.Op * x - self.b).norm() ** 2)
         elif self.b is not None:
@@ -138,7 +163,8 @@ class MPIL2(MPIProxOperator):
         if self.Op is not None and self.b is not None and x.partition != Partition.SCATTER:
             raise NotImplementedError(
                 "L2 proximal operator not "
-                f"supported for {x.partition} partition"
+                f"supported for inputs with {x.partition} "
+                "partition"
             )
 
         # define current number of iterations

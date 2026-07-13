@@ -117,6 +117,45 @@ def test_separable_prox(par):
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize(
+    "par", [(par1b)]
+)
+def test_L2_broadcast(par):
+    """Test L2 proximal operator raises error with broadcast partition
+    
+    """
+    x = pylops_mpi.DistributedArray(global_shape=par['n'],
+                                    dtype=par['dtype'],
+                                    partition=pylops_mpi.Partition.BROADCAST, 
+                                    engine=backend)
+    b = pylops_mpi.DistributedArray(global_shape=par['n'],
+                                    dtype=par['dtype'],
+                                    partition=pylops_mpi.Partition.BROADCAST,
+                                    engine=backend)
+    
+    Opd = pylops_mpi.MPILinearOperator(
+        Diagonal(np.ones(par['n'] * size, dtype=par['dtype']), dtype=par['dtype'])
+        )
+    
+    # creation
+    with pytest.raises(NotImplementedError, match="not supported for"):
+        _ = MPIL2(Op=Opd, b=b, sigma=2.0, x0=x.zeros_like(), solver="cgls")
+    
+    # call/prox
+    x0 = pylops_mpi.DistributedArray(global_shape=par['n'] * size,
+                                    dtype=par['dtype'],
+                                    partition=pylops_mpi.Partition.SCATTER, 
+                                    engine=backend)
+    l2d = MPIL2(Op=Opd, b=b, sigma=2.0, x0=x0, solver="cgls")
+      
+    with pytest.raises(NotImplementedError, match="not supported for"):
+        _ = l2d(x)
+
+    with pytest.raises(NotImplementedError, match="not supported for"):
+        _ = l2d.prox(x, .1)
+  
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize(
     "par", [(par1), (par1j), (par1b)]
 )
 def test_L2(par):
@@ -155,18 +194,22 @@ def test_L2(par):
     l2b = L2(b=b_global, sigma=2.0)
     l2bd = MPIL2(b=b, sigma=2.0)
 
-    l2Op = L2(Op=Op_global, b=b_global, sigma=2.0, solver="cgls")
-    l2Opd = MPIL2(Op=Opd, b=b, sigma=2.0, x0=x.zeros_like(), solver="cgls")
+    if par["partition"] == pylops_mpi.Partition.SCATTER:
+        l2Op = L2(Op=Op_global, b=b_global, sigma=2.0, solver="cgls")
+        l2Opd = MPIL2(Op=Opd, b=b, sigma=2.0, x0=x.zeros_like(), solver="cgls")
+    else:
+        l2Op = l2Opd = None  # to skip tests with broadcast
 
     for l2, l2d in zip([l2x, l2b, l2Op], [l2xd, l2bd, l2Opd]):
-        if par["partition"] == pylops_mpi.Partition.SCATTER:
-            f = l2d(x)
-            prox = l2d.prox(x, .1)
-            prox = prox.asarray()
+        if l2 is None:
+            continue
+        
+        f = l2d(x)
+        prox = l2d.prox(x, .1)
+        prox = prox.asarray()
 
         if rank == 0:
             f_np = l2(x_global)
             prox_np = l2.prox(x_global, .1)
-            if par["partition"] == pylops_mpi.Partition.SCATTER:
-                assert_allclose(f, f_np, rtol=1e-14)
-                assert_allclose(prox, prox_np, rtol=1e-12)
+            assert_allclose(f, f_np, rtol=1e-14)
+            assert_allclose(prox, prox_np, rtol=1e-12)
