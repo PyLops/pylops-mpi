@@ -85,7 +85,7 @@ class MPIProxOperator:
                                                 ncp.asarray(f),
                                                 op=reduce_op,
                                                 engine=x.engine)
-                return recv_buf[0]
+                return recv_buf
             else:
                 # For broadcasted arrays, simply return the local f
                 return f
