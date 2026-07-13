@@ -134,6 +134,13 @@ class MPIL2(MPIProxOperator):
     def prox(self, x: DistributedArray, tau: float, **kwargs: Any) -> DistributedArray:
         """Proximal operator applied to a vector
         """
+        # check partition
+        if self.Op is not None and self.b is not None and x.partition != Partition.SCATTER:
+            raise NotImplementedError(
+                "L2 proximal operator not "
+                f"supported for {x.partition} partition"
+            )
+
         # define current number of iterations
         if isinstance(self.niter, int):
             niter = self.niter
@@ -147,16 +154,10 @@ class MPIL2(MPIProxOperator):
                 if self.q is not None:
                     y -= tau * self.alpha * self.q
             if self.normaleqs:
-                if x.partition == Partition.SCATTER:
-                    Op1 = MPIBlockDiag([Identity(x.local_shape, dtype=self.Op.dtype, )]) + float(
-                        tau * self.sigma
-                    ) * (self.Op.H * self.Op)
-                    x = cg(Op1, y, niter=niter, x0=self.x0, **self.kwargs_solver)[0]
-                else:
-                    # TODO: handle case of x BROADCAST
-                    raise NotImplementedError(
-                        "L2 proximal operator currently "
-                        f"not supporter for {x.partition} partition")
+                Op1 = MPIBlockDiag([Identity(x.local_shape, dtype=self.Op.dtype, )]) + float(
+                    tau * self.sigma
+                ) * (self.Op.H * self.Op)
+                x = cg(Op1, y, niter=niter, x0=self.x0, **self.kwargs_solver)[0]                    
             else:
                 y = x
                 if self.q is not None:

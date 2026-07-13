@@ -40,26 +40,26 @@ par1 = {
     "imag": 0,
     "dtype": np.float64,
     "partition": pylops_mpi.Partition.SCATTER
-}
-
-par1b = {
-    "n": 101,
-    "imag": 0,
-    "dtype": np.float64,
-    "partition": pylops_mpi.Partition.BROADCAST
-}
+} # scatter, real
 
 par1j = {
     "n": 101,
     "imag": 1j,
     "dtype": np.complex128,
     "partition": pylops_mpi.Partition.SCATTER
-}
+} # scatter, complex
+
+par1b = {
+    "n": 101,
+    "imag": 0,
+    "dtype": np.float64,
+    "partition": pylops_mpi.Partition.BROADCAST
+} # broadcast, real
 
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize(
-    "par", [(par1), (par1b), (par1j),]
+    "par", [(par1), (par1j), (par1b)]
 )
 def test_separable_prox(par):
     """Separable proximal operators"""
@@ -117,10 +117,14 @@ def test_separable_prox(par):
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize(
-    "par", [(par1), (par1j),] #  (par1b),
+    "par", [(par1), (par1j), (par1b)]
 )
 def test_L2(par):
-    """L2 proximal operator"""
+    """L2 proximal operator
+    
+    Test call/prox for L2 without Op/b (scatter and broadcast),
+    with b (scatter and broadcast), and with Op/b (only scatter)
+    """
     np.random.seed(42)
 
     x = pylops_mpi.DistributedArray(global_shape=par['n'] * (size if par["partition"] == pylops_mpi.Partition.SCATTER else 1),
@@ -138,7 +142,7 @@ def test_L2(par):
     Op_global = Diagonal(
         np.ones(par['n'] * (size if par["partition"] == pylops_mpi.Partition.SCATTER else 1), dtype=par['dtype']),
         dtype=par['dtype'])
-    if pylops_mpi.Partition.SCATTER:
+    if par["partition"] == pylops_mpi.Partition.SCATTER:
         Op_local = Diagonal(np.ones(par['n'], dtype=par['dtype']), dtype=par['dtype'])
         Opd = pylops_mpi.MPIBlockDiag([Op_local, ])
     else:
@@ -155,12 +159,14 @@ def test_L2(par):
     l2Opd = MPIL2(Op=Opd, b=b, sigma=2.0, x0=x.zeros_like(), solver="cgls")
 
     for l2, l2d in zip([l2x, l2b, l2Op], [l2xd, l2bd, l2Opd]):
-        f = l2d(x)
-        prox = l2d.prox(x, .1)
-        prox = prox.asarray()
+        if par["partition"] == pylops_mpi.Partition.SCATTER:
+            f = l2d(x)
+            prox = l2d.prox(x, .1)
+            prox = prox.asarray()
 
         if rank == 0:
             f_np = l2(x_global)
             prox_np = l2.prox(x_global, .1)
-            assert_allclose(f, f_np, rtol=1e-14)
-            assert_allclose(prox, prox_np, rtol=1e-12)
+            if par["partition"] == pylops_mpi.Partition.SCATTER:
+                assert_allclose(f, f_np, rtol=1e-14)
+                assert_allclose(prox, prox_np, rtol=1e-12)
