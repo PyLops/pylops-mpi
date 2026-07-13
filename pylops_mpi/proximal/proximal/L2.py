@@ -157,12 +157,12 @@ class MPIL2(MPIProxOperator):
                 Op1 = MPIBlockDiag([Identity(x.local_shape, dtype=self.Op.dtype, )]) + float(
                     tau * self.sigma
                 ) * (self.Op.H * self.Op)
-                x = cg(Op1, y, niter=niter, x0=self.x0, **self.kwargs_solver)[0]                    
+                x = cg(Op1, y, niter=niter, x0=self.x0, **self.kwargs_solver)[0]
             else:
                 y = x
                 if self.q is not None:
                     y -= tau * self.alpha * self.q
-                
+
                 Opreg = MPIStackedVStack([
                     sqrt(tau * self.sigma) * self.Op,
                     MPIBlockDiag([Identity(x.local_shape, dtype=self.Op.dtype, ),])])

@@ -38,7 +38,7 @@ def ProximalGradient(
 
     """
     rank = x0.rank
-    
+
     # check if epgs is a vector
     epsg = np.asarray(epsg, dtype=float)
     if epsg.size == 1:
