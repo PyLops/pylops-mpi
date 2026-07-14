@@ -1,5 +1,5 @@
 from math import sqrt
-from typing import TYPE_CHECKING, Any, Callable
+from typing import Any, Callable
 
 from pylops.basicoperators import Identity
 from pyproximal.ProxOperator import _check_tau
@@ -160,9 +160,9 @@ class MPIL2(MPIProxOperator):
                 else:
                     Iop = MPILinearOperator(Identity(x.local_shape, dtype=self.Op.dtype, ))
                 Opreg = MPIStackedVStack([
-                        sqrt(tau * self.sigma) * self.Op,
-                        Iop,
-                    ])
+                    sqrt(tau * self.sigma) * self.Op,
+                    Iop,
+                ])
                 breg = StackedDistributedArray([sqrt(tau * self.sigma) * self.b, y])
                 x = cgls(Opreg, breg, x0=self.x0, niter=niter, **self.kwargs_solver)[0]
             if self.warm:
