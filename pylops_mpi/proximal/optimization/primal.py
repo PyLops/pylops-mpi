@@ -25,7 +25,6 @@ def ProximalGradient(
     x0: DistributedArray,
     epsg: float | NDArray = 1.0,
     tau: float | None = None,
-    beta: float = 0.5,
     eta: float = 1.0,
     niter: int = 10,
     niterback: int = 100,
@@ -35,6 +34,61 @@ def ProximalGradient(
     show: bool = False,
 ) -> DistributedArray:
     r"""Proximal gradient (optionally accelerated)
+
+    Solves the following minimization problem using (Accelerated) Proximal
+    gradient algorithm:
+
+    .. math::
+
+        \mathbf{x} = \arg\,min_\mathbf{x} f(\mathbf{x}) + \epsilon g(\mathbf{x})
+
+    where :math:`f(\mathbf{x})` is a smooth convex function with a uniquely
+    defined gradient and :math:`g(\mathbf{x})` is any convex function that
+    has a known proximal operator. Both ``f`` and ``g`` must be of
+    :class:`pylops_mpi.proximal.MPIProxOperator` kind.
+
+    Parameters
+    ----------
+    proxf : :obj:`pylops_mpi.proximal.MPIProxOperator`
+        Proximal operator of f function (must have ``grad`` implemented)
+    proxg : :obj:`pylops_mpi.proximal.MPIProxOperator`
+        Proximal operator of g function
+    x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
+        Initial vector
+    epsg : :obj:`float` or :obj:`numpy.ndarray`, optional
+        Scaling factor of g function. Can be a scalar
+        for iteration-independent scaling or a a 1d vector for
+        iteration-dependent scaling
+    tau : :obj:`float`, optional
+        Positive scalar weight, which should satisfy the following condition
+        to guarantees convergence: :math:`\tau  \in (0, 1/L]` where ``L`` is
+        the Lipschitz constant of :math:`\nabla f`.
+    eta : :obj:`float`, optional
+        Relaxation parameter (must be between 0 and 1, 0 excluded).
+    niter : :obj:`int`, optional
+        Number of iterations of iterative scheme
+    niterback : :obj:`int`, optional
+        Max number of iterations of backtracking
+    acceleration : :obj:`str`, optional
+        Acceleration (``None``, ``vandenberghe`` or ``fista``)
+    tol : :obj:`float`, optional
+        Tolerance on change of objective function (used as stopping criterion). If
+        ``tol=None``, run until ``niter`` is reached or the other tolerance
+        criterion is met
+    callback : :obj:`callable`, optional
+        Function with signature (``callback(x)``) to call after each iteration
+        where ``x`` is the current model vector
+    show : :obj:`bool`, optional
+        Display iterations log
+
+    Returns
+    -------
+    x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
+        Inverted model
+
+    Notes
+    -----
+    See :class:`pyproximal.optimization.primal.ProximalGradient`
 
     """
     rank = x0.rank
@@ -57,15 +111,14 @@ def ProximalGradient(
             "---------------------------------------------------------\n"
             "Proximal operator (f): %s\n"
             "Proximal operator (g): %s\n"
-            "tau = %s\tbeta = %10e\n"
-            "epsg = %s\tniter = %d\ttol = %s\n"
+            "tau = %s\tepsg = %s\n"
+            "niter = %d\ttol = %s\n"
             ""
             "niterback = %d\tacceleration = %s\n"
             % (
                 proxf,
                 proxg,
                 str(tau),
-                beta,
                 epsg_print,
                 niter,
                 str(tol),
@@ -168,6 +221,67 @@ def ADMML2(
     kwargs_solver: dict[str, Any] = {},
 ) -> tuple[DistributedArray, DistributedArray]:
     r"""Alternating Direction Method of Multipliers for L2 misfit term
+
+    Solves the following minimization problem using Alternating Direction
+    Method of Multipliers:
+
+    .. math::
+
+        \mathbf{x},\mathbf{z}  = \arg\,min_{\mathbf{x},\mathbf{z}}
+        \frac{1}{2}||\mathbf{Op}\mathbf{x} - \mathbf{b}||_2^2 + g(\mathbf{z}) \\
+        s.t. \; \mathbf{Ax}=\mathbf{z}
+
+    where :math:`g(\mathbf{z})` is any convex function that has a known proximal operator.
+
+    Parameters
+    ----------
+    proxg : :obj:`pylops_mpi.proximal.MPIProxOperator`
+        Proximal operator of g function
+    Op : :obj:`pylops_mpi.MPILinearOperator` or :obj:`pylops_mpi.MPIStackedLinearOperator`
+        Linear operator of data misfit term
+    b : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
+        Data
+    A : :obj:`pylops_mpi.MPILinearOperator` or :obj:`pylops_mpi.MPIStackedLinearOperator`
+        Linear operator of regularization term
+    x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
+        Initial vector
+    tau : :obj:`float`
+        Positive scalar weight, which should satisfy the following condition
+        to guarantees convergence: :math:`\tau \in (0, 1/\lambda_{max}(\mathbf{A}^H\mathbf{A})]`.
+    niter : :obj:`int`, optional
+        Number of iterations of iterative scheme
+    z0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
+        Initial auxiliary vector. If ``None``, initialized to ``A @ x0``.
+    gfirst : :obj:`bool`, optional
+        Apply Proximal of operator ``g`` first (``True``) or Proximal of
+        operator ``f`` first (``False``)
+    tol : :obj:`float`, optional
+        Tolerance on change of objective function (used as stopping criterion). If
+        ``tol=None``, run until ``niter`` is reached
+    callback : :obj:`callable`, optional
+        Function with signature (``callback(x)``) to call after each iteration
+        where ``x`` is the current model vector
+    show : :obj:`bool`, optional
+        Display iterations log
+    **kwargs_solver
+        Arbitrary keyword arguments for :py:func:`pylops_mpi.optimization.basic.cgls` used
+        to solve the x-update
+
+    Returns
+    -------
+    x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
+        Inverted model
+    z : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
+        Inverted second model
+
+    Raises
+    ------
+    ValueError
+        If both ``x0`` and ``z0`` are set to ``None`` or ``x0`` is set to None
+
+    Notes
+    -----
+    See :class:`pyproximal.optimization.primal.ADMML2`
 
     """
     rank = x0.rank
