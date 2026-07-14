@@ -10,9 +10,6 @@ from pylops_mpi.basicoperators import MPIBlockDiag, MPIStackedVStack
 from pylops_mpi.optimization.basic import cg, cgls
 from pylops_mpi.proximal import MPIProxOperator
 
-if TYPE_CHECKING:
-    from pylops_mpi import MPILinearOperator
-
 
 class MPIL2(MPIProxOperator):
     """L2 Norm proximal operator.
@@ -60,7 +57,7 @@ class MPIL2(MPIProxOperator):
 
     def __init__(
         self,
-        Op: "MPILinearOperator" = None,
+        Op: MPILinearOperator = None,
         b: DistributedArray | None = None,
         q: DistributedArray | None = None,
         sigma: float = 1.0,
@@ -163,8 +160,8 @@ class MPIL2(MPIProxOperator):
                 else:
                     Iop = MPILinearOperator(Identity(x.local_shape, dtype=self.Op.dtype, ))
                 Opreg = MPIStackedVStack([
-                    sqrt(tau * self.sigma) * self.Op,
-                    Iop,
+                        sqrt(tau * self.sigma) * self.Op,
+                        Iop,
                     ])
                 breg = StackedDistributedArray([sqrt(tau * self.sigma) * self.b, y])
                 x = cgls(Opreg, breg, x0=self.x0, niter=niter, **self.kwargs_solver)[0]
