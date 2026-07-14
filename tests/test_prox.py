@@ -119,7 +119,10 @@ def test_separable_prox(par):
 @pytest.mark.parametrize(
     "par", [(par1), (par1j), (par1b)]
 )
-def test_L2(par):
+@pytest.mark.parametrize(
+    "solver", ["cg", "cgls"]
+)
+def test_L2(par, solver):
     """L2 proximal operator
     
     Test call/prox for L2 without Op/b (scatter and broadcast),
@@ -146,7 +149,7 @@ def test_L2(par):
         Op_local = Diagonal(np.ones(par['n'], dtype=par['dtype']), dtype=par['dtype'])
         Opd = pylops_mpi.MPIBlockDiag([Op_local, ])
     else:
-        Op_local = Diagonal(np.ones(par['n'] * size, dtype=par['dtype']), dtype=par['dtype'])
+        Op_local = Diagonal(np.ones(par['n'], dtype=par['dtype']), dtype=par['dtype'])
         Opd = pylops_mpi.MPILinearOperator(Op_local)
 
     l2x = L2(sigma=2.0)
@@ -155,16 +158,10 @@ def test_L2(par):
     l2b = L2(b=b_global, sigma=2.0)
     l2bd = MPIL2(b=b, sigma=2.0)
 
-    if par["partition"] == pylops_mpi.Partition.SCATTER:
-        l2Op = L2(Op=Op_global, b=b_global, sigma=2.0, solver="cgls")
-        l2Opd = MPIL2(Op=Opd, b=b, sigma=2.0, x0=x.zeros_like(), solver="cgls")
-    else:
-        l2Op = l2Opd = None  # to skip tests with broadcast
-
+    l2Op = L2(Op=Op_global, b=b_global, sigma=2.0, solver=solver)
+    l2Opd = MPIL2(Op=Opd, b=b, sigma=2.0, x0=x.zeros_like(), solver=solver)
+    
     for l2, l2d in zip([l2x, l2b, l2Op], [l2xd, l2bd, l2Opd]):
-        if l2 is None:
-            continue
-        
         f = l2d(x)
         prox = l2d.prox(x, .1)
         prox = prox.asarray()

@@ -5,6 +5,7 @@ from pylops.basicoperators import Identity
 from pyproximal.ProxOperator import _check_tau
 
 from pylops_mpi import DistributedArray, StackedDistributedArray, Partition
+from pylops_mpi import MPILinearOperator
 from pylops_mpi.basicoperators import MPIBlockDiag, MPIStackedVStack
 from pylops_mpi.optimization.basic import cg, cgls
 from pylops_mpi.proximal import MPIProxOperator
@@ -134,13 +135,6 @@ class MPIL2(MPIProxOperator):
     def prox(self, x: DistributedArray, tau: float, **kwargs: Any) -> DistributedArray:
         """Proximal operator applied to a vector
         """
-        # check partition
-        if self.Op is not None and self.b is not None and x.partition != Partition.SCATTER:
-            raise NotImplementedError(
-                "L2 proximal operator currently not implemented "
-                f"for inputs with {x.partition} partition"
-            )
-
         # define current number of iterations
         if isinstance(self.niter, int):
             niter = self.niter
@@ -154,18 +148,24 @@ class MPIL2(MPIProxOperator):
                 if self.q is not None:
                     y -= tau * self.alpha * self.q
             if self.normaleqs:
-                Op1 = MPIBlockDiag([Identity(x.local_shape, dtype=self.Op.dtype, )]) + float(
-                    tau * self.sigma
-                ) * (self.Op.H * self.Op)
+                if x.partition == Partition.SCATTER:
+                    Iop = MPIBlockDiag([Identity(x.local_shape, dtype=self.Op.dtype, )])
+                else:
+                    Iop = MPILinearOperator(Identity(x.local_shape, dtype=self.Op.dtype, ))
+                Op1 = Iop + float(tau * self.sigma) * (self.Op.H * self.Op)
                 x = cg(Op1, y, niter=niter, x0=self.x0, **self.kwargs_solver)[0]
             else:
                 y = x
                 if self.q is not None:
                     y -= tau * self.alpha * self.q
-
+                if x.partition == Partition.SCATTER:
+                    Iop = MPIBlockDiag([Identity(x.local_shape, dtype=self.Op.dtype, ),])
+                else:
+                    Iop = MPILinearOperator(Identity(x.local_shape, dtype=self.Op.dtype, ))
                 Opreg = MPIStackedVStack([
                     sqrt(tau * self.sigma) * self.Op,
-                    MPIBlockDiag([Identity(x.local_shape, dtype=self.Op.dtype, ),])])
+                    Iop,
+                    ])
                 breg = StackedDistributedArray([sqrt(tau * self.sigma) * self.b, y])
                 x = cgls(Opreg, breg, x0=self.x0, niter=niter, **self.kwargs_solver)[0]
             if self.warm:
