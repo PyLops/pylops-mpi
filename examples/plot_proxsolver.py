@@ -3,7 +3,7 @@ Proximal solvers
 ================
 
 This example demonstrates the use of the solvers in the
-:py:module:`pylops_mpi.proximal.optimization` module.
+``pylops_mpi.proximal.optimization`` module.
 
 """
 import numpy as np
@@ -15,11 +15,13 @@ import pyproximal
 
 import pylops_mpi
 
-np.random.seed(42)
 plt.close("all")
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
+
+np.random.seed(rank)
+
 
 ###############################################################################
 # Let's start with an example of sparsity promoting inversion using the
@@ -37,9 +39,6 @@ arr[n//2] = -0.5
 
 # Operator and data
 A = np.random.normal(0, 1, (n // size, n,))
-As = np.vstack(comm.allgather(A))
-
-Op = pylops.MatrixMult(As)
 Opd = pylops_mpi.MPIVStack([pylops.MatrixMult(A), ])
 
 b = Opd @ arr
@@ -61,8 +60,10 @@ arrpg = pylops_mpi.proximal.optimization.primal.ProximalGradient(
 arrpgdlocal = arrpg.asarray()
 
 # Benchmark serial inversion
+As = np.vstack(comm.allgather(A))
 arrlocal = arr.asarray()
 if rank == 0:
+    Op = pylops.MatrixMult(As)
     l2local = pyproximal.L2(
         Op=Op, b=blocal)
     l1local = pyproximal.L1(sigma=1e-1)
@@ -76,7 +77,8 @@ if rank == 0:
     plt.plot(arrpgdlocal, "b", label="Distr")
     plt.plot(arrpglocal, "--r", label="Local")
     plt.legend()
-    plt.savefig('pg.png')
+    plt.tight_layout()
+
 
 ###############################################################################
 # Next we use the :py:class:`pylops_mpi.proximal.optimization.primal.ADMML2`
@@ -126,7 +128,7 @@ if rank == 0:
 
     arradmmlocal = pyproximal.optimization.primal.ADMML2(
         l1local, Op, blocal, Gop, x0=np.zeros(ny*nx), 
-        tau=.99/L, niter=5, show=True, iter_lim=5,
+        tau=.99/L, niter=5, show=False, iter_lim=5,
     )[0]
 
     fig, axs = plt.subplots(1, 3, figsize=(12, 6))
@@ -136,7 +138,8 @@ if rank == 0:
     axs[1].set_title("ADMML2 distr")
     axs[2].imshow(arradmmlocal.reshape(10 * size, 40))
     axs[2].set_title("ADMML2 local")
-    fig.savefig('solver.png')
+    fig.tight_layout()
+
 
 ###############################################################################
 # And finally we repeat the same with a scattered model.
@@ -183,7 +186,7 @@ if rank == 0:
 
     arradmmlocal = pyproximal.optimization.primal.ADMML2(
         l1local, Op, blocal, Gop, x0=np.zeros(ny*nx), 
-        tau=.99/L, niter=5, show=True, iter_lim=5,
+        tau=.99/L, niter=5, show=False, iter_lim=5,
     )[0]
 
     fig, axs = plt.subplots(1, 3, figsize=(12, 6))
@@ -193,4 +196,4 @@ if rank == 0:
     axs[1].set_title("ADMML2 distr")
     axs[2].imshow(arradmmlocal.reshape(10 * size, 40))
     axs[2].set_title("ADMML2 local ")
-    fig.savefig('solver1.png')
+    fig.tight_layout()
