@@ -146,6 +146,19 @@ class DistributedArray(DistributedMixIn):
         Engine used to store array (``numpy`` or ``cupy``)
     dtype : :obj:`str`, optional
         Type of elements in input array. Defaults to ``numpy.float64``.
+
+    Raises
+    ------
+    IndexError
+        If ``axis`` is out of bounds for ``global_shape``.
+    ValueError
+        If ``partition`` is not one of :obj:`Partition.BROADCAST`, :obj:`Partition.UNSAFE_BROADCAST`, or
+        :obj:`Partition.SCATTER`.
+    ValueError
+        If ``base_comm_nccl`` is provided while ``engine`` is not ``"cupy"``.
+    ValueError
+        If ``local_array`` is provided and its shape does not match the
+        expected local shape for the current rank.
     """
 
     def __init__(self, global_shape: Union[Tuple, Integral],
@@ -843,16 +856,17 @@ class DistributedArray(DistributedMixIn):
     def copy(self):
         """Creates a copy of the DistributedArray
         """
+        local_array = self.local_array.copy()
         arr = DistributedArray(global_shape=self.global_shape,
                                base_comm=self.base_comm,
                                base_comm_nccl=self.base_comm_nccl,
                                partition=self.partition,
                                axis=self.axis,
+                               local_array=local_array,
                                local_shapes=self.local_shapes,
                                mask=self.mask,
                                engine=self.engine,
                                dtype=self.dtype)
-        arr[:] = self.local_array
         return arr
 
     def ravel(self, order: Optional[str] = "C"):
@@ -888,23 +902,35 @@ class DistributedArray(DistributedMixIn):
         Parameters
         ----------
         local_shape : :obj:`tuple`
-            Shape of the local array on each MPI rank. For
-            :class:`Partition.SCATTER`, all local shapes must be identical on
-            every axis except the distribution axis, whose sizes may differ
-            across ranks.
+            Shape of the local array on each MPI rank.
         axis : :obj:`int`, optional
             Distribution axis in the reshaped global array. Defaults to ``0``.
+
+        Raises
+        ------
+        ValueError
+            If the provided local shapes are incompatible with the array partitioning.
+            For :class:`Partition.SCATTER`, local shapes must agree on every non-distribution axis.
+            For :class:`Partition.BROADCAST` and :class:`Partition.UNSAFE_BROADCAST`, all local shapes must be identical
+            across ranks.
         """
         local_shapes = self.base_comm.allgather(local_shape)
         global_shape = list(local_shapes[0])
+        ref_shape = local_shapes[0]
         if self.partition is Partition.SCATTER:
-            ref_shape = local_shapes[0]
-            for i, shape in enumerate(local_shapes[1:], start=1):
-                if shape[:axis] != ref_shape[:axis] or shape[axis + 1:] != ref_shape[axis + 1:]:
-                    raise ValueError(
-                        f"All local shapes must match on every axis except axis={axis}. "
-                    )
+            if local_shape[:axis] != ref_shape[:axis] or local_shape[axis + 1:] != ref_shape[axis + 1:]:
+                raise ValueError(
+                    f"All local shapes must match on every axis except axis={axis}. "
+                    f"Got {local_shape} in rank {self.rank} and {ref_shape} in rank 0."
+                )
+            global_shape = list(ref_shape)
             global_shape[axis] = sum(ls[axis] for ls in local_shapes)
+        else:
+            if local_shape != ref_shape:
+                raise ValueError(
+                    "All local shapes must be identical for Partition.BROADCAST and Partition.UNSAFE_BROADCAST. "
+                    f"Got {local_shape} in rank {self.rank} and {ref_shape} in rank 0."
+                )
         local_array = self.local_array.reshape(local_shapes[self.rank])
         arr = DistributedArray(global_shape=tuple(global_shape),
                                base_comm=self.base_comm,
