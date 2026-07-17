@@ -40,29 +40,30 @@ par1 = {
     "imag": 0,
     "dtype": np.float64,
     "partition": pylops_mpi.Partition.SCATTER
-} # scatter, real
+}  # scatter, real
 
 par1j = {
     "n": 101,
     "imag": 1j,
     "dtype": np.complex128,
     "partition": pylops_mpi.Partition.SCATTER
-} # scatter, complex
+}  # scatter, complex
 
 par1b = {
     "n": 101,
     "imag": 0,
     "dtype": np.float64,
     "partition": pylops_mpi.Partition.BROADCAST
-} # broadcast, real
+}  # broadcast, real
 
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize(
     "par", [(par1), (par1j), (par1b)]
 )
-def test_separable_prox(par):
-    """Separable proximal operators"""
+def test_box(par):
+    """Box call/prox vs pyproximal
+    (does not support complex numbers)"""
     np.random.seed(42)
 
     x = pylops_mpi.DistributedArray(global_shape=par['n'], dtype=par['dtype'],
@@ -71,7 +72,6 @@ def test_separable_prox(par):
         par['imag'] * np.random.normal(rank, 10, x.local_shape).astype(par['dtype'])
     x_global = x.asarray()
 
-    # Box (does not support complex numbers)
     if par['imag'] == 0:
         box = Box(lower=0.0, upper=1.0)
         boxd = pylops_mpi.proximal.MPIProxOperator(box)
@@ -86,7 +86,21 @@ def test_separable_prox(par):
             assert_allclose(f, f_np, rtol=1e-14)
             assert_allclose(prox, prox_np, rtol=1e-14)
 
-    # L0
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize(
+    "par", [(par1), (par1j), (par1b)]
+)
+def test_l0(par):
+    """L0 call/prox vs pyproximal"""
+    np.random.seed(42)
+
+    x = pylops_mpi.DistributedArray(global_shape=par['n'], dtype=par['dtype'],
+                                    partition=par['partition'], engine=backend)
+    x[:] = np.random.normal(rank, 10, x.local_shape).astype(par['dtype']) + \
+        par['imag'] * np.random.normal(rank, 10, x.local_shape).astype(par['dtype'])
+    x_global = x.asarray()
+
     l0 = L0(sigma=2.0)
     l0d = pylops_mpi.proximal.MPIProxOperator(l0)
 
@@ -100,7 +114,21 @@ def test_separable_prox(par):
         assert_allclose(f, f_np, rtol=1e-14)
         assert_allclose(prox, prox_np, rtol=1e-14)
 
-    # L1
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize(
+    "par", [(par1), (par1j), (par1b)]
+)
+def test_l1(par):
+    """L1 call/prox vs pyproximal"""
+    np.random.seed(42)
+
+    x = pylops_mpi.DistributedArray(global_shape=par['n'], dtype=par['dtype'],
+                                    partition=par['partition'], engine=backend)
+    x[:] = np.random.normal(rank, 10, x.local_shape).astype(par['dtype']) + \
+        par['imag'] * np.random.normal(rank, 10, x.local_shape).astype(par['dtype'])
+    x_global = x.asarray()
+
     l1 = L1(sigma=2.0)
     l1d = pylops_mpi.proximal.MPIProxOperator(l1)
 

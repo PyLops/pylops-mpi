@@ -2,7 +2,7 @@ from mpi4py import MPI
 from typing import Any
 
 from pyproximal import ProxOperator
-from pylops.utils.backend import get_module
+from pylops.utils.backend import get_module, to_numpy
 
 from pylops_mpi import DistributedArray, Partition
 
@@ -81,10 +81,15 @@ class MPIProxOperator:
 
                 # Reduce local function evaluations into final evaluation
                 reduce_op = _call_reduce_op[str(type(self.proxop).__name__)][0]
-                recv_buf = x._allreduce_subcomm(x.sub_comm, x.base_comm_nccl,
+                recv_buf = x._allreduce_subcomm(x.sub_comm,
+                                                x.base_comm_nccl,
                                                 ncp.asarray(f),
                                                 op=reduce_op,
                                                 engine=x.engine)
+
+                # Ensure that a bool/float/int is returned
+                if not isinstance(recv_buf, bool):
+                    recv_buf = to_numpy(recv_buf)
                 return recv_buf
             else:
                 # For broadcasted arrays, simply return the local f
