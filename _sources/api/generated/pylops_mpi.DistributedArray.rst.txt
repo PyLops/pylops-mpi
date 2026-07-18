@@ -22,6 +22,7 @@
         ~DistributedArray.norm
         ~DistributedArray.ravel
         ~DistributedArray.redistribute
+        ~DistributedArray.reshape
         ~DistributedArray.to_dist
         ~DistributedArray.zeros_like
 

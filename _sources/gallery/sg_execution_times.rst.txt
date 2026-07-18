@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:15.398** total execution time for 12 files **from gallery**:
+**00:16.256** total execution time for 12 files **from gallery**:
 
 .. container::
 
@@ -33,34 +33,34 @@ Computation times
      - Time
      - Mem (MB)
    * - :ref:`sphx_glr_gallery_plot_halo.py` (``plot_halo.py``)
-     - 00:09.578
+     - 00:09.651
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_nonstatconv.py` (``plot_nonstatconv.py``)
-     - 00:01.514
+     - 00:01.608
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_distributed_array.py` (``plot_distributed_array.py``)
-     - 00:01.098
+     - 00:01.300
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_ffts.py` (``plot_ffts.py``)
-     - 00:01.084
+     - 00:01.206
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_derivative.py` (``plot_derivative.py``)
-     - 00:00.881
+     - 00:01.093
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_mdc.py` (``plot_mdc.py``)
-     - 00:00.462
+     - 00:00.481
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_stacking.py` (``plot_stacking.py``)
-     - 00:00.343
+     - 00:00.403
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_mpilinop.py` (``plot_mpilinop.py``)
-     - 00:00.279
+     - 00:00.326
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_cgls.py` (``plot_cgls.py``)
-     - 00:00.135
+     - 00:00.160
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_stacked_array.py` (``plot_stacked_array.py``)
-     - 00:00.017
+     - 00:00.021
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_matrixmult.py` (``plot_matrixmult.py``)
      - 00:00.004

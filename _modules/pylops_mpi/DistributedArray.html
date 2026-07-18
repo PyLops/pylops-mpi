@@ -30,8 +30,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
@@ -43,10 +43,10 @@
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e45f66c9" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <script defer src="../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
@@ -608,6 +608,12 @@
 <span class="sd">        Broadcast, UnsafeBroadcast, or Scatter the array. Defaults to ``Partition.SCATTER``.</span>
 <span class="sd">    axis : :obj:`int`, optional</span>
 <span class="sd">        Axis along which distribution occurs. Defaults to ``0``.</span>
+<span class="sd">    local_array : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`, optional</span>
+<span class="sd">        Existing local array to use as the underlying storage instead of</span>
+<span class="sd">        allocating a new one. Its shape must match the expected local shape</span>
+<span class="sd">        for the current rank. When provided, the local array&#39;s dtype and engine</span>
+<span class="sd">        (numpy or cupy) are used, and the ``dtype`` and ``engine`` arguments</span>
+<span class="sd">        are ignored.</span>
 <span class="sd">    local_shapes : :obj:`list`, optional</span>
 <span class="sd">        List of tuples or integers representing local shapes at each rank.</span>
 <span class="sd">    mask : :obj:`list`, optional</span>
@@ -617,12 +623,26 @@
 <span class="sd">        Engine used to store array (``numpy`` or ``cupy``)</span>
 <span class="sd">    dtype : :obj:`str`, optional</span>
 <span class="sd">        Type of elements in input array. Defaults to ``numpy.float64``.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    IndexError</span>
+<span class="sd">        If ``axis`` is out of bounds for ``global_shape``.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If ``partition`` is not one of :obj:`Partition.BROADCAST`, :obj:`Partition.UNSAFE_BROADCAST`, or</span>
+<span class="sd">        :obj:`Partition.SCATTER`.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If ``base_comm_nccl`` is provided while ``engine`` is not ``&quot;cupy&quot;``.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If ``local_array`` is provided and its shape does not match the</span>
+<span class="sd">        expected local shape for the current rank.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">global_shape</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">,</span> <span class="n">Integral</span><span class="p">],</span>
                  <span class="n">base_comm</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MPI</span><span class="o">.</span><span class="n">Comm</span><span class="p">]</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">,</span>
                  <span class="n">base_comm_nccl</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NcclCommunicatorType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                  <span class="n">partition</span><span class="p">:</span> <span class="n">Partition</span> <span class="o">=</span> <span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                 <span class="n">local_array</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                  <span class="n">local_shapes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">,</span> <span class="n">Integral</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                  <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Integral</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                  <span class="n">engine</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;numpy&quot;</span><span class="p">,</span>
@@ -635,10 +655,10 @@
         <span class="k">if</span> <span class="n">partition</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Partition</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Should be either </span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="si">}</span><span class="s2">, &quot;</span>
                              <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">UNSAFE_BROADCAST</span><span class="si">}</span><span class="s2"> or </span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">base_comm_nccl</span> <span class="ow">and</span> <span class="n">engine</span> <span class="o">!=</span> <span class="s2">&quot;cupy&quot;</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span> <span class="o">=</span> <span class="n">engine</span> <span class="k">if</span> <span class="n">local_array</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">get_module_name</span><span class="p">(</span><span class="n">get_array_module</span><span class="p">(</span><span class="n">local_array</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">base_comm_nccl</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span> <span class="o">!=</span> <span class="s2">&quot;cupy&quot;</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;NCCL Communicator only works with engine `cupy`&quot;</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span> <span class="k">if</span> <span class="n">local_array</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">local_array</span><span class="o">.</span><span class="n">dtype</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_global_shape</span> <span class="o">=</span> <span class="n">_value_or_sized_to_tuple</span><span class="p">(</span><span class="n">global_shape</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_base_comm_nccl</span> <span class="o">=</span> <span class="n">base_comm_nccl</span>
         <span class="k">if</span> <span class="n">base_comm_nccl</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -655,8 +675,18 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_local_shape</span> <span class="o">=</span> <span class="n">local_shapes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">]</span> <span class="k">if</span> <span class="n">local_shapes</span> <span class="k">else</span> <span class="n">local_split</span><span class="p">(</span><span class="n">global_shape</span><span class="p">,</span> <span class="n">base_comm</span><span class="p">,</span>
                                                                                      <span class="n">partition</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span> <span class="o">=</span> <span class="n">engine</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_local_array</span> <span class="o">=</span> <span class="n">get_module</span><span class="p">(</span><span class="n">engine</span><span class="p">)</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">local_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">local_array</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_local_array</span> <span class="o">=</span> <span class="n">get_module</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="p">)</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
+                <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">local_shape</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">local_array</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_shape</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;local_array has shape </span><span class="si">{</span><span class="n">local_array</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;expected </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">local_shape</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_local_array</span> <span class="o">=</span> <span class="n">local_array</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_array</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
@@ -1287,31 +1317,33 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">conj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Distributed conj() method</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">local_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_array</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span>
         <span class="n">conj</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">global_shape</span><span class="p">,</span>
                                 <span class="n">base_comm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span>
                                 <span class="n">base_comm_nccl</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span>
                                 <span class="n">partition</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">partition</span><span class="p">,</span>
                                 <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+                                <span class="n">local_array</span><span class="o">=</span><span class="n">local_array</span><span class="p">,</span>
                                 <span class="n">local_shapes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">local_shapes</span><span class="p">,</span>
                                 <span class="n">mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span>
                                 <span class="n">engine</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span>
                                 <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-        <span class="n">conj</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_array</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">conj</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a copy of the DistributedArray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">local_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_array</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">arr</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">global_shape</span><span class="p">,</span>
                                <span class="n">base_comm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span>
                                <span class="n">base_comm_nccl</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span>
                                <span class="n">partition</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">partition</span><span class="p">,</span>
                                <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+                               <span class="n">local_array</span><span class="o">=</span><span class="n">local_array</span><span class="p">,</span>
                                <span class="n">local_shapes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">local_shapes</span><span class="p">,</span>
                                <span class="n">mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span>
                                <span class="n">engine</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span>
                                <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-        <span class="n">arr</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_array</span>
         <span class="k">return</span> <span class="n">arr</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">ravel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;C&quot;</span><span class="p">):</span>
@@ -1329,17 +1361,63 @@
 <span class="sd">            Flattened 1-D DistributedArray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">local_shapes</span> <span class="o">=</span> <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">local_shape</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">),</span> <span class="p">)</span> <span class="k">for</span> <span class="n">local_shape</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_shapes</span><span class="p">]</span>
+        <span class="n">local_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">local_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span>
         <span class="n">arr</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_shape</span><span class="p">),</span>
+                               <span class="n">base_comm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span>
+                               <span class="n">base_comm_nccl</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span>
+                               <span class="n">local_array</span><span class="o">=</span><span class="n">local_array</span><span class="p">,</span>
+                               <span class="n">local_shapes</span><span class="o">=</span><span class="n">local_shapes</span><span class="p">,</span>
+                               <span class="n">mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span>
+                               <span class="n">partition</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">partition</span><span class="p">,</span>
+                               <span class="n">engine</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span>
+                               <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">arr</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">reshape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local_shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a reshaped DistributedArray</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        local_shape : :obj:`tuple`</span>
+<span class="sd">            Shape of the local array on each MPI rank.</span>
+<span class="sd">        axis : :obj:`int`, optional</span>
+<span class="sd">            Distribution axis in the reshaped global array. Defaults to ``0``.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the provided local shapes are incompatible with the array partitioning.</span>
+<span class="sd">            For :class:`Partition.SCATTER`, local shapes must agree on every non-distribution axis.</span>
+<span class="sd">            For :class:`Partition.BROADCAST` and :class:`Partition.UNSAFE_BROADCAST`, all local shapes must be identical</span>
+<span class="sd">            across ranks.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">local_shapes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="o">.</span><span class="n">allgather</span><span class="p">(</span><span class="n">local_shape</span><span class="p">)</span>
+        <span class="n">global_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">local_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">ref_shape</span> <span class="o">=</span> <span class="n">local_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition</span> <span class="ow">is</span> <span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">local_shape</span><span class="p">[:</span><span class="n">axis</span><span class="p">]</span> <span class="o">!=</span> <span class="n">ref_shape</span><span class="p">[:</span><span class="n">axis</span><span class="p">]</span> <span class="ow">or</span> <span class="n">local_shape</span><span class="p">[</span><span class="n">axis</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">!=</span> <span class="n">ref_shape</span><span class="p">[</span><span class="n">axis</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;All local shapes must match on every axis except axis=</span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2">. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Got </span><span class="si">{</span><span class="n">local_shape</span><span class="si">}</span><span class="s2"> in rank </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">ref_shape</span><span class="si">}</span><span class="s2"> in rank 0.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">global_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ref_shape</span><span class="p">)</span>
+            <span class="n">global_shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">ls</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="k">for</span> <span class="n">ls</span> <span class="ow">in</span> <span class="n">local_shapes</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">local_shape</span> <span class="o">!=</span> <span class="n">ref_shape</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;All local shapes must be identical for Partition.BROADCAST and Partition.UNSAFE_BROADCAST. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Got </span><span class="si">{</span><span class="n">local_shape</span><span class="si">}</span><span class="s2"> in rank </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">ref_shape</span><span class="si">}</span><span class="s2"> in rank 0.&quot;</span>
+                <span class="p">)</span>
+        <span class="n">local_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_array</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">local_shapes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">])</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">global_shape</span><span class="p">),</span>
                                <span class="n">base_comm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span>
                                <span class="n">base_comm_nccl</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span>
                                <span class="n">local_shapes</span><span class="o">=</span><span class="n">local_shapes</span><span class="p">,</span>
                                <span class="n">mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span>
                                <span class="n">partition</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">partition</span><span class="p">,</span>
                                <span class="n">engine</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span>
-                               <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-        <span class="n">local_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">local_array</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">local_array</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">arr</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">x</span>
+                               <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                               <span class="n">local_array</span><span class="o">=</span><span class="n">local_array</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">arr</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">empty_like</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1750,8 +1828,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1785,7 +1863,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
 </p></div>
       
     </div>
