@@ -131,6 +131,12 @@ class DistributedArray(DistributedMixIn):
         Broadcast, UnsafeBroadcast, or Scatter the array. Defaults to ``Partition.SCATTER``.
     axis : :obj:`int`, optional
         Axis along which distribution occurs. Defaults to ``0``.
+    local_array : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`, optional
+        Existing local array to use as the underlying storage instead of
+        allocating a new one. Its shape must match the expected local shape
+        for the current rank. When provided, the local array's dtype and engine
+        (numpy or cupy) are used, and the ``dtype`` and ``engine`` arguments
+        are ignored.
     local_shapes : :obj:`list`, optional
         List of tuples or integers representing local shapes at each rank.
     mask : :obj:`list`, optional
@@ -140,12 +146,26 @@ class DistributedArray(DistributedMixIn):
         Engine used to store array (``numpy`` or ``cupy``)
     dtype : :obj:`str`, optional
         Type of elements in input array. Defaults to ``numpy.float64``.
+
+    Raises
+    ------
+    IndexError
+        If ``axis`` is out of bounds for ``global_shape``.
+    ValueError
+        If ``partition`` is not one of :obj:`Partition.BROADCAST`, :obj:`Partition.UNSAFE_BROADCAST`, or
+        :obj:`Partition.SCATTER`.
+    ValueError
+        If ``base_comm_nccl`` is provided while ``engine`` is not ``"cupy"``.
+    ValueError
+        If ``local_array`` is provided and its shape does not match the
+        expected local shape for the current rank.
     """
 
     def __init__(self, global_shape: Union[Tuple, Integral],
                  base_comm: Optional[MPI.Comm] = MPI.COMM_WORLD,
                  base_comm_nccl: Optional[NcclCommunicatorType] = None,
                  partition: Partition = Partition.SCATTER, axis: int = 0,
+                 local_array: Optional[NDArray] = None,
                  local_shapes: Optional[List[Union[Tuple, Integral]]] = None,
                  mask: Optional[List[Integral]] = None,
                  engine: Optional[str] = "numpy",
@@ -158,10 +178,10 @@ class DistributedArray(DistributedMixIn):
         if partition not in Partition:
             raise ValueError(f"Should be either {Partition.BROADCAST}, "
                              f"{Partition.UNSAFE_BROADCAST} or {Partition.SCATTER}")
-        if base_comm_nccl and engine != "cupy":
+        self._engine = engine if local_array is None else get_module_name(get_array_module(local_array))
+        if base_comm_nccl and self._engine != "cupy":
             raise ValueError("NCCL Communicator only works with engine `cupy`")
-
-        self.dtype = dtype
+        self.dtype = dtype if local_array is None else local_array.dtype
         self._global_shape = _value_or_sized_to_tuple(global_shape)
         self._base_comm_nccl = base_comm_nccl
         if base_comm_nccl is None:
@@ -178,8 +198,18 @@ class DistributedArray(DistributedMixIn):
         self._local_shape = local_shapes[self.rank] if local_shapes else local_split(global_shape, base_comm,
                                                                                      partition, axis)
 
-        self._engine = engine
-        self._local_array = get_module(engine).empty(shape=self.local_shape, dtype=self.dtype)
+        if local_array is None:
+            self._local_array = get_module(self._engine).empty(
+                shape=self.local_shape,
+                dtype=self.dtype,
+            )
+        else:
+            if local_array.shape != self.local_shape:
+                raise ValueError(
+                    f"local_array has shape {local_array.shape}, "
+                    f"expected {self.local_shape}"
+                )
+            self._local_array = local_array
 
     def __getitem__(self, index):
         return self.local_array[index]
@@ -810,31 +840,33 @@ class DistributedArray(DistributedMixIn):
     def conj(self):
         """Distributed conj() method
         """
+        local_array = self.local_array.conj()
         conj = DistributedArray(global_shape=self.global_shape,
                                 base_comm=self.base_comm,
                                 base_comm_nccl=self.base_comm_nccl,
                                 partition=self.partition,
                                 axis=self.axis,
+                                local_array=local_array,
                                 local_shapes=self.local_shapes,
                                 mask=self.mask,
                                 engine=self.engine,
                                 dtype=self.dtype)
-        conj[:] = self.local_array.conj()
         return conj
 
     def copy(self):
         """Creates a copy of the DistributedArray
         """
+        local_array = self.local_array.copy()
         arr = DistributedArray(global_shape=self.global_shape,
                                base_comm=self.base_comm,
                                base_comm_nccl=self.base_comm_nccl,
                                partition=self.partition,
                                axis=self.axis,
+                               local_array=local_array,
                                local_shapes=self.local_shapes,
                                mask=self.mask,
                                engine=self.engine,
                                dtype=self.dtype)
-        arr[:] = self.local_array
         return arr
 
     def ravel(self, order: Optional[str] = "C"):
@@ -852,17 +884,63 @@ class DistributedArray(DistributedMixIn):
             Flattened 1-D DistributedArray
         """
         local_shapes = [(np.prod(local_shape, axis=-1), ) for local_shape in self.local_shapes]
+        local_array = np.ravel(self.local_array, order=order)
         arr = DistributedArray(global_shape=np.prod(self.global_shape),
+                               base_comm=self.base_comm,
+                               base_comm_nccl=self.base_comm_nccl,
+                               local_array=local_array,
+                               local_shapes=local_shapes,
+                               mask=self.mask,
+                               partition=self.partition,
+                               engine=self.engine,
+                               dtype=self.dtype)
+        return arr
+
+    def reshape(self, local_shape: Tuple, axis: Optional[int] = 0):
+        """Return a reshaped DistributedArray
+
+        Parameters
+        ----------
+        local_shape : :obj:`tuple`
+            Shape of the local array on each MPI rank.
+        axis : :obj:`int`, optional
+            Distribution axis in the reshaped global array. Defaults to ``0``.
+
+        Raises
+        ------
+        ValueError
+            If the provided local shapes are incompatible with the array partitioning.
+            For :class:`Partition.SCATTER`, local shapes must agree on every non-distribution axis.
+            For :class:`Partition.BROADCAST` and :class:`Partition.UNSAFE_BROADCAST`, all local shapes must be identical
+            across ranks.
+        """
+        local_shapes = self.base_comm.allgather(local_shape)
+        global_shape = list(local_shapes[0])
+        ref_shape = local_shapes[0]
+        if self.partition is Partition.SCATTER:
+            if local_shape[:axis] != ref_shape[:axis] or local_shape[axis + 1:] != ref_shape[axis + 1:]:
+                raise ValueError(
+                    f"All local shapes must match on every axis except axis={axis}. "
+                    f"Got {local_shape} in rank {self.rank} and {ref_shape} in rank 0."
+                )
+            global_shape = list(ref_shape)
+            global_shape[axis] = sum(ls[axis] for ls in local_shapes)
+        else:
+            if local_shape != ref_shape:
+                raise ValueError(
+                    "All local shapes must be identical for Partition.BROADCAST and Partition.UNSAFE_BROADCAST. "
+                    f"Got {local_shape} in rank {self.rank} and {ref_shape} in rank 0."
+                )
+        local_array = self.local_array.reshape(local_shapes[self.rank])
+        arr = DistributedArray(global_shape=tuple(global_shape),
                                base_comm=self.base_comm,
                                base_comm_nccl=self.base_comm_nccl,
                                local_shapes=local_shapes,
                                mask=self.mask,
                                partition=self.partition,
                                engine=self.engine,
-                               dtype=self.dtype)
-        local_array = np.ravel(self.local_array, order=order)
-        x = local_array.copy()
-        arr[:] = x
+                               dtype=self.dtype,
+                               local_array=local_array)
         return arr
 
     def empty_like(self):
