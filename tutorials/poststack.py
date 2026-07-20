@@ -222,9 +222,9 @@ l1d = pylops_mpi.proximal.MPIProxOperator(l1)
 
 L = 12.0  # maxeig(Gopd^H Gopd)
 minv3d_tv_dist = pylops_mpi.proximal.optimization.primal.ADMML2(
-        l1d, BDiag, d_dist, Gopd, x0=mback3d_dist, tau=.99/L, niter=40,
-        show=True, kwargs_solver=dict(niter=20),
-    )[0]
+    l1d, BDiag, d_dist, Gopd, x0=mback3d_dist, tau=.99 / L, niter=40,
+    show=True, kwargs_solver=dict(niter=20),
+)[0]
 minv3d_tv = minv3d_tv_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################

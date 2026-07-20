@@ -8,6 +8,7 @@ providing proximal solvers using MPI.
 
 A list of proximal solvers:
     ProximalGradient                  Proximal Gradient
+    ADMML2                            ADMM with L2 misfit term
 
 """
 

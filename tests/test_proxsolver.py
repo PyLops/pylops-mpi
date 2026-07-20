@@ -22,7 +22,7 @@ from pylops import (
     MatrixMult,
 )
 from pyproximal import L1, L2
-from pyproximal.optimization.primal import ProximalGradient
+from pyproximal.optimization.primal import ProximalGradient, ADMML2
 
 from pylops_mpi import DistributedArray, Partition
 from pylops_mpi.basicoperators import MPIBlockDiag, MPIVStack
@@ -106,7 +106,7 @@ def test_proximalgradient_broadcast(par):
 
     A = np.random.normal(0, 1, (par["ny"], par["nx"])) + par[
         "imag"] * np.random.normal(0, 1, (par["ny"], par["nx"]))
-    AVStack_MPI = MPIVStack(ops=[pylops.MatrixMult(A), ])
+    AVStack_MPI = MPIVStack(ops=[pylops.MatrixMult(A, dtype=par['dtype']), ])
 
     x = DistributedArray(global_shape=par['nx'], dtype=par['dtype'],
                          partition=Partition.BROADCAST, engine=backend)
@@ -143,7 +143,7 @@ def test_proximalgradient_broadcast(par):
     
     As = np.vstack(comm.allgather(A))
     if rank == 0:
-        AVStack = MatrixMult(As)
+        AVStack = MatrixMult(As, dtype=par['dtype'])
         if par["x0"]:
             x0 = x0_global
         else:
@@ -164,12 +164,12 @@ def test_proximalgradient_broadcast(par):
     "par", [(par1), (par1j), (par2), (par2j), (par3), (par3j), (par4), (par4j)]
 )
 def test_proximalgradient_scatter(par):
-    """ProximalGradient with broabcasted model"""
+    """ProximalGradient with scattered model"""
     np.random.seed(rank)
 
     A = np.random.normal(0, 1, (par["ny"], par["nx"])) + par[
         "imag"] * np.random.normal(0, 1, (par["ny"], par["nx"]))
-    ABDiag_MPI = MPIBlockDiag(ops=[pylops.MatrixMult(A), ])
+    ABDiag_MPI = MPIBlockDiag(ops=[pylops.MatrixMult(A, dtype=par['dtype']), ])
 
     x = DistributedArray(global_shape=par['nx'] * size, dtype=par['dtype'],
                          partition=Partition.SCATTER, engine=backend)
@@ -206,7 +206,7 @@ def test_proximalgradient_scatter(par):
 
     As = comm.allgather(A)
     if rank == 0:
-        ABDiag = BlockDiag([MatrixMult(A) for A in As])
+        ABDiag = BlockDiag([MatrixMult(A, dtype=par['dtype']) for A in As])
         if par["x0"]:
             x0 = x0_global
         else:
@@ -220,3 +220,71 @@ def test_proximalgradient_scatter(par):
             l2local, l1local, x0=x0, tau=1e-3,
             niter=400, show=False)
         assert_allclose(xinv_array, xinv1, rtol=1e-12)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize(
+    "par", [(par1), (par1j), (par2), (par2j), (par3), (par3j), (par4), (par4j)]
+)
+def test_admml2_scatter(par):
+    """ADMML2 with scattered model"""
+    np.random.seed(rank)
+
+    A = np.random.normal(0, 1, (par["ny"], par["nx"])) + par[
+        "imag"] * np.random.normal(0, 1, (par["ny"], par["nx"]))
+    ABDiag_MPI = MPIBlockDiag(ops=[pylops.MatrixMult(A, dtype=par['dtype']), ])
+
+    x = DistributedArray(global_shape=par['nx'] * size, dtype=par['dtype'],
+                         partition=Partition.SCATTER, engine=backend)
+    x[:] = np.random.normal(1, 10, par["nx"]) + \
+        par["imag"] * np.random.normal(10, 10, par["nx"])
+    x_global = x.asarray()
+    if par["x0"]:
+        x0 = DistributedArray(global_shape=par['nx'] * size, dtype=par['dtype'],
+                              partition=Partition.SCATTER, engine=backend)
+        x0[:] = np.random.normal(1, 10, par["nx"]) + \
+            par["imag"] * np.random.normal(10, 10, par["nx"])
+        x0_global = x0.asarray()
+    else:
+        # Set TO 0s if x0 = False
+        x0 = DistributedArray(global_shape=par['nx'] * size, dtype=par['dtype'],
+                              partition=Partition.SCATTER, engine=backend)
+        x0[:] = 0
+        x0_global = x0.asarray()
+
+    y = ABDiag_MPI * x
+
+    # Regularizer (just make identity to solve the same problem
+    # as ProximalGradient)
+    Iopd = MPIBlockDiag(ops=[pylops.Identity(par['nx'], dtype=par['dtype']), ])
+
+    # L1 prox
+    l1 = L1(sigma=1e-1)
+    l1d = MPIProxOperator(l1)
+
+    xinv = MPIADMML2(
+        l1d, ABDiag_MPI, y, Iopd, x0=x0, tau=1e-3,
+        niter=400, show=True)[0]
+    assert isinstance(xinv, DistributedArray)
+    xinv_array = xinv.asarray()
+
+    As = comm.allgather(A)
+    if rank == 0:
+        ABDiag = BlockDiag([MatrixMult(A, dtype=par['dtype']) for A in As])
+        if par["x0"]:
+            x0 = x0_global
+        else:
+            x0 = np.zeros(par['nx'] * size, dtype=par['dtype'])
+        y1 = ABDiag * x_global
+
+        Iop  = pylops.Identity(par['nx'] * size, dtype=par['dtype'])
+        l1local = L1(sigma=1e-1)
+
+        xinv1 = ADMML2(
+            l1local, ABDiag, y1, Iop, x0=x0, tau=1e-3,
+            niter=400, show=False)[0]
+
+        # Pretty high tolerance because a different
+        # linear solver is used internally in the
+        #  serial vs distributed versions of ADMML2
+        assert_allclose(xinv_array, xinv1, rtol=1e-4)
