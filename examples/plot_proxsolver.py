@@ -31,11 +31,12 @@ np.random.seed(rank)
 
 # Sparse input
 n = 16
-arr = pylops_mpi.DistributedArray(global_shape=n,
-                                  partition=pylops_mpi.Partition.BROADCAST)
+arr = pylops_mpi.DistributedArray(
+    global_shape=n,
+    partition=pylops_mpi.Partition.BROADCAST)
 arr[:] = 0.0
-arr[n//4] = 1.0
-arr[n//2] = -0.5
+arr[n // 4] = 1.0
+arr[n // 2] = -0.5
 
 # Operator and data
 A = np.random.normal(0, 1, (n // size, n,))
@@ -54,9 +55,9 @@ l1d = pylops_mpi.proximal.MPIProxOperator(l1)
 
 # Distributed inversion
 arrpg = pylops_mpi.proximal.optimization.primal.ProximalGradient(
-        l2d, l1d, x0=arr.zeros_like(), tau=1e-2, niter=400,
-        show=True,
-    )
+    l2d, l1d, x0=arr.zeros_like(), tau=1e-2, niter=400,
+    show=True,
+)
 arrpgdlocal = arrpg.asarray()
 
 # Benchmark serial inversion
@@ -70,7 +71,7 @@ if rank == 0:
 
     arrpglocal = pyproximal.optimization.primal.ProximalGradient(
         l2local, l1local, x0=np.zeros(n), tau=1e-2, niter=400, show=False
-    )  
+    )
 
     plt.figure(figsize=(12, 3))
     plt.plot(arrlocal, "k", label="True")
@@ -89,14 +90,16 @@ if rank == 0:
 # Input
 ny, nx = 10 * size, 40
 arrlocal = np.zeros((ny, nx))
-arrlocal[ny//2-5:ny//2+5, nx//2-5:nx//2+5] = 2
-arr = pylops_mpi.DistributedArray(global_shape=ny * nx,
-                                  partition=pylops_mpi.Partition.BROADCAST)
+arrlocal[ny // 2 - 5:ny // 2 + 5, nx // 2 - 5:nx // 2 + 5] = 2
+arr = pylops_mpi.DistributedArray(
+    global_shape=ny * nx,
+    partition=pylops_mpi.Partition.BROADCAST
+)
 arr[:] = arrlocal.flatten()
 
 # Operator and data
-Op = pylops.VStack([pylops.Diagonal(np.ones(ny*nx)) for _ in range(size)])
-Opd = pylops_mpi.MPIVStack([pylops.Diagonal(np.ones(ny*nx)),])
+Op = pylops.VStack([pylops.Diagonal(np.ones(ny * nx)) for _ in range(size)])
+Opd = pylops_mpi.MPIVStack([pylops.Diagonal(np.ones(ny * nx)),])
 
 b = Opd @ arr
 blocal = b.asarray()
@@ -112,9 +115,9 @@ l1d = pylops_mpi.proximal.MPIProxOperator(l1)
 L = 8.0  # max eig of Gopd.H @ Gop
 x0distr = arr.zeros_like()
 arradmm = pylops_mpi.proximal.optimization.primal.ADMML2(
-        l1d, Opd, b, Gopd, x0=x0distr, tau=.99/L, niter=5,
-        show=True, kwargs_solver=dict(niter=5),
-    )[0]
+    l1d, Opd, b, Gopd, x0=x0distr, tau=.99 / L, niter=5,
+    show=True, kwargs_solver=dict(niter=5),
+)[0]
 arradmmdlocal = arradmm.asarray()
 
 # Benchmark serial inversion
@@ -123,21 +126,24 @@ if rank == 0:
 
     Gop = pylops.Gradient(
         dims=(ny, nx), sampling=1., edge=False, kind="forward",
-        )
+    )
     l1local = pyproximal.L1(sigma=2e0)
 
     arradmmlocal = pyproximal.optimization.primal.ADMML2(
-        l1local, Op, blocal, Gop, x0=np.zeros(ny*nx), 
-        tau=.99/L, niter=5, show=False, iter_lim=5,
+        l1local, Op, blocal, Gop, x0=np.zeros(ny * nx),
+        tau=.99 / L, niter=5, show=False, iter_lim=5,
     )[0]
 
-    fig, axs = plt.subplots(1, 3, figsize=(12, 6))
+    fig, axs = plt.subplots(1, 3, figsize=(12, 3))
     axs[0].imshow(arrlocal.reshape(10 * size, 40))
     axs[0].set_title("True")
+    axs[0].axis("tight")
     axs[1].imshow(arradmmdlocal.reshape(10 * size, 40))
     axs[1].set_title("ADMML2 distr")
+    axs[1].axis("tight")
     axs[2].imshow(arradmmlocal.reshape(10 * size, 40))
     axs[2].set_title("ADMML2 local")
+    axs[2].axis("tight")
     fig.tight_layout()
 
 
@@ -147,14 +153,14 @@ if rank == 0:
 # Input
 ny, nx = 10 * size, 40
 arrlocal = np.zeros((ny, nx))
-arrlocal[ny//2-5:ny//2+5, nx//2-5:nx//2+5] = 2
+arrlocal[ny // 2 - 5:ny // 2 + 5, nx // 2 - 5:nx // 2 + 5] = 2
 arr = pylops_mpi.DistributedArray(global_shape=ny * nx,
                                   partition=pylops_mpi.Partition.SCATTER)
-arr[:] = arrlocal[ny//size * rank: ny//size * (rank +1)].flatten()
+arr[:] = arrlocal[ny // size * rank: ny // size * (rank + 1)].flatten()
 
 # Operator and data
-Op = pylops.Diagonal(np.ones(ny*nx))
-Opd = pylops_mpi.MPIBlockDiag([pylops.Diagonal(np.ones(ny*nx//size)),])
+Op = pylops.Diagonal(np.ones(ny * nx))
+Opd = pylops_mpi.MPIBlockDiag([pylops.Diagonal(np.ones((ny * nx) // size)),])
 
 b = Opd @ arr
 blocal = b.asarray()
@@ -170,9 +176,9 @@ l1d = pylops_mpi.proximal.MPIProxOperator(l1)
 L = 8.0  # max eig of Gopd.H @ Gop
 x0distr = arr.zeros_like()
 arradmm = pylops_mpi.proximal.optimization.primal.ADMML2(
-        l1d, Opd, b, Gopd, x0=x0distr, tau=.99/L, niter=5,
-        show=True, kwargs_solver=dict(niter=5),
-    )[0]
+    l1d, Opd, b, Gopd, x0=x0distr, tau=.99 / L, niter=5,
+    show=True, kwargs_solver=dict(niter=5),
+)[0]
 arradmmdlocal = arradmm.asarray()
 
 # Benchmark serial inversion
@@ -180,20 +186,23 @@ arrlocal = arr.asarray()
 if rank == 0:
 
     Gop = pylops.Gradient(
-        dims=(ny, nx), sampling=1., edge=False, kind="forward",
-        )
+        dims=(ny, nx), sampling=1., edge=False, kind="forward"
+    )
     l1local = pyproximal.L1(sigma=2e0)
 
     arradmmlocal = pyproximal.optimization.primal.ADMML2(
-        l1local, Op, blocal, Gop, x0=np.zeros(ny*nx), 
-        tau=.99/L, niter=5, show=False, iter_lim=5,
+        l1local, Op, blocal, Gop, x0=np.zeros(ny * nx),
+        tau=.99 / L, niter=5, show=False, iter_lim=5,
     )[0]
 
-    fig, axs = plt.subplots(1, 3, figsize=(12, 6))
+    fig, axs = plt.subplots(1, 3, figsize=(12, 3))
     axs[0].imshow(arrlocal.reshape(10 * size, 40))
     axs[0].set_title("True")
+    axs[0].axis("tight")
     axs[1].imshow(arradmmdlocal.reshape(10 * size, 40))
     axs[1].set_title("ADMML2 distr")
+    axs[1].axis("tight")
     axs[2].imshow(arradmmlocal.reshape(10 * size, 40))
-    axs[2].set_title("ADMML2 local ")
+    axs[2].set_title("ADMML2 local")
+    axs[2].axis("tight")
     fig.tight_layout()

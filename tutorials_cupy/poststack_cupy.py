@@ -126,8 +126,8 @@ LapOp = pylops_mpi.MPILaplacian(dims=(ny, nx, nz), axes=(0, 1, 2),
                                 dtype=BDiag.dtype)
 NormEqOp = BDiag.H @ BDiag + epsR * LapOp.H @ LapOp
 dnorm_dist = BDiag.H @ d_dist
-minv3d_ne_dist = pylops_mpi.optimization.basic.cg(NormEqOp, dnorm_dist, 
-                                                  x0=mback3d_dist, 
+minv3d_ne_dist = pylops_mpi.optimization.basic.cg(NormEqOp, dnorm_dist,
+                                                  x0=mback3d_dist,
                                                   niter=100, show=True)[0]
 minv3d_ne = minv3d_ne_dist.asarray().reshape((ny, nx, nz))
 
@@ -140,11 +140,10 @@ d0_dist[:] = 0.
 dstack_dist = pylops_mpi.StackedDistributedArray([d_dist, d0_dist])
 
 dnorm_dist = BDiag.H @ d_dist
-minv3d_reg_dist = pylops_mpi.optimization.basic.cgls(StackOp, dstack_dist, 
-                                                     x0=mback3d_dist, 
+minv3d_reg_dist = pylops_mpi.optimization.basic.cgls(StackOp, dstack_dist,
+                                                     x0=mback3d_dist,
                                                      niter=100, show=True)[0]
 minv3d_reg = minv3d_reg_dist.asarray().reshape((ny, nx, nz))
-
 
 ###############################################################################
 # TV-Regularized inversion
@@ -158,9 +157,9 @@ l1 = L1(sigma=1e-2)
 l1d = pylops_mpi.proximal.MPIProxOperator(l1)
 
 minv3d_admm_dist = pylops_mpi.proximal.optimization.primal.ADMML2(
-        l1d, BDiag, d_dist, Gopd, x0=mback3d_dist, tau=.99/L, niter=40,
-        show=True, kwargs_solver=dict(niter=20),
-    )[0]
+    l1d, BDiag, d_dist, Gopd, x0=mback3d_dist, tau=.99 / L, niter=40,
+    show=True, kwargs_solver=dict(niter=20),
+)[0]
 minv3d_admm = minv3d_admm_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
@@ -175,7 +174,7 @@ if rank == 0:
 
     # Check the two distributed implementations give the same modelling results
     print('Distr == Local', np.allclose(cp.asnumpy(d), d0, atol=1e-6))
-    
+
     # Visualize
     fig, axs = plt.subplots(nrows=7, ncols=3, figsize=(12, 18),
                             constrained_layout=True)
