@@ -329,7 +329,7 @@ def ADMML2(
 
         if show:
             if iiter < 10 or niter - iiter < 10 or iiter % (niter // 10) == 0:
-                pf, pg = to_numpy(0.5 * (Op @ x - b).norm() ** 2), proxg(Ax)
+                pf, pg = to_numpy(0.5 * (Op @ x - b).norm().item() ** 2), proxg(Ax)
                 if rank == 0:
                     msg = "%6g  %12.5e  %10.3e  %10.3e  %10.3e" % (
                         iiter + 1,

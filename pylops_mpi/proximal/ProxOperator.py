@@ -2,7 +2,7 @@ from mpi4py import MPI
 from typing import Any
 
 from pyproximal import ProxOperator
-from pylops.utils.backend import get_module, to_numpy
+from pylops.utils.backend import get_module
 
 from pylops_mpi import DistributedArray, Partition
 
@@ -71,6 +71,20 @@ class MPIProxOperator:
             Function evaluation
 
         """
+
+        def _as_scalar(value):
+            """Convert NumPy/CuPy/Python scalar-like objects to a Python scalar."""
+            # Ensure that a bool/int/float is returned
+            if isinstance(value, (bool, int, float)):
+                return value
+
+            ncp = get_module(x.engine)
+            if ncp.size(value) != 1:
+                raise ValueError(
+                    f"Expected scalar function evaluation, "
+                    f"got object with shape {getattr(value, 'shape', None)}"
+                )
+            return value.item()
         if isinstance(x, DistributedArray):
             # Compute local function evaluation
             f = self.proxop(x.local_array)
@@ -87,13 +101,10 @@ class MPIProxOperator:
                                                 op=reduce_op,
                                                 engine=x.engine)
 
-                # Ensure that a bool/float/int is returned
-                if not isinstance(recv_buf, bool):
-                    recv_buf = to_numpy(recv_buf)
-                return recv_buf
+                return _as_scalar(recv_buf)
             else:
-                # For broadcasted arrays, simply return the local f
-                return f
+                # For broadcasted arrays, simply return the local evaluation
+                return _as_scalar(f)
         else:  # StackedDistributedArray
             reduce_op = _call_reduce_op[str(type(self.proxop).__name__)][1]
             fs = [self(x[iarr]) for iarr in range(x.narrays)]
