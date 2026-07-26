@@ -56,8 +56,14 @@ jobs:
         run: pip install .[all]
       - name: Testing using pytest-mpi
         run: |
-          if [ "${{ matrix.mpi }}" = "openmpi" ]; then
-            mpiexec --mca btl ^openib -n ${{ matrix.rank }} pytest tests/ --with-mpi
-          else
-            mpiexec -n ${{ matrix.rank }} pytest tests/ --with-mpi
-          fi
+          case "${{ matrix.mpi }}" in
+            openmpi)
+              mpiexec --mca btl ^openib -n ${{ matrix.rank }} pytest tests/ --with-mpi
+              ;;
+            mpich)
+              mpiexec -n ${{ matrix.rank }} --bind-to none pytest tests/ --with-mpi
+              ;;
+            intelmpi)
+              mpiexec -n ${{ matrix.rank }} -genv I_MPI_PIN off pytest tests/ --with-mpi
+              ;;
+          esac
