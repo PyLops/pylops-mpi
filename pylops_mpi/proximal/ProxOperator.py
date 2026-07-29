@@ -84,7 +84,7 @@ class MPIProxOperator:
                     f"got object with shape {getattr(value, 'shape', None)}"
                 )
             return value.item()
-        
+
         if isinstance(x, DistributedArray):
             # Compute local function evaluation
             f = self.proxop(x.local_array)
