@@ -71,7 +71,6 @@ class MPIProxOperator:
             Function evaluation
 
         """
-
         def _as_scalar(value):
             """Convert NumPy/CuPy/Python scalar-like objects to a Python scalar."""
             # Ensure that a bool/int/float is returned
@@ -85,6 +84,7 @@ class MPIProxOperator:
                     f"got object with shape {getattr(value, 'shape', None)}"
                 )
             return value.item()
+        
         if isinstance(x, DistributedArray):
             # Compute local function evaluation
             f = self.proxop(x.local_array)

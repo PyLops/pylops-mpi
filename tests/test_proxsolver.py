@@ -286,5 +286,5 @@ def test_admml2_scatter(par):
 
         # Pretty high tolerance because a different
         # linear solver is used internally in the
-        #  serial vs distributed versions of ADMML2
+        # serial vs distributed versions of ADMML2
         assert_allclose(xinv_array, xinv1, rtol=1e-3)
