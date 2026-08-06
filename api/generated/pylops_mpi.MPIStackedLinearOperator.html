@@ -464,6 +464,12 @@
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.waveeqprocessing.MPIMDC.html">pylops_mpi.waveeqprocessing.MPIMDC</a></li>
 </ul>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.proximal.MPIProxOperator.html">pylops_mpi.proximal.MPIProxOperator</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.proximal.proximal.MPIL2.html">pylops_mpi.proximal.proximal.MPIL2</a></li>
+</ul>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.optimization.cls_basic.CG.html">pylops_mpi.optimization.cls_basic.CG</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.optimization.cls_basic.CGLS.html">pylops_mpi.optimization.cls_basic.CGLS</a></li>
 </ul>
@@ -478,6 +484,10 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.optimization.sparsity.ista.html">pylops_mpi.optimization.sparsity.ista</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.optimization.sparsity.fista.html">pylops_mpi.optimization.sparsity.fista</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.proximal.optimization.primal.ProximalGradient.html">pylops_mpi.proximal.optimization.primal.ProximalGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.proximal.optimization.primal.ADMML2.html">pylops_mpi.proximal.optimization.primal.ADMML2</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.DistributedArray.local_split.html">pylops_mpi.DistributedArray.local_split</a></li>
@@ -620,6 +630,9 @@ class of any new stacked operator developed within pylops-mpi.</p>
 <div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="We will be focusing here on the case where the input array x is assumed to be an n-dimensional :pypylops_mpi.DistributedArray and the derivative is applied over the first axis (``axis=0``). Since the array is distributed over multiple processes, the derivative operators must take care of applying the derivatives across the edges using the information from the previous/next processes, using the so-called ghost cells."><img alt="" src="../../_images/sphx_glr_plot_derivative_thumb.png" />
 <p><a class="reference internal" href="../../gallery/plot_derivative.html"><span class="doc">Derivatives</span></a></p>
   <div class="sphx-glr-thumbnail-title">Derivatives</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the use of the solvers in the pylops_mpi.proximal.optimization module."><img alt="" src="../../_images/sphx_glr_plot_proxsolver_thumb.png" />
+<p><a class="reference internal" href="../../gallery/plot_proxsolver.html"><span class="doc">Proximal solvers</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Proximal solvers</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="Stacked Array"><img alt="" src="../../_images/sphx_glr_plot_stacked_array_thumb.png" />
 <p><a class="reference internal" href="../../gallery/plot_stacked_array.html"><span class="doc">Stacked Array</span></a></p>
   <div class="sphx-glr-thumbnail-title">Stacked Array</div>

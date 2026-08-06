@@ -1,0 +1,43 @@
+﻿pylops\_mpi.proximal.MPIProxOperator
+====================================
+
+.. currentmodule:: pylops_mpi.proximal
+
+.. autoclass:: MPIProxOperator
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~MPIProxOperator.__init__
+        ~MPIProxOperator.prox
+        ~MPIProxOperator.proxdual
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.proximal.MPIProxOperator.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+

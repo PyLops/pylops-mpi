@@ -464,6 +464,12 @@
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.waveeqprocessing.MPIMDC.html">pylops_mpi.waveeqprocessing.MPIMDC</a></li>
 </ul>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.proximal.MPIProxOperator.html">pylops_mpi.proximal.MPIProxOperator</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.proximal.proximal.MPIL2.html">pylops_mpi.proximal.proximal.MPIL2</a></li>
+</ul>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.optimization.cls_basic.CG.html">pylops_mpi.optimization.cls_basic.CG</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.optimization.cls_basic.CGLS.html">pylops_mpi.optimization.cls_basic.CGLS</a></li>
 </ul>
@@ -478,6 +484,10 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.optimization.sparsity.ista.html">pylops_mpi.optimization.sparsity.ista</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.optimization.sparsity.fista.html">pylops_mpi.optimization.sparsity.fista</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.proximal.optimization.primal.ProximalGradient.html">pylops_mpi.proximal.optimization.primal.ProximalGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.proximal.optimization.primal.ADMML2.html">pylops_mpi.proximal.optimization.primal.ADMML2</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="generated/pylops_mpi.DistributedArray.local_split.html">pylops_mpi.DistributedArray.local_split</a></li>
@@ -669,6 +679,31 @@ large-scale linear algebra operations, inversions and computations.</p>
 </div>
 </section>
 </section>
+<section id="proximal-operators">
+<h2>Proximal operators<a class="headerlink" href="#proximal-operators" title="Link to this heading">#</a></h2>
+<section id="id1">
+<h3>Templates<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.proximal.MPIProxOperator.html#pylops_mpi.proximal.MPIProxOperator" title="pylops_mpi.proximal.MPIProxOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIProxOperator</span></code></a>(prox)</p></td>
+<td><p>MPI-enabled PyProximal Proximal Operator</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id2">
+<h3>Basic Operators<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.proximal.proximal.MPIL2.html#pylops_mpi.proximal.proximal.MPIL2" title="pylops_mpi.proximal.proximal.MPIL2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIL2</span></code></a>([Op, b, q, sigma, alpha, qgrad, ...])</p></td>
+<td><p>L2 Norm proximal operator.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
 <section id="solvers">
 <h2>Solvers<a class="headerlink" href="#solvers" title="Link to this heading">#</a></h2>
 <section id="basic">
@@ -716,6 +751,20 @@ large-scale linear algebra operations, inversions and computations.</p>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/pylops_mpi.optimization.sparsity.fista.html#pylops_mpi.optimization.sparsity.fista" title="pylops_mpi.optimization.sparsity.fista"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fista</span></code></a>(Op, y, x0[, niter, SOp, eps, alpha, ...])</p></td>
 <td><p>Fast Iterative Shrinkage-Thresholding Algorithm (FISTA).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="proximal">
+<h3>Proximal<a class="headerlink" href="#proximal" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/pylops_mpi.proximal.optimization.primal.ProximalGradient.html#pylops_mpi.proximal.optimization.primal.ProximalGradient" title="pylops_mpi.proximal.optimization.primal.ProximalGradient"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProximalGradient</span></code></a>(proxf, proxg, x0[, epsg, ...])</p></td>
+<td><p>Proximal gradient (optionally accelerated)</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/pylops_mpi.proximal.optimization.primal.ADMML2.html#pylops_mpi.proximal.optimization.primal.ADMML2" title="pylops_mpi.proximal.optimization.primal.ADMML2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ADMML2</span></code></a>(proxg, Op, b, A, x0, tau[, niter, ...])</p></td>
+<td><p>Alternating Direction Method of Multipliers for L2 misfit term</p></td>
 </tr>
 </tbody>
 </table>
@@ -819,6 +868,11 @@ large-scale linear algebra operations, inversions and computations.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#wave-equation-processing">Wave-Equation processing</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#proximal-operators">Proximal operators</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Templates</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Basic Operators</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#solvers">Solvers</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#basic">Basic</a><ul class="nav section-nav flex-column">
 </ul>
@@ -826,6 +880,7 @@ large-scale linear algebra operations, inversions and computations.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sparsity">Sparsity</a><ul class="nav section-nav flex-column">
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#proximal">Proximal</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#utils">Utils</a><ul class="nav section-nav flex-column">

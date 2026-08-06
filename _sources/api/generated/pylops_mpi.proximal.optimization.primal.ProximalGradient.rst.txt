@@ -1,0 +1,12 @@
+﻿pylops\_mpi.proximal.optimization.primal.ProximalGradient
+=========================================================
+
+.. currentmodule:: pylops_mpi.proximal.optimization.primal
+
+.. autofunction:: ProximalGradient
+
+.. include:: backreferences/pylops_mpi.proximal.optimization.primal.ProximalGradient.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>

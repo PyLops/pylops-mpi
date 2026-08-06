@@ -436,6 +436,8 @@
 <li class="toctree-l1"><a class="reference internal" href="plot_mpilinop.html">MPILinearOperator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plot_mdc.html">Multi-Dimensional Convolution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plot_nonstatconv.html">Non-Stationary Convolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plot_prox.html">Proximal operators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plot_proxsolver.html">Proximal solvers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plot_stacked_array.html">Stacked Array</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plot_stacking.html">Stacking Operators</a></li>
 </ul>
@@ -538,6 +540,12 @@ run them with multiple ranks when learning about pylops-mpi.</p>
 </div><div class="sphx-glr-thumbcontainer" tooltip="This operator is effectively equivalent to PyLops&#x27; :pypylops.signalprocessing.NonStationaryConvolve1D, however both the input array and the filters will be distibuted. What makes this operator interesting is that we need to handle convolutions at the edges between different ranks and to do that we will halo the input array of a number of samples equal to the distance between two filters and we will also borrow the filtering from the next/previous rank. This is internally achieved by means of the :pypylops_mpi.basicoperators.MPIHalo operator."><img alt="" src="../_images/sphx_glr_plot_nonstatconv_thumb.png" />
 <p><a class="reference internal" href="plot_nonstatconv.html"><span class="doc">Non-Stationary Convolution</span></a></p>
   <div class="sphx-glr-thumbnail-title">Non-Stationary Convolution</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the use of the :pypylops_mpi.proximal module, and more specifically how to create and apply PyProximal operators to distributed array."><img alt="" src="../_images/sphx_glr_plot_prox_thumb.png" />
+<p><a class="reference internal" href="plot_prox.html"><span class="doc">Proximal operators</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Proximal operators</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates the use of the solvers in the pylops_mpi.proximal.optimization module."><img alt="" src="../_images/sphx_glr_plot_proxsolver_thumb.png" />
+<p><a class="reference internal" href="plot_proxsolver.html"><span class="doc">Proximal solvers</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Proximal solvers</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="Stacked Array"><img alt="" src="../_images/sphx_glr_plot_stacked_array_thumb.png" />
 <p><a class="reference internal" href="plot_stacked_array.html"><span class="doc">Stacked Array</span></a></p>
   <div class="sphx-glr-thumbnail-title">Stacked Array</div>

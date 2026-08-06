@@ -1,0 +1,44 @@
+﻿pylops\_mpi.proximal.proximal.MPIL2
+===================================
+
+.. currentmodule:: pylops_mpi.proximal.proximal
+
+.. autoclass:: MPIL2
+
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        ~MPIL2.__init__
+        ~MPIL2.grad
+        ~MPIL2.prox
+        ~MPIL2.proxdual
+
+
+
+
+
+
+
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+.. include:: backreferences/pylops_mpi.proximal.proximal.MPIL2.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
+
+
+
+
+
+
+
+
+
+
+

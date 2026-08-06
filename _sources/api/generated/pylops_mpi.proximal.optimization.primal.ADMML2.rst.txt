@@ -1,0 +1,12 @@
+﻿pylops\_mpi.proximal.optimization.primal.ADMML2
+===============================================
+
+.. currentmodule:: pylops_mpi.proximal.optimization.primal
+
+.. autofunction:: ADMML2
+
+.. include:: backreferences/pylops_mpi.proximal.optimization.primal.ADMML2.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>

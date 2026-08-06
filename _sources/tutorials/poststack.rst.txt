@@ -57,7 +57,7 @@ be written as
         \mathbf{ai}_{2}  \\
         \vdots     \\
         \mathbf{ai}_{N}
-    \end{bmatrix}
+    \end{bmatrix} \rightarrow \mathbf{d} = \mathbf{G} \mathbf{ai}
 
 where :math:`\mathbf{G}_i` is a post-stack modelling operator, :math:`\mathbf{d}_i`
 is the data, and :math:`\mathbf{ai}_i` is the input model for the i-th portion of the model.
@@ -65,7 +65,7 @@ is the data, and :math:`\mathbf{ai}_i` is the input model for the i-th portion o
 This problem can be easily set up using the :py:class:`pylops_mpi.basicoperators.MPIBlockDiag`
 operator.
 
-.. GENERATED FROM PYTHON SOURCE LINES 50-66
+.. GENERATED FROM PYTHON SOURCE LINES 50-67
 
 .. code-block:: Python
 
@@ -78,6 +78,7 @@ operator.
     from pylops.utils.wavelets import ricker
     from pylops.basicoperators import Transpose
     from pylops.avo.poststack import PoststackLinearModelling
+    from pyproximal.proximal import L1
 
     import pylops_mpi
 
@@ -92,12 +93,12 @@ operator.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 67-69
+.. GENERATED FROM PYTHON SOURCE LINES 68-70
 
 Let's start by defining all the parameters required by the
 :py:func:`pylops.avo.poststack.PoststackLinearModelling` operator.
 
-.. GENERATED FROM PYTHON SOURCE LINES 69-99
+.. GENERATED FROM PYTHON SOURCE LINES 70-100
 
 .. code-block:: Python
 
@@ -138,7 +139,7 @@ Let's start by defining all the parameters required by the
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 100-110
+.. GENERATED FROM PYTHON SOURCE LINES 101-111
 
 We now create the linear operator version of
 :py:func:`pylops.avo.poststack.PoststackLinearModelling` at each rank to model a
@@ -151,7 +152,7 @@ and use :py:class:`pylops.Transpose` to rearrange the model and data
 in the form required by the :py:func:`pylops.avo.poststack.PoststackLinearModelling`
 operator.
 
-.. GENERATED FROM PYTHON SOURCE LINES 110-131
+.. GENERATED FROM PYTHON SOURCE LINES 111-132
 
 .. code-block:: Python
 
@@ -183,9 +184,9 @@ operator.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 132-177
+.. GENERATED FROM PYTHON SOURCE LINES 133-185
 
-We perform 2 different kinds of inversions:
+We perform 3 different kinds of inversions:
 
 * Inversion calculated iteratively using the :py:class:`pylops_mpi.optimization.cls_basic.CGLS` solver.
 
@@ -231,7 +232,14 @@ where :math:`\mathbf{L}` is the :py:class:`pylops_mpi.basicoperators.MPILaplacia
 which is used to apply second derivative along all three axes, :math:`\mathbf{N}` is an operator computing the
 normal equations, and :math:`\mathbf{d}^{Norm}` is the data of the normal equation operator used for inversion.
 
-.. GENERATED FROM PYTHON SOURCE LINES 177-182
+* Inversion with anisotropic Total Variation (TV)
+
+.. math::
+  \| \mathbf{d} + \mathbf{G} \mathbf{ai} \|_2^2 + \epsilon \| \boldsymbol \nabla \mathbf{ai} \|_1
+
+where :math:`\boldsymbol \nabla` is the :py:class:`pylops_mpi.basicoperators.MPIGradient` operator.
+
+.. GENERATED FROM PYTHON SOURCE LINES 185-190
 
 .. code-block:: Python
 
@@ -284,14 +292,14 @@ normal equations, and :math:`\mathbf{d}^{Norm}` is the data of the normal equati
         99        6.1544e-01         6.5026e-01     6.5026e-01
        100        6.1561e-01         6.4212e-01     6.4212e-01
 
-    Iterations = 100        Total time (s) = 27.57
+    Iterations = 100        Total time (s) = 26.06
     -----------------------------------------------------------------
 
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 183-193
+.. GENERATED FROM PYTHON SOURCE LINES 191-201
 
 .. code-block:: Python
 
@@ -349,19 +357,22 @@ normal equations, and :math:`\mathbf{d}^{Norm}` is the data of the normal equati
         99         6.3033e-01         1.9903e+02
        100         6.3026e-01         1.9777e+02
 
-    Iterations = 100        Total time (s) = 39.01
+    Iterations = 100        Total time (s) = 35.01
     -------------------------------------------------------
 
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 194-206
+.. GENERATED FROM PYTHON SOURCE LINES 202-203
+
+Regularized inversion with regularized equations
+
+.. GENERATED FROM PYTHON SOURCE LINES 203-214
 
 .. code-block:: Python
 
 
-    # Regularized inversion with regularized equations
     StackOp = pylops_mpi.MPIStackedVStack([BDiag, np.sqrt(epsR) * LapOp])
     d0_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz)
     d0_dist[:] = 0.
@@ -379,11 +390,79 @@ normal equations, and :math:`\mathbf{d}^{Norm}` is the data of the normal equati
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 207-208
+.. GENERATED FROM PYTHON SOURCE LINES 215-216
+
+TV-Regularized inversion
+
+.. GENERATED FROM PYTHON SOURCE LINES 216-230
+
+.. code-block:: Python
+
+
+    Gopd = pylops_mpi.MPIGradient(
+        dims=(ny, nx, nz), sampling=1., edge=False, kind="forward")
+
+    l1 = L1(sigma=1e-2)
+    l1d = pylops_mpi.proximal.MPIProxOperator(l1)
+
+    L = 12.0  # maxeig(Gopd^H Gopd)
+    minv3d_tv_dist = pylops_mpi.proximal.optimization.primal.ADMML2(
+        l1d, BDiag, d_dist, Gopd, x0=mback3d_dist, tau=.99 / L, niter=40,
+        show=True, kwargs_solver=dict(niter=20),
+    )[0]
+    minv3d_tv = minv3d_tv_dist.asarray().reshape((ny, nx, nz))
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    ADMM
+    ---------------------------------------------------------
+    Proximal operator (g): <MPIProxOperator (L1)>
+    tau = 8.250000e-02      niter = 40
+
+       Itn       x[0]          f           g       J = f + g
+         1   6.15115e-01   2.846e+03   3.454e+02   3.192e+03
+         2   6.19454e-01   1.063e+03   4.200e+02   1.483e+03
+         3   6.18081e-01   5.765e+02   4.647e+02   1.041e+03
+         4   6.18574e-01   3.846e+02   4.864e+02   8.710e+02
+         5   6.18484e-01   2.849e+02   4.976e+02   7.826e+02
+         6   6.18201e-01   2.250e+02   5.036e+02   7.286e+02
+         7   6.18312e-01   1.852e+02   5.065e+02   6.918e+02
+         8   6.18418e-01   1.572e+02   5.077e+02   6.649e+02
+         9   6.18694e-01   1.365e+02   5.078e+02   6.443e+02
+        10   6.18895e-01   1.206e+02   5.072e+02   6.278e+02
+        13   6.19246e-01   8.982e+01   5.035e+02   5.933e+02
+        17   6.18859e-01   6.907e+01   4.974e+02   5.664e+02
+        21   6.18193e-01   5.759e+01   4.912e+02   5.488e+02
+        25   6.17509e-01   5.024e+01   4.855e+02   5.358e+02
+        29   6.16778e-01   4.517e+01   4.804e+02   5.256e+02
+        32   6.12053e-01   4.222e+01   4.769e+02   5.191e+02
+        33   6.16139e-01   4.135e+01   4.758e+02   5.171e+02
+        34   6.11703e-01   4.054e+01   4.747e+02   5.152e+02
+        35   6.15859e-01   3.977e+01   4.736e+02   5.134e+02
+        36   6.11466e-01   3.904e+01   4.726e+02   5.116e+02
+        37   6.15626e-01   3.834e+01   4.716e+02   5.099e+02
+        38   6.11313e-01   3.768e+01   4.706e+02   5.083e+02
+        39   6.15411e-01   3.706e+01   4.696e+02   5.067e+02
+        40   6.11217e-01   3.646e+01   4.687e+02   5.051e+02
+
+    Total time (s) = 469.46
+    ---------------------------------------------------------
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 231-232
 
 Finally, we display the modeling and inversion results
 
-.. GENERATED FROM PYTHON SOURCE LINES 208-280
+.. GENERATED FROM PYTHON SOURCE LINES 232-315
 
 .. code-block:: Python
 
@@ -398,7 +477,8 @@ Finally, we display the modeling and inversion results
         print('Distr == Local', np.allclose(d, d0))
 
         # Visualize
-        fig, axs = plt.subplots(nrows=6, ncols=3, figsize=(9, 14), constrained_layout=True)
+        fig, axs = plt.subplots(nrows=7, ncols=3, figsize=(12, 18),
+                                constrained_layout=True)
         axs[0][0].imshow(m3d[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
         axs[0][0].set_title("Model x-z")
         axs[0][0].axis("tight")
@@ -459,11 +539,21 @@ Finally, we display the modeling and inversion results
         axs[5][2].set_title('Regularized Inverted Model iter x-y')
         axs[5][2].axis('tight')
 
+        axs[6][0].imshow(minv3d_tv[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+        axs[6][0].set_title("TV-Regularized Inverted Model iter x-z")
+        axs[6][0].axis("tight")
+        axs[6][1].imshow(minv3d_tv[:, 200, :].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
+        axs[6][1].set_title('TV-Regularized Inverted Model iter y-z')
+        axs[6][1].axis('tight')
+        axs[6][2].imshow(minv3d_tv[:, :, 220].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
+        axs[6][2].set_title('TV-Regularized Inverted Model iter x-y')
+        axs[6][2].axis('tight')
+
 
 
 
 .. image-sg:: /tutorials/images/sphx_glr_poststack_001.png
-   :alt: Model x-z, Model y-z, Model y-z, Smooth Model x-z, Smooth Model y-z, Smooth Model y-z, Data x-z, Data y-z, Data x-y, Inverted Model iter x-z, Inverted Model iter y-z, Inverted Model iter x-y, Normal Equations Inverted Model iter x-z, Normal Equations Inverted Model iter y-z, Normal Equations Inverted Model iter x-y, Regularized Inverted Model iter x-z, Regularized Inverted Model iter y-z, Regularized Inverted Model iter x-y
+   :alt: Model x-z, Model y-z, Model y-z, Smooth Model x-z, Smooth Model y-z, Smooth Model y-z, Data x-z, Data y-z, Data x-y, Inverted Model iter x-z, Inverted Model iter y-z, Inverted Model iter x-y, Normal Equations Inverted Model iter x-z, Normal Equations Inverted Model iter y-z, Normal Equations Inverted Model iter x-y, Regularized Inverted Model iter x-z, Regularized Inverted Model iter y-z, Regularized Inverted Model iter x-y, TV-Regularized Inverted Model iter x-z, TV-Regularized Inverted Model iter y-z, TV-Regularized Inverted Model iter x-y
    :srcset: /tutorials/images/sphx_glr_poststack_001.png
    :class: sphx-glr-single-img
 
@@ -477,7 +567,7 @@ Finally, we display the modeling and inversion results
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 281-284
+.. GENERATED FROM PYTHON SOURCE LINES 316-319
 
 To run this tutorial with our NCCL backend, refer to `Post Stack Inversion with NCCL
 tutorial <https://github.com/PyLops/pylops-mpi/blob/main/tutorials_nccl/poststack_nccl.py>`_
@@ -486,7 +576,7 @@ in the repository.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (2 minutes 5.880 seconds)
+   **Total running time of the script:** (9 minutes 42.858 seconds)
 
 
 .. _sphx_glr_download_tutorials_poststack.py:

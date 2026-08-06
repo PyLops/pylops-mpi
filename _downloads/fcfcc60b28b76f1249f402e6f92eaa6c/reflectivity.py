@@ -16,8 +16,12 @@ a 1d operator, we can easily set up a problem where one of the dimensions (here
 the y-dimension) is distributed across ranks and each of them is in charge of 
 performing modelling for a subvolume of the entire domain.
 
-However, since a reflectivity model is sparse, the :py:class:`pylops.optimization.ISTA`
-solver is used here.
+However, since a reflectivity model is sparse, a sparsity-promoting solver is used here.
+We will consider two options:
+- :py:class:`pylops_mpi.optimization.ISTA`: ad-hoc distributed ISTA solver
+  acting like PyLops' ISTA;
+- :py:class:`pylops_mpi.proximal.optimization.ProximalGradient`: general purpose 
+  distributed Proximal Gradient solver acting like PyProximal's ProximalGradient;
 
 """
 
@@ -25,6 +29,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from mpi4py import MPI
 
+import pyproximal
 from pylops.utils.wavelets import ricker
 from pylops.basicoperators import FirstDerivative
 from pylops.signalprocessing import Convolve1D
@@ -87,15 +92,37 @@ d_local = d_dist.local_array.reshape((ny_i, nx, nz))
 d = d_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
-# We now perform sparsity-promotion inversion
+# We now perform sparsity-promotion inversion with the ISTA solver
 
 r0_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz)
 r0_dist[:] = 0.
 
-rinv3d_dist = pylops_mpi.optimization.sparsity.ista(
+rfista3d_dist = pylops_mpi.optimization.sparsity.fista(
     CDiag, d_dist, x0=r0_dist,
-    niter=200, eps=1e-2, tol=1e-8, show=True)[0]
-rinv3d = rinv3d_dist.asarray().reshape((ny, nx, nz))
+    niter=200, eps=2e-2, tol=1e-8, show=True)[0]
+rfista3d = rfista3d_dist.asarray().reshape((ny, nx, nz))
+
+###############################################################################
+# And now with the Proximal Gradient solver
+
+l2d = pylops_mpi.proximal.MPIL2(Op=CDiag, b=d_dist, x0=r0_dist)
+l1 = pyproximal.L1(sigma=1e-2)
+l1d = pylops_mpi.proximal.MPIProxOperator(l1)
+
+CDiag1 = CDiag.H @ CDiag
+maxeig = np.abs(
+    pylops_mpi.optimization.eigs.power_iteration(
+        CDiag1,
+        b_k=r0_dist.empty_like(),
+        dtype=CDiag1.dtype
+    )[0]
+)
+
+rpg3d_dist = pylops_mpi.proximal.optimization.primal.ProximalGradient(
+        l2d, l1d, x0=r0_dist, tau=.99 / maxeig, niter=200, acceleration="fista",
+        show=True
+    )
+rpg3d = rpg3d_dist.asarray().reshape((ny, nx, nz))
 
 ###############################################################################
 # Finally, we display the modeling and inversion results
@@ -110,11 +137,11 @@ if rank == 0:
     d0 = Cop0 @ r0
 
     # Check the two distributed implementations give the same modelling results
-    print('Reflectivity Distr == Local', np.allclose(d, d0))
-    print('Data Distr == Local', np.allclose(r, r0))
+    print('Reflectivity Distr == Local', np.allclose(r, r0))
+    print('Data Distr == Local', np.allclose(d, d0))
 
     # Visualize
-    fig, axs = plt.subplots(nrows=4, ncols=3, figsize=(9, 14), constrained_layout=True)
+    fig, axs = plt.subplots(nrows=5, ncols=3, figsize=(9, 14), constrained_layout=True)
     axs[0][0].imshow(m3d[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
     axs[0][0].set_title("Model x-z")
     axs[0][0].axis("tight")
@@ -145,16 +172,29 @@ if rank == 0:
     axs[2][2].set_title('Data x-y')
     axs[2][2].axis('tight')
     
-    axs[3][0].imshow(rinv3d[5, :, :].T, cmap='gray', vmin=-.1, vmax=.1)
-    axs[3][0].set_title("Inverted Reflectivity iter x-z")
+    axs[3][0].imshow(rfista3d[5, :, :].T, cmap='gray', vmin=-.1, vmax=.1)
+    axs[3][0].set_title("FISTA Reflectivity iter x-z")
     axs[3][0].axis("tight")
-    axs[3][1].imshow(rinv3d[:, 200, :].T, cmap='gray', vmin=-.1, vmax=.1)
-    axs[3][1].set_title('Inverted Reflectivity iter y-z')
+    axs[3][1].imshow(rfista3d[:, 200, :].T, cmap='gray', vmin=-.1, vmax=.1)
+    axs[3][1].set_title('FISTA Reflectivity iter y-z')
     axs[3][1].axis('tight')
-    axs[3][2].imshow(rinv3d[:, :, 220].T, cmap='gray', vmin=-.1, vmax=.1)
-    axs[3][2].set_title('Inverted Reflectivity iter x-y')
+    axs[3][2].imshow(rfista3d[:, :, 220].T, cmap='gray', vmin=-.1, vmax=.1)
+    axs[3][2].set_title('FISTA Reflectivity iter x-y')
     axs[3][2].axis('tight')
+
+    axs[4][0].imshow(rpg3d[5, :, :].T, cmap='gray', vmin=-.1, vmax=.1)
+    axs[4][0].set_title("PG Reflectivity iter x-z")
+    axs[4][0].axis("tight")
+    axs[4][1].imshow(rpg3d[:, 200, :].T, cmap='gray', vmin=-.1, vmax=.1)
+    axs[4][1].set_title('PG Reflectivity iter y-z')
+    axs[4][1].axis('tight')
+    axs[4][2].imshow(rpg3d[:, :, 220].T, cmap='gray', vmin=-.1, vmax=.1)
+    axs[4][2].set_title('PG Reflectivity iter x-y')
+    axs[4][2].axis('tight')
+
+    plt.savefig('Reflectivity')
 
 ###############################################################################
 # To run this tutorial with our NCCL backend, refer to 
-# `Reflectivity Inversion with NCCL tutorial <https://github.com/PyLops/pylops-mpi/blob/main/tutorials_nccl/reflectivity_nccl.py>`_ in the repository.
+# `Reflectivity Inversion with NCCL tutorial <https://github.com/PyLops/pylops-mpi/blob/main/tutorials_nccl/reflectivity_nccl.py>`_
+# in the repository.

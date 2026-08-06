@@ -467,10 +467,11 @@
                 <article class="bd-article">
                   
   <h1>Source code for pylops_mpi.optimization.cls_sparsity</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">sqrt</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
@@ -581,6 +582,7 @@
         <span class="nb">print</span><span class="p">(</span><span class="n">strpar1</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">80</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">head1</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_print_step</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
@@ -600,6 +602,7 @@
             <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">costdata</span><span class="si">:</span><span class="s2">10.3e</span><span class="si">}</span><span class="s2">   </span><span class="si">{</span><span class="n">costdata</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">costreg</span><span class="si">:</span><span class="s2">9.3e</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">xupdate</span><span class="si">:</span><span class="s2">10.3e</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">memory_usage</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
@@ -721,10 +724,10 @@
                     <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">eigsdict</span>
                 <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;maxeieur&quot;</span><span class="p">,</span> <span class="n">maxeig</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">maxeig</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">thresh</span> <span class="o">=</span> <span class="n">eps</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">*</span> <span class="mf">0.5</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">x0</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">rank</span>
 
         <span class="c1"># create variable to track residual</span>
         <span class="k">if</span> <span class="n">monitorres</span><span class="p">:</span>
@@ -734,7 +737,7 @@
         <span class="c1"># create variables to track the residual norm and iterations</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">iiter</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">show</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_print_setup</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">x</span>
 
@@ -809,7 +812,7 @@
         <span class="n">costreg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="o">*</span> <span class="n">x</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="nb">ord</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cost</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">costdata</span> <span class="o">+</span> <span class="n">costreg</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">iiter</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">show</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_print_step</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">costdata</span><span class="p">,</span> <span class="n">costreg</span><span class="p">,</span> <span class="n">xupdate</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">xupdate</span>
 
@@ -875,7 +878,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">tend</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">telapsed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tend</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstart</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cost</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">show</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_print_finalize</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span>
@@ -1131,7 +1134,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">cost</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">costdata</span> <span class="o">+</span> <span class="n">costreg</span><span class="p">))</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">iiter</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">show</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_print_step</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">costdata</span><span class="p">,</span> <span class="n">costreg</span><span class="p">,</span> <span class="n">xupdate</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">xupdate</span>
 
