@@ -9,6 +9,7 @@ dependencies:
   - scipy>=1.8.0
   - mpi4py
   - pylops>=2.0.0
+  - pyproximal
   - matplotlib
   - ipython
   - pytest

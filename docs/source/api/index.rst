@@ -49,7 +49,6 @@ Basic Operators
     MPIStackedVStack
     MPIHStack
     MPIHalo
-    
 
 Derivatives
 ~~~~~~~~~~~
@@ -86,6 +85,30 @@ Wave-Equation processing
    :toctree: generated/
 
     MPIMDC
+
+
+Proximal operators
+------------------
+
+Templates
+~~~~~~~~~
+
+.. currentmodule:: pylops_mpi.proximal
+
+.. autosummary::
+   :toctree: generated/
+
+    MPIProxOperator
+
+Basic Operators
+~~~~~~~~~~~~~~~
+
+.. currentmodule:: pylops_mpi.proximal.proximal
+
+.. autosummary::
+   :toctree: generated/
+
+    MPIL2
 
 
 Solvers
@@ -128,6 +151,19 @@ Sparsity
 
     ista
     fista
+
+
+Proximal
+~~~~~~~~
+
+.. currentmodule:: pylops_mpi.proximal.optimization.primal
+
+.. autosummary::
+   :toctree: generated/
+
+    ProximalGradient
+    ADMML2
+
 
 Utils
 -----

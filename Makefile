@@ -70,22 +70,22 @@ doc:
 doc_cupy:
 	cp tutorials_cupy/* tutorials/
 	cd docs  && rm -rf source/api/generated && rm -rf source/gallery &&\
-	rm -rf source/tutorials && rm -rf source/tutorials && rm -rf build &&\
-	cd .. && sphinx-build -b html docs/source docs/build
+	rm -rf source/tutorials && rm -rf build &&\
+	cd .. && sphinx-build -b html docs/source docs/build &&\
 	rm tutorials/*_cupy.py
 
 doc_nccl:
 	cp tutorials_cupy/* tutorials_nccl/* tutorials/
 	cd docs  && rm -rf source/api/generated && rm -rf source/gallery &&\
-	rm -rf source/tutorials && rm -rf source/tutorials && rm -rf build &&\
-	cd .. && sphinx-build -b html docs/source docs/build
+	rm -rf source/tutorials && rm -rf build &&\
+	cd .. && sphinx-build -b html docs/source docs/build &&\
 	rm tutorials/*_cupy.py tutorials/*_nccl.py
 
 docupdate:
 	cd docs && NCCL_PYLOPS_MPI=0 make html && cd ..
 
 servedoc:
-	$(PYTHON) -m http.server --directory docs/build/
+	$(PYTHON) -m http.server --directory docs/build/html/
 
 # Run examples using mpi
 run_examples:
