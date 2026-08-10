@@ -15,6 +15,7 @@ else:
 
     backend = "numpy"
 import numpy as npp
+import math
 from mpi4py import MPI
 import pytest
 
@@ -24,6 +25,7 @@ import pylops_mpi
 from pylops_mpi import DistributedArray
 from pylops_mpi.DistributedArray import local_split, Partition
 from pylops_mpi.signalprocessing import MPIFredholm1
+from pylops_mpi.signalprocessing.Fredholm1 import MPIFredholm1SUMMA
 from pylops_mpi.utils.dottest import dottest
 
 np.random.seed(42)
@@ -93,6 +95,58 @@ par6 = {
     "imag": 0,
     "dtype": "float32",
 }  # real, unsaved Gt, nz=1
+
+parsumma1 = {
+    "nsl": 3,
+    "ny": 5,
+    "nx": 4,
+    "nz": 3,
+    "saveGt": True,
+    "imag": 0,
+    "dtype": "float32",
+}
+parsumma2 = {
+    "nsl": 2,
+    "ny": 4,
+    "nx": 5,
+    "nz": 3,
+    "saveGt": False,
+    "imag": 1j,
+    "dtype": "complex64",
+}
+
+
+def _active_summa_comm(base_comm):
+    size = base_comm.Get_size()
+    p = math.isqrt(size)
+    active_size = p * p
+    if base_comm.Get_rank() >= active_size:
+        return None, False
+    if active_size == size:
+        return base_comm, True
+    active_ranks = list(range(active_size))
+    group = base_comm.Get_group().Incl(active_ranks)
+    comm = base_comm.Create_group(group)
+    return comm, True
+
+
+def _assemble_summa_tiles(op, local_tiles, nsl, nrows, ncols,
+                          row_block, col_block, engine):
+    comm = op.base_comm
+    comm_nccl = op.base_comm_nccl if engine == "cupy" else None
+    tiles = op._allgather(comm, comm_nccl, local_tiles, engine=engine)
+    out = np.zeros((nsl, nrows, ncols), dtype=local_tiles.dtype)
+    for rank_in_group in range(comm.Get_size()):
+        row_id, col_id = divmod(rank_in_group, op.p)
+        tile = tiles[rank_in_group]
+        if tile.size == 0:
+            continue
+        rs = row_id * row_block
+        cs = col_id * col_block
+        rn = tile.shape[1]
+        cn = tile.shape[2]
+        out[:, rs:rs + rn, cs:cs + cn] = tile
+    return out
 
 
 """Seems to stop next tests from running
@@ -165,3 +219,114 @@ def test_Fredholm1(par):
         y_adj_np = Fop.H @ y_np
         assert_allclose(y, y_np, rtol=1e-14)
         assert_allclose(y_adj, y_adj_np, rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=1)
+@pytest.mark.parametrize("par", [(parsumma1), (parsumma2)])
+def test_Fredholm1SUMMA(par):
+    """MPIFredholm1SUMMA operator"""
+    np.random.seed(42)
+
+    comm, is_active = _active_summa_comm(MPI.COMM_WORLD)
+    if not is_active:
+        return
+
+    comm_rank = comm.Get_rank()
+    p = math.isqrt(comm.Get_size())
+
+    dtype = np.dtype(par["dtype"])
+    if dtype == np.complex64 or dtype == np.float32:
+        base_float_dtype = np.float32
+    else:
+        base_float_dtype = np.float64
+
+    nsl = par["nsl"]
+    nx = par["nx"]
+    ny = par["ny"]
+    nz = par["nz"]
+
+    _G = np.arange(nsl * nx * ny,
+                   dtype=base_float_dtype).reshape(nsl, nx, ny)
+    G = (_G - par["imag"] * _G).astype(dtype)
+
+    _M = np.arange(nsl * ny * nz,
+                   dtype=base_float_dtype).reshape(nsl, ny, nz)
+    M = (_M + par["imag"] * _M).astype(dtype)
+
+    bn = (nx + p - 1) // p
+    bk = (ny + p - 1) // p
+    bm = (nz + p - 1) // p
+
+    row_id, col_id = divmod(comm_rank, p)
+    rs = row_id * bn
+    re = min(rs + bn, nx)
+    cs = col_id * bk
+    ce = min(cs + bk, ny)
+    ms = row_id * bk
+    me = min(ms + bk, ny)
+    zs = col_id * bm
+    ze = min(zs + bm, nz)
+
+    G_local = G[:, rs:re, cs:ce]
+    M_local = M[:, ms:me, zs:ze]
+
+    Fop_MPI = MPIFredholm1SUMMA(
+        G_local,
+        nz=nz,
+        nsl_global=nsl,
+        saveGt=par["saveGt"],
+        pb=1,
+        base_comm=comm,
+        dtype=par["dtype"],
+    )
+
+    local_k = max(0, me - ms)
+    local_n = max(0, re - rs)
+    local_m = max(0, ze - zs)
+    local_x_size = nsl * local_k * local_m
+    local_shapes = comm.allgather(local_x_size)
+
+    x_dist = DistributedArray(
+        global_shape=nsl * ny * nz,
+        local_shapes=local_shapes,
+        partition=Partition.SCATTER,
+        base_comm=comm,
+        dtype=par["dtype"],
+        engine=backend,
+    )
+    x_dist.local_array[:] = M_local.ravel()
+
+    # Forward and adjoint
+    y_dist = Fop_MPI @ x_dist
+    xadj_dist = Fop_MPI.H @ y_dist
+
+    # Dot test
+    dottest(Fop_MPI, x_dist, y_dist,
+            nsl * nx * nz, nsl * ny * nz)
+
+    y_local = y_dist.local_array.reshape(nsl, local_n, local_m)
+    y = _assemble_summa_tiles(
+        Fop_MPI, y_local, nsl, nx, nz, bn, bm, backend
+    )
+
+    xadj_local = xadj_dist.local_array.reshape(nsl, local_k, local_m)
+    xadj = _assemble_summa_tiles(
+        Fop_MPI, xadj_local, nsl, ny, nz, bk, bm, backend
+    )
+
+    if comm_rank == 0:
+        y_np = np.matmul(G, M)
+        xadj_np = np.matmul(G.conj().transpose(0, 2, 1), y_np)
+        rtol = np.finfo(base_float_dtype).resolution
+        assert_allclose(
+            y.squeeze(),
+            y_np.squeeze(),
+            rtol=rtol,
+            err_msg=f"Rank {comm_rank}: Forward verification failed."
+        )
+        assert_allclose(
+            xadj.squeeze(),
+            xadj_np.squeeze(),
+            rtol=rtol,
+            err_msg=f"Rank {comm_rank}: Adjoint verification failed."
+        )
