@@ -5,8 +5,12 @@ from pylops.basicoperators import Identity
 from pylops.utils.backend import to_numpy
 from pyproximal.ProxOperator import _check_tau
 
-from pylops_mpi import DistributedArray, StackedDistributedArray, Partition
-from pylops_mpi import MPILinearOperator
+from pylops_mpi import (
+    DistributedArray,
+    MPILinearOperator,
+    Partition,
+    StackedDistributedArray,
+)
 from pylops_mpi.basicoperators import MPIBlockDiag, MPIStackedVStack
 from pylops_mpi.optimization.basic import cg, cgls
 from pylops_mpi.proximal import MPIProxOperator
@@ -53,6 +57,18 @@ class MPIL2(MPIProxOperator):
     **kwargs_solver : :obj:`dict`, optional
         Dictionary containing extra arguments for the solver selected
         via the ``solver`` parameter.
+
+    Notes
+    -----
+    This is a distributed implementation of the :math:`L_{2}` norm.
+
+    The norm evaluation simply requires the evaluation of the norm of
+    the underlying distributed array.
+
+    The proximal operator in the case where ``Op`` and ``b`` are not None
+    requires the solution of a distributed inversion via the
+    :py:func:`pylops_mpi.optimization.basic.cg` or
+    :py:func:`pylops_mpi.optimization.basic.cgls` solvers.
 
     """
 
@@ -101,14 +117,10 @@ class MPIL2(MPIProxOperator):
             raise ValueError(msg)
 
         # create data term
-        if (
-            self.Op is not None
-            and self.b is not None
-            and self.normaleqs
-        ):
+        if self.Op is not None and self.b is not None and self.normaleqs:
             self.OpTb = self.sigma * self.Op.H @ self.b
 
-    def __call__(self, x: DistributedArray) -> DistributedArray:
+    def __call__(self, x: DistributedArray) -> float:
         if self.Op is not None and self.b is not None:
             f = (self.sigma / 2.0) * ((self.Op * x - self.b).norm() ** 2)
         elif self.b is not None:
@@ -131,8 +143,7 @@ class MPIL2(MPIProxOperator):
     @_increment_count
     @_check_tau
     def prox(self, x: DistributedArray, tau: float, **kwargs: Any) -> DistributedArray:
-        """Proximal operator applied to a vector
-        """
+        """Proximal operator applied to a vector"""
         # define current number of iterations
         if isinstance(self.niter, int):
             niter = self.niter
@@ -147,9 +158,21 @@ class MPIL2(MPIProxOperator):
                     y -= tau * self.alpha * self.q
             if self.normaleqs:
                 if x.partition == Partition.SCATTER:
-                    Iop = MPIBlockDiag([Identity(x.local_shape, dtype=self.Op.dtype, )])
+                    Iop = MPIBlockDiag(
+                        [
+                            Identity(
+                                x.local_shape,
+                                dtype=self.Op.dtype,
+                            )
+                        ]
+                    )
                 else:
-                    Iop = MPILinearOperator(Identity(x.local_shape, dtype=self.Op.dtype, ))
+                    Iop = MPILinearOperator(
+                        Identity(
+                            x.local_shape,
+                            dtype=self.Op.dtype,
+                        )
+                    )
                 Op1 = Iop + float(tau * self.sigma) * (self.Op.H * self.Op)
                 x = cg(Op1, y, niter=niter, x0=self.x0, **self.kwargs_solver)[0]
             else:
@@ -157,13 +180,27 @@ class MPIL2(MPIProxOperator):
                 if self.q is not None:
                     y -= tau * self.alpha * self.q
                 if x.partition == Partition.SCATTER:
-                    Iop = MPIBlockDiag([Identity(x.local_shape, dtype=self.Op.dtype, ),])
+                    Iop = MPIBlockDiag(
+                        [
+                            Identity(
+                                x.local_shape,
+                                dtype=self.Op.dtype,
+                            ),
+                        ]
+                    )
                 else:
-                    Iop = MPILinearOperator(Identity(x.local_shape, dtype=self.Op.dtype, ))
-                Opreg = MPIStackedVStack([
-                    sqrt(tau * self.sigma) * self.Op,
-                    Iop,
-                ])
+                    Iop = MPILinearOperator(
+                        Identity(
+                            x.local_shape,
+                            dtype=self.Op.dtype,
+                        )
+                    )
+                Opreg = MPIStackedVStack(
+                    [
+                        sqrt(tau * self.sigma) * self.Op,
+                        Iop,
+                    ]
+                )
                 breg = StackedDistributedArray([sqrt(tau * self.sigma) * self.b, y])
                 x = cgls(Opreg, breg, x0=self.x0, niter=niter, **self.kwargs_solver)[0]
             if self.warm:
@@ -172,7 +209,7 @@ class MPIL2(MPIProxOperator):
             num = x + tau * self.sigma * self.b
             if self.q is not None:
                 num -= tau * self.alpha * self.q
-            x = (1. / (1.0 + tau * self.sigma)) * num
+            x = (1.0 / (1.0 + tau * self.sigma)) * num
         else:
             num = x
             if self.q is not None:

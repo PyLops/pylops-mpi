@@ -29,6 +29,7 @@ intersphinx_mapping = {
     "matplotlib": ("https://matplotlib.org/", None),
     "mpi4py": ("https://mpi4py.readthedocs.io/en/stable/", None),
     "pylops": ("https://pylops.readthedocs.io/en/stable/", None),
+    "pyproximal": ("https://pyproximal.readthedocs.io/en/stable/", None),
     "mpi4py_fft": ("https://mpi4py-fft.readthedocs.io/en/stable/", None)
 }
 
