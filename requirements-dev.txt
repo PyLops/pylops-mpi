@@ -11,4 +11,6 @@ numpydoc
 numba
 nbsphinx
 sphinx_gallery
+isort
+black
 flake8

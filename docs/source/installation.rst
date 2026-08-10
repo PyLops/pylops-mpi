@@ -239,6 +239,22 @@ From then on, you can pull changes (for example, in the main branch) with:
 
    >> git pull upstream main
 
+Install pre-commit hooks
+========================
+To ensure consistency in the coding style of our developers we rely on
+`pre-commit <https://pre-commit.com>`_ to perform a series of checks when you are
+ready to commit and push some changes. This is accomplished by means of git hooks
+that have been configured in the ``.pre-commit-config.yaml`` file.
+
+In order to setup such hooks in your local repository, run:
+
+.. code-block:: bash
+
+   >> pre-commit install
+
+Once this is set up, when committing changes, ``pre-commit`` will reject and "fix" your code by running the proper hooks.
+At this point, the user must check the changes and then stage them before trying to commit again.
+
 Final steps
 ===========
 PyLops-MPI does not enforce the use of a linter as a pre-commit hook, but we do highly encourage using one before submitting a Pull Request.
