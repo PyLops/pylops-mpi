@@ -3,6 +3,19 @@
 Changelog
 =========
 
+Version 0.7.0
+-------------
+
+*Released on 13/08/2026*
+
+* Introduced `dims` and `dimsd` as parameters in :class:`pylops_mpi.MPILinearOperator` and :class:`pylops_mpi.MPIStackedLinearOperator`.
+* Added `dims` and `dimsd` to all the MPI Operators.
+* Added support for nested :class:`pylops_mpi.StackedDistributedArray` and basic operations on them.
+* Added support for separable proximal operators through :class:`pylops_mpi.proximal.MPIProxOperator` wrappers.
+* Implemented the distributed :class:`pylops_mpi.proximal.proximal.MPIL2` proximal operator using distributed stacking and solvers.
+* Added distributed :func:`pylops_mpi.proximal.optimization.ProximalGradient` and :func:`pylops_mpi.proximal.optimization.ADMML2` solvers.
+* Added `local_array` as a new parameter to :class:`pylops_mpi.DistributedArray`.
+
 Version 0.6.1
 -------------
 

@@ -487,6 +487,19 @@
                   
   <section id="changelog">
 <span id="id1"></span><h1>Changelog<a class="headerlink" href="#changelog" title="Link to this heading">#</a></h1>
+<section id="version-0-7-0">
+<h2>Version 0.7.0<a class="headerlink" href="#version-0-7-0" title="Link to this heading">#</a></h2>
+<p><em>Released on 13/08/2026</em></p>
+<ul class="simple">
+<li><p>Introduced <cite>dims</cite> and <cite>dimsd</cite> as parameters in <a class="reference internal" href="api/generated/pylops_mpi.MPILinearOperator.html#pylops_mpi.MPILinearOperator" title="pylops_mpi.MPILinearOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.MPILinearOperator</span></code></a> and <a class="reference internal" href="api/generated/pylops_mpi.MPIStackedLinearOperator.html#pylops_mpi.MPIStackedLinearOperator" title="pylops_mpi.MPIStackedLinearOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.MPIStackedLinearOperator</span></code></a>.</p></li>
+<li><p>Added <cite>dims</cite> and <cite>dimsd</cite> to all the MPI Operators.</p></li>
+<li><p>Added support for nested <a class="reference internal" href="api/generated/pylops_mpi.StackedDistributedArray.html#pylops_mpi.StackedDistributedArray" title="pylops_mpi.StackedDistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.StackedDistributedArray</span></code></a> and basic operations on them.</p></li>
+<li><p>Added support for separable proximal operators through <a class="reference internal" href="api/generated/pylops_mpi.proximal.MPIProxOperator.html#pylops_mpi.proximal.MPIProxOperator" title="pylops_mpi.proximal.MPIProxOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.proximal.MPIProxOperator</span></code></a> wrappers.</p></li>
+<li><p>Implemented the distributed <a class="reference internal" href="api/generated/pylops_mpi.proximal.proximal.MPIL2.html#pylops_mpi.proximal.proximal.MPIL2" title="pylops_mpi.proximal.proximal.MPIL2"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.proximal.proximal.MPIL2</span></code></a> proximal operator using distributed stacking and solvers.</p></li>
+<li><p>Added distributed <code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.proximal.optimization.ProximalGradient</span></code> and <code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.proximal.optimization.ADMML2</span></code> solvers.</p></li>
+<li><p>Added <cite>local_array</cite> as a new parameter to <a class="reference internal" href="api/generated/pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>.</p></li>
+</ul>
+</section>
 <section id="version-0-6-1">
 <h2>Version 0.6.1<a class="headerlink" href="#version-0-6-1" title="Link to this heading">#</a></h2>
 <p><em>Released on: 23/05/2026</em></p>
@@ -633,6 +646,7 @@ for NCCL communication backend.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#version-0-7-0">Version 0.7.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#version-0-6-1">Version 0.6.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#version-0-6-0">Version 0.6.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#version-0-5-0">Version 0.5.0</a></li>
