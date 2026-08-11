@@ -148,6 +148,49 @@ def test_l1(par):
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par1j), (par1b)])
+def test_precomposition(par):
+    """Check precomposition method for L2 norm"""
+    np.random.seed(10)
+
+    x = pylops_mpi.DistributedArray(
+        global_shape=par["n"],
+        dtype=par["dtype"],
+        partition=par["partition"],
+        engine=backend,
+    )
+    x[:] = np.random.normal(rank, 10, x.local_shape).astype(par["dtype"]) + par[
+        "imag"
+    ] * np.random.normal(rank, 10, x.local_shape).astype(par["dtype"])
+
+    a, b = 2.0, 5.0
+    l2d = MPIL2()
+    l2dprec = l2d.precomposition(a=a, b=b)
+
+    # norm
+    assert l2dprec(x) == l2d(a * x + b)
+
+    # grad
+    assert_allclose(
+        l2dprec.grad(x).asarray(),
+        a * l2d.grad(a * x + b).asarray(),
+        rtol=1e-14,
+    )
+
+    # prox (only with b)
+    l2d = MPIL2()
+    l2dprec = l2d.precomposition(a=1.0, b=b)
+    bd = x.zeros_like()
+    bd.local_array[:] -= b
+    l2dref = MPIL2(b=bd)
+    assert_allclose(
+        l2dprec.prox(x, 1.0).asarray(),
+        l2dref.prox(x, 1.0).asarray(),
+        rtol=1e-14,
+    )
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par1), (par1j), (par1b)])
 @pytest.mark.parametrize("solver", ["cg", "cgls"])
 def test_L2(par, solver):
     """L2 proximal operator
@@ -256,14 +299,18 @@ def test_l21_wrongdim(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par1j), (par1b)])
+@pytest.mark.parametrize(
+    "par", [(par1), (par1b)]
+)  # (par1j) excluded until PyProximal #257 is merged
 def test_l21(par):
     """L21 call/prox vs pyproximal"""
     np.random.seed(42)
 
     ndim = 3
     x = []
-    x_global = np.zeros((ndim, par["n"]))
+    x_global = np.zeros((ndim, par["n"]), dtype=par["dtype"]) + par["imag"] * np.zeros(
+        (ndim, par["n"]), dtype=par["dtype"]
+    )
     for i in range(ndim):
         x_ = pylops_mpi.DistributedArray(
             global_shape=par["n"],

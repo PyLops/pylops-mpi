@@ -1,6 +1,8 @@
 from typing import Any
 
 import numpy as np
+from mpi4py import MPI
+from pylops.utils.backend import get_module
 from pyproximal.ProxOperator import _check_tau
 
 from pylops_mpi import DistributedArray, StackedDistributedArray
@@ -47,12 +49,26 @@ class MPIL21(MPIProxOperator):
             raise ValueError(f"Expected {self.ndim} DistributedArray, got {x.narrays}")
 
     def sum_squared(self, x: StackedDistributedArray) -> DistributedArray:
-        # Sum squared distributed arrays
-        distrsum2 = x.distarrays[0] * x.distarrays[0]
+        # Square root of the sum of squared distributed arrays. Note that
+        # the modulus is taken prior to summation, such that the returned
+        # DistributedArray is always real-valued (also for complex-valued
+        # inputs)
+        ncp = get_module(x.engine)
+        x0 = x.distarrays[0]
+        sum2 = ncp.abs(x0.local_array) ** 2
         for iarr in range(1, self.ndim):
-            distrsum2 += x.distarrays[iarr] * x.distarrays[iarr]
-        distrsum2.local_array[:] = distrsum2.local_array[:] ** 0.5
-        return distrsum2
+            sum2 += ncp.abs(x.distarrays[iarr].local_array) ** 2
+        return DistributedArray(
+            global_shape=x0.global_shape,
+            base_comm=x0.base_comm,
+            base_comm_nccl=x0.base_comm_nccl,
+            partition=x0.partition,
+            axis=x0.axis,
+            local_array=ncp.sqrt(sum2),
+            local_shapes=x0.local_shapes,
+            mask=x0.mask,
+            engine=x0.engine,
+        )
 
     def __call__(self, x: StackedDistributedArray) -> float:
         # Check input

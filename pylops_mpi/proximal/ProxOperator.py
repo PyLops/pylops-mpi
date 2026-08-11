@@ -1,11 +1,11 @@
-from mpi4py import MPI
 from typing import Any
 
-from pyproximal import ProxOperator
+from mpi4py import MPI
 from pylops.utils.backend import get_module
+from pyproximal import ProxOperator
+from pyproximal.ProxOperator import _check_tau
 
-from pylops_mpi import DistributedArray, Partition
-
+from pylops_mpi import DistributedArray, Partition, StackedDistributedArray
 
 _call_reduce_op = dict(
     Box=(MPI.LAND, all),
@@ -43,7 +43,8 @@ class MPIProxOperator:
         if prox_name not in _call_reduce_op:
             raise NotImplementedError(
                 f"{prox_name} is not a separable proximal "
-                "operator, must be implemented directly...")
+                "operator, must be implemented directly..."
+            )
         self.proxop = prox
         self.hasgrad = prox.hasgrad
 
@@ -53,7 +54,10 @@ class MPIProxOperator:
         else:
             return f"<{type(self).__name__}>"
 
-    def __call__(self, x: DistributedArray) -> DistributedArray:
+    def __call__(
+        self,
+        x: DistributedArray | StackedDistributedArray,
+    ) -> bool | float | int:
         """Functional evaluation of the oprator.
 
         Modified version of pyproximal `__call__`. This method makes use
@@ -71,6 +75,7 @@ class MPIProxOperator:
             Function evaluation
 
         """
+
         def _as_scalar(value):
             """Convert NumPy/CuPy/Python scalar-like objects to a Python scalar."""
             # Ensure that a bool/int/float is returned
@@ -95,11 +100,13 @@ class MPIProxOperator:
 
                 # Reduce local function evaluations into final evaluation
                 reduce_op = _call_reduce_op[str(type(self.proxop).__name__)][0]
-                recv_buf = x._allreduce_subcomm(x.sub_comm,
-                                                x.base_comm_nccl,
-                                                ncp.asarray(f),
-                                                op=reduce_op,
-                                                engine=x.engine)
+                recv_buf = x._allreduce_subcomm(
+                    x.sub_comm,
+                    x.base_comm_nccl,
+                    ncp.asarray(f),
+                    op=reduce_op,
+                    engine=x.engine,
+                )
 
                 return _as_scalar(recv_buf)
             else:
@@ -111,9 +118,14 @@ class MPIProxOperator:
             f = reduce_op(fs)
             return f
 
-    def prox(self, x: DistributedArray, tau: float, **kwargs: Any) -> DistributedArray:
-        """Proximal operator applied to a vector
-        """
+    @_check_tau
+    def prox(
+        self,
+        x: DistributedArray | StackedDistributedArray,
+        tau: float,
+        **kwargs: Any,
+    ) -> DistributedArray | StackedDistributedArray:
+        """Proximal operator applied to a vector"""
         if isinstance(x, DistributedArray):
             y = x.empty_like()
             y[:] = self.proxop.prox(x.local_array, tau)
@@ -123,18 +135,96 @@ class MPIProxOperator:
                 y[iarr][:] = self.proxop.prox(x[iarr].local_array, tau)
         return y
 
-    def proxdual(self, x: DistributedArray, tau: float, **kwargs: Any) -> DistributedArray:
-        """Dual Proximal operator applied to a vector
-        """
-        y = DistributedArray(global_shape=x.global_shape,
-                             base_comm=x.base_comm,
-                             base_comm_nccl=x.base_comm_nccl,
-                             partition=x.partition,
-                             axis=x.axis,
-                             local_shapes=x.local_shapes,
-                             mask=x.mask,
-                             engine=x.engine,
-                             dtype=x.dtype)
+    @_check_tau
+    def proxdual(
+        self,
+        x: DistributedArray | StackedDistributedArray,
+        tau: float,
+        **kwargs: Any,
+    ) -> DistributedArray | StackedDistributedArray:
+        """Dual Proximal operator applied to a vector"""
+        y = DistributedArray(
+            global_shape=x.global_shape,
+            base_comm=x.base_comm,
+            base_comm_nccl=x.base_comm_nccl,
+            partition=x.partition,
+            axis=x.axis,
+            local_shapes=x.local_shapes,
+            mask=x.mask,
+            engine=x.engine,
+            dtype=x.dtype,
+        )
         y[:] = self.proxop.proxdual(x.local_array, tau)
 
         return y
+
+    def precomposition(
+        self,
+        a: float,
+        b: float | DistributedArray | StackedDistributedArray,
+    ) -> "MPIProxOperator":
+        r"""Precomposition
+
+        Multiplies scalar ``a`` and adds scalar or vector ``b`` to
+        ``x`` when evaluating the proximal function
+
+        Parameters
+        ----------
+        a : :obj:`float`
+            Multiplicative scalar
+        b : :obj:`float` or obj:`pylops_mpi.DistributedArray` or obj:`pylops_mpi.StackedDistributedArray`
+            Additive scalar (or vector)
+
+        Notes
+        -----
+        The proximal operator of a function :math:`g= f(a \mathbf{x} + b)` is
+        defined as:
+
+        .. math::
+
+            prox_{\tau g} (\mathbf{x}) = \frac{1}{a} (
+            prox_{a^2 \tau f} (a \mathbf{x} + b) - b)
+
+        """
+        if isinstance(a, float) and isinstance(
+            b, (float, DistributedArray, StackedDistributedArray)
+        ):
+            return _PrecompositionOperator(self, a, b)
+        else:
+            msg = "a must be of type float and b must be of type float, DistributedArray, or StackedDistributedArray"
+            raise NotImplementedError(msg)
+
+
+class _PrecompositionOperator(MPIProxOperator):
+    def __init__(
+        self,
+        f: MPIProxOperator,
+        a: float,
+        b: float | DistributedArray | StackedDistributedArray,
+    ) -> None:
+        if not isinstance(a, float):
+            msg = "Second input must be a float"
+            raise ValueError(msg)
+        if not isinstance(b, (float, DistributedArray, StackedDistributedArray)):
+            msg = "Third input must be a float, DistributedArray, or StackedDistributedArray"
+            raise ValueError(msg)
+        self.f, self.a, self.b = f, a, b
+        self.hasgrad = f.hasgrad
+
+    def __call__(
+        self, x: DistributedArray | StackedDistributedArray
+    ) -> DistributedArray | StackedDistributedArray:
+        return self.f(self.a * x + self.b)
+
+    @_check_tau
+    def prox(
+        self, x: DistributedArray | StackedDistributedArray, tau: float, **kwargs: Any
+    ) -> DistributedArray | StackedDistributedArray:
+        return (1.0 / self.a) * (
+            self.f.prox(self.a * x + self.b, (self.a**2) * tau) - self.b
+        )
+
+    def grad(
+        self, x: DistributedArray | StackedDistributedArray
+    ) -> DistributedArray | StackedDistributedArray:
+        return self.a * self.f.grad(self.a * x + self.b)
