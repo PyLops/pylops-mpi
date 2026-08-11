@@ -379,6 +379,7 @@ def test_adj_mpilinop(par):
         assert_allclose(y, y_np.flatten(), rtol=1e-9)
 
 
+@pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par2), (par1j), (par2j)])
 def test_copy_dims_dimsd(par):
     """Apply various overloaded operators (.H, -, +, *) and ensure that the
