@@ -70,6 +70,7 @@ if backend == "cupy":
     np.cuda.Device(device_id).use()
 
 
+@pytest.mark.mpi(min_size=2)
 def test_ISTA_FISTA_unknown_threshkind():
     """Check error is raised if unknown threshkind is passed"""
     with pytest.raises(ValueError, match="threshkind must be"):
@@ -82,6 +83,7 @@ def test_ISTA_FISTA_unknown_threshkind():
         _ = fista(MPIBlockDiag(ops=[Identity(5)]), y, 10, threshkind="foo")
 
 
+@pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par2), (par3), (par1j), (par2j), (par3j)])
 def test_ISTA_FISTA_alpha_too_high(par):
     """Invert problem with ISTA/FISTA - alpha too high"""
@@ -129,6 +131,7 @@ def test_ISTA_FISTA_alpha_too_high(par):
         assert np.isnan(cost[-1]) or np.isinf(cost[-1])
 
 
+@pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par1j)])
 def test_ISTA_FISTA(par):
     """Invert problem with ISTA/FISTA"""
@@ -199,6 +202,7 @@ def test_ISTA_FISTA(par):
                 assert_allclose(xinv_array, xinv1, rtol=1e-8)
 
 
+@pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par2), (par2j)])
 def test_ISTA_FISTA_broadcastmodel(par):
     """Invert problem with ISTA/FISTA with broadcasted model"""
@@ -267,6 +271,7 @@ def test_ISTA_FISTA_broadcastmodel(par):
                 assert_allclose(xinv_array, xinv1, rtol=1e-8)
 
 
+@pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par3), (par3j)])
 def test_ISTA_FISTA_broadcastdata(par):
     """Invert problem with ISTA/FISTA with broadcasted data"""

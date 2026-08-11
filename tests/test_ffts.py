@@ -89,6 +89,7 @@ par8 = {
 rank = MPI.COMM_WORLD.Get_rank()
 
 
+@pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4)])
 @pytest.mark.parametrize(
     "ifftshift_before, fftshift_after",
@@ -127,6 +128,7 @@ def test_FFT2d(par, ifftshift_before, fftshift_after):
         assert_array_almost_equal(y_adj, y_adj_np, decimal=7)
 
 
+@pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6), (par7), (par8)])
 @pytest.mark.parametrize(
     "ifftshift_before, fftshift_after",

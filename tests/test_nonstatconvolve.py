@@ -84,6 +84,7 @@ def test_ih_irregular(par):
         )
 
 
+@pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1_1d), (par2_1d)])
 def test_NonStationaryConvolve1D(par):
     """Dot-test and inversion for NonStationaryConvolve1D operator"""

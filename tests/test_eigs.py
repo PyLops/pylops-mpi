@@ -19,6 +19,7 @@ par1 = {"n": 21, "imag": 0, "dtype": "float64"}  # square, real
 par2 = {"n": 21, "imag": 1j, "dtype": "complex128"}  # square, complex
 
 
+@pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par2)])
 def test_power_iteration(par):
     """Max eigenvalue computation with power iteration method vs. numpy.linalg.eig"""
@@ -46,6 +47,7 @@ def test_power_iteration(par):
     assert np.abs(np.abs(eig) - eig_np) < 1e-3
 
 
+@pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par2)])
 def test_power_iteration_stacked(par):
     """Max eigenvalue computation with power iteration method vs. numpy.linalg.eig for MPIStackedBlockDiag"""

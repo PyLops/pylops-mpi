@@ -79,7 +79,7 @@ def _reorganize_local_matrix(x_dist, N, M, blk_cols, p_prime):
     return x
 
 
-@pytest.mark.mpi(min_size=1)
+@pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("N, K, M, dtype_str", test_params)
 def test_MPIMatrixMult_block(N, K, M, dtype_str):
     """MPIMatrixMult operator with kind=`blocked`"""
@@ -196,7 +196,7 @@ def test_MPIMatrixMult_block(N, K, M, dtype_str):
             err_msg=f"Rank {rank}: Adjoint verification failed."
         )
 
-@pytest.mark.mpi(min_size=1)
+@pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("N, K, M, dtype_str", test_params)
 def test_MPIMatrixMult_summa(N, K, M, dtype_str):
     """MPIMatrixMult operator with kind=`summa`"""
