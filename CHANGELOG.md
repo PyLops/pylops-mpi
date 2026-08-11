@@ -1,3 +1,12 @@
+# 0.7.0
+* Introduced `dims` and `dimsd` as parameters in `pylops_mpi.MPILinearOperator` and `pylops_mpi.MPIStackedLinearOperator`.
+* Added `dims` and `dimsd` to all the MPI Operators.
+* Added support for nested `pylops_mpi.StackedDistributedArray` and basic operations on them.
+* Added support for separable proximal operators through `pylops_mpi.proximal.MPIProxOperator` wrappers.
+* Implemented the distributed `pylops_mpi.proximal.proximal.MPIL2` proximal operator using distributed stacking and solvers.
+* Added distributed `pylops_mpi.proximal.optimization.ProximalGradient` and `pylops_mpi.proximal.optimization.ADMML2` solvers.
+* Added `local_array` as a new parameter to `pylops_mpi.DistributedArray`.
+
 # 0.6.1
 * Fixed import error in `pylops_mpi.optimization.cls_sparsity` and `pylops_mpi.optimization.sparsity`.
 
