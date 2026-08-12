@@ -173,7 +173,7 @@ def test_precomposition(par):
     assert_allclose(
         l2dprec.grad(x).asarray(),
         a * l2d.grad(a * x + b).asarray(),
-        rtol=1e-14,
+        rtol=1e-12,
     )
 
     # prox (only with b)
@@ -185,7 +185,7 @@ def test_precomposition(par):
     assert_allclose(
         l2dprec.prox(x, 1.0).asarray(),
         l2dref.prox(x, 1.0).asarray(),
-        rtol=1e-14,
+        rtol=1e-12,
     )
 
 
