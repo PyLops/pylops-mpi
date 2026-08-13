@@ -167,7 +167,7 @@ broadcasted whilst the data is scattered across ranks.
        399  -0.00000e+00   3.606e-04   1.493e-01   1.496e-01   1.000e-02
        400  -0.00000e+00   3.606e-04   1.493e-01   1.496e-01   1.000e-02
 
-    Total time (s) = 0.20
+    Total time (s) = 0.23
     ---------------------------------------------------------
 
 
@@ -368,7 +368,7 @@ And finally we repeat the same with a scattered model.
          4   6.54288e-02   2.735e+01   5.783e+01   8.518e+01
          5   1.08365e-01   2.254e+01   6.021e+01   8.274e+01
 
-    Total time (s) = 0.10
+    Total time (s) = 0.11
     ---------------------------------------------------------
 
 
@@ -378,7 +378,7 @@ And finally we repeat the same with a scattered model.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 0.702 seconds)
+   **Total running time of the script:** (0 minutes 0.803 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_proxsolver.py:

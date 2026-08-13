@@ -678,6 +678,19 @@ Run the following command to add the PyLops-MPI repo as a remote named <em>upstr
 </pre></div>
 </div>
 </section>
+<section id="install-pre-commit-hooks">
+<h3>Install pre-commit hooks<a class="headerlink" href="#install-pre-commit-hooks" title="Link to this heading">#</a></h3>
+<p>To ensure consistency in the coding style of our developers we rely on
+<a class="reference external" href="https://pre-commit.com">pre-commit</a> to perform a series of checks when you are
+ready to commit and push some changes. This is accomplished by means of git hooks
+that have been configured in the <code class="docutils literal notranslate"><span class="pre">.pre-commit-config.yaml</span></code> file.</p>
+<p>In order to setup such hooks in your local repository, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;<span class="w"> </span>pre-commit<span class="w"> </span>install
+</pre></div>
+</div>
+<p>Once this is set up, when committing changes, <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code> will reject and “fix” your code by running the proper hooks.
+At this point, the user must check the changes and then stage them before trying to commit again.</p>
+</section>
 <section id="final-steps">
 <h3>Final steps<a class="headerlink" href="#final-steps" title="Link to this heading">#</a></h3>
 <p>PyLops-MPI does not enforce the use of a linter as a pre-commit hook, but we do highly encourage using one before submitting a Pull Request.
@@ -765,6 +778,7 @@ Apart from ensuring that docstrings are properly formatted, they can aid in catc
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#run-tests">Run tests</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#run-examples-and-tutorials">Run examples and tutorials</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#add-remote-optional">Add remote (optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#install-pre-commit-hooks">Install pre-commit hooks</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#final-steps">Final steps</a></li>
 </ul>
 </li>

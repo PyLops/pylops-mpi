@@ -217,7 +217,7 @@ We now perform sparsity-promotion inversion with the ISTA solver
        199      -0.0000e+00         6.554e+00   5.223e+02   1.938e-01
        200      -0.0000e+00         6.559e+00   5.222e+02   1.939e-01
 
-    Iterations = 200        Total time (s) = 49.60
+    Iterations = 200        Total time (s) = 78.05
     --------------------------------------------------------------------------------
 
 
@@ -298,7 +298,7 @@ And now with the Proximal Gradient solver
        199  -0.00000e+00   6.551e+00   2.579e+02   2.645e+02   2.130e-02
        200  -0.00000e+00   6.555e+00   2.579e+02   2.644e+02   2.130e-02
 
-    Total time (s) = 23.35
+    Total time (s) = 40.27
     ---------------------------------------------------------
 
 
@@ -409,7 +409,7 @@ in the repository.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (1 minutes 16.621 seconds)
+   **Total running time of the script:** (2 minutes 3.023 seconds)
 
 
 .. _sphx_glr_download_tutorials_reflectivity.py:
