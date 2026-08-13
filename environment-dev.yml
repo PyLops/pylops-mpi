@@ -21,6 +21,8 @@ dependencies:
   - numba
   - nbsphinx
   - pydata-sphinx-theme
+  - isort
+  - black
   - flake8
   - mpi4py-fft
   - pip:
