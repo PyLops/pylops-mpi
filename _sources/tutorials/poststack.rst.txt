@@ -292,7 +292,7 @@ where :math:`\boldsymbol \nabla` is the :py:class:`pylops_mpi.basicoperators.MPI
         99        6.1544e-01         6.5026e-01     6.5026e-01
        100        6.1561e-01         6.4212e-01     6.4212e-01
 
-    Iterations = 100        Total time (s) = 36.27
+    Iterations = 100        Total time (s) = 27.16
     -----------------------------------------------------------------
 
 
@@ -357,7 +357,7 @@ where :math:`\boldsymbol \nabla` is the :py:class:`pylops_mpi.basicoperators.MPI
         99         6.3033e-01         1.9903e+02
        100         6.3026e-01         1.9777e+02
 
-    Iterations = 100        Total time (s) = 56.97
+    Iterations = 100        Total time (s) = 37.55
     -------------------------------------------------------
 
 
@@ -451,7 +451,7 @@ TV-Regularized inversion
         39   6.15411e-01   3.706e+01   4.696e+02   5.067e+02
         40   6.11217e-01   3.646e+01   4.687e+02   5.051e+02
 
-    Total time (s) = 745.84
+    Total time (s) = 503.10
     ---------------------------------------------------------
 
 
@@ -576,7 +576,7 @@ in the repository.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (15 minutes 16.955 seconds)
+   **Total running time of the script:** (10 minutes 23.846 seconds)
 
 
 .. _sphx_glr_download_tutorials_poststack.py:
