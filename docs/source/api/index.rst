@@ -109,6 +109,7 @@ Basic Operators
    :toctree: generated/
 
     MPIL2
+    MPIL21
 
 
 Solvers
