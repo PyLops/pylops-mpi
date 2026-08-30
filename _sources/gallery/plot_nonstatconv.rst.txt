@@ -156,7 +156,7 @@ filters
 
  .. code-block:: none
 
-    /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pylops/utils/wavelets.py:196: UserWarning: One sample removed from time axis...
+    /opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pylops/utils/wavelets.py:196: UserWarning: One sample removed from time axis...
       t = _tcrop(t)
     Filters centers: [ 8 24 40 56]
 
@@ -351,7 +351,7 @@ And on 2D signal with the filters applied over the second axis.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 1.592 seconds)
+   **Total running time of the script:** (0 minutes 1.607 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_nonstatconv.py:

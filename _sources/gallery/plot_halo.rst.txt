@@ -623,7 +623,7 @@ filtering from the next/previous rank.
 
  .. code-block:: none
 
-    /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/pylops/utils/wavelets.py:196: UserWarning: One sample removed from time axis...
+    /opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pylops/utils/wavelets.py:196: UserWarning: One sample removed from time axis...
       t = _tcrop(t)
     Filters centers: [16 48]
     Rank 0 - shape before/after haloing: (64,)/(64,)
@@ -862,7 +862,7 @@ Let's display the results
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 9.644 seconds)
+   **Total running time of the script:** (0 minutes 9.661 seconds)
 
 
 .. _sphx_glr_download_gallery_plot_halo.py:

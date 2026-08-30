@@ -30,8 +30,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
@@ -43,10 +43,10 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e45f66c9" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
@@ -480,7 +480,7 @@
 <div class="viewcode-block" id="MPIFFT2D">
 <a class="viewcode-back" href="../../../api/generated/pylops_mpi.signalprocessing.MPIFFT2D.html#pylops_mpi.signalprocessing.MPIFFT2D">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MPIFFT2D</span><span class="p">(</span><span class="n">MPIFFTND</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Two-dimensional Fast-Fourier Transform.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Two-dimensional Fast-Fourier Transform.</span>
 
 <span class="sd">    Apply two-dimensional Fast-Fourier Transform (FFT) to any pair of ``axes`` of a</span>
 <span class="sd">    multidimensional array.</span>
@@ -502,9 +502,9 @@
 <span class="sd">    sampling : :obj:`tuple` or :obj:`float`, optional</span>
 <span class="sd">        Sampling steps for each axis in ``axes``. When supplied a single value, it is used</span>
 <span class="sd">        for both axes.</span>
-<span class="sd">    norm : `{&quot;none&quot;, &quot;1/n&quot;}`, optional</span>
-<span class="sd">        - &quot;none&quot;: Does not scale the forward or the adjoint FFT transforms. Default is &quot;none&quot;.</span>
-<span class="sd">        - &quot;1/n&quot;: Scales both the forward and adjoint FFT transforms by</span>
+<span class="sd">    norm : `{"none", "1/n"}`, optional</span>
+<span class="sd">        - "none": Does not scale the forward or the adjoint FFT transforms. Default is "none".</span>
+<span class="sd">        - "1/n": Scales both the forward and adjoint FFT transforms by</span>
 <span class="sd">          :math:`1/N_F`.</span>
 <span class="sd">    real : :obj:`bool`, optional</span>
 <span class="sd">        Model to which fft is applied has real numbers (``True``) or not</span>
@@ -514,7 +514,7 @@
 <span class="sd">        ``axes``)</span>
 <span class="sd">    ifftshift_before : :obj:`tuple` or :obj:`bool`, optional</span>
 <span class="sd">        Apply ifftshift (``True``) or not (``False``) to model vector (before FFT).</span>
-<span class="sd">        Consider using this option when the model vector&#39;s respective axis is symmetric</span>
+<span class="sd">        Consider using this option when the model vector's respective axis is symmetric</span>
 <span class="sd">        with respect to the zero value sample. This will shift the zero value sample to</span>
 <span class="sd">        coincide with the zero index sample. With such an arrangement, FFT will not</span>
 <span class="sd">        introduce a sample-dependent phase-shift when compared to the continuous Fourier</span>
@@ -570,7 +570,7 @@
 <span class="sd">    ValueError</span>
 <span class="sd">        - If ``dims`` has less than two elements.</span>
 <span class="sd">        - If ``axes`` does not have exactly two elements.</span>
-<span class="sd">        - If ``norm`` is not one of &quot;none&quot;, or &quot;1/n&quot;.</span>
+<span class="sd">        - If ``norm`` is not one of "none", or "1/n".</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
@@ -584,7 +584,7 @@
 <span class="sd">    input is redistributed accordingly before the transform. After the transform, the output is</span>
 <span class="sd">    flattened back to 1D.</span>
 
-<span class="sd">    The class uses PFFT&#39;s two internal pencil layouts: ``pencil[False]`` for forward-input/backward-output and</span>
+<span class="sd">    The class uses PFFT's two internal pencil layouts: ``pencil[False]`` for forward-input/backward-output and</span>
 <span class="sd">    ``pencil[True]`` for forward-output/backward-input. During initialization, it records the distributed axes</span>
 <span class="sd">    of these layouts as ``_pfft_in_axis`` and ``_pfft_out_axis``, and redistributes the input</span>
 <span class="sd">    :class:`pylops_mpi.DistributedArray` as needed before each transform.</span>
@@ -595,7 +595,7 @@
 <span class="sd">        D(k_y, k_x) = \mathscr{F} (d) = \iint\limits_{-\infty}^\infty d(y, x) e^{-j2\pi k_yy}</span>
 <span class="sd">        e^{-j2\pi k_xx} \,\mathrm{d}y \,\mathrm{d}x</span>
 
-<span class="sd">    When ``norm=&quot;1/n&quot;``, the result is additionally scaled by :math:`1/N_F`.</span>
+<span class="sd">    When ``norm="1/n"``, the result is additionally scaled by :math:`1/N_F`.</span>
 
 <span class="sd">    In the adjoint pass, :meth:`PFFT.backward` is called with ``normalize=True``, so ``PFFT``</span>
 <span class="sd">    internally divides by :math:`N_F = N_1 \cdot N_2`, computing:</span>
@@ -604,29 +604,29 @@
 <span class="sd">        d(y,x) = \mathscr{F}^{-1} (D) = \frac{1}{N_F} \iint\limits_{-\infty}^\infty D(k_y, k_x) e^{j2\pi k_yy}</span>
 <span class="sd">        e^{j2\pi k_xx} \,\mathrm{d}k_y  \,\mathrm{d}k_x</span>
 
-<span class="sd">    When ``norm=&quot;none&quot;``, the adjoint multiplies by :math:`N_F` to cancel this internal scaling,</span>
+<span class="sd">    When ``norm="none"``, the adjoint multiplies by :math:`N_F` to cancel this internal scaling,</span>
 <span class="sd">    returning a true unscaled adjoint. The result is then flattened back to a 1D</span>
 <span class="sd">    :class:`pylops_mpi.DistributedArray`. All inter-rank data movement is handled internally by</span>
 <span class="sd">    ``mpi4py_fft``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">dims</span><span class="p">:</span> <span class="n">InputDimsLike</span><span class="p">,</span>
         <span class="n">axes</span><span class="p">:</span> <span class="n">InputDimsLike</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
         <span class="n">sampling</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
-        <span class="n">norm</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+        <span class="n">norm</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"none"</span><span class="p">,</span>
         <span class="n">real</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">ifftshift_before</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">fftshift_after</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">dtype</span><span class="p">:</span> <span class="n">DTypeLike</span> <span class="o">=</span> <span class="s2">&quot;complex128&quot;</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="p">:</span> <span class="n">DTypeLike</span> <span class="o">=</span> <span class="s2">"complex128"</span><span class="p">,</span>
         <span class="n">base_comm</span><span class="p">:</span> <span class="n">MPI</span><span class="o">.</span><span class="n">Comm</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># checks</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;FFT2D requires at least two input dimensions&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">"FFT2D requires at least two input dimensions"</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;FFT2D must be applied along exactly two dimensions&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">"FFT2D must be applied along exactly two dimensions"</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dims</span><span class="o">=</span><span class="n">dims</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">axes</span><span class="p">,</span> <span class="n">sampling</span><span class="o">=</span><span class="n">sampling</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="n">real</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
                          <span class="n">ifftshift_before</span><span class="o">=</span><span class="n">ifftshift_before</span><span class="p">,</span> <span class="n">fftshift_after</span><span class="o">=</span><span class="n">fftshift_after</span><span class="p">,</span> <span class="n">base_comm</span><span class="o">=</span><span class="n">base_comm</span><span class="p">)</span>
@@ -671,8 +671,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -706,7 +706,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>

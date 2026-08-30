@@ -30,8 +30,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
@@ -43,10 +43,10 @@
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e45f66c9" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
@@ -484,7 +484,7 @@
 <div class="viewcode-block" id="MPIStackedLinearOperator">
 <a class="viewcode-back" href="../../api/generated/pylops_mpi.MPIStackedLinearOperator.html#pylops_mpi.MPIStackedLinearOperator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MPIStackedLinearOperator</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Stack of MPI-enabled PyLops Linear Operators</span>
+<span class="w">    </span><span class="sd">"""Stack of MPI-enabled PyLops Linear Operators</span>
 
 <span class="sd">    Common interface for performing matrix-vector products in distributed fashion</span>
 <span class="sd">    for a stack of :class:`pylops_mpi.MPILinearOperator` operators.</span>
@@ -511,7 +511,7 @@
 <span class="sd">        Type of elements in input array. Defaults to ``None``.</span>
 <span class="sd">    base_comm : :obj:`mpi4py.MPI.Comm`, optional</span>
 <span class="sd">        MPI Base Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -537,14 +537,14 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">_shape</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_shape&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">_shape</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_shape"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># Cannot find shape, falling back on dims and dimsd</span>
-            <span class="n">dims</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_dims&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">dimsd</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_dimsd&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">dims</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_dims"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">dimsd</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_dimsd"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">dims</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">dimsd</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># Cannot find both dims and dimsd, error</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; object has no attribute &#39;shape&#39; &quot;</span>
-                    <span class="s2">&quot;nor both fallback attributes (&#39;dims&#39;, &#39;dimsd&#39;)&quot;</span>
+                    <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">' object has no attribute 'shape' "</span>
+                    <span class="s2">"nor both fallback attributes ('dims', 'dimsd')"</span>
                 <span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="n">_shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">dimsd</span><span class="p">)),</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">dims</span><span class="p">)))</span>
@@ -555,31 +555,31 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_shape</span><span class="p">:</span> <span class="n">ShapeLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">new_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">new_shape</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">isshape</span><span class="p">(</span><span class="n">new_shape</span><span class="p">):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid shape; must be 2-d tuple of integers, got </span><span class="si">{</span><span class="n">new_shape</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Invalid shape; must be 2-d tuple of integers, got </span><span class="si">{</span><span class="n">new_shape</span><span class="si">}</span><span class="s2">"</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="n">dims</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_dims&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">dimsd</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_dimsd&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">dims</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_dims"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">dimsd</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_dimsd"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">dims</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">dimsd</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># Found dims and dimsd</span>
             <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">dimsd</span><span class="p">)</span> <span class="o">!=</span> <span class="n">new_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span> <span class="o">!=</span> <span class="n">new_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;New shape incompatible with dims and dimsd&quot;</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">"New shape incompatible with dims and dimsd"</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">dimsd</span><span class="p">)</span> <span class="o">!=</span> <span class="n">new_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;New shape incompatible with dimsd&quot;</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">"New shape incompatible with dimsd"</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span> <span class="o">!=</span> <span class="n">new_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;New shape incompatible with dims&quot;</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">"New shape incompatible with dims"</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span> <span class="o">=</span> <span class="n">new_shape</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">dims</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">_dims</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_dims&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">_dims</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_dims"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">_dims</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">shape</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_shape&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_shape"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; object has no &quot;</span>
-                    <span class="s2">&quot;attributes &#39;dims&#39; or &#39;shape&#39;&quot;</span>
+                    <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">' object has no "</span>
+                    <span class="s2">"attributes 'dims' or 'shape'"</span>
                 <span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="n">_dims</span> <span class="o">=</span> <span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],)</span>
@@ -588,25 +588,25 @@
     <span class="nd">@dims</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">dims</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_dims</span><span class="p">:</span> <span class="n">ShapeLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">new_dims</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">new_dims</span><span class="p">)</span>
-        <span class="n">shape</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_shape&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_shape"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># shape not set yet</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_dims</span> <span class="o">=</span> <span class="n">new_dims</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">new_dims</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_dims</span> <span class="o">=</span> <span class="n">new_dims</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;dims incompatible with shape[1]&quot;</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">"dims incompatible with shape[1]"</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">dimsd</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">_dimsd</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_dimsd&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">_dimsd</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_dimsd"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">_dimsd</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">shape</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_shape&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_shape"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; object has &quot;</span>
-                    <span class="s2">&quot;no attributes &#39;dimsd&#39; or &#39;shape&#39;&quot;</span>
+                    <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">' object has "</span>
+                    <span class="s2">"no attributes 'dimsd' or 'shape'"</span>
                 <span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="n">_dimsd</span> <span class="o">=</span> <span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],)</span>
@@ -615,18 +615,18 @@
     <span class="nd">@dimsd</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">dimsd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_dimsd</span><span class="p">:</span> <span class="n">ShapeLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">new_dimsd</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">new_dimsd</span><span class="p">)</span>
-        <span class="n">shape</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_shape&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_shape"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># shape not set yet</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_dimsd</span> <span class="o">=</span> <span class="n">new_dimsd</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">new_dimsd</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_dimsd</span> <span class="o">=</span> <span class="n">new_dimsd</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;dimsd incompatible with shape[0]&quot;</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">"dimsd incompatible with shape[0]"</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Matrix-vector multiplication.</span>
+<span class="w">        </span><span class="sd">"""Matrix-vector multiplication.</span>
 
 <span class="sd">        Modified version of :class:`pylops_mpi.MPILinearOperator` matvec.</span>
 <span class="sd">        This method makes use of either :class:`pylops_mpi.DistributedArray` or</span>
@@ -643,15 +643,15 @@
 <span class="sd">        y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.DistributedArray`</span>
 <span class="sd">            A StackedDistributedArray or a DistributedArray of global shape (M, )</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="n">M</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">):</span>
             <span class="n">stacked_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">global_shape</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">distarrays</span><span class="p">]),</span> <span class="p">)</span>
             <span class="k">if</span> <span class="n">stacked_shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;dimension mismatch&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"dimension mismatch"</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">global_shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">N</span><span class="p">,):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;dimension mismatch&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"dimension mismatch"</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matvec</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
     <span class="nd">@abstractmethod</span>
@@ -659,7 +659,7 @@
         <span class="k">pass</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adjoint Matrix-vector multiplication.</span>
+<span class="w">        </span><span class="sd">"""Adjoint Matrix-vector multiplication.</span>
 
 <span class="sd">        Modified version of :class:`pylops_mpi.MPILinearOperator` rmatvec</span>
 <span class="sd">        This method makes use of either :class:`pylops_mpi.DistributedArray` or</span>
@@ -676,15 +676,15 @@
 <span class="sd">        y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.DistributedArray`</span>
 <span class="sd">            A StackedDistributedArray or a DistributedArray of global shape (N, )</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="n">M</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">):</span>
             <span class="n">stacked_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">global_shape</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">distarrays</span><span class="p">]),</span> <span class="p">)</span>
             <span class="k">if</span> <span class="n">stacked_shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;dimension mismatch&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"dimension mismatch"</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">global_shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">M</span><span class="p">,):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;dimension mismatch&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"dimension mismatch"</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rmatvec</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
     <span class="nd">@abstractmethod</span>
@@ -692,7 +692,7 @@
         <span class="k">pass</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">dot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Matrix Vector Multiplication</span>
+<span class="w">        </span><span class="sd">"""Matrix Vector Multiplication</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -706,12 +706,12 @@
 <span class="sd">            :obj:`pylops_mpi.StackedMPILinearOperator</span>
 <span class="sd">            StackedDistributedArray, DistributedArray or a StackedMPILinearOperator.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">MPIStackedLinearOperator</span><span class="p">):</span>
             <span class="n">Op</span> <span class="o">=</span> <span class="n">_ProductStackedLinearOperator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_copy_attributes</span><span class="p">(</span>
                 <span class="n">Op</span><span class="p">,</span>
-                <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;dims&#39;</span><span class="p">]</span>
+                <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s1">'dims'</span><span class="p">]</span>
             <span class="p">)</span>
             <span class="n">Op</span><span class="o">.</span><span class="n">dims</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">dims</span>
             <span class="k">return</span> <span class="n">Op</span>
@@ -729,30 +729,30 @@
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ndims</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">ndims</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">matvec</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;expected 1-d DistributedArray or StackedDistributedArray&#39;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'expected 1-d DistributedArray or StackedDistributedArray'</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adjoint MPIStackedLinearOperator</span>
+<span class="w">        </span><span class="sd">"""Adjoint MPIStackedLinearOperator</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        op : :obj:`pylops_mpi.MPIStackedLinearOperator`</span>
 <span class="sd">            Adjoint of Operator</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adjoint</span><span class="p">()</span>
 
     <span class="n">H</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">adjoint</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Transposition of MPIStackedLinearOperator</span>
+<span class="w">        </span><span class="sd">"""Transposition of MPIStackedLinearOperator</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        op : :obj:`pylops_mpi.MPIStackedLinearOperator`</span>
 <span class="sd">            Transpose MPIStackedLinearOperator</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span>
 
     <span class="n">T</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">transpose</span><span class="p">)</span>
@@ -772,12 +772,12 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__matmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Scalar not allowed, use * instead&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Scalar not allowed, use * instead"</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__mul__</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__rmatmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Scalar not allowed, use * instead&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Scalar not allowed, use * instead"</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__rmul__</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
@@ -808,7 +808,7 @@
         <span class="n">Op</span> <span class="o">=</span> <span class="n">_AdjointStackedLinearOperator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_copy_attributes</span><span class="p">(</span>
             <span class="n">Op</span><span class="p">,</span>
-            <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;dims&#39;</span><span class="p">,</span> <span class="s1">&#39;dimsd&#39;</span><span class="p">]</span>
+            <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s1">'dims'</span><span class="p">,</span> <span class="s1">'dimsd'</span><span class="p">]</span>
         <span class="p">)</span>
         <span class="n">Op</span><span class="o">.</span><span class="n">dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimsd</span>
         <span class="n">Op</span><span class="o">.</span><span class="n">dimsd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dims</span>
@@ -818,38 +818,38 @@
         <span class="n">Op</span> <span class="o">=</span> <span class="n">_TransposedStackedLinearOperator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_copy_attributes</span><span class="p">(</span>
             <span class="n">Op</span><span class="p">,</span>
-            <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;dims&#39;</span><span class="p">,</span> <span class="s1">&#39;dimsd&#39;</span><span class="p">]</span>
+            <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s1">'dims'</span><span class="p">,</span> <span class="s1">'dimsd'</span><span class="p">]</span>
         <span class="p">)</span>
         <span class="n">Op</span><span class="o">.</span><span class="n">dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimsd</span>
         <span class="n">Op</span><span class="o">.</span><span class="n">dimsd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dims</span>
         <span class="k">return</span> <span class="n">Op</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">conj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Complex conjugate operator</span>
+<span class="w">        </span><span class="sd">"""Complex conjugate operator</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        conjop : :obj:`pylops_mpi.MPIStackedLinearOperator`</span>
 <span class="sd">            Complex conjugate operator</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">_ConjLinearOperator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">M</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">dt</span> <span class="o">=</span> <span class="s2">&quot;unspecified dtype&quot;</span>
+            <span class="n">dt</span> <span class="o">=</span> <span class="s2">"unspecified dtype"</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">dt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;dtype=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;</span><span class="si">{</span><span class="n">M</span><span class="si">}</span><span class="s2">x</span><span class="si">{</span><span class="n">N</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> with </span><span class="si">{</span><span class="n">dt</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
+            <span class="n">dt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"dtype=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"&lt;</span><span class="si">{</span><span class="n">M</span><span class="si">}</span><span class="s2">x</span><span class="si">{</span><span class="n">N</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> with </span><span class="si">{</span><span class="n">dt</span><span class="si">}</span><span class="s2">&gt;"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_copy_attributes</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">dest</span><span class="p">:</span> <span class="n">MPIStackedLinearOperator</span><span class="p">,</span>
         <span class="n">exclude</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Copy attributes from one MPIStackedLinearOperator to another&quot;&quot;&quot;</span>
-        <span class="n">attrs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;dims&quot;</span><span class="p">,</span> <span class="s2">&quot;dimsd&quot;</span><span class="p">]</span>
+<span class="w">        </span><span class="sd">"""Copy attributes from one MPIStackedLinearOperator to another"""</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"dims"</span><span class="p">,</span> <span class="s2">"dimsd"</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">exclude</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">:</span>
                 <span class="n">attrs</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
@@ -860,7 +860,7 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_AdjointStackedLinearOperator</span><span class="p">(</span><span class="n">MPIStackedLinearOperator</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjoint of MPIStackedLinearOperator&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Adjoint of MPIStackedLinearOperator"""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">MPIStackedLinearOperator</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">A</span> <span class="o">=</span> <span class="n">A</span>
@@ -876,7 +876,7 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_TransposedStackedLinearOperator</span><span class="p">(</span><span class="n">MPIStackedLinearOperator</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Transpose of MPIStackedLinearOperator&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Transpose of MPIStackedLinearOperator"""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">MPIStackedLinearOperator</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">A</span> <span class="o">=</span> <span class="n">A</span>
@@ -898,18 +898,18 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_ProductStackedLinearOperator</span><span class="p">(</span><span class="n">MPIStackedLinearOperator</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Product of MPI Stacked Linear Operators&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Product of MPI Stacked Linear Operators"""</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">MPIStackedLinearOperator</span><span class="p">,</span> <span class="n">B</span><span class="p">:</span> <span class="n">MPIStackedLinearOperator</span><span class="p">):</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.basicoperators.VStack</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPIStackedVStack</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.basicoperators.BlockDiag</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPIStackedBlockDiag</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">MPIStackedLinearOperator</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">MPIStackedLinearOperator</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;both operands have to be a MPIStackedLinearOperator&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'both operands have to be a MPIStackedLinearOperator'</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">MPIStackedVStack</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">MPIStackedVStack</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;both operands cannot be MPIStackedVStack&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'both operands cannot be MPIStackedVStack'</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">MPIStackedBlockDiag</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">MPIStackedBlockDiag</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">ops</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;both MPIStackedBlockDiag cannot have different number of ops, </span><span class="si">{</span><span class="n">A</span><span class="o">.</span><span class="n">ops</span><span class="si">}</span><span class="s1"> != </span><span class="si">{</span><span class="n">B</span><span class="o">.</span><span class="n">ops</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'both MPIStackedBlockDiag cannot have different number of ops, </span><span class="si">{</span><span class="n">A</span><span class="o">.</span><span class="n">ops</span><span class="si">}</span><span class="s1"> != </span><span class="si">{</span><span class="n">B</span><span class="o">.</span><span class="n">ops</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;cannot multiply </span><span class="si">%r</span><span class="s1"> and </span><span class="si">%r</span><span class="s1">: shape mismatch&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'cannot multiply </span><span class="si">%r</span><span class="s1"> and </span><span class="si">%r</span><span class="s1">: shape mismatch'</span> <span class="o">%</span> <span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">_get_dtype</span><span class="p">([</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">]),</span>
                          <span class="n">base_comm</span><span class="o">=</span><span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">)</span>
@@ -926,14 +926,14 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_ScaledStackedLinearOperator</span><span class="p">(</span><span class="n">MPIStackedLinearOperator</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Scaled MPI StackedLinearOperator</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Scaled MPI StackedLinearOperator</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">MPIStackedLinearOperator</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">MPIStackedLinearOperator</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;MPILinearOperator expected as A&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'MPILinearOperator expected as A'</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">alpha</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;scalar expected as alpha&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'scalar expected as alpha'</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">_get_dtype</span><span class="p">([</span><span class="n">A</span><span class="p">],</span> <span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">alpha</span><span class="p">)]),</span>
                          <span class="n">base_comm</span><span class="o">=</span><span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">)</span>
@@ -956,16 +956,16 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_SumStackedLinearOperator</span><span class="p">(</span><span class="n">MPIStackedLinearOperator</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sum of MPI StackedLinearOperators</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Sum of MPI StackedLinearOperators</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">MPIStackedLinearOperator</span><span class="p">,</span> <span class="n">B</span><span class="p">:</span> <span class="n">MPIStackedLinearOperator</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">MPIStackedLinearOperator</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">MPIStackedLinearOperator</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;both operands have to be a MPIStackedLinearOperator&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'both operands have to be a MPIStackedLinearOperator'</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">type</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>  <span class="c1"># noqa: E721</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;both operands have to be of same type, </span><span class="si">{</span><span class="n">A</span><span class="si">}</span><span class="s1"> != </span><span class="si">{</span><span class="n">B</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'both operands have to be of same type, </span><span class="si">{</span><span class="n">A</span><span class="si">}</span><span class="s1"> != </span><span class="si">{</span><span class="n">B</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;cannot add </span><span class="si">%r</span><span class="s2"> and </span><span class="si">%r</span><span class="s2">: shape mismatch&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"cannot add </span><span class="si">%r</span><span class="s2"> and </span><span class="si">%r</span><span class="s2">: shape mismatch"</span> <span class="o">%</span> <span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">base_comm</span><span class="o">=</span><span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">)</span>
 
@@ -985,16 +985,16 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_PowerLinearOperator</span><span class="p">(</span><span class="n">MPIStackedLinearOperator</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Power of MPI StackedLinearOperator</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Power of MPI StackedLinearOperator</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">MPIStackedLinearOperator</span><span class="p">,</span> <span class="n">p</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">MPIStackedLinearOperator</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;MPIStackedLinearOperator expected as A&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"MPIStackedLinearOperator expected as A"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;square MPIStackedLinearOperator expected, got </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">A</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"square MPIStackedLinearOperator expected, got </span><span class="si">%r</span><span class="s2">"</span> <span class="o">%</span> <span class="n">A</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">isintlike</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="ow">or</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;non-negative integer expected as p&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"non-negative integer expected as p"</span><span class="p">)</span>
 
         <span class="nb">super</span><span class="p">(</span><span class="n">_PowerLinearOperator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">base_comm</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">base_comm</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
@@ -1013,12 +1013,12 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_ConjLinearOperator</span><span class="p">(</span><span class="n">MPIStackedLinearOperator</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Complex conjugate MPI StackedLinearOperator</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Complex conjugate MPI StackedLinearOperator</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">MPIStackedLinearOperator</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">MPIStackedLinearOperator</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;A must be a MPIStackedLinearOperator&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">'A must be a MPIStackedLinearOperator'</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">A</span> <span class="o">=</span> <span class="n">A</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">base_comm</span><span class="o">=</span><span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">)</span>
 
@@ -1067,8 +1067,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1102,7 +1102,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>

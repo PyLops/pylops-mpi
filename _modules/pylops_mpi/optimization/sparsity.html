@@ -30,8 +30,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
@@ -43,10 +43,10 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e45f66c9" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
@@ -491,14 +491,14 @@
         <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
         <span class="n">rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="n">rtol1</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-        <span class="n">threshkind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;soft&quot;</span><span class="p">,</span>
+        <span class="n">threshkind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"soft"</span><span class="p">,</span>
         <span class="n">decay</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">monitorres</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">itershow</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
         <span class="n">callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]:</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Iterative Shrinkage-Thresholding Algorithm (ISTA).</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Iterative Shrinkage-Thresholding Algorithm (ISTA).</span>
 
 <span class="sd">    Solve an optimization problem with :math:`L^p, \; p=0, 0.5, 1`</span>
 <span class="sd">    regularization, given the operator ``Op`` and data ``y``. The operator</span>
@@ -540,7 +540,7 @@
 <span class="sd">        Relative tolerance on total cost function wrt to data. Stops the solver when</span>
 <span class="sd">        the ratio of the current total cost function to the data norm is below this value.</span>
 <span class="sd">    threshkind : :obj:`str`, optional</span>
-<span class="sd">        Kind of thresholding (&#39;hard&#39;, &#39;soft&#39;, &#39;half&#39; - &#39;soft&#39; used as default)</span>
+<span class="sd">        Kind of thresholding ('hard', 'soft', 'half' - 'soft' used as default)</span>
 <span class="sd">    decay : :obj:`numpy.ndarray`, optional</span>
 <span class="sd">        Decay factor to be applied to thresholding during iterations</span>
 <span class="sd">    monitorres : :obj:`bool`, optional</span>
@@ -571,7 +571,7 @@
 <span class="sd">    NotImplementedError</span>
 <span class="sd">        If ``threshkind`` is different from hard, soft, half</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">callbacks</span> <span class="o">=</span> <span class="p">[</span>
         <span class="n">CostNanInfCallback</span><span class="p">(),</span>
     <span class="p">]</span>
@@ -619,14 +619,14 @@
     <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
     <span class="n">rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
     <span class="n">rtol1</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-    <span class="n">threshkind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;soft&quot;</span><span class="p">,</span>
+    <span class="n">threshkind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"soft"</span><span class="p">,</span>
     <span class="n">decay</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">monitorres</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">itershow</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
     <span class="n">callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]:</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Fast Iterative Shrinkage-Thresholding Algorithm (FISTA).</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Fast Iterative Shrinkage-Thresholding Algorithm (FISTA).</span>
 
 <span class="sd">    Solve an optimization problem with :math:`L^p, \; p=0, 0.5, 1`</span>
 <span class="sd">    regularization, given the operator ``Op`` and data ``y``.</span>
@@ -668,7 +668,7 @@
 <span class="sd">        Relative tolerance on total cost function wrt to data. Stops the solver when</span>
 <span class="sd">        the ratio of the current total cost function to the data norm is below this value.</span>
 <span class="sd">    threshkind : :obj:`str`, optional</span>
-<span class="sd">        Kind of thresholding (&#39;hard&#39;, &#39;soft&#39;, &#39;half&#39; - &#39;soft&#39; used as default)</span>
+<span class="sd">        Kind of thresholding ('hard', 'soft', 'half' - 'soft' used as default)</span>
 <span class="sd">    decay : :obj:`numpy.ndarray`, optional</span>
 <span class="sd">        Decay factor to be applied to thresholding during iterations</span>
 <span class="sd">    monitorres : :obj:`bool`, optional</span>
@@ -698,7 +698,7 @@
 <span class="sd">    NotImplementedError</span>
 <span class="sd">        If ``threshkind`` is different from hard, soft, half.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">callbacks</span> <span class="o">=</span> <span class="p">[</span>
         <span class="n">CostNanInfCallback</span><span class="p">(),</span>
     <span class="p">]</span>
@@ -759,8 +759,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -794,7 +794,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>

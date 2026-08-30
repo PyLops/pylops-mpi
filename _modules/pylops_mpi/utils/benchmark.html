@@ -30,8 +30,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
@@ -43,10 +43,10 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e45f66c9" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
@@ -467,8 +467,8 @@
                 <article class="bd-article">
                   
   <h1>Source code for pylops_mpi.utils.benchmark</h1><div class="highlight"><pre>
-<span></span><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;benchmark&quot;</span><span class="p">,</span>
-           <span class="s2">&quot;mark&quot;</span><span class="p">,</span>
+<span></span><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"benchmark"</span><span class="p">,</span>
+           <span class="s2">"mark"</span><span class="p">,</span>
            <span class="p">]</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
@@ -481,8 +481,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">deps</span> <span class="k">as</span> <span class="n">pylops_deps</span>  <span class="c1"># avoid namespace crashes with pylops_mpi.utils</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">deps</span>
 
-<span class="n">cupy_message</span> <span class="o">=</span> <span class="n">pylops_deps</span><span class="o">.</span><span class="n">cupy_import</span><span class="p">(</span><span class="s2">&quot;the benchmark module&quot;</span><span class="p">)</span>
-<span class="n">nccl_message</span> <span class="o">=</span> <span class="n">deps</span><span class="o">.</span><span class="n">nccl_import</span><span class="p">(</span><span class="s2">&quot;the benchmark module&quot;</span><span class="p">)</span>
+<span class="n">cupy_message</span> <span class="o">=</span> <span class="n">pylops_deps</span><span class="o">.</span><span class="n">cupy_import</span><span class="p">(</span><span class="s2">"the benchmark module"</span><span class="p">)</span>
+<span class="n">nccl_message</span> <span class="o">=</span> <span class="n">deps</span><span class="o">.</span><span class="n">nccl_import</span><span class="p">(</span><span class="s2">"the benchmark module"</span><span class="p">)</span>
 
 <span class="k">if</span> <span class="n">nccl_message</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cupy_message</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.utils._nccl</span><span class="w"> </span><span class="kn">import</span> <span class="n">_nccl_sync</span>
@@ -491,7 +491,7 @@
         <span class="k">pass</span>
 
 <span class="c1"># Benchmark is enabled by default</span>
-<span class="n">ENABLE_BENCHMARK</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;BENCH_PYLOPS_MPI&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span>
+<span class="n">ENABLE_BENCHMARK</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"BENCH_PYLOPS_MPI"</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span>
 
 <span class="c1"># Stack of active mark functions for nested support</span>
 <span class="n">_mark_func_stack</span> <span class="o">=</span> <span class="p">[]</span>
@@ -499,7 +499,7 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_parse_output_tree</span><span class="p">(</span><span class="n">markers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;This function parses the list of strings gathered during the benchmark call and output them</span>
+<span class="w">    </span><span class="sd">"""This function parses the list of strings gathered during the benchmark call and output them</span>
 <span class="sd">    as one properly formatted string. The format of output string follows the hierarchy of function calls</span>
 <span class="sd">    i.e., the nested funtion calls are indented.</span>
 
@@ -507,22 +507,22 @@
 <span class="sd">    ----------</span>
 <span class="sd">    markers: :obj:`list`, optional</span>
 <span class="sd">        A list of markers/labels generated from the benchmark call</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">global</span> <span class="n">_markers</span>
     <span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">stack</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">markers</span><span class="p">):</span>
         <span class="n">label</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">level</span> <span class="o">=</span> <span class="n">markers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">label</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;[decorator]&quot;</span><span class="p">):</span>
-            <span class="n">indent</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="p">(</span><span class="n">level</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">indent</span><span class="si">}{</span><span class="n">label</span><span class="si">}</span><span class="s2">: total runtime: </span><span class="si">{</span><span class="n">time</span><span class="si">:</span><span class="s2">6f</span><span class="si">}</span><span class="s2"> s</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">label</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"[decorator]"</span><span class="p">):</span>
+            <span class="n">indent</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\t</span><span class="s2">"</span> <span class="o">*</span> <span class="p">(</span><span class="n">level</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">indent</span><span class="si">}{</span><span class="n">label</span><span class="si">}</span><span class="s2">: total runtime: </span><span class="si">{</span><span class="n">time</span><span class="si">:</span><span class="s2">6f</span><span class="si">}</span><span class="s2"> s</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">stack</span><span class="p">:</span>
                 <span class="n">prev_label</span><span class="p">,</span> <span class="n">prev_time</span><span class="p">,</span> <span class="n">prev_level</span> <span class="o">=</span> <span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
                 <span class="k">if</span> <span class="n">prev_level</span> <span class="o">==</span> <span class="n">level</span><span class="p">:</span>
-                    <span class="n">indent</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="n">level</span>
-                    <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">indent</span><span class="si">}{</span><span class="n">prev_label</span><span class="si">}</span><span class="s2">--&gt;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">time</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">prev_time</span><span class="si">:</span><span class="s2">6f</span><span class="si">}</span><span class="s2"> s</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">indent</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\t</span><span class="s2">"</span> <span class="o">*</span> <span class="n">level</span>
+                    <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">indent</span><span class="si">}{</span><span class="n">prev_label</span><span class="si">}</span><span class="s2">--&gt;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">time</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">prev_time</span><span class="si">:</span><span class="s2">6f</span><span class="si">}</span><span class="s2"> s</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
                     <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
 
             <span class="c1"># Push to the stack only if it is going deeper or still at the same level</span>
@@ -537,7 +537,7 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_sync</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Synchronize all MPI processes or CUDA Devices&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Synchronize all MPI processes or CUDA Devices"""</span>
     <span class="n">_nccl_sync</span><span class="p">()</span>
     <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="o">.</span><span class="n">Barrier</span><span class="p">()</span>
 
@@ -545,18 +545,18 @@
 <div class="viewcode-block" id="mark">
 <a class="viewcode-back" href="../../../api/generated/pylops_mpi.utils.mark.html#pylops_mpi.utils.mark">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">mark</span><span class="p">(</span><span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;This function allows users to measure time arbitary lines of the function</span>
+<span class="w">    </span><span class="sd">"""This function allows users to measure time arbitary lines of the function</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    label: :obj:`str`</span>
 <span class="sd">        A label of the mark. This signifies both 1) the end of the</span>
 <span class="sd">        previous mark 2) the beginning of the new mark</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">ENABLE_BENCHMARK</span><span class="p">:</span>
         <span class="k">return</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">_mark_func_stack</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;mark() called outside of a benchmarked region&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"mark() called outside of a benchmarked region"</span><span class="p">)</span>
     <span class="n">_mark_func_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">](</span><span class="n">label</span><span class="p">)</span></div>
 
 
@@ -564,10 +564,10 @@
 <div class="viewcode-block" id="benchmark">
 <a class="viewcode-back" href="../../../api/generated/pylops_mpi.utils.benchmark.html#pylops_mpi.utils.benchmark">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">benchmark</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-              <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+              <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
               <span class="n">logger</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">logging</span><span class="o">.</span><span class="n">Logger</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
               <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A wrapper for code injection for time measurement.</span>
+<span class="w">    </span><span class="sd">"""A wrapper for code injection for time measurement.</span>
 
 <span class="sd">    This wrapper measures the start-to-end time of the wrapped function when</span>
 <span class="sd">    decorated without any argument.</span>
@@ -582,12 +582,12 @@
 <span class="sd">    func : :obj:`callable`, optional</span>
 <span class="sd">        Function to be decorated. Defaults to ``None``.</span>
 <span class="sd">    description : :obj:`str`, optional</span>
-<span class="sd">        Description for the output text. Defaults to ``&#39;&#39;``.</span>
+<span class="sd">        Description for the output text. Defaults to ``''``.</span>
 <span class="sd">    logger: :obj:`logging.Logger`, optional</span>
 <span class="sd">        A `logging.Logger` object for logging the benchmark text output. This logger must be setup before</span>
 <span class="sd">        passing to this function to either writing output to a file or log to stdout. If `logger`</span>
 <span class="sd">        is not provided, the output is printed to stdout.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">noop_decorator</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
         <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
@@ -603,7 +603,7 @@
             <span class="n">level</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">_mark_func_stack</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
             <span class="c1"># The header is needed for later tree parsing. Here it is allocating its spot.</span>
             <span class="c1"># the tuple at this index will be replaced after elapsed time is calculated.</span>
-            <span class="n">_markers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s2">&quot;[decorator]</span><span class="si">{</span><span class="n">description</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">level</span><span class="p">))</span>
+            <span class="n">_markers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s2">"[decorator]</span><span class="si">{</span><span class="n">description</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">level</span><span class="p">))</span>
             <span class="n">header_index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">_markers</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
 
             <span class="k">def</span><span class="w"> </span><span class="nf">local_mark</span><span class="p">(</span><span class="n">label</span><span class="p">):</span>
@@ -620,7 +620,7 @@
             <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
 
             <span class="n">elapsed</span> <span class="o">=</span> <span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span>
-            <span class="n">_markers</span><span class="p">[</span><span class="n">header_index</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[decorator]</span><span class="si">{</span><span class="n">description</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">elapsed</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+            <span class="n">_markers</span><span class="p">[</span><span class="n">header_index</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"[decorator]</span><span class="si">{</span><span class="n">description</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">elapsed</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
 
             <span class="c1"># In case of nesting, the wrapped callee must pop its closure from stack so that</span>
             <span class="c1"># when the callee returns, the wrapped caller operates on its closure (and its level label), which now becomes</span>
@@ -632,9 +632,9 @@
                 <span class="k">if</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="n">output</span> <span class="o">=</span> <span class="n">_parse_output_tree</span><span class="p">(</span><span class="n">_markers</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">logger</span><span class="p">:</span>
-                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output</span><span class="p">))</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output</span><span class="p">))</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output</span><span class="p">))</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output</span><span class="p">))</span>
             <span class="k">return</span> <span class="n">result</span>
         <span class="k">return</span> <span class="n">wrapper</span>
 
@@ -674,8 +674,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -709,7 +709,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>

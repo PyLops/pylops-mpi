@@ -30,8 +30,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
@@ -43,10 +43,10 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e45f66c9" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
@@ -485,7 +485,7 @@
          <span class="n">_Fredholm1</span><span class="o">=</span><span class="n">Fredholm1</span><span class="p">,</span> <span class="n">args_Identity</span><span class="o">=</span><span class="p">{},</span>
          <span class="n">args_FFT</span><span class="o">=</span><span class="p">{},</span> <span class="n">args_Identity1</span><span class="o">=</span><span class="p">{},</span>
          <span class="n">args_FFT1</span><span class="o">=</span><span class="p">{},</span> <span class="n">args_Fredholm1</span><span class="o">=</span><span class="p">{}):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Multi-dimensional convolution.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Multi-dimensional convolution.</span>
 
 <span class="sd">    Used to be able to provide operators from different libraries to</span>
 <span class="sd">    MDC. It operates in the same way as public method</span>
@@ -493,9 +493,9 @@
 <span class="sd">    passing a different operator and additional arguments to be passed to such</span>
 <span class="sd">    operator.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">twosided</span> <span class="ow">and</span> <span class="n">nt</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;nt must be odd number&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'nt must be odd number'</span><span class="p">)</span>
 
     <span class="c1"># find out dtype of G</span>
     <span class="n">dtype</span> <span class="o">=</span> <span class="n">G</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span>
@@ -519,7 +519,7 @@
     <span class="n">nfft</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="n">nt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">nfmax</span> <span class="o">&gt;</span> <span class="n">nfft</span><span class="p">:</span>
         <span class="n">nfmax</span> <span class="o">=</span> <span class="n">nfft</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;nfmax set equal to ceil[(nt+1)/2=</span><span class="si">%d</span><span class="s1">]&#39;</span> <span class="o">%</span> <span class="n">nfmax</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">'nfmax set equal to ceil[(nt+1)/2=</span><span class="si">%d</span><span class="s1">]'</span> <span class="o">%</span> <span class="n">nfmax</span><span class="p">)</span>
 
     <span class="n">Fop</span> <span class="o">=</span> <span class="n">MPILinearOperator</span><span class="p">(</span><span class="n">_FFT</span><span class="p">(</span><span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="n">nt</span><span class="p">,</span> <span class="n">nr</span><span class="p">,</span> <span class="n">nv</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                                  <span class="n">ifftshift_before</span><span class="o">=</span><span class="n">twosided</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">rdtype</span><span class="p">,</span> <span class="o">**</span><span class="n">args_FFT</span><span class="p">))</span>
@@ -546,11 +546,11 @@
 <div class="viewcode-block" id="MPIMDC">
 <a class="viewcode-back" href="../../../api/generated/pylops_mpi.waveeqprocessing.MPIMDC.html#pylops_mpi.waveeqprocessing.MPIMDC">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">MPIMDC</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nt</span><span class="p">,</span> <span class="n">nv</span><span class="p">,</span> <span class="n">nfreq</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">dr</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">twosided</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-           <span class="n">fftengine</span><span class="o">=</span><span class="s1">&#39;numpy&#39;</span><span class="p">,</span>
+           <span class="n">fftengine</span><span class="o">=</span><span class="s1">'numpy'</span><span class="p">,</span>
            <span class="n">saveGt</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">conj</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
            <span class="n">usematmul</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">prescaled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
            <span class="n">base_comm</span><span class="p">:</span> <span class="n">MPI</span><span class="o">.</span><span class="n">Comm</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Multi-dimensional convolution.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Multi-dimensional convolution.</span>
 
 <span class="sd">    Apply multi-dimensional convolution between two datasets in a distributed</span>
 <span class="sd">    fashion, with ``G`` distributed over ranks across the frequency axis.</span>
@@ -636,19 +636,19 @@
 <span class="sd">    convolution kernel.</span>
 
 <span class="sd">    .. [1] Wapenaar, K., van der Neut, J., Ruigrok, E., Draganov, D., Hunziker,</span>
-<span class="sd">       J., Slob, E., Thorbecke, J., and Snieder, R., &quot;Seismic interferometry</span>
+<span class="sd">       J., Slob, E., Thorbecke, J., and Snieder, R., "Seismic interferometry</span>
 <span class="sd">       by crosscorrelation and by multi-dimensional deconvolution: a</span>
-<span class="sd">       systematic comparison&quot;, Geophysical Journal International, vol. 185,</span>
+<span class="sd">       systematic comparison", Geophysical Journal International, vol. 185,</span>
 <span class="sd">       pp. 1335-1364. 2011.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">return</span> <span class="n">_MDC</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nt</span><span class="p">,</span> <span class="n">nv</span><span class="p">,</span> <span class="n">nfreq</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">,</span> <span class="n">dr</span><span class="o">=</span><span class="n">dr</span><span class="p">,</span> <span class="n">twosided</span><span class="o">=</span><span class="n">twosided</span><span class="p">,</span>
                 <span class="n">saveGt</span><span class="o">=</span><span class="n">saveGt</span><span class="p">,</span> <span class="n">conj</span><span class="o">=</span><span class="n">conj</span><span class="p">,</span> <span class="n">prescaled</span><span class="o">=</span><span class="n">prescaled</span><span class="p">,</span>
                 <span class="n">base_comm</span><span class="o">=</span><span class="n">base_comm</span><span class="p">,</span>
                 <span class="n">_Fredholm1</span><span class="o">=</span><span class="n">MPIFredholm1</span><span class="p">,</span>
-                <span class="n">args_FFT</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;engine&quot;</span><span class="p">:</span> <span class="n">fftengine</span><span class="p">},</span>
-                <span class="n">args_FFT1</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;engine&quot;</span><span class="p">:</span> <span class="n">fftengine</span><span class="p">},</span>
-                <span class="n">args_Fredholm1</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;usematmul&#39;</span><span class="p">:</span> <span class="n">usematmul</span><span class="p">})</span></div>
+                <span class="n">args_FFT</span><span class="o">=</span><span class="p">{</span><span class="s2">"engine"</span><span class="p">:</span> <span class="n">fftengine</span><span class="p">},</span>
+                <span class="n">args_FFT1</span><span class="o">=</span><span class="p">{</span><span class="s2">"engine"</span><span class="p">:</span> <span class="n">fftengine</span><span class="p">},</span>
+                <span class="n">args_Fredholm1</span><span class="o">=</span><span class="p">{</span><span class="s1">'usematmul'</span><span class="p">:</span> <span class="n">usematmul</span><span class="p">})</span></div>
 
 </pre></div>
 
@@ -679,8 +679,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -714,7 +714,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>

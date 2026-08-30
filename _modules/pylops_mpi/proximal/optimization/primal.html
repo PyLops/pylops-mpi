@@ -30,8 +30,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../../../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/plot_directive.css" />
@@ -43,10 +43,10 @@
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=e45f66c9" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
     <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
@@ -476,7 +476,6 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils.backend</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_numpy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
-
 <span class="kn">from</span><span class="w"> </span><span class="nn">pyproximal.optimization.primal</span><span class="w"> </span><span class="kn">import</span> <span class="n">_x0z0_init</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi</span><span class="w"> </span><span class="kn">import</span> <span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span>
@@ -504,7 +503,7 @@
     <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">DistributedArray</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Proximal gradient (optionally accelerated)</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Proximal gradient (optionally accelerated)</span>
 
 <span class="sd">    Solves the following minimization problem using (Accelerated) Proximal</span>
 <span class="sd">    gradient algorithm:</span>
@@ -524,7 +523,7 @@
 <span class="sd">        Proximal operator of f function (must have ``grad`` implemented)</span>
 <span class="sd">    proxg : :obj:`pylops_mpi.proximal.MPIProxOperator`</span>
 <span class="sd">        Proximal operator of g function</span>
-<span class="sd">    x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
+<span class="sd">    x0 : :obj:`pylops_mpi.DistributedArray`</span>
 <span class="sd">        Initial vector</span>
 <span class="sd">    epsg : :obj:`float` or :obj:`numpy.ndarray`, optional</span>
 <span class="sd">        Scaling factor of g function. Can be a scalar</span>
@@ -554,14 +553,14 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
+<span class="sd">    x : :obj:`pylops_mpi.DistributedArray`</span>
 <span class="sd">        Inverted model</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    See :class:`pyproximal.optimization.primal.ProximalGradient`</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">rank</span> <span class="o">=</span> <span class="n">x0</span><span class="o">.</span><span class="n">rank</span>
 
     <span class="c1"># check if epgs is a vector</span>
@@ -570,22 +569,22 @@
         <span class="n">epsg</span> <span class="o">=</span> <span class="n">epsg</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">niter</span><span class="p">)</span>
         <span class="n">epsg_print</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">epsg</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">epsg_print</span> <span class="o">=</span> <span class="s2">&quot;Multi&quot;</span>
+        <span class="n">epsg_print</span> <span class="o">=</span> <span class="s2">"Multi"</span>
 
-    <span class="k">if</span> <span class="n">acceleration</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;None&quot;</span><span class="p">,</span> <span class="s2">&quot;vandenberghe&quot;</span><span class="p">,</span> <span class="s2">&quot;fista&quot;</span><span class="p">]:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Acceleration should be None, vandenberghe or fista&quot;</span>
+    <span class="k">if</span> <span class="n">acceleration</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"None"</span><span class="p">,</span> <span class="s2">"vandenberghe"</span><span class="p">,</span> <span class="s2">"fista"</span><span class="p">]:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">"Acceleration should be None, vandenberghe or fista"</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">show</span> <span class="ow">and</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">tstart</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="nb">print</span><span class="p">(</span>
-            <span class="s2">&quot;Accelerated Proximal Gradient</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;---------------------------------------------------------</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;Proximal operator (f): </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;Proximal operator (g): </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;tau = </span><span class="si">%s</span><span class="se">\t</span><span class="s2">epsg = </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;niter = </span><span class="si">%d</span><span class="se">\t</span><span class="s2">tol = </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;&quot;</span>
-            <span class="s2">&quot;niterback = </span><span class="si">%d</span><span class="se">\t</span><span class="s2">acceleration = </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">"Accelerated Proximal Gradient</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"---------------------------------------------------------</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"Proximal operator (f): </span><span class="si">%s</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"Proximal operator (g): </span><span class="si">%s</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"tau = </span><span class="si">%s</span><span class="se">\t</span><span class="s2">epsg = </span><span class="si">%s</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"niter = </span><span class="si">%d</span><span class="se">\t</span><span class="s2">tol = </span><span class="si">%s</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">""</span>
+            <span class="s2">"niterback = </span><span class="si">%d</span><span class="se">\t</span><span class="s2">acceleration = </span><span class="si">%s</span><span class="se">\n</span><span class="s2">"</span>
             <span class="o">%</span> <span class="p">(</span>
                 <span class="n">proxf</span><span class="p">,</span>
                 <span class="n">proxg</span><span class="p">,</span>
@@ -597,7 +596,7 @@
                 <span class="n">acceleration</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
-        <span class="n">head</span> <span class="o">=</span> <span class="s2">&quot;   Itn       x[0]          f           g       J=f+eps*g       tau&quot;</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="s2">"   Itn       x[0]          f           g       J=f+eps*g       tau"</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">head</span><span class="p">)</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 
@@ -616,14 +615,12 @@
         <span class="k">if</span> <span class="n">eta</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">proxg</span><span class="o">.</span><span class="n">prox</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">tau</span> <span class="o">*</span> <span class="n">proxf</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="n">epsg</span><span class="p">[</span><span class="n">iiter</span><span class="p">]</span> <span class="o">*</span> <span class="n">tau</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">eta</span> <span class="o">*</span> <span class="p">(</span>
-                <span class="n">proxg</span><span class="o">.</span><span class="n">prox</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">tau</span> <span class="o">*</span> <span class="n">proxf</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">epsg</span><span class="p">[</span><span class="n">iiter</span><span class="p">]</span> <span class="o">*</span> <span class="n">tau</span><span class="p">)</span> <span class="o">-</span> <span class="n">x</span>
-            <span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">eta</span> <span class="o">*</span> <span class="p">(</span><span class="n">proxg</span><span class="o">.</span><span class="n">prox</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">tau</span> <span class="o">*</span> <span class="n">proxf</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">epsg</span><span class="p">[</span><span class="n">iiter</span><span class="p">]</span> <span class="o">*</span> <span class="n">tau</span><span class="p">)</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span>
 
         <span class="c1"># update y</span>
-        <span class="k">if</span> <span class="n">acceleration</span> <span class="o">==</span> <span class="s2">&quot;vandenberghe&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">acceleration</span> <span class="o">==</span> <span class="s2">"vandenberghe"</span><span class="p">:</span>
             <span class="n">omega</span> <span class="o">=</span> <span class="n">iiter</span> <span class="o">/</span> <span class="p">(</span><span class="n">iiter</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">acceleration</span> <span class="o">==</span> <span class="s2">&quot;fista&quot;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">acceleration</span> <span class="o">==</span> <span class="s2">"fista"</span><span class="p">:</span>
             <span class="n">told</span> <span class="o">=</span> <span class="n">t</span>
             <span class="n">t</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="mf">4.0</span> <span class="o">*</span> <span class="n">t</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span> <span class="o">/</span> <span class="mf">2.0</span>
             <span class="n">omega</span> <span class="o">=</span> <span class="p">(</span><span class="n">told</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="n">t</span>
@@ -651,7 +648,7 @@
                     <span class="n">pf</span><span class="p">,</span> <span class="n">pg</span> <span class="o">=</span> <span class="n">proxf</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">proxg</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
                     <span class="n">pfg</span> <span class="o">=</span> <span class="n">pf</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">epsg</span><span class="p">[</span><span class="n">iiter</span><span class="p">]</span> <span class="o">*</span> <span class="n">pg</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%6g</span><span class="s2">  </span><span class="si">%12.5e</span><span class="s2">  </span><span class="si">%10.3e</span><span class="s2">  </span><span class="si">%10.3e</span><span class="s2">  </span><span class="si">%10.3e</span><span class="s2">  </span><span class="si">%10.3e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s2">"</span><span class="si">%6g</span><span class="s2">  </span><span class="si">%12.5e</span><span class="s2">  </span><span class="si">%10.3e</span><span class="s2">  </span><span class="si">%10.3e</span><span class="s2">  </span><span class="si">%10.3e</span><span class="s2">  </span><span class="si">%10.3e</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span>
                         <span class="n">iiter</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
                         <span class="p">(</span>
                             <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
@@ -671,8 +668,8 @@
             <span class="k">break</span>
 
     <span class="k">if</span> <span class="n">show</span> <span class="ow">and</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Total time (s) = </span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">tstart</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------------------------------------------</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Total time (s) = </span><span class="si">%.2f</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">tstart</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"---------------------------------------------------------</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">x</span></div>
 
@@ -682,9 +679,9 @@
 <a class="viewcode-back" href="../../../../api/generated/pylops_mpi.proximal.optimization.primal.ADMML2.html#pylops_mpi.proximal.optimization.primal.ADMML2">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">ADMML2</span><span class="p">(</span>
     <span class="n">proxg</span><span class="p">:</span> <span class="n">MPIProxOperator</span><span class="p">,</span>
-    <span class="n">Op</span><span class="p">:</span> <span class="s2">&quot;MPILinearOperator&quot;</span><span class="p">,</span>
+    <span class="n">Op</span><span class="p">:</span> <span class="s2">"MPILinearOperator"</span><span class="p">,</span>
     <span class="n">b</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">,</span>
-    <span class="n">A</span><span class="p">:</span> <span class="s2">&quot;MPILinearOperator&quot;</span><span class="p">,</span>
+    <span class="n">A</span><span class="p">:</span> <span class="s2">"MPILinearOperator"</span><span class="p">,</span>
     <span class="n">x0</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">,</span>
     <span class="n">tau</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">niter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
@@ -694,7 +691,7 @@
     <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">kwargs_solver</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">DistributedArray</span><span class="p">,</span> <span class="n">DistributedArray</span><span class="p">]:</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Alternating Direction Method of Multipliers for L2 misfit term</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Alternating Direction Method of Multipliers for L2 misfit term</span>
 
 <span class="sd">    Solves the following minimization problem using Alternating Direction</span>
 <span class="sd">    Method of Multipliers:</span>
@@ -713,18 +710,18 @@
 <span class="sd">        Proximal operator of g function</span>
 <span class="sd">    Op : :obj:`pylops_mpi.MPILinearOperator` or :obj:`pylops_mpi.MPIStackedLinearOperator`</span>
 <span class="sd">        Linear operator of data misfit term</span>
-<span class="sd">    b : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
+<span class="sd">    b : :obj:`pylops_mpi.DistributedArray`</span>
 <span class="sd">        Data</span>
 <span class="sd">    A : :obj:`pylops_mpi.MPILinearOperator` or :obj:`pylops_mpi.MPIStackedLinearOperator`</span>
 <span class="sd">        Linear operator of regularization term</span>
-<span class="sd">    x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
+<span class="sd">    x0 : :obj:`pylops_mpi.DistributedArray`</span>
 <span class="sd">        Initial vector</span>
 <span class="sd">    tau : :obj:`float`</span>
 <span class="sd">        Positive scalar weight, which should satisfy the following condition</span>
 <span class="sd">        to guarantees convergence: :math:`\tau \in (0, 1/\lambda_{max}(\mathbf{A}^H\mathbf{A})]`.</span>
 <span class="sd">    niter : :obj:`int`, optional</span>
 <span class="sd">        Number of iterations of iterative scheme</span>
-<span class="sd">    z0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
+<span class="sd">    z0 : :obj:`pylops_mpi.DistributedArray`</span>
 <span class="sd">        Initial auxiliary vector. If ``None``, initialized to ``A @ x0``.</span>
 <span class="sd">    gfirst : :obj:`bool`, optional</span>
 <span class="sd">        Apply Proximal of operator ``g`` first (``True``) or Proximal of</span>
@@ -743,9 +740,9 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
+<span class="sd">    x : :obj:`pylops_mpi.DistributedArray`</span>
 <span class="sd">        Inverted model</span>
-<span class="sd">    z : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
+<span class="sd">    z : :obj:`pylops_mpi.DistributedArray`</span>
 <span class="sd">        Inverted second model</span>
 
 <span class="sd">    Raises</span>
@@ -757,22 +754,22 @@
 <span class="sd">    -----</span>
 <span class="sd">    See :class:`pyproximal.optimization.primal.ADMML2`</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">rank</span> <span class="o">=</span> <span class="n">x0</span><span class="o">.</span><span class="n">rank</span>
 
     <span class="c1"># initialize variables</span>
-    <span class="n">x</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">_x0z0_init</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">Opname</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="p">)</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">_x0z0_init</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">Opname</span><span class="o">=</span><span class="s2">"A"</span><span class="p">)</span>
     <span class="n">u</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="n">show</span> <span class="ow">and</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">tstart</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="nb">print</span><span class="p">(</span>
-            <span class="s2">&quot;ADMM</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;---------------------------------------------------------</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;Proximal operator (g): </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;tau = </span><span class="si">%10e</span><span class="se">\t</span><span class="s2">niter = </span><span class="si">%d</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">proxg</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">niter</span><span class="p">)</span>
+            <span class="s2">"ADMM</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"---------------------------------------------------------</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"Proximal operator (g): </span><span class="si">%s</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"tau = </span><span class="si">%10e</span><span class="se">\t</span><span class="s2">niter = </span><span class="si">%d</span><span class="se">\n</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span><span class="n">proxg</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">niter</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="n">head</span> <span class="o">=</span> <span class="s2">&quot;   Itn       x[0]          f           g       J = f + g&quot;</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="s2">"   Itn       x[0]          f           g       J = f + g"</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">head</span><span class="p">)</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 
@@ -803,9 +800,9 @@
 
         <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">iiter</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="ow">or</span> <span class="n">niter</span> <span class="o">-</span> <span class="n">iiter</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="ow">or</span> <span class="n">iiter</span> <span class="o">%</span> <span class="p">(</span><span class="n">niter</span> <span class="o">//</span> <span class="mi">10</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">pf</span><span class="p">,</span> <span class="n">pg</span> <span class="o">=</span> <span class="n">to_numpy</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">Op</span> <span class="o">@</span> <span class="n">x</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span> <span class="n">proxg</span><span class="p">(</span><span class="n">Ax</span><span class="p">)</span>
+                <span class="n">pf</span><span class="p">,</span> <span class="n">pg</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">Op</span> <span class="o">@</span> <span class="n">x</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">proxg</span><span class="p">(</span><span class="n">Ax</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%6g</span><span class="s2">  </span><span class="si">%12.5e</span><span class="s2">  </span><span class="si">%10.3e</span><span class="s2">  </span><span class="si">%10.3e</span><span class="s2">  </span><span class="si">%10.3e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s2">"</span><span class="si">%6g</span><span class="s2">  </span><span class="si">%12.5e</span><span class="s2">  </span><span class="si">%10.3e</span><span class="s2">  </span><span class="si">%10.3e</span><span class="s2">  </span><span class="si">%10.3e</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span>
                         <span class="n">iiter</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
                         <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span>
                         <span class="n">pf</span><span class="p">,</span>
@@ -815,8 +812,8 @@
                     <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                     <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">show</span> <span class="ow">and</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Total time (s) = </span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">tstart</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------------------------------------------</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Total time (s) = </span><span class="si">%.2f</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">tstart</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"---------------------------------------------------------</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">z</span></div>
 
@@ -849,8 +846,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -884,7 +881,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>

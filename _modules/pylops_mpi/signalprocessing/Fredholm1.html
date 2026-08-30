@@ -30,8 +30,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
@@ -43,10 +43,10 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e45f66c9" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
@@ -483,7 +483,7 @@
 <div class="viewcode-block" id="MPIFredholm1">
 <a class="viewcode-back" href="../../../api/generated/pylops_mpi.signalprocessing.MPIFredholm1.html#pylops_mpi.signalprocessing.MPIFredholm1">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MPIFredholm1</span><span class="p">(</span><span class="n">MPILinearOperator</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Fredholm integral of first kind.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Fredholm integral of first kind.</span>
 
 <span class="sd">    Implement a multi-dimensional Fredholm integral of first kind distributed</span>
 <span class="sd">    across the first dimension</span>
@@ -544,7 +544,7 @@
 <span class="sd">    the resulting outputs are then gathered by all ranks to return a</span>
 <span class="sd">    distributed arrays with broadcast partion.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -553,15 +553,15 @@
         <span class="n">saveGt</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">usematmul</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">base_comm</span><span class="p">:</span> <span class="n">MPI</span><span class="o">.</span><span class="n">Comm</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">,</span>
-        <span class="n">dtype</span><span class="p">:</span> <span class="n">DTypeLike</span> <span class="o">=</span> <span class="s2">&quot;float64&quot;</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="p">:</span> <span class="n">DTypeLike</span> <span class="o">=</span> <span class="s2">"float64"</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nz</span> <span class="o">=</span> <span class="n">nz</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nsl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ny</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">shape</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nsls</span> <span class="o">=</span> <span class="n">base_comm</span><span class="o">.</span><span class="n">allgather</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsl</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">base_comm</span><span class="o">.</span><span class="n">Get_rank</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="mi">1</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsls</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;All ranks must have at least 2 or more &#39;</span>
-                                      <span class="sa">f</span><span class="s1">&#39;elements in the first dimension: &#39;</span>
-                                      <span class="sa">f</span><span class="s1">&#39;local split is instead </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nsls</span><span class="si">}</span><span class="s1">...&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'All ranks must have at least 2 or more '</span>
+                                      <span class="sa">f</span><span class="s1">'elements in the first dimension: '</span>
+                                      <span class="sa">f</span><span class="s1">'local split is instead </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nsls</span><span class="si">}</span><span class="s1">...'</span><span class="p">)</span>
         <span class="n">nslstot</span> <span class="o">=</span> <span class="n">base_comm</span><span class="o">.</span><span class="n">allreduce</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsl</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">islstart</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsls</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">islend</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsls</span><span class="p">)</span>
@@ -578,8 +578,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="n">ncp</span> <span class="o">=</span> <span class="n">get_module</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">partition</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="p">,</span> <span class="n">Partition</span><span class="o">.</span><span class="n">UNSAFE_BROADCAST</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;x should have partition=</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">UNSAFE_BROADCAST</span><span class="si">}</span><span class="s2">&quot;</span>
-                             <span class="sa">f</span><span class="s2">&quot;Got  </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">partition</span><span class="si">}</span><span class="s2"> instead...&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"x should have partition=</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">UNSAFE_BROADCAST</span><span class="si">}</span><span class="s2">"</span>
+                             <span class="sa">f</span><span class="s2">"Got  </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">partition</span><span class="si">}</span><span class="s2"> instead..."</span><span class="p">)</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
                              <span class="n">base_comm</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span>
                              <span class="n">base_comm_nccl</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span>
@@ -604,8 +604,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="n">ncp</span> <span class="o">=</span> <span class="n">get_module</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">partition</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="p">,</span> <span class="n">Partition</span><span class="o">.</span><span class="n">UNSAFE_BROADCAST</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;x should have partition=</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">UNSAFE_BROADCAST</span><span class="si">}</span><span class="s2">&quot;</span>
-                             <span class="sa">f</span><span class="s2">&quot;Got  </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">partition</span><span class="si">}</span><span class="s2"> instead...&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"x should have partition=</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">BROADCAST</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">UNSAFE_BROADCAST</span><span class="si">}</span><span class="s2">"</span>
+                             <span class="sa">f</span><span class="s2">"Got  </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">partition</span><span class="si">}</span><span class="s2"> instead..."</span><span class="p">)</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
                              <span class="n">base_comm</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span>
                              <span class="n">base_comm_nccl</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span>
@@ -617,7 +617,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">usematmul</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nz</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">ncp</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
-            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;GT&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"GT"</span><span class="p">):</span>
                 <span class="n">y1</span> <span class="o">=</span> <span class="n">ncp</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">GT</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">y1</span> <span class="o">=</span> <span class="p">(</span>
@@ -627,7 +627,7 @@
                 <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">y1</span> <span class="o">=</span> <span class="n">ncp</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">ncp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nsls</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">ny</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nz</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
-            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;GT&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"GT"</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">isl</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nsls</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">]):</span>
                     <span class="n">y1</span><span class="p">[</span><span class="n">isl</span><span class="p">]</span> <span class="o">=</span> <span class="n">ncp</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">GT</span><span class="p">[</span><span class="n">isl</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="n">isl</span><span class="p">])</span>
             <span class="k">else</span><span class="p">:</span>
@@ -668,8 +668,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -703,7 +703,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>

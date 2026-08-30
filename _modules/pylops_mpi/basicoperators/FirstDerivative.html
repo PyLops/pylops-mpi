@@ -30,8 +30,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
@@ -43,10 +43,10 @@
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e45f66c9" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
@@ -487,7 +487,7 @@
 <div class="viewcode-block" id="MPIFirstDerivative">
 <a class="viewcode-back" href="../../../api/generated/pylops_mpi.basicoperators.MPIFirstDerivative.html#pylops_mpi.basicoperators.MPIFirstDerivative">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MPIFirstDerivative</span><span class="p">(</span><span class="n">MPILinearOperator</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;MPI First Derivative</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""MPI First Derivative</span>
 
 <span class="sd">    Apply a first derivative using a multiple-point stencil finite-difference</span>
 <span class="sd">    approximation with :class:`pylops_mpi.DistributedArray`. The First-Derivative</span>
@@ -525,7 +525,7 @@
 
 <span class="sd">    When computing the first derivative using a :class:`pylops_mpi.DistributedArray`, a technique named **ghosting**</span>
 <span class="sd">    is employed, often in conjunction with MPI for communication between different processes. Ghosting involves</span>
-<span class="sd">    creating additional **&quot;ghost cells&quot;** around the boundary of each process&#39;s local data domain. These ghost cells</span>
+<span class="sd">    creating additional **"ghost cells"** around the boundary of each process's local data domain. These ghost cells</span>
 <span class="sd">    are replicated copies of the border cells from neighboring processes, these cells allow each process</span>
 <span class="sd">    to perform local computations without the need for explicit communication with other processes.</span>
 
@@ -550,12 +550,12 @@
 <span class="sd">    Formulas for the third-order centered stencil can be found at</span>
 <span class="sd">    this `link &lt;https://en.wikipedia.org/wiki/Finite_difference_coefficient&gt;`_.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">dims</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">InputDimsLike</span><span class="p">],</span>
                  <span class="n">sampling</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
-                 <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;centered&quot;</span><span class="p">,</span>
+                 <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"centered"</span><span class="p">,</span>
                  <span class="n">edge</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                  <span class="n">order</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
                  <span class="n">base_comm</span><span class="p">:</span> <span class="n">MPI</span><span class="o">.</span><span class="n">Comm</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">,</span>
@@ -576,10 +576,10 @@
         <span class="c1"># choose _matvec and _rmatvec kind</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_hmatvec</span><span class="p">:</span> <span class="n">Callable</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_hrmatvec</span><span class="p">:</span> <span class="n">Callable</span>
-        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;forward&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"forward"</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hmatvec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matvec_forward</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hrmatvec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rmatvec_forward</span>
-        <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;centered&quot;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"centered"</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">order</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_hmatvec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matvec_centered3</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_hrmatvec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rmatvec_centered3</span>
@@ -587,13 +587,13 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_hmatvec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matvec_centered5</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_hrmatvec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rmatvec_centered5</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;&#39;order&#39; must be &#39;3, or &#39;5&#39;&quot;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;backward&quot;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"'order' must be '3, or '5'"</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"backward"</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hmatvec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matvec_backward</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hrmatvec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rmatvec_backward</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-                <span class="s2">&quot;&#39;kind&#39; must be &#39;forward&#39;, &#39;centered&#39;, or &#39;backward&#39;&quot;</span>
+                <span class="s2">"'kind' must be 'forward', 'centered', or 'backward'"</span>
             <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
@@ -817,8 +817,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -852,7 +852,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>

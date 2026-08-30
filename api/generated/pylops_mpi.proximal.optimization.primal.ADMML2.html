@@ -31,8 +31,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
@@ -44,10 +44,10 @@
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e45f66c9" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
@@ -583,18 +583,18 @@ s.t. \; \mathbf{Ax}=\mathbf{z}\end{split}\]</div>
 </dd>
 <dt><strong>Op</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.MPILinearOperator.html#pylops_mpi.MPILinearOperator" title="pylops_mpi.MPILinearOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.MPILinearOperator</span></code></a> or <a class="reference internal" href="pylops_mpi.MPIStackedLinearOperator.html#pylops_mpi.MPIStackedLinearOperator" title="pylops_mpi.MPIStackedLinearOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.MPIStackedLinearOperator</span></code></a></span></dt><dd><p>Linear operator of data misfit term</p>
 </dd>
-<dt><strong>b</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a> or <a class="reference internal" href="pylops_mpi.StackedDistributedArray.html#pylops_mpi.StackedDistributedArray" title="pylops_mpi.StackedDistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.StackedDistributedArray</span></code></a></span></dt><dd><p>Data</p>
+<dt><strong>b</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a></span></dt><dd><p>Data</p>
 </dd>
 <dt><strong>A</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.MPILinearOperator.html#pylops_mpi.MPILinearOperator" title="pylops_mpi.MPILinearOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.MPILinearOperator</span></code></a> or <a class="reference internal" href="pylops_mpi.MPIStackedLinearOperator.html#pylops_mpi.MPIStackedLinearOperator" title="pylops_mpi.MPIStackedLinearOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.MPIStackedLinearOperator</span></code></a></span></dt><dd><p>Linear operator of regularization term</p>
 </dd>
-<dt><strong>x0</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a> or <a class="reference internal" href="pylops_mpi.StackedDistributedArray.html#pylops_mpi.StackedDistributedArray" title="pylops_mpi.StackedDistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.StackedDistributedArray</span></code></a></span></dt><dd><p>Initial vector</p>
+<dt><strong>x0</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a></span></dt><dd><p>Initial vector</p>
 </dd>
 <dt><strong>tau</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p>Positive scalar weight, which should satisfy the following condition
 to guarantees convergence: <span class="math notranslate nohighlight">\(\tau \in (0, 1/\lambda_{max}(\mathbf{A}^H\mathbf{A})]\)</span>.</p>
 </dd>
 <dt><strong>niter</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a>, optional</span></dt><dd><p>Number of iterations of iterative scheme</p>
 </dd>
-<dt><strong>z0</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a> or <a class="reference internal" href="pylops_mpi.StackedDistributedArray.html#pylops_mpi.StackedDistributedArray" title="pylops_mpi.StackedDistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.StackedDistributedArray</span></code></a></span></dt><dd><p>Initial auxiliary vector. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, initialized to <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">&#64;</span> <span class="pre">x0</span></code>.</p>
+<dt><strong>z0</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a></span></dt><dd><p>Initial auxiliary vector. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, initialized to <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">&#64;</span> <span class="pre">x0</span></code>.</p>
 </dd>
 <dt><strong>gfirst</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Apply Proximal of operator <code class="docutils literal notranslate"><span class="pre">g</span></code> first (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or Proximal of
 operator <code class="docutils literal notranslate"><span class="pre">f</span></code> first (<code class="docutils literal notranslate"><span class="pre">False</span></code>)</p>
@@ -614,9 +614,9 @@ to solve the x-update</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl>
-<dt><strong>x</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a> or <a class="reference internal" href="pylops_mpi.StackedDistributedArray.html#pylops_mpi.StackedDistributedArray" title="pylops_mpi.StackedDistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.StackedDistributedArray</span></code></a></span></dt><dd><p>Inverted model</p>
+<dt><strong>x</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a></span></dt><dd><p>Inverted model</p>
 </dd>
-<dt><strong>z</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a> or <a class="reference internal" href="pylops_mpi.StackedDistributedArray.html#pylops_mpi.StackedDistributedArray" title="pylops_mpi.StackedDistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.StackedDistributedArray</span></code></a></span></dt><dd><p>Inverted second model</p>
+<dt><strong>z</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a></span></dt><dd><p>Inverted second model</p>
 </dd>
 </dl>
 </dd>
@@ -697,8 +697,8 @@ to solve the x-update</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -732,7 +732,7 @@ to solve the x-update</p>
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>
