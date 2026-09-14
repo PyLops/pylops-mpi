@@ -28,7 +28,20 @@ class MPIL21(MPIProxOperator):
     -----
     This is a distributed implementation of the :math:`L_{2,1}` norm.
 
-    XXXX
+    The matrix is here represented as a :py:class:`pylops_mpi.StackedDistributedArray`
+    with each column corresponding to a :py:class:`pylops_mpi.DistributedArray`.
+
+    The norm evaluation simply requires the creation of an intermediate
+    :py:class:`pylops_mpi.DistributedArray` that contains the sum of the square
+    root of the sum of the squares of the corresponding elements in the
+    :py:class:`pylops_mpi.DistributedArray` of the
+    :py:class:`pylops_mpi.StackedDistributedArray`
+    the underlying distributed array. This is further reduced by computing the
+    L1 norm.
+
+    The proximal operator requires once again the creation of the same intermediate
+    :py:class:`pylops_mpi.DistributedArray`, followed by a per-element
+    independent re-scaling.
 
     """
 
@@ -79,7 +92,9 @@ class MPIL21(MPIProxOperator):
         return float(f)
 
     @_check_tau
-    def prox(self, x: DistributedArray, tau: float, **kwargs: Any) -> DistributedArray:
+    def prox(
+        self, x: StackedDistributedArray, tau: float, **kwargs: Any
+    ) -> DistributedArray:
         """Proximal operator applied to a vector"""
         # Check input
         self._check_dims(x)
