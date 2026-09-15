@@ -61,7 +61,7 @@
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="pylops_mpi.optimization.cls_basic.CG" href="pylops_mpi.optimization.cls_basic.CG.html" />
+    <link rel="next" title="pylops_mpi.proximal.proximal.MPIL21" href="pylops_mpi.proximal.proximal.MPIL21.html" />
     <link rel="prev" title="pylops_mpi.proximal.MPIProxOperator" href="pylops_mpi.proximal.MPIProxOperator.html" />
     
     <script src="../../_static/require.js"></script>
@@ -470,6 +470,7 @@
 </ul>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">pylops_mpi.proximal.proximal.MPIL2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.proximal.proximal.MPIL21.html">pylops_mpi.proximal.proximal.MPIL21</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.optimization.cls_basic.CG.html">pylops_mpi.optimization.cls_basic.CG</a></li>
@@ -579,23 +580,23 @@
 </dd>
 <dt><strong>q</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>, optional</span></dt><dd><p>Dot vector</p>
 </dd>
-<dt><strong>sigma</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a>, optional</span></dt><dd><p>Multiplicative coefficient of L2 norm</p>
+<dt><strong>sigma</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a>, optional</span></dt><dd><p>Multiplicative coefficient of L2 norm</p>
 </dd>
-<dt><strong>alpha</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Multiplicative coefficient of dot product</p>
+<dt><strong>alpha</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Multiplicative coefficient of dot product</p>
 </dd>
-<dt><strong>qgrad</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Add q term to gradient (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or not (<code class="docutils literal notranslate"><span class="pre">False</span></code>)</p>
+<dt><strong>qgrad</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Add q term to gradient (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or not (<code class="docutils literal notranslate"><span class="pre">False</span></code>)</p>
 </dd>
-<dt><strong>niter</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">func</span></code>, optional</span></dt><dd><p>Number of iterations of iterative scheme used to compute the proximal.
+<dt><strong>niter</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">func</span></code>, optional</span></dt><dd><p>Number of iterations of iterative scheme used to compute the proximal.
 This can be a constant number or a function that is called passing a
 counter which keeps track of how many times the <code class="docutils literal notranslate"><span class="pre">prox</span></code> method has
 been invoked before and returns the <code class="docutils literal notranslate"><span class="pre">niter</span></code> to be used.</p>
 </dd>
 <dt><strong>x0</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>, optional</span></dt><dd><p>Initial vector. If <code class="docutils literal notranslate"><span class="pre">Op</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, this must be passed.</p>
 </dd>
-<dt><strong>warm</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Warm start (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or not (<code class="docutils literal notranslate"><span class="pre">False</span></code>). Uses estimate from previous
+<dt><strong>warm</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Warm start (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or not (<code class="docutils literal notranslate"><span class="pre">False</span></code>). Uses estimate from previous
 call of <code class="docutils literal notranslate"><span class="pre">prox</span></code> method.</p>
 </dd>
-<dt><strong>solver</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><div class="versionadded">
+<dt><strong>solver</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><div class="versionadded">
 <p><span class="versionmodified added">Added in version 0.11.0.</span></p>
 </div>
 <p>Name of solver to use with non-explicit operators:</p>
@@ -606,7 +607,7 @@ normal equations;</p></li>
 regularized system of equations;</p></li>
 </ul>
 </dd>
-<dt><strong>**kwargs_solver</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code></a>, optional</span></dt><dd><p>Dictionary containing extra arguments for the solver selected
+<dt><strong>**kwargs_solver</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code></a>, optional</span></dt><dd><p>Dictionary containing extra arguments for the solver selected
 via the <code class="docutils literal notranslate"><span class="pre">solver</span></code> parameter.</p>
 </dd>
 </dl>
@@ -629,11 +630,17 @@ requires the solution of a distributed inversion via the
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">grad</span></code>(x)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">prox</span></code>(*args, **kwargs)</p></td>
-<td><p>Proximal operator applied to a vector</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">postcomposition</span></code>(sigma)</p></td>
+<td><p>Postcomposition</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">proxdual</span></code>(x, tau, **kwargs)</p></td>
-<td><p>Dual Proximal operator applied to a vector</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">precomposition</span></code>(a, b)</p></td>
+<td><p>Precomposition</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">prox</span></code>(*args, **kwargs)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">proxdual</span></code>(**kwargs)</p></td>
+<td><p></p></td>
 </tr>
 </tbody>
 </table>
@@ -662,11 +669,11 @@ requires the solution of a distributed inversion via the
       </div>
     </a>
     <a class="right-next"
-       href="pylops_mpi.optimization.cls_basic.CG.html"
+       href="pylops_mpi.proximal.proximal.MPIL21.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">pylops_mpi.optimization.cls_basic.CG</p>
+        <p class="prev-next-title">pylops_mpi.proximal.proximal.MPIL21</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

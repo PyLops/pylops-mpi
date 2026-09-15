@@ -470,6 +470,7 @@
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.proximal.proximal.MPIL2.html">pylops_mpi.proximal.proximal.MPIL2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.proximal.proximal.MPIL21.html">pylops_mpi.proximal.proximal.MPIL21</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.optimization.cls_basic.CG.html">pylops_mpi.optimization.cls_basic.CG</a></li>
@@ -581,11 +582,11 @@ frequencies only as values at negative frequencies are simply their complex conj
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
-<dt><strong>dims</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a></span></dt><dd><p>Number of samples for each dimension</p>
+<dt><strong>dims</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a></span></dt><dd><p>Number of samples for each dimension</p>
 </dd>
-<dt><strong>axes</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a>, optional</span></dt><dd><p>Axes (or axis) along which FFTND is applied</p>
+<dt><strong>axes</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a>, optional</span></dt><dd><p>Axes (or axis) along which FFTND is applied</p>
 </dd>
-<dt><strong>sampling</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Sampling steps for each direction. When supplied a single value, it is used
+<dt><strong>sampling</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a> or <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Sampling steps for each direction. When supplied a single value, it is used
 for all directions.</p>
 </dd>
 <dt><strong>norm</strong><span class="classifier"><cite>{“none”, “1/n”}</cite>, optional</span></dt><dd><ul class="simple">
@@ -594,13 +595,13 @@ for all directions.</p>
 <span class="math notranslate nohighlight">\(1/N_F\)</span>.</p></li>
 </ul>
 </dd>
-<dt><strong>real</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Model to which fft is applied has real numbers (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or not
+<dt><strong>real</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Model to which fft is applied has real numbers (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or not
 (<code class="docutils literal notranslate"><span class="pre">False</span></code>). Used to enforce that the output of adjoint of a real
 model is real. Note that the real FFT is applied only to the first
 dimension to which the FFTND operator is applied (last element of
 <code class="docutils literal notranslate"><span class="pre">axes</span></code>)</p>
 </dd>
-<dt><strong>ifftshift_before</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Apply ifftshift (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or not (<code class="docutils literal notranslate"><span class="pre">False</span></code>) to model vector (before FFT).
+<dt><strong>ifftshift_before</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a> or <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Apply ifftshift (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or not (<code class="docutils literal notranslate"><span class="pre">False</span></code>) to model vector (before FFT).
 Consider using this option when the model vector’s respective axis is symmetric
 with respect to the zero value sample. This will shift the zero value sample to
 coincide with the zero index sample. With such an arrangement, FFT will not
@@ -608,14 +609,14 @@ introduce a sample-dependent phase-shift when compared to the continuous Fourier
 Transform. When passing a single value, the shift will the same for every direction.
 Pass a tuple to specify which dimensions are shifted.</p>
 </dd>
-<dt><strong>fftshift_after</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Apply fftshift (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or not (<code class="docutils literal notranslate"><span class="pre">False</span></code>) to data vector (after FFT).
+<dt><strong>fftshift_after</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a> or <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Apply fftshift (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or not (<code class="docutils literal notranslate"><span class="pre">False</span></code>) to data vector (after FFT).
 Consider using this option when you require frequencies to be arranged
 naturally, from negative to positive. When not applying fftshift after FFT,
 frequencies are arranged from zero to largest positive, and then from negative
 Nyquist to the frequency bin before zero. When passing a single value, the shift
 will the same for every direction. Pass a tuple to specify which dimensions are shifted.</p>
 </dd>
-<dt><strong>dtype</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Type of elements in input array. Note that the <code class="docutils literal notranslate"><span class="pre">dtype</span></code> of the operator
+<dt><strong>dtype</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Type of elements in input array. Note that the <code class="docutils literal notranslate"><span class="pre">dtype</span></code> of the operator
 is the corresponding complex type even when a real type is provided.
 In addition, note that the NumPy backend does not support returning <code class="docutils literal notranslate"><span class="pre">dtype</span></code>
 different from <code class="docutils literal notranslate"><span class="pre">complex128</span></code>.</p>
@@ -626,20 +627,20 @@ different from <code class="docutils literal notranslate"><span class="pre">comp
 </dd>
 <dt class="field-even">Attributes<span class="colon">:</span></dt>
 <dd class="field-even"><dl>
-<dt><strong>fs</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a></span></dt><dd><p>Each element of the tuple corresponds to the Discrete Fourier Transform
+<dt><strong>fs</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a></span></dt><dd><p>Each element of the tuple corresponds to the Discrete Fourier Transform
 sample frequencies along the respective direction given by <code class="docutils literal notranslate"><span class="pre">axes</span></code>.</p>
 </dd>
-<dt><strong>nffts</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a>, optional</span></dt><dd><p>Number of samples in Fourier Transform for each axis in <code class="docutils literal notranslate"><span class="pre">axes</span></code>.</p>
+<dt><strong>nffts</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a> or <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a>, optional</span></dt><dd><p>Number of samples in Fourier Transform for each axis in <code class="docutils literal notranslate"><span class="pre">axes</span></code>.</p>
 </dd>
-<dt><strong>real</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a></span></dt><dd><p>When <code class="docutils literal notranslate"><span class="pre">True</span></code>, uses real fast fourier transform</p>
+<dt><strong>real</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a></span></dt><dd><p>When <code class="docutils literal notranslate"><span class="pre">True</span></code>, uses real fast fourier transform</p>
 </dd>
-<dt><strong>rdtype</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a></span></dt><dd><p>Expected input type to the forward</p>
+<dt><strong>rdtype</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a></span></dt><dd><p>Expected input type to the forward</p>
 </dd>
-<dt><strong>cdtype</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a></span></dt><dd><p>Output type of the forward. Complex equivalent to <code class="docutils literal notranslate"><span class="pre">rdtype</span></code>.</p>
+<dt><strong>cdtype</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a></span></dt><dd><p>Output type of the forward. Complex equivalent to <code class="docutils literal notranslate"><span class="pre">rdtype</span></code>.</p>
 </dd>
-<dt><strong>shape</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a></span></dt><dd><p>Operator shape.</p>
+<dt><strong>shape</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a></span></dt><dd><p>Operator shape.</p>
 </dd>
-<dt><strong>clinear</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a></span></dt><dd><p>Operator is complex-linear. Is false when either <code class="docutils literal notranslate"><span class="pre">real=True</span></code> or when
+<dt><strong>clinear</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a></span></dt><dd><p>Operator is complex-linear. Is false when either <code class="docutils literal notranslate"><span class="pre">real=True</span></code> or when
 <code class="docutils literal notranslate"><span class="pre">dtype</span></code> is not a complex type.</p>
 </dd>
 <dt><strong>fft</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpi4py_fft.mpifft.PFFT</span></code></span></dt><dd><p>Parallel FFT operator object handling the distributed transform across

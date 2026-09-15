@@ -11,6 +11,8 @@
     
         ~MPIL2.__init__
         ~MPIL2.grad
+        ~MPIL2.postcomposition
+        ~MPIL2.precomposition
         ~MPIL2.prox
         ~MPIL2.proxdual
 

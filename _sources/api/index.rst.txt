@@ -109,6 +109,7 @@ Basic Operators
    :toctree: generated/
 
     MPIL2
+    MPIL21
 
 
 Solvers
@@ -163,6 +164,7 @@ Proximal
 
     ProximalGradient
     ADMML2
+    PrimalDual
 
 
 Utils

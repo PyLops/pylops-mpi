@@ -470,6 +470,7 @@
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.proximal.proximal.MPIL2.html">pylops_mpi.proximal.proximal.MPIL2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.proximal.proximal.MPIL21.html">pylops_mpi.proximal.proximal.MPIL21</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.optimization.cls_basic.CG.html">pylops_mpi.optimization.cls_basic.CG</a></li>
@@ -586,30 +587,30 @@ has a known proximal operator. Both <code class="docutils literal notranslate"><
 </dd>
 <dt><strong>x0</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a></span></dt><dd><p>Initial vector</p>
 </dd>
-<dt><strong>epsg</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a> or <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a>, optional</span></dt><dd><p>Scaling factor of g function. Can be a scalar
+<dt><strong>epsg</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a> or <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a>, optional</span></dt><dd><p>Scaling factor of g function. Can be a scalar
 for iteration-independent scaling or a a 1d vector for
 iteration-dependent scaling</p>
 </dd>
-<dt><strong>tau</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Positive scalar weight, which should satisfy the following condition
+<dt><strong>tau</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Positive scalar weight, which should satisfy the following condition
 to guarantees convergence: <span class="math notranslate nohighlight">\(\tau  \in (0, 1/L]\)</span> where <code class="docutils literal notranslate"><span class="pre">L</span></code> is
 the Lipschitz constant of <span class="math notranslate nohighlight">\(\nabla f\)</span>.</p>
 </dd>
-<dt><strong>eta</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Relaxation parameter (must be between 0 and 1, 0 excluded).</p>
+<dt><strong>eta</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Relaxation parameter (must be between 0 and 1, 0 excluded).</p>
 </dd>
-<dt><strong>niter</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a>, optional</span></dt><dd><p>Number of iterations of iterative scheme</p>
+<dt><strong>niter</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a>, optional</span></dt><dd><p>Number of iterations of iterative scheme</p>
 </dd>
-<dt><strong>niterback</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a>, optional</span></dt><dd><p>Max number of iterations of backtracking</p>
+<dt><strong>niterback</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a>, optional</span></dt><dd><p>Max number of iterations of backtracking</p>
 </dd>
-<dt><strong>acceleration</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Acceleration (<code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">vandenberghe</span></code> or <code class="docutils literal notranslate"><span class="pre">fista</span></code>)</p>
+<dt><strong>acceleration</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Acceleration (<code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">vandenberghe</span></code> or <code class="docutils literal notranslate"><span class="pre">fista</span></code>)</p>
 </dd>
-<dt><strong>tol</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Tolerance on change of objective function (used as stopping criterion). If
+<dt><strong>tol</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Tolerance on change of objective function (used as stopping criterion). If
 <code class="docutils literal notranslate"><span class="pre">tol=None</span></code>, run until <code class="docutils literal notranslate"><span class="pre">niter</span></code> is reached or the other tolerance
 criterion is met</p>
 </dd>
-<dt><strong>callback</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#callable" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callable</span></code></a>, optional</span></dt><dd><p>Function with signature (<code class="docutils literal notranslate"><span class="pre">callback(x)</span></code>) to call after each iteration
+<dt><strong>callback</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#callable" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callable</span></code></a>, optional</span></dt><dd><p>Function with signature (<code class="docutils literal notranslate"><span class="pre">callback(x)</span></code>) to call after each iteration
 where <code class="docutils literal notranslate"><span class="pre">x</span></code> is the current model vector</p>
 </dd>
-<dt><strong>show</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Display iterations log</p>
+<dt><strong>show</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Display iterations log</p>
 </dd>
 </dl>
 </dd>

@@ -470,6 +470,7 @@
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.proximal.proximal.MPIL2.html">pylops_mpi.proximal.proximal.MPIL2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.proximal.proximal.MPIL21.html">pylops_mpi.proximal.proximal.MPIL21</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.optimization.cls_basic.CG.html">pylops_mpi.optimization.cls_basic.CG</a></li>
@@ -589,23 +590,23 @@ s.t. \; \mathbf{Ax}=\mathbf{z}\end{split}\]</div>
 </dd>
 <dt><strong>x0</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a></span></dt><dd><p>Initial vector</p>
 </dd>
-<dt><strong>tau</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p>Positive scalar weight, which should satisfy the following condition
+<dt><strong>tau</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a></span></dt><dd><p>Positive scalar weight, which should satisfy the following condition
 to guarantees convergence: <span class="math notranslate nohighlight">\(\tau \in (0, 1/\lambda_{max}(\mathbf{A}^H\mathbf{A})]\)</span>.</p>
 </dd>
-<dt><strong>niter</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a>, optional</span></dt><dd><p>Number of iterations of iterative scheme</p>
+<dt><strong>niter</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a>, optional</span></dt><dd><p>Number of iterations of iterative scheme</p>
 </dd>
 <dt><strong>z0</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a></span></dt><dd><p>Initial auxiliary vector. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, initialized to <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">&#64;</span> <span class="pre">x0</span></code>.</p>
 </dd>
-<dt><strong>gfirst</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Apply Proximal of operator <code class="docutils literal notranslate"><span class="pre">g</span></code> first (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or Proximal of
+<dt><strong>gfirst</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Apply Proximal of operator <code class="docutils literal notranslate"><span class="pre">g</span></code> first (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or Proximal of
 operator <code class="docutils literal notranslate"><span class="pre">f</span></code> first (<code class="docutils literal notranslate"><span class="pre">False</span></code>)</p>
 </dd>
-<dt><strong>tol</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Tolerance on change of objective function (used as stopping criterion). If
+<dt><strong>tol</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Tolerance on change of objective function (used as stopping criterion). If
 <code class="docutils literal notranslate"><span class="pre">tol=None</span></code>, run until <code class="docutils literal notranslate"><span class="pre">niter</span></code> is reached</p>
 </dd>
-<dt><strong>callback</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#callable" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callable</span></code></a>, optional</span></dt><dd><p>Function with signature (<code class="docutils literal notranslate"><span class="pre">callback(x)</span></code>) to call after each iteration
+<dt><strong>callback</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#callable" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callable</span></code></a>, optional</span></dt><dd><p>Function with signature (<code class="docutils literal notranslate"><span class="pre">callback(x)</span></code>) to call after each iteration
 where <code class="docutils literal notranslate"><span class="pre">x</span></code> is the current model vector</p>
 </dd>
-<dt><strong>show</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Display iterations log</p>
+<dt><strong>show</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Display iterations log</p>
 </dd>
 <dt><strong>**kwargs_solver</strong></dt><dd><p>Arbitrary keyword arguments for <a class="reference internal" href="pylops_mpi.optimization.basic.cgls.html#pylops_mpi.optimization.basic.cgls" title="pylops_mpi.optimization.basic.cgls"><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.optimization.basic.cgls</span></code></a> used
 to solve the x-update</p>

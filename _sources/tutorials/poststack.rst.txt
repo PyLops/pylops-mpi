@@ -65,20 +65,19 @@ is the data, and :math:`\mathbf{ai}_i` is the input model for the i-th portion o
 This problem can be easily set up using the :py:class:`pylops_mpi.basicoperators.MPIBlockDiag`
 operator.
 
-.. GENERATED FROM PYTHON SOURCE LINES 50-67
+.. GENERATED FROM PYTHON SOURCE LINES 50-66
 
 .. code-block:: Python
 
 
     import numpy as np
-    from scipy.signal import filtfilt
     from matplotlib import pyplot as plt
     from mpi4py import MPI
-
-    from pylops.utils.wavelets import ricker
-    from pylops.basicoperators import Transpose
     from pylops.avo.poststack import PoststackLinearModelling
+    from pylops.basicoperators import Transpose
+    from pylops.utils.wavelets import ricker
     from pyproximal.proximal import L1
+    from scipy.signal import filtfilt
 
     import pylops_mpi
 
@@ -93,19 +92,19 @@ operator.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 68-70
+.. GENERATED FROM PYTHON SOURCE LINES 67-69
 
 Let's start by defining all the parameters required by the
 :py:func:`pylops.avo.poststack.PoststackLinearModelling` operator.
 
-.. GENERATED FROM PYTHON SOURCE LINES 70-100
+.. GENERATED FROM PYTHON SOURCE LINES 69-99
 
 .. code-block:: Python
 
 
     # Model
     model = np.load("../testdata/avo/poststack_model.npz")
-    x, z, m = model['x'][::3], model['z'], np.log(model['model'])[:, ::3]
+    x, z, m = model["x"][::3], model["z"], np.log(model["model"])[:, ::3]
 
     # Making m a 3D model
     ny_i = 20  # size of model in y direction for rank i
@@ -126,7 +125,7 @@ Let's start by defining all the parameters required by the
     dt = 0.004
     t0 = np.arange(nz) * dt
     ntwav = 41
-    wav = ricker(t0[:ntwav // 2 + 1], 15)[0]
+    wav = ricker(t0[: ntwav // 2 + 1], 15)[0]
 
     # Collecting all the m3d and mback3d at all ranks
     m3d = np.concatenate(MPI.COMM_WORLD.allgather(m3d_i))
@@ -139,7 +138,7 @@ Let's start by defining all the parameters required by the
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 101-111
+.. GENERATED FROM PYTHON SOURCE LINES 100-110
 
 We now create the linear operator version of
 :py:func:`pylops.avo.poststack.PoststackLinearModelling` at each rank to model a
@@ -152,7 +151,7 @@ and use :py:class:`pylops.Transpose` to rearrange the model and data
 in the form required by the :py:func:`pylops.avo.poststack.PoststackLinearModelling`
 operator.
 
-.. GENERATED FROM PYTHON SOURCE LINES 111-132
+.. GENERATED FROM PYTHON SOURCE LINES 110-135
 
 .. code-block:: Python
 
@@ -168,7 +167,11 @@ operator.
     # LinearOperator PostStackLinearModelling
     PPop = PoststackLinearModelling(wav, nt0=nz, spatdims=(ny_i, nx))
     Top = Transpose((ny_i, nx, nz), (2, 0, 1))
-    BDiag = pylops_mpi.basicoperators.MPIBlockDiag(ops=[Top.H @ PPop @ Top, ])
+    BDiag = pylops_mpi.basicoperators.MPIBlockDiag(
+        ops=[
+            Top.H @ PPop @ Top,
+        ]
+    )
 
     # Data
     d_dist = BDiag @ m3d_dist
@@ -184,11 +187,11 @@ operator.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 133-185
+.. GENERATED FROM PYTHON SOURCE LINES 136-190
 
 We perform 3 different kinds of inversions:
 
-* Inversion calculated iteratively using the :py:class:`pylops_mpi.optimization.cls_basic.CGLS` solver.
+* Inversion calculated iteratively using the :py:class:`pylops_mpi.optimization.basic.cgls` solver.
 
 * Inversion with spatial regularization using normal equations along all three dimensions (x, y and z).
   This requires extending the operator and data in the following manner:
@@ -237,15 +240,19 @@ normal equations, and :math:`\mathbf{d}^{Norm}` is the data of the normal equati
 .. math::
   \| \mathbf{d} + \mathbf{G} \mathbf{ai} \|_2^2 + \epsilon \| \boldsymbol \nabla \mathbf{ai} \|_1
 
-where :math:`\boldsymbol \nabla` is the :py:class:`pylops_mpi.basicoperators.MPIGradient` operator.
+where :math:`\boldsymbol \nabla` is the :py:class:`pylops_mpi.basicoperators.MPIGradient` operator. This
+is solved using both the :py:class:`pylops_mpi.proximal.optimization.primal.ADMML2` and
+:py:class:`pylops_mpi.proximal.optimization.primaldual.PrimalDual` solvers.
 
-.. GENERATED FROM PYTHON SOURCE LINES 185-190
+.. GENERATED FROM PYTHON SOURCE LINES 190-197
 
 .. code-block:: Python
 
 
     # Inversion using CGLS solver
-    minv3d_iter_dist = pylops_mpi.optimization.basic.cgls(BDiag, d_dist, x0=mback3d_dist, niter=100, show=True)[0]
+    minv3d_iter_dist = pylops_mpi.optimization.basic.cgls(
+        BDiag, d_dist, x0=mback3d_dist, niter=100, show=True
+    )[0]
     minv3d_iter = minv3d_iter_dist.asarray().reshape((ny, nx, nz))
 
 
@@ -292,25 +299,32 @@ where :math:`\boldsymbol \nabla` is the :py:class:`pylops_mpi.basicoperators.MPI
         99        6.1544e-01         6.5026e-01     6.5026e-01
        100        6.1561e-01         6.4212e-01     6.4212e-01
 
-    Iterations = 100        Total time (s) = 28.02
+    Iterations = 100        Total time (s) = 26.64
     -----------------------------------------------------------------
 
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 191-201
+.. GENERATED FROM PYTHON SOURCE LINES 198-215
 
 .. code-block:: Python
 
 
     # Regularized inversion with normal equations
     epsR = 1e2
-    LapOp = pylops_mpi.MPILaplacian(dims=(ny, nx, nz), axes=(0, 1, 2), weights=(1, 1, 1),
-                                    sampling=(1, 1, 1), dtype=BDiag.dtype)
+    LapOp = pylops_mpi.MPILaplacian(
+        dims=(ny, nx, nz),
+        axes=(0, 1, 2),
+        weights=(1, 1, 1),
+        sampling=(1, 1, 1),
+        dtype=BDiag.dtype,
+    )
     NormEqOp = BDiag.H @ BDiag + epsR * LapOp.H @ LapOp
     dnorm_dist = BDiag.H @ d_dist
-    minv3d_ne_dist = pylops_mpi.optimization.basic.cg(NormEqOp, dnorm_dist, x0=mback3d_dist, niter=100, show=True)[0]
+    minv3d_ne_dist = pylops_mpi.optimization.basic.cg(
+        NormEqOp, dnorm_dist, x0=mback3d_dist, niter=100, show=True
+    )[0]
     minv3d_ne = minv3d_ne_dist.asarray().reshape((ny, nx, nz))
 
 
@@ -357,30 +371,31 @@ where :math:`\boldsymbol \nabla` is the :py:class:`pylops_mpi.basicoperators.MPI
         99         6.3033e-01         1.9903e+02
        100         6.3026e-01         1.9777e+02
 
-    Iterations = 100        Total time (s) = 38.70
+    Iterations = 100        Total time (s) = 37.25
     -------------------------------------------------------
 
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 202-203
+.. GENERATED FROM PYTHON SOURCE LINES 216-217
 
 Regularized inversion with regularized equations
 
-.. GENERATED FROM PYTHON SOURCE LINES 203-214
+.. GENERATED FROM PYTHON SOURCE LINES 217-229
 
 .. code-block:: Python
 
 
     StackOp = pylops_mpi.MPIStackedVStack([BDiag, np.sqrt(epsR) * LapOp])
     d0_dist = pylops_mpi.DistributedArray(global_shape=ny * nx * nz)
-    d0_dist[:] = 0.
+    d0_dist[:] = 0.0
     dstack_dist = pylops_mpi.StackedDistributedArray([d_dist, d0_dist])
 
     dnorm_dist = BDiag.H @ d_dist
     minv3d_reg_dist = pylops_mpi.optimization.basic.cgls(
-        StackOp, dstack_dist, x0=mback3d_dist, niter=100, show=False)[0]
+        StackOp, dstack_dist, x0=mback3d_dist, niter=100, show=False
+    )[0]
     minv3d_reg = minv3d_reg_dist.asarray().reshape((ny, nx, nz))
 
 
@@ -390,25 +405,33 @@ Regularized inversion with regularized equations
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 215-216
+.. GENERATED FROM PYTHON SOURCE LINES 230-231
 
-TV-Regularized inversion
+TV-Regularized inversion with ADMM
 
-.. GENERATED FROM PYTHON SOURCE LINES 216-230
+.. GENERATED FROM PYTHON SOURCE LINES 231-253
 
 .. code-block:: Python
 
 
     Gopd = pylops_mpi.MPIGradient(
-        dims=(ny, nx, nz), sampling=1., edge=False, kind="forward")
+        dims=(ny, nx, nz), sampling=1.0, edge=False, kind="forward"
+    )
 
     l1 = L1(sigma=1e-2)
     l1d = pylops_mpi.proximal.MPIProxOperator(l1)
 
     L = 12.0  # maxeig(Gopd^H Gopd)
     minv3d_tv_dist = pylops_mpi.proximal.optimization.primal.ADMML2(
-        l1d, BDiag, d_dist, Gopd, x0=mback3d_dist, tau=.99 / L, niter=40,
-        show=True, kwargs_solver=dict(niter=20),
+        l1d,
+        BDiag,
+        d_dist,
+        Gopd,
+        x0=mback3d_dist,
+        tau=0.99 / L,
+        niter=40,
+        show=True,
+        kwargs_solver=dict(niter=20),
     )[0]
     minv3d_tv = minv3d_tv_dist.asarray().reshape((ny, nx, nz))
 
@@ -451,18 +474,101 @@ TV-Regularized inversion
         39   6.15411e-01   3.706e+01   4.696e+02   5.067e+02
         40   6.11217e-01   3.646e+01   4.687e+02   5.051e+02
 
-    Total time (s) = 524.22
+    Total time (s) = 488.62
     ---------------------------------------------------------
 
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 231-232
+.. GENERATED FROM PYTHON SOURCE LINES 254-255
+
+TV-Regularized inversion with ADMM
+
+.. GENERATED FROM PYTHON SOURCE LINES 255-280
+
+.. code-block:: Python
+
+
+    l2d = pylops_mpi.proximal.MPIL2(
+        Op=BDiag, b=d_dist, x0=mback3d_dist, niter=20, warm=True
+    )
+    l1 = L1(sigma=1e-2)
+    l1d = pylops_mpi.proximal.MPIProxOperator(l1)
+
+    y0 = Gopd @ mback3d_dist.zeros_like()
+
+    L = 12.0  # maxeig(Gopd^H Gopd)
+    tau = 1.0
+    mu = 0.99 / (tau * L)
+    minv3d_tv1_dist = pylops_mpi.proximal.optimization.primaldual.PrimalDual(
+        l2d,
+        l1d,
+        Gopd,
+        x0=mback3d_dist,
+        y0=y0,
+        tau=tau,
+        mu=mu,
+        niter=40,
+        show=True,
+    )
+    minv3d_tv1 = minv3d_tv1_dist.asarray().reshape((ny, nx, nz))
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Primal-dual: min_x f(Ax) + x^T z + g(x)
+    ---------------------------------------------------------
+    Proximal operator (f): <class 'pylops_mpi.proximal.proximal.L2.MPIL2'>
+    Proximal operator (g): <class 'pylops_mpi.proximal.ProxOperator.MPIProxOperator'>
+    Linear operator (A): <class 'pylops_mpi.basicoperators.Gradient.MPIGradient'>
+    Additional vector (z): None
+    tau = 1.0               mu = 0.0825
+    theta = 1.00            niter = 40
+
+       Itn       x[0]          f           g          z^x       J = f + g + z^x
+         1   6.21753e-01   1.151e+03   4.937e+02   0.000e+00       1.645e+03
+         2   6.22602e-01   3.525e+02   5.604e+02   0.000e+00       9.129e+02
+         3   6.22043e-01   2.108e+02   5.647e+02   0.000e+00       7.756e+02
+         4   6.21029e-01   1.527e+02   5.532e+02   0.000e+00       7.059e+02
+         5   6.19746e-01   1.199e+02   5.390e+02   0.000e+00       6.589e+02
+         6   6.18291e-01   9.874e+01   5.285e+02   0.000e+00       6.272e+02
+         7   6.16806e-01   8.390e+01   5.231e+02   0.000e+00       6.070e+02
+         8   6.15464e-01   7.297e+01   5.236e+02   0.000e+00       5.966e+02
+         9   6.14411e-01   6.461e+01   5.272e+02   0.000e+00       5.918e+02
+        10   6.13735e-01   5.804e+01   5.304e+02   0.000e+00       5.885e+02
+        13   6.13849e-01   4.491e+01   5.235e+02   0.000e+00       5.684e+02
+        17   6.15923e-01   3.566e+01   4.953e+02   0.000e+00       5.310e+02
+        21   6.17071e-01   3.053e+01   4.852e+02   0.000e+00       5.158e+02
+        25   6.17971e-01   2.696e+01   4.767e+02   0.000e+00       5.037e+02
+        29   6.19084e-01   2.438e+01   4.667e+02   0.000e+00       4.911e+02
+        32   6.19624e-01   2.301e+01   4.611e+02   0.000e+00       4.841e+02
+        33   6.19706e-01   2.263e+01   4.596e+02   0.000e+00       4.822e+02
+        34   6.19745e-01   2.229e+01   4.583e+02   0.000e+00       4.806e+02
+        35   6.19748e-01   2.197e+01   4.573e+02   0.000e+00       4.793e+02
+        36   6.19728e-01   2.168e+01   4.565e+02   0.000e+00       4.782e+02
+        37   6.19701e-01   2.141e+01   4.558e+02   0.000e+00       4.772e+02
+        38   6.19680e-01   2.117e+01   4.549e+02   0.000e+00       4.761e+02
+        39   6.19679e-01   2.094e+01   4.540e+02   0.000e+00       4.749e+02
+        40   6.19710e-01   2.073e+01   4.530e+02   0.000e+00       4.738e+02
+
+    Total time (s) = 133.97
+    ---------------------------------------------------------
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 281-282
 
 Finally, we display the modeling and inversion results
 
-.. GENERATED FROM PYTHON SOURCE LINES 232-315
+.. GENERATED FROM PYTHON SOURCE LINES 282-410
 
 .. code-block:: Python
 
@@ -474,11 +580,10 @@ Finally, we display the modeling and inversion results
         d0 = (PPop0 @ m3d.transpose(2, 0, 1)).transpose(1, 2, 0)
 
         # Check the two distributed implementations give the same modelling results
-        print('Distr == Local', np.allclose(d, d0))
+        print("Distr == Local", np.allclose(d, d0))
 
         # Visualize
-        fig, axs = plt.subplots(nrows=7, ncols=3, figsize=(12, 18),
-                                constrained_layout=True)
+        fig, axs = plt.subplots(nrows=8, ncols=3, figsize=(12, 18), constrained_layout=True)
         axs[0][0].imshow(m3d[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
         axs[0][0].set_title("Model x-z")
         axs[0][0].axis("tight")
@@ -489,71 +594,117 @@ Finally, we display the modeling and inversion results
         axs[0][2].set_title("Model y-z")
         axs[0][2].axis("tight")
 
-        axs[1][0].imshow(mback3d[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+        axs[1][0].imshow(
+            mback3d[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max()
+        )
         axs[1][0].set_title("Smooth Model x-z")
         axs[1][0].axis("tight")
-        axs[1][1].imshow(mback3d[:, 200, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+        axs[1][1].imshow(
+            mback3d[:, 200, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max()
+        )
         axs[1][1].set_title("Smooth Model y-z")
         axs[1][1].axis("tight")
-        axs[1][2].imshow(mback3d[:, :, 220].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+        axs[1][2].imshow(
+            mback3d[:, :, 220].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max()
+        )
         axs[1][2].set_title("Smooth Model y-z")
         axs[1][2].axis("tight")
 
         axs[2][0].imshow(d[5, :, :].T, cmap="gray", vmin=-1, vmax=1)
         axs[2][0].set_title("Data x-z")
         axs[2][0].axis("tight")
-        axs[2][1].imshow(d[:, 200, :].T, cmap='gray', vmin=-1, vmax=1)
-        axs[2][1].set_title('Data y-z')
-        axs[2][1].axis('tight')
-        axs[2][2].imshow(d[:, :, 220].T, cmap='gray', vmin=-1, vmax=1)
-        axs[2][2].set_title('Data x-y')
-        axs[2][2].axis('tight')
+        axs[2][1].imshow(d[:, 200, :].T, cmap="gray", vmin=-1, vmax=1)
+        axs[2][1].set_title("Data y-z")
+        axs[2][1].axis("tight")
+        axs[2][2].imshow(d[:, :, 220].T, cmap="gray", vmin=-1, vmax=1)
+        axs[2][2].set_title("Data x-y")
+        axs[2][2].axis("tight")
 
-        axs[3][0].imshow(minv3d_iter[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+        axs[3][0].imshow(
+            minv3d_iter[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max()
+        )
         axs[3][0].set_title("Inverted Model iter x-z")
         axs[3][0].axis("tight")
-        axs[3][1].imshow(minv3d_iter[:, 200, :].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
-        axs[3][1].set_title('Inverted Model iter y-z')
-        axs[3][1].axis('tight')
-        axs[3][2].imshow(minv3d_iter[:, :, 220].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
-        axs[3][2].set_title('Inverted Model iter x-y')
-        axs[3][2].axis('tight')
+        axs[3][1].imshow(
+            minv3d_iter[:, 200, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max()
+        )
+        axs[3][1].set_title("Inverted Model iter y-z")
+        axs[3][1].axis("tight")
+        axs[3][2].imshow(
+            minv3d_iter[:, :, 220].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max()
+        )
+        axs[3][2].set_title("Inverted Model iter x-y")
+        axs[3][2].axis("tight")
 
-        axs[4][0].imshow(minv3d_ne[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+        axs[4][0].imshow(
+            minv3d_ne[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max()
+        )
         axs[4][0].set_title("Normal Equations Inverted Model iter x-z")
         axs[4][0].axis("tight")
-        axs[4][1].imshow(minv3d_ne[:, 200, :].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
-        axs[4][1].set_title('Normal Equations Inverted Model iter y-z')
-        axs[4][1].axis('tight')
-        axs[4][2].imshow(minv3d_ne[:, :, 220].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
-        axs[4][2].set_title('Normal Equations Inverted Model iter x-y')
-        axs[4][2].axis('tight')
+        axs[4][1].imshow(
+            minv3d_ne[:, 200, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max()
+        )
+        axs[4][1].set_title("Normal Equations Inverted Model iter y-z")
+        axs[4][1].axis("tight")
+        axs[4][2].imshow(
+            minv3d_ne[:, :, 220].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max()
+        )
+        axs[4][2].set_title("Normal Equations Inverted Model iter x-y")
+        axs[4][2].axis("tight")
 
-        axs[5][0].imshow(minv3d_reg[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
+        axs[5][0].imshow(
+            minv3d_reg[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max()
+        )
         axs[5][0].set_title("Regularized Inverted Model iter x-z")
         axs[5][0].axis("tight")
-        axs[5][1].imshow(minv3d_reg[:, 200, :].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
-        axs[5][1].set_title('Regularized Inverted Model iter y-z')
-        axs[5][1].axis('tight')
-        axs[5][2].imshow(minv3d_reg[:, :, 220].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
-        axs[5][2].set_title('Regularized Inverted Model iter x-y')
-        axs[5][2].axis('tight')
+        axs[5][1].imshow(
+            minv3d_reg[:, 200, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max()
+        )
+        axs[5][1].set_title("Regularized Inverted Model iter y-z")
+        axs[5][1].axis("tight")
+        axs[5][2].imshow(
+            minv3d_reg[:, :, 220].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max()
+        )
+        axs[5][2].set_title("Regularized Inverted Model iter x-y")
+        axs[5][2].axis("tight")
 
-        axs[6][0].imshow(minv3d_tv[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max())
-        axs[6][0].set_title("TV-Regularized Inverted Model iter x-z")
+        axs[6][0].imshow(
+            minv3d_tv[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max()
+        )
+        axs[6][0].set_title("TV-ADMM Inverted Model iter x-z")
         axs[6][0].axis("tight")
-        axs[6][1].imshow(minv3d_tv[:, 200, :].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
-        axs[6][1].set_title('TV-Regularized Inverted Model iter y-z')
-        axs[6][1].axis('tight')
-        axs[6][2].imshow(minv3d_tv[:, :, 220].T, cmap='gist_rainbow', vmin=m.min(), vmax=m.max())
-        axs[6][2].set_title('TV-Regularized Inverted Model iter x-y')
-        axs[6][2].axis('tight')
+        axs[6][1].imshow(
+            minv3d_tv[:, 200, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max()
+        )
+        axs[6][1].set_title("TV-ADMM Inverted Model iter y-z")
+        axs[6][1].axis("tight")
+        axs[6][2].imshow(
+            minv3d_tv[:, :, 220].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max()
+        )
+        axs[6][2].set_title("TV-ADMM Inverted Model iter x-y")
+        axs[6][2].axis("tight")
+
+        axs[7][0].imshow(
+            minv3d_tv1[5, :, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max()
+        )
+        axs[7][0].set_title("TV-PD Inverted Model iter x-z")
+        axs[7][0].axis("tight")
+        axs[7][1].imshow(
+            minv3d_tv1[:, 200, :].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max()
+        )
+        axs[7][1].set_title("TV-PD Inverted Model iter y-z")
+        axs[7][1].axis("tight")
+        axs[7][2].imshow(
+            minv3d_tv1[:, :, 220].T, cmap="gist_rainbow", vmin=m.min(), vmax=m.max()
+        )
+        axs[7][2].set_title("TV-PD Inverted Model iter x-y")
+        axs[7][2].axis("tight")
 
 
 
 
 .. image-sg:: /tutorials/images/sphx_glr_poststack_001.png
-   :alt: Model x-z, Model y-z, Model y-z, Smooth Model x-z, Smooth Model y-z, Smooth Model y-z, Data x-z, Data y-z, Data x-y, Inverted Model iter x-z, Inverted Model iter y-z, Inverted Model iter x-y, Normal Equations Inverted Model iter x-z, Normal Equations Inverted Model iter y-z, Normal Equations Inverted Model iter x-y, Regularized Inverted Model iter x-z, Regularized Inverted Model iter y-z, Regularized Inverted Model iter x-y, TV-Regularized Inverted Model iter x-z, TV-Regularized Inverted Model iter y-z, TV-Regularized Inverted Model iter x-y
+   :alt: Model x-z, Model y-z, Model y-z, Smooth Model x-z, Smooth Model y-z, Smooth Model y-z, Data x-z, Data y-z, Data x-y, Inverted Model iter x-z, Inverted Model iter y-z, Inverted Model iter x-y, Normal Equations Inverted Model iter x-z, Normal Equations Inverted Model iter y-z, Normal Equations Inverted Model iter x-y, Regularized Inverted Model iter x-z, Regularized Inverted Model iter y-z, Regularized Inverted Model iter x-y, TV-ADMM Inverted Model iter x-z, TV-ADMM Inverted Model iter y-z, TV-ADMM Inverted Model iter x-y, TV-PD Inverted Model iter x-z, TV-PD Inverted Model iter y-z, TV-PD Inverted Model iter x-y
    :srcset: /tutorials/images/sphx_glr_poststack_001.png
    :class: sphx-glr-single-img
 
@@ -567,7 +718,7 @@ Finally, we display the modeling and inversion results
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 316-319
+.. GENERATED FROM PYTHON SOURCE LINES 411-414
 
 To run this tutorial with our NCCL backend, refer to `Post Stack Inversion with NCCL
 tutorial <https://github.com/PyLops/pylops-mpi/blob/main/tutorials_nccl/poststack_nccl.py>`_
@@ -576,7 +727,7 @@ in the repository.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (10 minutes 47.460 seconds)
+   **Total running time of the script:** (12 minutes 20.741 seconds)
 
 
 .. _sphx_glr_download_tutorials_poststack.py:

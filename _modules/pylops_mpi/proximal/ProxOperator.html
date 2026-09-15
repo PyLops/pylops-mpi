@@ -467,14 +467,14 @@
                 <article class="bd-article">
                   
   <h1>Source code for pylops_mpi.proximal.ProxOperator</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">pyproximal</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProxOperator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils.backend</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_module</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyproximal</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProxOperator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyproximal.ProxOperator</span><span class="w"> </span><span class="kn">import</span> <span class="n">_check_tau</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi</span><span class="w"> </span><span class="kn">import</span> <span class="n">DistributedArray</span><span class="p">,</span> <span class="n">Partition</span>
-
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi</span><span class="w"> </span><span class="kn">import</span> <span class="n">DistributedArray</span><span class="p">,</span> <span class="n">Partition</span><span class="p">,</span> <span class="n">StackedDistributedArray</span>
 
 <span class="n">_call_reduce_op</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
     <span class="n">Box</span><span class="o">=</span><span class="p">(</span><span class="n">MPI</span><span class="o">.</span><span class="n">LAND</span><span class="p">,</span> <span class="nb">all</span><span class="p">),</span>
@@ -514,7 +514,8 @@
         <span class="k">if</span> <span class="n">prox_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_call_reduce_op</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">prox_name</span><span class="si">}</span><span class="s2"> is not a separable proximal "</span>
-                <span class="s2">"operator, must be implemented directly..."</span><span class="p">)</span>
+                <span class="s2">"operator, must be implemented directly..."</span>
+            <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">proxop</span> <span class="o">=</span> <span class="n">prox</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hasgrad</span> <span class="o">=</span> <span class="n">prox</span><span class="o">.</span><span class="n">hasgrad</span>
 
@@ -524,7 +525,10 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="sa">f</span><span class="s2">"&lt;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&gt;"</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Functional evaluation of the oprator.</span>
 
 <span class="sd">        Modified version of pyproximal `__call__`. This method makes use</span>
@@ -542,6 +546,7 @@
 <span class="sd">            Function evaluation</span>
 
 <span class="sd">        """</span>
+
         <span class="k">def</span><span class="w"> </span><span class="nf">_as_scalar</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">"""Convert NumPy/CuPy/Python scalar-like objects to a Python scalar."""</span>
             <span class="c1"># Ensure that a bool/int/float is returned</span>
@@ -566,11 +571,13 @@
 
                 <span class="c1"># Reduce local function evaluations into final evaluation</span>
                 <span class="n">reduce_op</span> <span class="o">=</span> <span class="n">_call_reduce_op</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proxop</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
-                <span class="n">recv_buf</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">_allreduce_subcomm</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">sub_comm</span><span class="p">,</span>
-                                                <span class="n">x</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span>
-                                                <span class="n">ncp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">f</span><span class="p">),</span>
-                                                <span class="n">op</span><span class="o">=</span><span class="n">reduce_op</span><span class="p">,</span>
-                                                <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
+                <span class="n">recv_buf</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">_allreduce_subcomm</span><span class="p">(</span>
+                    <span class="n">x</span><span class="o">.</span><span class="n">sub_comm</span><span class="p">,</span>
+                    <span class="n">x</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span>
+                    <span class="n">ncp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">f</span><span class="p">),</span>
+                    <span class="n">op</span><span class="o">=</span><span class="n">reduce_op</span><span class="p">,</span>
+                    <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span>
+                <span class="p">)</span>
 
                 <span class="k">return</span> <span class="n">_as_scalar</span><span class="p">(</span><span class="n">recv_buf</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -582,9 +589,14 @@
             <span class="n">f</span> <span class="o">=</span> <span class="n">reduce_op</span><span class="p">(</span><span class="n">fs</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">f</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">prox</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">,</span> <span class="n">tau</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Proximal operator applied to a vector</span>
-<span class="sd">        """</span>
+    <span class="nd">@_check_tau</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prox</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span><span class="p">,</span>
+        <span class="n">tau</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Proximal operator applied to a vector"""</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">DistributedArray</span><span class="p">):</span>
             <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">empty_like</span><span class="p">()</span>
             <span class="n">y</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxop</span><span class="o">.</span><span class="n">prox</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span>
@@ -594,22 +606,148 @@
                 <span class="n">y</span><span class="p">[</span><span class="n">iarr</span><span class="p">][:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxop</span><span class="o">.</span><span class="n">prox</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">iarr</span><span class="p">]</span><span class="o">.</span><span class="n">local_array</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">y</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">proxdual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">,</span> <span class="n">tau</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Dual Proximal operator applied to a vector</span>
+    <span class="nd">@_check_tau</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">proxdual</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span><span class="p">,</span>
+        <span class="n">tau</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Dual Proximal operator applied to a vector"""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">DistributedArray</span><span class="p">):</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">empty_like</span><span class="p">()</span>
+            <span class="n">y</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxop</span><span class="o">.</span><span class="n">proxdual</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># StackedDistributedArray</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">empty_like</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">iarr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">narrays</span><span class="p">):</span>
+                <span class="n">y</span><span class="p">[</span><span class="n">iarr</span><span class="p">][:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxop</span><span class="o">.</span><span class="n">proxdual</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">iarr</span><span class="p">]</span><span class="o">.</span><span class="n">local_array</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">y</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">postcomposition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"MPIProxOperator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Postcomposition</span>
+
+<span class="sd">        Multiplies a scalar ``sigma`` to the current function.</span>
+
+<span class="sd">        This method can also be accessed via the ``*`` operator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sigma : :obj:`float`</span>
+<span class="sd">            Scalar</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The proximal operator of a function :math:`g= \sigma f(\mathbf{x})` is</span>
+<span class="sd">        defined as:</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            prox_{\tau g} (\mathbf{x}) =</span>
+<span class="sd">            prox_{\sigma \tau f} (\mathbf{x})</span>
+
 <span class="sd">        """</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">global_shape</span><span class="p">,</span>
-                             <span class="n">base_comm</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span>
-                             <span class="n">base_comm_nccl</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span>
-                             <span class="n">partition</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">partition</span><span class="p">,</span>
-                             <span class="n">axis</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
-                             <span class="n">local_shapes</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">local_shapes</span><span class="p">,</span>
-                             <span class="n">mask</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span>
-                             <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span>
-                             <span class="n">dtype</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-        <span class="n">y</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxop</span><span class="o">.</span><span class="n">proxdual</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">local_array</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">_PostcompositionOperator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">"sigma must be of type float"</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">y</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">precomposition</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">a</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"MPIProxOperator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Precomposition</span>
 
+<span class="sd">        Multiplies scalar ``a`` and adds scalar or vector ``b`` to</span>
+<span class="sd">        ``x`` when evaluating the proximal function</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        a : :obj:`float`</span>
+<span class="sd">            Multiplicative scalar</span>
+<span class="sd">        b : :obj:`float` or obj:`pylops_mpi.DistributedArray` or obj:`pylops_mpi.StackedDistributedArray`</span>
+<span class="sd">            Additive scalar (or vector)</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The proximal operator of a function :math:`g= f(a \mathbf{x} + b)` is</span>
+<span class="sd">        defined as:</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            prox_{\tau g} (\mathbf{x}) = \frac{1}{a} (</span>
+<span class="sd">            prox_{a^2 \tau f} (a \mathbf{x} + b) - b)</span>
+
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">b</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="n">_PrecompositionOperator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">"a must be of type float and b must be of type float, DistributedArray, or StackedDistributedArray"</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_PostcompositionOperator</span><span class="p">(</span><span class="n">MPIProxOperator</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">:</span> <span class="n">MPIProxOperator</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">"Second input must be a float"</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">f</span><span class="p">,</span> <span class="n">sigma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hasgrad</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">hasgrad</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="nd">@_check_tau</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prox</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span><span class="p">,</span> <span class="n">tau</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">prox</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">tau</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">grad</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_PrecompositionOperator</span><span class="p">(</span><span class="n">MPIProxOperator</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">f</span><span class="p">:</span> <span class="n">MPIProxOperator</span><span class="p">,</span>
+        <span class="n">a</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">"Second input must be a float"</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span><span class="p">)):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">"Third input must be a float, DistributedArray, or StackedDistributedArray"</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">f</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hasgrad</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">hasgrad</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)</span>
+
+    <span class="nd">@_check_tau</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prox</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span><span class="p">,</span> <span class="n">tau</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">prox</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">tau</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">grad</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)</span>
 </pre></div>
 
                 </article>

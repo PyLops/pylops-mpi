@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     
-        <title>pylops_mpi.optimization.sparsity.fista &#8212; PyLops-MPI</title>
+        <title>pylops_mpi.proximal.proximal.MPIL21 &#8212; PyLops-MPI</title>
     
 
   
@@ -56,13 +56,13 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api/generated/pylops_mpi.optimization.sparsity.fista';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/generated/pylops_mpi.proximal.proximal.MPIL21';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="pylops_mpi.proximal.optimization.primal.ProximalGradient" href="pylops_mpi.proximal.optimization.primal.ProximalGradient.html" />
-    <link rel="prev" title="pylops_mpi.optimization.sparsity.ista" href="pylops_mpi.optimization.sparsity.ista.html" />
+    <link rel="next" title="pylops_mpi.optimization.cls_basic.CG" href="pylops_mpi.optimization.cls_basic.CG.html" />
+    <link rel="prev" title="pylops_mpi.proximal.proximal.MPIL2" href="pylops_mpi.proximal.proximal.MPIL2.html" />
     
     <script src="../../_static/require.js"></script>
 
@@ -468,9 +468,9 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.proximal.MPIProxOperator.html">pylops_mpi.proximal.MPIProxOperator</a></li>
 </ul>
-<ul class="nav bd-sidenav">
+<ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.proximal.proximal.MPIL2.html">pylops_mpi.proximal.proximal.MPIL2</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.proximal.proximal.MPIL21.html">pylops_mpi.proximal.proximal.MPIL21</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">pylops_mpi.proximal.proximal.MPIL21</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.optimization.cls_basic.CG.html">pylops_mpi.optimization.cls_basic.CG</a></li>
@@ -484,9 +484,9 @@
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.optimization.cls_sparsity.ISTA.html">pylops_mpi.optimization.cls_sparsity.ISTA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.optimization.cls_sparsity.FISTA.html">pylops_mpi.optimization.cls_sparsity.FISTA</a></li>
 </ul>
-<ul class="current nav bd-sidenav">
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.optimization.sparsity.ista.html">pylops_mpi.optimization.sparsity.ista</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">pylops_mpi.optimization.sparsity.fista</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.optimization.sparsity.fista.html">pylops_mpi.optimization.sparsity.fista</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.proximal.optimization.primal.ProximalGradient.html">pylops_mpi.proximal.optimization.primal.ProximalGradient</a></li>
@@ -547,7 +547,7 @@
     
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">PyLops MPI API</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">pylops_mpi.optimization.sparsity.fista</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">pylops_mpi.proximal.proximal.MPIL21</span></li>
   </ul>
 </nav>
 </div>
@@ -564,94 +564,68 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="pylops-mpi-optimization-sparsity-fista">
-<h1>pylops_mpi.optimization.sparsity.fista<a class="headerlink" href="#pylops-mpi-optimization-sparsity-fista" title="Link to this heading">#</a></h1>
-<dl class="py function">
-<dt class="sig sig-object py" id="pylops_mpi.optimization.sparsity.fista">
-<span class="sig-prename descclassname"><span class="pre">pylops_mpi.optimization.sparsity.</span></span><span class="sig-name descname"><span class="pre">fista</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">niter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SOp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eigsdict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshkind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'soft'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitorres</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itershow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(10,</span> <span class="pre">10,</span> <span class="pre">10)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/optimization/sparsity.html#fista"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.optimization.sparsity.fista" title="Link to this definition">#</a></dt>
-<dd><p>Fast Iterative Shrinkage-Thresholding Algorithm (FISTA).</p>
-<p>Solve an optimization problem with <span class="math notranslate nohighlight">\(L^p, \; p=0, 0.5, 1\)</span>
-regularization, given the operator <code class="docutils literal notranslate"><span class="pre">Op</span></code> and data <code class="docutils literal notranslate"><span class="pre">y</span></code>.
-The operator can be real or complex, and should ideally be either square
-<span class="math notranslate nohighlight">\(N=M\)</span> or underdetermined <span class="math notranslate nohighlight">\(N&lt;M\)</span>.</p>
+  <section id="pylops-mpi-proximal-proximal-mpil21">
+<h1>pylops_mpi.proximal.proximal.MPIL21<a class="headerlink" href="#pylops-mpi-proximal-proximal-mpil21" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="pylops_mpi.proximal.proximal.MPIL21">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pylops_mpi.proximal.proximal.</span></span><span class="sig-name descname"><span class="pre">MPIL21</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ndim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/pylops_mpi/proximal/proximal/L21.html#MPIL21"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pylops_mpi.proximal.proximal.MPIL21" title="Link to this definition">#</a></dt>
+<dd><p><span class="math notranslate nohighlight">\(L_{2,1}\)</span> proximal operator.</p>
+<p>Implement a distributed version of the <span class="math notranslate nohighlight">\(L_{2,1}\)</span> matrix norm.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
-<dt><strong>Op</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.MPILinearOperator.html#pylops_mpi.MPILinearOperator" title="pylops_mpi.MPILinearOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.MPILinearOperator</span></code></a></span></dt><dd><p>Operator to invert</p>
+<dt><strong>ndim</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a></span></dt><dd><p>Number of dimensions <span class="math notranslate nohighlight">\(N_{dim}\)</span>. Used to reshape the input array
+in a matrix of size <span class="math notranslate nohighlight">\(N_{dim} \times N'_{x}\)</span> where
+<span class="math notranslate nohighlight">\(N'_x = \frac{N_x}{N_{dim}}\)</span>. Note that the input
+vector <code class="docutils literal notranslate"><span class="pre">x</span></code> must be a <a class="reference internal" href="pylops_mpi.StackedDistributedArray.html#pylops_mpi.StackedDistributedArray" title="pylops_mpi.StackedDistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.StackedDistributedArray</span></code></a>
+that contains <code class="docutils literal notranslate"><span class="pre">ndim</span></code> <a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>.</p>
 </dd>
-<dt><strong>y</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a></span></dt><dd><p>Data</p>
-</dd>
-<dt><strong>x0: :obj:`pylops_mpi.DistributedArray`, optional</strong></dt><dd><p>Initial guess</p>
-</dd>
-<dt><strong>niter</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a>, optional</span></dt><dd><p>Number of iterations</p>
-</dd>
-<dt><strong>SOp</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.MPILinearOperator.html#pylops_mpi.MPILinearOperator" title="pylops_mpi.MPILinearOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.MPILinearOperator</span></code></a>, optional</span></dt><dd><p>Regularization operator (use when solving the analysis problem)</p>
-</dd>
-<dt><strong>eps</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Sparsity damping</p>
-</dd>
-<dt><strong>alpha</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Step size. To guarantee convergence, ensure
-<span class="math notranslate nohighlight">\(\alpha \le 1/\lambda_\text{max}\)</span>, where <span class="math notranslate nohighlight">\(\lambda_\text{max}\)</span>
-is the largest eigenvalue of <span class="math notranslate nohighlight">\(\mathbf{Op}^H\mathbf{Op}\)</span>.
-If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the maximum eigenvalue is estimated and the optimal step size
-is chosen as <span class="math notranslate nohighlight">\(1/\lambda_\text{max}\)</span>. If provided, the
-convergence criterion will not be checked internally.</p>
-</dd>
-<dt><strong>eigsdict</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code></a>, optional</span></dt><dd><p>Dictionary of parameters to be passed to <code class="xref py py-func docutils literal notranslate"><span class="pre">pylops.LinearOperator.eigs</span></code> method
-when computing the maximum eigenvalue</p>
-</dd>
-<dt><strong>tol</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Absolute tolerance on model update. Stop iterations if difference between inverted model
-at subsequent iterations is smaller than <code class="docutils literal notranslate"><span class="pre">tol</span></code></p>
-</dd>
-<dt><strong>rtol</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Relative tolerance on total cost function wrt initial total cost
-function. Stops the solver when the ratio of the current total cost function
-to the initial total cost function is below this value.</p>
-</dd>
-<dt><strong>rtol1</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Relative tolerance on total cost function wrt to data. Stops the solver when
-the ratio of the current total cost function to the data norm is below this value.</p>
-</dd>
-<dt><strong>threshkind</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Kind of thresholding (‘hard’, ‘soft’, ‘half’ - ‘soft’ used as default)</p>
-</dd>
-<dt><strong>decay</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a>, optional</span></dt><dd><p>Decay factor to be applied to thresholding during iterations</p>
-</dd>
-<dt><strong>monitorres</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Monitor that residual is decreasing</p>
-</dd>
-<dt><strong>show</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Display iterations log</p>
-</dd>
-<dt><strong>itershow</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a>, optional</span></dt><dd><p>Display set log for the first N1 steps, last N2 steps,
-and every N3 steps in between where N1, N2, N3 are the
-three element of the list.</p>
-</dd>
-<dt><strong>callback</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#callable" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callable</span></code></a>, optional</span></dt><dd><p>Function with signature (<code class="docutils literal notranslate"><span class="pre">callback(x)</span></code>) to call after each iteration
-where <code class="docutils literal notranslate"><span class="pre">x</span></code> is the current model vector</p>
-</dd>
-<dt><strong>preallocate</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>Pre-allocate all variables used by the solver.</p>
-</dd>
-<dt><strong>Returns</strong></dt><dd></dd>
-<dt><strong>——-</strong></dt><dd></dd>
-<dt><strong>xinv</strong><span class="classifier"><a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a></span></dt><dd><p>Inverted model</p>
-</dd>
-<dt><strong>niter</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a></span></dt><dd><p>Number of effective iterations</p>
-</dd>
-<dt><strong>cost</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a>, optional</span></dt><dd><p>History of cost (including regularization term)</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>NotImplementedError</dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">threshkind</span></code> is different from hard, soft, half.</p>
+<dt><strong>sigma</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>, optional</span></dt><dd><p>Multiplicative coefficient of <span class="math notranslate nohighlight">\(L_{2,1}\)</span> norm</p>
 </dd>
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>This is a distributed implementation of the <span class="math notranslate nohighlight">\(L_{2,1}\)</span> norm.</p>
+<p>The matrix is here represented as a <a class="reference internal" href="pylops_mpi.StackedDistributedArray.html#pylops_mpi.StackedDistributedArray" title="pylops_mpi.StackedDistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.StackedDistributedArray</span></code></a>
+with each column corresponding to a <a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>.</p>
+<p>The norm evaluation simply requires the creation of an intermediate
+<a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a> that contains the sum of the square
+root of the sum of the squares of the corresponding elements in the
+<a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a> of the
+<a class="reference internal" href="pylops_mpi.StackedDistributedArray.html#pylops_mpi.StackedDistributedArray" title="pylops_mpi.StackedDistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.StackedDistributedArray</span></code></a>
+the underlying distributed array. This is further reduced by computing the
+L1 norm.</p>
+<p>The proximal operator requires once again the creation of the same intermediate
+<a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>, followed by a per-element
+independent re-scaling.</p>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code>(ndim[, sigma])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">postcomposition</span></code>(sigma)</p></td>
+<td><p>Postcomposition</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">precomposition</span></code>(a, b)</p></td>
+<td><p>Precomposition</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">prox</span></code>(**kwargs)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">proxdual</span></code>(**kwargs)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sum_squared</span></code>(x)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </dd></dl>
 
-<section id="examples-using-pylops-mpi-optimization-sparsity-fista">
-<h2>Examples using <code class="docutils literal notranslate"><span class="pre">pylops_mpi.optimization.sparsity.fista</span></code><a class="headerlink" href="#examples-using-pylops-mpi-optimization-sparsity-fista" title="Link to this heading">#</a></h2>
-<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="In other words, the modelling operator becomes"><img alt="" src="../../_images/sphx_glr_reflectivity_thumb.png" />
-<p><a class="reference internal" href="../../tutorials/reflectivity.html"><span class="doc">Reflectivity Inversion - 3D</span></a></p>
-  <div class="sphx-glr-thumbnail-title">Reflectivity Inversion - 3D</div>
-</div></div><div style='clear:both'></div></section>
-</section>
+<div style='clear:both'></div><div style='clear:both'></div></section>
 
 
                 </article>
@@ -664,20 +638,20 @@ where <code class="docutils literal notranslate"><span class="pre">x</span></cod
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="pylops_mpi.optimization.sparsity.ista.html"
+       href="pylops_mpi.proximal.proximal.MPIL2.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">pylops_mpi.optimization.sparsity.ista</p>
+        <p class="prev-next-title">pylops_mpi.proximal.proximal.MPIL2</p>
       </div>
     </a>
     <a class="right-next"
-       href="pylops_mpi.proximal.optimization.primal.ProximalGradient.html"
+       href="pylops_mpi.optimization.cls_basic.CG.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">pylops_mpi.proximal.optimization.primal.ProximalGradient</p>
+        <p class="prev-next-title">pylops_mpi.optimization.cls_basic.CG</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -700,8 +674,7 @@ where <code class="docutils literal notranslate"><span class="pre">x</span></cod
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pylops_mpi.optimization.sparsity.fista"><code class="docutils literal notranslate"><span class="pre">fista</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples-using-pylops-mpi-optimization-sparsity-fista">Examples using <code class="docutils literal notranslate"><span class="pre">pylops_mpi.optimization.sparsity.fista</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pylops_mpi.proximal.proximal.MPIL21"><code class="docutils literal notranslate"><span class="pre">MPIL21</span></code></a></li>
 </ul>
   </nav></div>
 

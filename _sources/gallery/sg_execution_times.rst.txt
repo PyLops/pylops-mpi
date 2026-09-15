@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:17.243** total execution time for 14 files **from gallery**:
+**00:16.309** total execution time for 14 files **from gallery**:
 
 .. container::
 
@@ -33,44 +33,44 @@ Computation times
      - Time
      - Mem (MB)
    * - :ref:`sphx_glr_gallery_plot_halo.py` (``plot_halo.py``)
-     - 00:09.661
+     - 00:09.582
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_nonstatconv.py` (``plot_nonstatconv.py``)
-     - 00:01.607
+     - 00:01.537
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_distributed_array.py` (``plot_distributed_array.py``)
-     - 00:01.233
+     - 00:01.106
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_ffts.py` (``plot_ffts.py``)
-     - 00:01.205
+     - 00:01.023
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_proxsolver.py` (``plot_proxsolver.py``)
-     - 00:01.164
+     - 00:00.913
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_derivative.py` (``plot_derivative.py``)
-     - 00:01.003
+     - 00:00.912
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_mdc.py` (``plot_mdc.py``)
-     - 00:00.475
+     - 00:00.413
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_stacking.py` (``plot_stacking.py``)
-     - 00:00.386
+     - 00:00.355
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_mpilinop.py` (``plot_mpilinop.py``)
-     - 00:00.315
+     - 00:00.292
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_cgls.py` (``plot_cgls.py``)
-     - 00:00.155
+     - 00:00.136
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_stacked_array.py` (``plot_stacked_array.py``)
-     - 00:00.020
+     - 00:00.017
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_prox.py` (``plot_prox.py``)
-     - 00:00.011
-     - 0.0
-   * - :ref:`sphx_glr_gallery_plot_summamatrixmult.py` (``plot_summamatrixmult.py``)
-     - 00:00.004
+     - 00:00.015
      - 0.0
    * - :ref:`sphx_glr_gallery_plot_matrixmult.py` (``plot_matrixmult.py``)
+     - 00:00.004
+     - 0.0
+   * - :ref:`sphx_glr_gallery_plot_summamatrixmult.py` (``plot_summamatrixmult.py``)
      - 00:00.004
      - 0.0

@@ -470,6 +470,7 @@
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.proximal.proximal.MPIL2.html">pylops_mpi.proximal.proximal.MPIL2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.proximal.proximal.MPIL21.html">pylops_mpi.proximal.proximal.MPIL21</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.optimization.cls_basic.CG.html">pylops_mpi.optimization.cls_basic.CG</a></li>
@@ -578,9 +579,9 @@ specified <code class="docutils literal notranslate"><span class="pre">kind</spa
 <dd class="field-odd"><dl>
 <dt><strong>A</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a></span></dt><dd><p>Local block of the matrix operator.</p>
 </dd>
-<dt><strong>M</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a></span></dt><dd><p>Global number of columns in the operand and result matrices.</p>
+<dt><strong>M</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a></span></dt><dd><p>Global number of columns in the operand and result matrices.</p>
 </dd>
-<dt><strong>saveAt</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, store both <span class="math notranslate nohighlight">\(\mathbf{A}\)</span> and its conjugate transpose
+<dt><strong>saveAt</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, store both <span class="math notranslate nohighlight">\(\mathbf{A}\)</span> and its conjugate transpose
 <span class="math notranslate nohighlight">\(\mathbf{A}^H\)</span> to accelerate adjoint operations (uses twice the
 memory). Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 </dd>
@@ -588,19 +589,19 @@ memory). Default is <code class="docutils literal notranslate"><span class="pre"
 </dd>
 <dt><strong>base_comm_nccl</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cupy.cuda.nccl.NcclCommunicator</span></code>, optional</span></dt><dd><p>NCCL communicator to use when operating on <code class="docutils literal notranslate"><span class="pre">cupy</span></code> arrays.</p>
 </dd>
-<dt><strong>kind</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Algorithm used to perform matrix multiplication: <code class="docutils literal notranslate"><span class="pre">'block'</span></code> for #
+<dt><strong>kind</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Algorithm used to perform matrix multiplication: <code class="docutils literal notranslate"><span class="pre">'block'</span></code> for #
 block-row-column decomposition, and <code class="docutils literal notranslate"><span class="pre">'summa'</span></code> for SUMMA algorithm, or
 . Default is <code class="docutils literal notranslate"><span class="pre">'summa'</span></code>.</p>
 </dd>
-<dt><strong>dtype</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Type of elements in input array. Defaults to <code class="docutils literal notranslate"><span class="pre">numpy.float64</span></code>.</p>
+<dt><strong>dtype</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Type of elements in input array. Defaults to <code class="docutils literal notranslate"><span class="pre">numpy.float64</span></code>.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Attributes<span class="colon">:</span></dt>
 <dd class="field-even"><dl>
-<dt><strong>shape</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a></span></dt><dd><p>Operator shape</p>
+<dt><strong>shape</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code></a></span></dt><dd><p>Operator shape</p>
 </dd>
-<dt><strong>kind</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Selected distributed matrix multiply algorithm (<code class="docutils literal notranslate"><span class="pre">'block'</span></code> or <code class="docutils literal notranslate"><span class="pre">'summa'</span></code>).</p>
+<dt><strong>kind</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Selected distributed matrix multiply algorithm (<code class="docutils literal notranslate"><span class="pre">'block'</span></code> or <code class="docutils literal notranslate"><span class="pre">'summa'</span></code>).</p>
 </dd>
 </dl>
 </dd>

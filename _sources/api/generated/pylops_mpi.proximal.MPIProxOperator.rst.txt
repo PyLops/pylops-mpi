@@ -10,6 +10,8 @@
     .. autosummary::
     
         ~MPIProxOperator.__init__
+        ~MPIProxOperator.postcomposition
+        ~MPIProxOperator.precomposition
         ~MPIProxOperator.prox
         ~MPIProxOperator.proxdual
 

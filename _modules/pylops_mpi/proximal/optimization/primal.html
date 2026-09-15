@@ -566,7 +566,7 @@
     <span class="c1"># check if epgs is a vector</span>
     <span class="n">epsg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">epsg</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">epsg</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">epsg</span> <span class="o">=</span> <span class="n">epsg</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">niter</span><span class="p">)</span>
+        <span class="n">epsg</span> <span class="o">=</span> <span class="n">epsg</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">niter</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
         <span class="n">epsg_print</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">epsg</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">epsg_print</span> <span class="o">=</span> <span class="s2">"Multi"</span>

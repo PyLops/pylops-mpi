@@ -468,6 +468,7 @@
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.proximal.proximal.MPIL2.html">pylops_mpi.proximal.proximal.MPIL2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pylops_mpi.proximal.proximal.MPIL21.html">pylops_mpi.proximal.proximal.MPIL21</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="pylops_mpi.optimization.cls_basic.CG.html">pylops_mpi.optimization.cls_basic.CG</a></li>
@@ -570,14 +571,14 @@
 <p>Common interface for applying (separable) proximal operators in a
 distributed fashion.</p>
 <p>In practice, this class provides methods to compute the norm, proximal
-operator and gradient between any <code class="xref py py-obj docutils literal notranslate"><span class="pre">pyproximal.ProxOperator</span></code>
+operator and gradient between any <a class="reference external" href="https://pyproximal.readthedocs.io/en/stable/api/generated/pyproximal.ProxOperator.html#pyproximal.ProxOperator" title="(in PyProximal dev)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyproximal.ProxOperator</span></code></a>
 (which must be the same across ranks) and a <a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>.
 It internally handles the extraction of the local array from the distributed
 array and the creation of the output <a class="reference internal" href="pylops_mpi.DistributedArray.html#pylops_mpi.DistributedArray" title="pylops_mpi.DistributedArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops_mpi.DistributedArray</span></code></a>.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
-<dt><strong>prox</strong><span class="classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyproximal.ProxOperator</span></code></span></dt><dd><p>PyProximal Proximal Operator to wrap.</p>
+<dt><strong>prox</strong><span class="classifier"><a class="reference external" href="https://pyproximal.readthedocs.io/en/stable/api/generated/pyproximal.ProxOperator.html#pyproximal.ProxOperator" title="(in PyProximal dev)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyproximal.ProxOperator</span></code></a></span></dt><dd><p>PyProximal Proximal Operator to wrap.</p>
 </dd>
 </dl>
 </dd>
@@ -588,11 +589,17 @@ array and the creation of the output <a class="reference internal" href="pylops_
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code>(prox)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">prox</span></code>(x, tau, **kwargs)</p></td>
-<td><p>Proximal operator applied to a vector</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">postcomposition</span></code>(sigma)</p></td>
+<td><p>Postcomposition</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">proxdual</span></code>(x, tau, **kwargs)</p></td>
-<td><p>Dual Proximal operator applied to a vector</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">precomposition</span></code>(a, b)</p></td>
+<td><p>Precomposition</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">prox</span></code>(**kwargs)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">proxdual</span></code>(**kwargs)</p></td>
+<td><p></p></td>
 </tr>
 </tbody>
 </table>
