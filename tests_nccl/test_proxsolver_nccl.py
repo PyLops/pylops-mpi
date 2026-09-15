@@ -1,22 +1,13 @@
 """Test proximal solvers
-    Designed to run with n processes
-    $ mpiexec -n 10 pytest test_proxsolver.py --with-mpi
+    Designed to run with n GPUs (with 1 MPI process per GPU)
+    $ mpiexec -n 10 pytest test_proxsolver_nccl.py --with-mpi
 """
-import os
-
-if int(os.environ.get("TEST_CUPY_PYLOPS", 0)):
-    import cupy as np
-    from cupy.testing import assert_allclose
-
-    backend = "cupy"
-else:
-    import numpy as np
-    from numpy.testing import assert_allclose
-
-    backend = "numpy"
+import cupy as cp
+import numpy as np
 import pylops
 import pytest
 from mpi4py import MPI
+from numpy.testing import assert_allclose
 from pylops import BlockDiag, MatrixMult
 from pyproximal import L1, L2
 from pyproximal.optimization.primal import ADMML2, ProximalGradient
@@ -30,13 +21,13 @@ from pylops_mpi.proximal.optimization.primal import (
     ProximalGradient as MPIProximalGradient,
 )
 from pylops_mpi.proximal.optimization.primaldual import PrimalDual as MPIPrimalDual
+from pylops_mpi.utils._nccl import initialize_nccl_comm
 
-comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-size = comm.Get_size()
-if backend == "cupy":
-    device_id = rank % np.cuda.runtime.getDeviceCount()
-    np.cuda.Device(device_id).use()
+nccl_comm = initialize_nccl_comm()
+base_comm = MPI.COMM_WORLD
+rank = base_comm.Get_rank()
+size = base_comm.Get_size()
+
 
 par1 = {
     "ny": 11,
@@ -102,9 +93,9 @@ par4j = {
 )
 def test_proximalgradient_broadcast(par):
     """ProximalGradient with broabcasted model"""
-    np.random.seed(rank)
+    cp.random.seed(rank)
 
-    A = np.random.normal(0, 1, (par["ny"], par["nx"])) + par["imag"] * np.random.normal(
+    A = cp.random.normal(0, 1, (par["ny"], par["nx"])) + par["imag"] * cp.random.normal(
         0, 1, (par["ny"], par["nx"])
     )
     AVStack_MPI = MPIVStack(
@@ -117,9 +108,9 @@ def test_proximalgradient_broadcast(par):
         global_shape=par["nx"],
         dtype=par["dtype"],
         partition=Partition.BROADCAST,
-        engine=backend,
+        engine="cupy",
     )
-    x[:] = np.random.normal(1, 10, par["nx"]) + par["imag"] * np.random.normal(
+    x[:] = cp.random.normal(1, 10, par["nx"]) + par["imag"] * cp.random.normal(
         10, 10, par["nx"]
     )
     x_global = x.asarray()
@@ -128,19 +119,19 @@ def test_proximalgradient_broadcast(par):
             global_shape=par["nx"],
             dtype=par["dtype"],
             partition=Partition.BROADCAST,
-            engine=backend,
+            engine="cupy",
         )
-        x0[:] = np.random.normal(1, 10, par["nx"]) + par["imag"] * np.random.normal(
+        x0[:] = cp.random.normal(1, 10, par["nx"]) + par["imag"] * cp.random.normal(
             10, 10, par["nx"]
         )
         x0_global = x0.asarray()
     else:
-        # Set TO 0s if x0 = False
+        # Set to 0s if x0 = False
         x0 = DistributedArray(
             global_shape=par["nx"],
             dtype=par["dtype"],
             partition=Partition.BROADCAST,
-            engine=backend,
+            engine="cupy",
         )
         x0[:] = 0
         x0_global = x0.asarray()
@@ -158,13 +149,13 @@ def test_proximalgradient_broadcast(par):
     assert isinstance(xinv, DistributedArray)
     xinv_array = xinv.asarray()
 
-    As = np.vstack(comm.allgather(A))
+    As = cp.vstack(base_comm.allgather(A))
     if rank == 0:
         AVStack = MatrixMult(As, dtype=par["dtype"])
         if par["x0"]:
             x0 = x0_global
         else:
-            x0 = np.zeros(par["nx"], dtype=par["dtype"])
+            x0 = cp.zeros(par["nx"], dtype=par["dtype"])
         y1 = AVStack * x_global
 
         l2local = L2(Op=AVStack, b=y1, x0=x0)
@@ -173,7 +164,7 @@ def test_proximalgradient_broadcast(par):
         xinv1 = ProximalGradient(
             l2local, l1local, x0=x0, tau=1e-3, niter=50, show=False
         )
-        assert_allclose(xinv_array, xinv1, rtol=1e-12)
+        assert_allclose(xinv_array.get(), xinv1.get(), rtol=1e-12)
 
 
 @pytest.mark.mpi(min_size=2)
@@ -182,9 +173,9 @@ def test_proximalgradient_broadcast(par):
 )
 def test_proximalgradient_scatter(par):
     """ProximalGradient with scattered model"""
-    np.random.seed(rank)
+    cp.random.seed(rank)
 
-    A = np.random.normal(0, 1, (par["ny"], par["nx"])) + par["imag"] * np.random.normal(
+    A = cp.random.normal(0, 1, (par["ny"], par["nx"])) + par["imag"] * cp.random.normal(
         0, 1, (par["ny"], par["nx"])
     )
     ABDiag_MPI = MPIBlockDiag(
@@ -197,9 +188,9 @@ def test_proximalgradient_scatter(par):
         global_shape=par["nx"] * size,
         dtype=par["dtype"],
         partition=Partition.SCATTER,
-        engine=backend,
+        engine="cupy",
     )
-    x[:] = np.random.normal(1, 10, par["nx"]) + par["imag"] * np.random.normal(
+    x[:] = cp.random.normal(1, 10, par["nx"]) + par["imag"] * cp.random.normal(
         10, 10, par["nx"]
     )
     x_global = x.asarray()
@@ -208,19 +199,19 @@ def test_proximalgradient_scatter(par):
             global_shape=par["nx"] * size,
             dtype=par["dtype"],
             partition=Partition.SCATTER,
-            engine=backend,
+            engine="cupy",
         )
-        x0[:] = np.random.normal(1, 10, par["nx"]) + par["imag"] * np.random.normal(
+        x0[:] = cp.random.normal(1, 10, par["nx"]) + par["imag"] * cp.random.normal(
             10, 10, par["nx"]
         )
         x0_global = x0.asarray()
     else:
-        # Set TO 0s if x0 = False
+        # Set to 0s if x0 = False
         x0 = DistributedArray(
             global_shape=par["nx"] * size,
             dtype=par["dtype"],
             partition=Partition.SCATTER,
-            engine=backend,
+            engine="cupy",
         )
         x0[:] = 0
         x0_global = x0.asarray()
@@ -238,13 +229,13 @@ def test_proximalgradient_scatter(par):
     assert isinstance(xinv, DistributedArray)
     xinv_array = xinv.asarray()
 
-    As = comm.allgather(A)
+    As = base_comm.allgather(A)
     if rank == 0:
         ABDiag = BlockDiag([MatrixMult(A, dtype=par["dtype"]) for A in As])
         if par["x0"]:
             x0 = x0_global
         else:
-            x0 = np.zeros(par["nx"] * size, dtype=par["dtype"])
+            x0 = cp.zeros(par["nx"] * size, dtype=par["dtype"])
         y1 = ABDiag * x_global
 
         l2local = L2(Op=ABDiag, b=y1, x0=x0)
@@ -253,7 +244,7 @@ def test_proximalgradient_scatter(par):
         xinv1 = ProximalGradient(
             l2local, l1local, x0=x0, tau=1e-3, niter=50, show=False
         )
-        assert_allclose(xinv_array, xinv1, rtol=1e-12)
+        assert_allclose(xinv_array.get(), xinv1.get(), rtol=1e-12)
 
 
 @pytest.mark.mpi(min_size=2)
@@ -262,9 +253,9 @@ def test_proximalgradient_scatter(par):
 )
 def test_admml2_scatter(par):
     """ADMML2 with scattered model"""
-    np.random.seed(rank)
+    cp.random.seed(rank)
 
-    A = np.random.normal(0, 1, (par["ny"], par["nx"])) + par["imag"] * np.random.normal(
+    A = cp.random.normal(0, 1, (par["ny"], par["nx"])) + par["imag"] * cp.random.normal(
         0, 1, (par["ny"], par["nx"])
     )
     ABDiag_MPI = MPIBlockDiag(
@@ -277,9 +268,9 @@ def test_admml2_scatter(par):
         global_shape=par["nx"] * size,
         dtype=par["dtype"],
         partition=Partition.SCATTER,
-        engine=backend,
+        engine="cupy",
     )
-    x[:] = np.random.normal(1, 10, par["nx"]) + par["imag"] * np.random.normal(
+    x[:] = cp.random.normal(1, 10, par["nx"]) + par["imag"] * cp.random.normal(
         10, 10, par["nx"]
     )
     x_global = x.asarray()
@@ -288,9 +279,9 @@ def test_admml2_scatter(par):
             global_shape=par["nx"] * size,
             dtype=par["dtype"],
             partition=Partition.SCATTER,
-            engine=backend,
+            engine="cupy",
         )
-        x0[:] = np.random.normal(1, 10, par["nx"]) + par["imag"] * np.random.normal(
+        x0[:] = cp.random.normal(1, 10, par["nx"]) + par["imag"] * cp.random.normal(
             10, 10, par["nx"]
         )
         x0_global = x0.asarray()
@@ -300,7 +291,7 @@ def test_admml2_scatter(par):
             global_shape=par["nx"] * size,
             dtype=par["dtype"],
             partition=Partition.SCATTER,
-            engine=backend,
+            engine="cupy",
         )
         x0[:] = 0
         x0_global = x0.asarray()
@@ -323,13 +314,13 @@ def test_admml2_scatter(par):
     assert isinstance(xinv, DistributedArray)
     xinv_array = xinv.asarray()
 
-    As = comm.allgather(A)
+    As = base_comm.allgather(A)
     if rank == 0:
         ABDiag = BlockDiag([MatrixMult(A, dtype=par["dtype"]) for A in As])
         if par["x0"]:
             x0 = x0_global
         else:
-            x0 = np.zeros(par["nx"] * size, dtype=par["dtype"])
+            x0 = cp.zeros(par["nx"] * size, dtype=par["dtype"])
         y1 = ABDiag * x_global
 
         Iop = pylops.Identity(par["nx"] * size, dtype=par["dtype"])
@@ -342,125 +333,4 @@ def test_admml2_scatter(par):
         # Pretty high tolerance because a different
         # linear solver is used internally in the
         # serial vs distributed versions of ADMML2
-        assert_allclose(xinv_array, xinv1, rtol=1e-3)
-
-
-# Tests with complex numbers currently fail due to tau being casted to complex
-# in PyProximal.
-# Tests in CuPy model currently failing due to BlockDiag not being allowed to
-# be scaled by a 1-element array (which is how tau/mu are provided)
-#
-# Will be both fixed in next release of PyProximal
-@pytest.mark.skipif(
-    int(os.environ.get("TEST_CUPY_PYLOPS", 0)) == 1, reason="Not CuPy enabled"
-)
-@pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize(
-    "par",
-    [
-        (par1),
-        (par2),
-        (par3),
-        (par4),
-    ],
-)
-def test_primaldual_scatter(par):
-    """PrimalDual with scattered model"""
-    np.random.seed(rank)
-
-    A = np.random.normal(0, 1, (par["ny"], par["nx"])) + par["imag"] * np.random.normal(
-        0, 1, (par["ny"], par["nx"])
-    )
-    ABDiag_MPI = MPIBlockDiag(
-        ops=[
-            pylops.MatrixMult(A, dtype=par["dtype"]),
-        ]
-    )
-
-    x = DistributedArray(
-        global_shape=par["nx"] * size,
-        dtype=par["dtype"],
-        partition=Partition.SCATTER,
-        engine=backend,
-    )
-    x[:] = np.random.normal(1, 10, par["nx"]) + par["imag"] * np.random.normal(
-        10, 10, par["nx"]
-    )
-    x_global = x.asarray()
-    if par["x0"]:
-        x0 = DistributedArray(
-            global_shape=par["nx"] * size,
-            dtype=par["dtype"],
-            partition=Partition.SCATTER,
-            engine=backend,
-        )
-        x0[:] = np.random.normal(1, 10, par["nx"]) + par["imag"] * np.random.normal(
-            10, 10, par["nx"]
-        )
-        x0_global = x0.asarray()
-    else:
-        # Set to 0s if x0 = False
-        x0 = DistributedArray(
-            global_shape=par["nx"] * size,
-            dtype=par["dtype"],
-            partition=Partition.SCATTER,
-            engine=backend,
-        )
-        x0[:] = 0
-        x0_global = x0.asarray()
-
-    y = ABDiag_MPI * x
-
-    # L2 prox
-    l2d = MPIL2(Op=ABDiag_MPI, b=y, x0=x0, solver="cgls")
-
-    # Regularizer (just make identity to solve the same problem
-    # as ProximalGradient)
-    Iopd = MPIBlockDiag(
-        ops=[
-            pylops.Identity(par["nx"], dtype=par["dtype"]),
-        ]
-    )
-
-    # L1 prox
-    l1 = L1(sigma=1e-1)
-    l1d = MPIProxOperator(l1)
-
-    y0 = Iopd * x0
-    xinv = MPIPrimalDual(
-        l2d, l1d, Iopd, x0=x0, y0=y0, tau=0.99, mu=0.99, niter=50, show=True
-    )
-    assert isinstance(xinv, DistributedArray)
-    xinv_array = xinv.asarray()
-
-    As = comm.allgather(A)
-    if rank == 0:
-        ABDiag = BlockDiag([MatrixMult(A, dtype=par["dtype"]) for A in As])
-        if par["x0"]:
-            x0 = x0_global
-        else:
-            x0 = np.zeros(par["nx"] * size, dtype=par["dtype"])
-        y1 = ABDiag * x_global
-
-        l2local = L2(Op=ABDiag, b=y1, x0=x0, sigma=1.0, solver="cgls")
-
-        Iop = pylops.Identity(par["nx"] * size, dtype=par["dtype"])
-        l1local = L1(sigma=1e-1)
-
-        y0 = Iop * x0
-        xinv1 = PrimalDual(
-            l2local,
-            l1local,
-            Iop,
-            x0=x0,
-            y0=y0,
-            tau=0.99,
-            mu=0.99,
-            niter=50,
-            show=False,
-        )
-
-        # Pretty high tolerance because a different
-        # linear solver is used internally in the
-        # serial vs distributed versions of L2
-        assert_allclose(xinv_array, xinv1, rtol=5e-2)
+        assert_allclose(xinv_array.get(), xinv1.get(), rtol=1e-3)

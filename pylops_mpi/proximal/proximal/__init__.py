@@ -10,12 +10,15 @@ pylops_mpi.proximal.MPIProxOperator.
 
 A list of proximal operators:
     MPIL2                             L2 Norm
+    MPIL21                            L2,1 Norm
 
 """
 
 from .L2 import *
+from .L21 import *
 
 
 __all__ = [
     "MPIL2",
+    "MPIL21",
 ]
