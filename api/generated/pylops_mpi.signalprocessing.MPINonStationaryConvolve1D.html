@@ -37,7 +37,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/style.css?v=e5b2244c" />
-    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=c83e6b79" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -638,7 +638,7 @@ finally the halo is removed from each local convolved signal.</p>
 
 <section id="examples-using-pylops-mpi-signalprocessing-mpinonstationaryconvolve1d">
 <h2>Examples using <code class="docutils literal notranslate"><span class="pre">pylops_mpi.signalprocessing.MPINonStationaryConvolve1D</span></code><a class="headerlink" href="#examples-using-pylops-mpi-signalprocessing-mpinonstationaryconvolve1d" title="Link to this heading">#</a></h2>
-<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This operator is effectively equivalent to PyLops&#x27; :pypylops.signalprocessing.NonStationaryConvolve1D, however both the input array and the filters will be distibuted. What makes this operator interesting is that we need to handle convolutions at the edges between different ranks and to do that we will halo the input array of a number of samples equal to the distance between two filters and we will also borrow the filtering from the next/previous rank. This is internally achieved by means of the :pypylops_mpi.basicoperators.MPIHalo operator."><img alt="" src="../../_images/sphx_glr_plot_nonstatconv_thumb.png" />
+<div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="This operator is effectively equivalent to PyLops&#x27; pylops.signalprocessing.NonStationaryConvolve1D, however both the input array and the filters will be distibuted. What makes this operator interesting is that we need to handle convolutions at the edges between different ranks and to do that we will halo the input array of a number of samples equal to the distance between two filters and we will also borrow the filtering from the next/previous rank. This is internally achieved by means of the pylops_mpi.basicoperators.MPIHalo operator."><img alt="" src="../../_images/sphx_glr_plot_nonstatconv_thumb.png" />
 <p><a class="reference internal" href="../../gallery/plot_nonstatconv.html"><span class="doc">Non-Stationary Convolution</span></a></p>
   <div class="sphx-glr-thumbnail-title">Non-Stationary Convolution</div>
 </div></div><div style='clear:both'></div></section>

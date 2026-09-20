@@ -29,7 +29,7 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip=":pypylops_mpi.utils.benchmark is a decorator used to decorate any function to measure its execution time from start to finish :pypylops_mpi.utils.mark is a function used inside the benchmark-decorated function to provide fine-grain time measurements.">
+    <div class="sphx-glr-thumbcontainer" tooltip="pylops_mpi.utils.benchmark is a decorator used to decorate any function to measure its execution time from start to finish pylops_mpi.utils.mark is a function used inside the benchmark-decorated function to provide fine-grain time measurements.">
 
 .. only:: html
 
@@ -63,7 +63,7 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="More precisely, compared to its counterpart in the PyLops documentation, this example distributes the frequency slices of the kernel of the MDC operator across multiple processes. Whilst both the entire model and data sit on all processes, within the MDC operator, and more precisely when the :pypylops_mpi.signalprocessing.Fredholm1 is called, different groups of frequencies are processed by the different ranks.">
+    <div class="sphx-glr-thumbcontainer" tooltip="More precisely, compared to its counterpart in the PyLops documentation, this example distributes the frequency slices of the kernel of the MDC operator across multiple processes. Whilst both the entire model and data sit on all processes, within the MDC operator, and more precisely when the pylops_mpi.signalprocessing.Fredholm1 is called, different groups of frequencies are processed by the different ranks.">
 
 .. only:: html
 
@@ -80,7 +80,7 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="This tutorial builds on the :pypylops.avo.poststack.PoststackLinearModelling operator to model 1d post-stack seismic traces 1d profiles of the subsurface acoustic impedence by means of the following equation">
+    <div class="sphx-glr-thumbcontainer" tooltip="This tutorial builds on the pylops.avo.poststack.PoststackLinearModelling operator to model 1d post-stack seismic traces 1d profiles of the subsurface acoustic impedence by means of the following equation">
 
 .. only:: html
 
