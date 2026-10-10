@@ -64,7 +64,7 @@ jobs:
           $PIP install --upgrade pip setuptools
           $PIP install flake8 pytest setuptools-scm
           $PIP install -r requirements-dev.txt
-          $PIP install cupy-cuda12x nvidia-nccl-cu12
+          $PIP install cupy-cuda12x[ctk] nvidia-nccl-cu12
           $PYTHON -m setuptools_scm
           $PIP install .
           EOF
