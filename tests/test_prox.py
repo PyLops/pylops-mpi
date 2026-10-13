@@ -214,15 +214,21 @@ def test_precomposition(par):
         rtol=1e-12,
     )
 
-    # prox (only with b)
+    # prox / proxdual (only with b)
     l2d = MPIL2()
     l2dprec = l2d.precomposition(a=1.0, b=b)
     bd = x.zeros_like()
     bd.local_array[:] -= b
     l2dref = MPIL2(b=bd)
+
     assert_allclose(
         l2dprec.prox(x, 1.0).asarray(),
         l2dref.prox(x, 1.0).asarray(),
+        rtol=1e-12,
+    )
+    assert_allclose(
+        l2dprec.proxdual(x, 1.0).asarray(),
+        l2dref.proxdual(x, 1.0).asarray(),
         rtol=1e-12,
     )
 
