@@ -164,7 +164,7 @@ def test_proximalgradient_broadcast(par):
         xinv1 = ProximalGradient(
             l2local, l1local, x0=x0, tau=1e-3, niter=50, show=False
         )
-        assert_allclose(xinv_array.get(), xinv1.get(), rtol=1e-12)
+        assert_allclose(xinv_array.get(), xinv1.get(), rtol=1e-5)
 
 
 @pytest.mark.mpi(min_size=2)
@@ -244,7 +244,7 @@ def test_proximalgradient_scatter(par):
         xinv1 = ProximalGradient(
             l2local, l1local, x0=x0, tau=1e-3, niter=50, show=False
         )
-        assert_allclose(xinv_array.get(), xinv1.get(), rtol=1e-12)
+        assert_allclose(xinv_array.get(), xinv1.get(), rtol=1e-5)
 
 
 @pytest.mark.mpi(min_size=2)

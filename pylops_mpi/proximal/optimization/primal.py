@@ -5,14 +5,22 @@ from math import sqrt
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
+import pyproximal
 from pylops.utils.backend import to_numpy
 from pylops.utils.typing import NDArray
-from pyproximal.optimization.primal import _x0z0_init
 
 from pylops_mpi import DistributedArray, StackedDistributedArray
 from pylops_mpi.basicoperators import MPIStackedVStack
 from pylops_mpi.optimization.basic import cgls
 from pylops_mpi.proximal.ProxOperator import MPIProxOperator
+
+# need to check pyproximal version since _x0z0_init moved from primal to cls_primal
+# from pyproximal>=0.13.0
+pyproximal_version = pyproximal.__version__.split(".")
+if int(pyproximal_version[0]) == 0 and int(pyproximal_version[1]) < 13:
+    from pyproximal.optimization.primal import _x0z0_init
+else:
+    from pyproximal.optimization.cls_primal import _x0z0_init
 
 if TYPE_CHECKING:
     from pylops_mpi.linearoperator import MPILinearOperator
