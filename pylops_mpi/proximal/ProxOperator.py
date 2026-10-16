@@ -127,6 +127,7 @@ class MPIProxOperator:
     ) -> DistributedArray | StackedDistributedArray:
         """Proximal operator applied to a vector"""
         if hasattr(self, "proxop"):
+            # Use prox of the pyproximal operator being wrapped
             if isinstance(x, DistributedArray):
                 y = x.empty_like()
                 y[:] = self.proxop.prox(x.local_array, tau)
