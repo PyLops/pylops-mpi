@@ -3,6 +3,17 @@
 Changelog
 =========
 
+Version 0.8.0
+-------------
+
+*Released on 22/10/2026*
+
+* Added :class:`pylops_mpi.proximal.proximal.MPIL21` proximal operator.
+* Added :func:`pylops__mpi.proximal.optimization.PrimalDual` solver.
+* Added precomposition and postcomposition to :class:`pylops_mpi.proximal.MPIProxOperator`.
+* Fixed DeprecationWarning from `float()` on `norm` and `dot` results by returning true scalars
+* Fixed the import of PyProximal’s `_x0z0_init` to work with both before and after v0.13.0 releases.
+
 Version 0.7.0
 -------------
 
