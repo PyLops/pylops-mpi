@@ -93,10 +93,12 @@ class CG(Solver):
         self.tol = tol
 
         x = x0.copy()
-        self.r = self.y - self.Op.matvec(x)
+        # residual computed in-place into the output of the matvec
+        self.r = self.Op.matvec(x)
+        self.y.subtract(self.r, out=self.r)
         self.rank = x.rank
         self.c = self.r.copy()
-        self.kold = float(np.abs(self.r.dot(self.r.conj())))
+        self.kold = float(np.abs(self.r.dot(self.r, vdot=True)))
 
         # create variables to track the residual norm and iterations
         self.cost: List = []
@@ -132,11 +134,15 @@ class CG(Solver):
         Opc = self.Op.matvec(self.c)
         cOpc = np.abs(self.c.dot(Opc.conj()))
         a = float(self.kold / cOpc)
-        x += a * self.c
-        self.r -= a * Opc
-        k = float(np.abs(self.r.dot(self.r.conj())))
+        # all updates are done in-place, reusing Opc as scratch space
+        Opc *= a
+        self.r -= Opc
+        self.c.multiply(a, out=Opc)
+        x += Opc
+        k = float(np.abs(self.r.dot(self.r, vdot=True)))
         b = float(k / self.kold)
-        self.c = self.r + b * self.c
+        self.c *= b
+        self.c += self.r
         self.kold = k
         self.iiter += 1
         self.cost.append(float(np.sqrt(self.kold)))
@@ -352,21 +358,29 @@ class CGLS(Solver):
         self.niter = niter
 
         x = x0.copy()
-        self.s = self.y - self.Op.matvec(x)
-        damped_x = x * damp
-        r = self.Op.rmatvec(self.s) - damped_x
+        # residual computed in-place into the output of the matvec
+        self.s = self.Op.matvec(x)
+        self.y.subtract(self.s, out=self.s)
+        r = self.Op.rmatvec(self.s)
+        if damp != 0.0:
+            r -= x * damp
         self.rank = x.rank
         self.c = r.copy()
         self.q = self.Op.matvec(self.c)
-        self.kold = float(np.abs(r.dot(r.conj())))
+        # r is kept as scratch space for the steps
+        self.r = r
+        self.kold = float(np.abs(r.dot(r, vdot=True)))
 
         # create variables to track the residual norm and iterations
         self.cost = []
         self.cost1 = []
         self.cost.append(float(self.s.norm()))
-        self.cost1.append(
-            np.sqrt(float(self.cost[0] ** 2 + damp * np.abs(x.dot(x.conj()))))
-        )
+        if damp == 0.0:
+            self.cost1.append(self.cost[0])
+        else:
+            self.cost1.append(
+                np.sqrt(float(self.cost[0] ** 2 + damp * np.abs(x.dot(x, vdot=True))))
+            )
         self.iiter = 0
 
         # print setup
@@ -397,28 +411,41 @@ class CGLS(Solver):
 
         """
 
-        a = float(
-            np.abs(
-                self.kold
-                / (self.q.dot(self.q.conj()) + self.damp * self.c.dot(self.c.conj()))
-            )
-        )
-        x += a * self.c
-        self.s -= a * self.q
-        damped_x = self.damp * x
-        r = self.Op.rmatvec(self.s) - damped_x
-        k = float(np.abs(r.dot(r.conj())))
+        qq = self.q.dot(self.q, vdot=True)
+        if self.damp != 0.0:
+            qq += self.damp * self.c.dot(self.c, vdot=True)
+        a = float(np.abs(self.kold / qq))
+        # all updates are done in-place: the previous r is dead after the last
+        # update of c, so it is used as scratch space; q is replaced by the
+        # next matvec
+        self.c.multiply(a, out=self.r)
+        x += self.r
+        self.q *= a
+        self.s -= self.q
+        r = self.Op.rmatvec(self.s)
+        if self.damp != 0.0:
+            x.multiply(self.damp, out=self.r)
+            r -= self.r
+        k = float(np.abs(r.dot(r, vdot=True)))
         b = float(k / self.kold)
-        self.c = r + b * self.c
+        self.c *= b
+        self.c += r
+        self.r = r
         self.q = self.Op.matvec(self.c)
         self.kold = k
         self.iiter += 1
         self.cost.append(float(self.s.norm()))
-        self.cost1.append(
-            np.sqrt(
-                float(self.cost[self.iiter] ** 2 + self.damp * np.abs(x.dot(x.conj())))
+        if self.damp == 0.0:
+            self.cost1.append(self.cost[self.iiter])
+        else:
+            self.cost1.append(
+                np.sqrt(
+                    float(
+                        self.cost[self.iiter] ** 2
+                        + self.damp * np.abs(x.dot(x, vdot=True))
+                    )
+                )
             )
-        )
         if show and self.rank == 0:
             self._print_step(x)
         return x
