@@ -1433,13 +1433,7 @@ class StackedDistributedArray:
                 )
 
     def __neg__(self):
-        arr = self.copy()
-        for iarr in range(self.narrays):
-            if isinstance(arr[iarr], StackedDistributedArray):
-                arr[iarr] = -arr[iarr]
-            else:
-                arr[iarr][:] = -arr[iarr][:]
-        return arr
+        return self.multiply(-1)
 
     def __add__(self, x):
         return self.add(x)
@@ -1448,59 +1442,113 @@ class StackedDistributedArray:
         return self.iadd(x)
 
     def __sub__(self, x):
-        return self.__add__(-x)
+        return self.subtract(x)
 
     def __isub__(self, x):
-        return self.__iadd__(-x)
+        return self.subtract(x, out=self)
 
     def __mul__(self, x):
         return self.multiply(x)
 
+    def __imul__(self, x):
+        return self.multiply(x, out=self)
+
     def __rmul__(self, x):
         return self.multiply(x)
 
-    def add(self, stacked_array: Self) -> Self:
-        """Stacked Distributed Addition of arrays"""
-        self._check_stacked_size(stacked_array)
-        SumArray = self.copy()
+    def _apply(self, name: str, other, out: Optional[Self] = None) -> Self:
+        """Apply the binary method ``name`` of the children, writing into ``out``
+
+        The result is allocated once (if ``out`` is not provided) and each
+        child writes directly into its portion of it, recursing into nested
+        stacked arrays.
+        """
+        is_stacked = isinstance(other, StackedDistributedArray)
+        if is_stacked:
+            self._check_stacked_size(other)
+        if out is None:
+            out = self.empty_like()
         for iarr in range(self.narrays):
-            if isinstance(stacked_array[iarr], StackedDistributedArray):
-                SumArray[iarr] = self[iarr] + stacked_array[iarr]
-            else:
-                SumArray[iarr][:] = (self[iarr] + stacked_array[iarr])[:]
-        return SumArray
+            getattr(self[iarr], name)(
+                other[iarr] if is_stacked else other, out=out[iarr]
+            )
+        return out
+
+    def add(self, stacked_array: float | int | Self, out: Optional[Self] = None) -> Self:
+        """Stacked Distributed Addition of arrays
+
+        Parameters
+        ----------
+        stacked_array : :obj:`pylops_mpi.StackedDistributedArray` or scalar
+            Array to add.
+        out : :obj:`pylops_mpi.StackedDistributedArray`, optional
+            Array where the result is stored (it can be ``self``).
+            If ``None``, a new array is created.
+        """
+        return self._apply("add", stacked_array, out)
 
     def iadd(self, stacked_array: Self) -> Self:
         """Stacked Distributed In-Place Addition of arrays"""
-        self._check_stacked_size(stacked_array)
-        for iarr in range(self.narrays):
-            if isinstance(self[iarr], StackedDistributedArray):
-                self[iarr] = self[iarr] + stacked_array[iarr]
+        return self.add(stacked_array, out=self)
+
+    def subtract(self, stacked_array: float | int | Self, out: Optional[Self] = None) -> Self:
+        """Stacked Distributed Subtraction of arrays
+
+        Parameters
+        ----------
+        stacked_array : :obj:`pylops_mpi.StackedDistributedArray` or scalar
+            Array to subtract.
+        out : :obj:`pylops_mpi.StackedDistributedArray`, optional
+            Array where the result is stored (it can be ``self``).
+            If ``None``, a new array is created.
+        """
+        return self._apply("subtract", stacked_array, out)
+
+    def multiply(self, stacked_array: float | int | Self, out: Optional[Self] = None) -> Self:
+        """Stacked Distributed Multiplication of arrays
+
+        Parameters
+        ----------
+        stacked_array : :obj:`pylops_mpi.StackedDistributedArray` or scalar
+            Array to multiply by.
+        out : :obj:`pylops_mpi.StackedDistributedArray`, optional
+            Array where the result is stored (it can be ``self``).
+            If ``None``, a new array is created.
+        """
+        return self._apply("multiply", stacked_array, out)
+
+    def _leaves(self) -> List:
+        """Flat list of the (non-stacked) DistributedArrays"""
+        leaves = []
+        for distarray in self.distarrays:
+            if isinstance(distarray, StackedDistributedArray):
+                leaves.extend(distarray._leaves())
             else:
-                self[iarr][:] = (self[iarr] + stacked_array[iarr])[:]
-        return self
+                leaves.append(distarray)
+        return leaves
 
-    def multiply(self, stacked_array: float | int | Self) -> Self:
-        """Stacked Distributed Multiplication of arrays"""
-        if isinstance(stacked_array, StackedDistributedArray):
-            self._check_stacked_size(stacked_array)
-        ProductArray = self.copy()
+    def _fusable(self, leaves: List) -> bool:
+        """Whether the reductions of all leaves can share a single allreduce"""
+        first = leaves[0]
+        return all(
+            leaf.partition is Partition.SCATTER
+            and leaf.mask is None
+            and leaf.base_comm is first.base_comm
+            and leaf.base_comm_nccl is first.base_comm_nccl
+            for leaf in leaves
+        )
 
-        if isinstance(stacked_array, StackedDistributedArray):
-            # multiply two StackedDistributedArray
-            for iarr in range(self.narrays):
-                if isinstance(self[iarr], StackedDistributedArray):
-                    ProductArray[iarr] = self[iarr] * stacked_array[iarr]
-                else:
-                    ProductArray[iarr][:] = (self[iarr] * stacked_array[iarr])[:]
-        else:
-            # multiply with scalar
-            for iarr in range(self.narrays):
-                if isinstance(self[iarr], StackedDistributedArray):
-                    ProductArray[iarr] = self[iarr] * stacked_array
-                else:
-                    ProductArray[iarr][:] = (self[iarr] * stacked_array)[:]
-        return ProductArray
+    def _fused_allreduce(self, leaves: List, local):
+        """Sum-reduce the local partial result of the leaves in one allreduce"""
+        first = leaves[0]
+        return to_scalar(
+            first._allreduce_subcomm(
+                first.sub_comm,
+                first.base_comm_nccl,
+                local,
+                engine=first.engine,
+            )
+        )
 
     def dot(self, stacked_array: Self, vdot: bool = False) -> Self:
         """
@@ -1523,6 +1571,18 @@ class StackedDistributedArray:
             The result of the dot product across all ranks. This is reduced across all processes.
         """
         self._check_stacked_size(stacked_array)
+        leaves = self._leaves()
+        other_leaves = stacked_array._leaves()
+        if len(leaves) == len(other_leaves) and self._fusable(leaves):
+            # sum the local dot products and reduce only once
+            for leaf, other_leaf in zip(leaves, other_leaves):
+                leaf._check_partition_shape(other_leaf)
+                leaf._check_mask(other_leaf)
+            local = sum(
+                leaf._local_dot(other_leaf, vdot)
+                for leaf, other_leaf in zip(leaves, other_leaves)
+            )
+            return self._fused_allreduce(leaves, local)
         dotprod = 0.0
         for iarr in range(self.narrays):
             dotprod += self[iarr].dot(stacked_array[iarr], vdot=vdot)
@@ -1541,6 +1601,11 @@ class StackedDistributedArray:
         norm : :obj:`float`
             The computed norm of the stacked distributed array.
         """
+        leaves = self._leaves()
+        if ord in (None, 2) and self._fusable(leaves):
+            # sum the local squared norms and reduce only once
+            local = sum(leaf._local_sqnorm() for leaf in leaves)
+            return to_scalar(np.sqrt(self._fused_allreduce(leaves, local)))
         # Note that the norms of the individual distributed arrays are
         # scalars (irrespective of the engine used), thus numpy is used
         # to combine them
