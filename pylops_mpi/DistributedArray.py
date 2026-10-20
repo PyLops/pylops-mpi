@@ -247,6 +247,7 @@ class DistributedArray(DistributedMixIn):
             else [_value_or_sized_to_tuple(local_shape) for local_shape in local_shapes]
         )
         self._check_local_shapes(local_shapes)
+        self._local_shapes = local_shapes if local_shapes else None
         self._local_shape = (
             local_shapes[self.rank]
             if local_shapes
@@ -428,16 +429,21 @@ class DistributedArray(DistributedMixIn):
     def local_shapes(self):
         """Gather Local shapes from all ranks
 
+        The shapes are gathered (collective) the first time this property is
+        accessed, and cached afterwards.
+
         Returns
         -------
         local_shapes : :obj:`list`
         """
-        if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
-            return self._nccl_local_shapes(False)
-        else:
-            return self._allgather(
-                self.base_comm, self.base_comm_nccl, self.local_shape
-            )
+        if self._local_shapes is None:
+            if deps.nccl_enabled and getattr(self, "base_comm_nccl"):
+                self._local_shapes = self._nccl_local_shapes(False)
+            else:
+                self._local_shapes = self._allgather(
+                    self.base_comm, self.base_comm_nccl, self.local_shape
+                )
+        return self._local_shapes
 
     @property
     def sub_comm(self):
@@ -628,6 +634,56 @@ class DistributedArray(DistributedMixIn):
         redist_array[:] = ncp.concatenate(recv_list, axis=self.axis)
         return redist_array
 
+    def _like(self, local_array: Optional[NDArray] = None, dtype=None):
+        """Create a DistributedArray with the same metadata as ``self``
+
+        The metadata comes from an array that is already valid, so no
+        collective communication is performed and the sub-communicator is
+        reused. The only check is a local one on the shape of ``local_array``.
+
+        Parameters
+        ----------
+        local_array : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`, optional
+            Local array to use as storage, whose shape must be equal to the
+            local shape of ``self``. Its dtype becomes the dtype of the new
+            array (``dtype`` is ignored). If ``None``, an uninitialized array
+            is allocated.
+        dtype : :obj:`str`, optional
+            Type of the elements of the allocated array. Only used when
+            ``local_array`` is ``None``, where it defaults to ``self.dtype``.
+
+        Raises
+        ------
+        ValueError
+            If ``local_array`` is provided and its shape does not match the
+            local shape of ``self``.
+        """
+        arr = object.__new__(type(self))
+        arr._global_shape = self._global_shape
+        arr._base_comm = self._base_comm
+        arr._base_comm_nccl = self._base_comm_nccl
+        arr._partition = self._partition
+        arr._axis = self._axis
+        arr._mask = self._mask
+        arr._sub_comm = self._sub_comm
+        arr._local_shape = self._local_shape
+        arr._local_shapes = self._local_shapes
+        arr._engine = self._engine
+        if local_array is None:
+            arr.dtype = self.dtype if dtype is None else dtype
+            arr._local_array = get_module(self._engine).empty(
+                self._local_shape, dtype=arr.dtype
+            )
+        else:
+            if local_array.shape != self._local_shape:
+                raise ValueError(
+                    f"local_array has shape {local_array.shape}, "
+                    f"expected {self._local_shape}"
+                )
+            arr.dtype = local_array.dtype
+            arr._local_array = local_array
+        return arr
+
     def _check_local_shapes(self, local_shapes):
         """Check if the local shapes align with the global shape"""
         if local_shapes:
@@ -695,19 +751,12 @@ class DistributedArray(DistributedMixIn):
         return local_shapes
 
     def __neg__(self):
-        arr = DistributedArray(
-            global_shape=self.global_shape,
-            base_comm=self.base_comm,
-            base_comm_nccl=self.base_comm_nccl,
-            partition=self.partition,
-            axis=self.axis,
-            local_shapes=self.local_shapes,
-            mask=self.mask,
-            engine=self.engine,
-            dtype=self.dtype,
-        )
-        arr[:] = -self.local_array
-        return arr
+        out = self._like()
+        if self.partition is Partition.BROADCAST:
+            out[:] = -self.local_array
+        else:
+            get_module(self.engine).negative(self.local_array, out=out.local_array)
+        return out
 
     def __add__(self, x):
         return self.add(x)
@@ -716,72 +765,83 @@ class DistributedArray(DistributedMixIn):
         return self.iadd(x)
 
     def __sub__(self, x):
-        return self.__add__(-x)
+        return self.subtract(x)
 
     def __isub__(self, x):
-        return self.__iadd__(-x)
+        return self.subtract(x, out=self)
 
     def __mul__(self, x):
         return self.multiply(x)
 
+    def __imul__(self, x):
+        return self.multiply(x, out=self)
+
     def __rmul__(self, x):
         return self.multiply(x)
 
-    def add(self, dist_array):
-        """Distributed Addition of arrays"""
-        if isinstance(dist_array, DistributedArray):
-            self._check_partition_shape(dist_array)
-            self._check_mask(dist_array)
-        SumArray = DistributedArray(
-            global_shape=self.global_shape,
-            base_comm=self.base_comm,
-            base_comm_nccl=self.base_comm_nccl,
-            dtype=self.dtype,
-            partition=self.partition,
-            local_shapes=self.local_shapes,
-            mask=self.mask,
-            engine=self.engine,
-            axis=self.axis,
-        )
-        if isinstance(dist_array, DistributedArray):
-            # sum two DistributedArray
-            SumArray[:] = self.local_array + dist_array.local_array
-        else:
-            # SUum with scalar
-            SumArray[:] = self.local_array + dist_array
-        return SumArray
+    def _ufunc(self, ufunc, other, out=None):
+        """Apply a binary ufunc between ``self`` and ``other`` (distributed
+        array or scalar/array-like), optionally writing into ``out``"""
+        if isinstance(other, DistributedArray):
+            self._check_partition_shape(other)
+            self._check_mask(other)
+            other = other.local_array
+        if out is None:
+            out = self._like()
+        if self.partition is not Partition.BROADCAST:
+            try:
+                # single pass, no temporary
+                ufunc(self.local_array, other, out=out.local_array)
+                return out
+            except TypeError:
+                # unsafe cast into out (e.g., complex into real): fall back
+                # to the assignment, which casts
+                pass
+        out[:] = ufunc(self.local_array, other)
+        return out
+
+    def add(self, dist_array, out=None):
+        """Distributed Addition of arrays
+
+        Parameters
+        ----------
+        dist_array : :obj:`pylops_mpi.DistributedArray` or scalar
+            Array to add.
+        out : :obj:`pylops_mpi.DistributedArray`, optional
+            Array where the result is stored (it can be ``self`` or
+            ``dist_array``). If ``None``, a new array is created.
+        """
+        return self._ufunc(get_module(self.engine).add, dist_array, out)
 
     def iadd(self, dist_array):
         """Distributed In-place Addition of arrays"""
-        self._check_partition_shape(dist_array)
-        self._check_mask(dist_array)
-        self[:] = self.local_array + dist_array.local_array
-        return self
+        return self.add(dist_array, out=self)
 
-    def multiply(self, dist_array):
-        """Distributed Element-wise multiplication"""
-        if isinstance(dist_array, DistributedArray):
-            self._check_partition_shape(dist_array)
-            self._check_mask(dist_array)
+    def subtract(self, dist_array, out=None):
+        """Distributed Subtraction of arrays
 
-        ProductArray = DistributedArray(
-            global_shape=self.global_shape,
-            base_comm=self.base_comm,
-            base_comm_nccl=self.base_comm_nccl,
-            dtype=self.dtype,
-            partition=self.partition,
-            local_shapes=self.local_shapes,
-            mask=self.mask,
-            engine=self.engine,
-            axis=self.axis,
-        )
-        if isinstance(dist_array, DistributedArray):
-            # multiply two DistributedArray
-            ProductArray[:] = self.local_array * dist_array.local_array
-        else:
-            # multiply with scalar
-            ProductArray[:] = self.local_array * dist_array
-        return ProductArray
+        Parameters
+        ----------
+        dist_array : :obj:`pylops_mpi.DistributedArray` or scalar
+            Array to subtract.
+        out : :obj:`pylops_mpi.DistributedArray`, optional
+            Array where the result is stored. If ``None``, a new array is
+            created.
+        """
+        return self._ufunc(get_module(self.engine).subtract, dist_array, out)
+
+    def multiply(self, dist_array, out=None):
+        """Distributed Element-wise multiplication
+
+        Parameters
+        ----------
+        dist_array : :obj:`pylops_mpi.DistributedArray` or scalar
+            Array to multiply by.
+        out : :obj:`pylops_mpi.DistributedArray`, optional
+            Array where the result is stored. If ``None``, a new array is
+            created.
+        """
+        return self._ufunc(get_module(self.engine).multiply, dist_array, out)
 
     def dot(self, dist_array, vdot: bool = False):
         """
@@ -805,7 +865,6 @@ class DistributedArray(DistributedMixIn):
         """
         self._check_partition_shape(dist_array)
         self._check_mask(dist_array)
-        ncp = get_module(self.engine)
         # Convert to Partition.SCATTER if Partition.BROADCAST
         x = (
             DistributedArray.to_dist(
@@ -825,18 +884,32 @@ class DistributedArray(DistributedMixIn):
             if self.partition in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]
             else dist_array
         )
-        # Flatten the local arrays and calculate dot product. Note that
-        # _allreduce_subcomm returns a size-1 array, which is converted
-        # into a scalar to be consistent with numpy.dot/numpy.vdot
-        dot_func = ncp.vdot if vdot else ncp.dot
+        # Note that _allreduce_subcomm returns a size-1 array, which is
+        # converted into a scalar to be consistent with numpy.dot/numpy.vdot
         return to_scalar(
             self._allreduce_subcomm(
                 self.sub_comm,
                 self.base_comm_nccl,
-                dot_func(x.local_array.flatten(), y.local_array.flatten()),
+                x._local_dot(y, vdot),
                 engine=self.engine,
             )
         )
+
+    def _local_dot(self, dist_array, vdot: bool = False):
+        """Dot product of the local arrays (no communication)"""
+        ncp = get_module(self.engine)
+        dot_func = ncp.vdot if vdot else ncp.dot
+        return dot_func(self.local_array.ravel(), dist_array.local_array.ravel())
+
+    def _local_sqnorm(self):
+        """Squared 2-norm of the local array (no communication)"""
+        ncp = get_module(self.engine)
+        local = self.local_array.ravel()
+        if ncp.iscomplexobj(local):
+            # real view of the same buffer: sum of squares of real and
+            # imaginary parts (overflows to inf rather than nan)
+            local = local.view(np.finfo(local.dtype).dtype)
+        return ncp.vdot(local, local).astype(ncp.float64)
 
     def _compute_vector_norm(
         self, local_array: NDArray, axis: int, ord: Optional[int] = None
@@ -863,6 +936,15 @@ class DistributedArray(DistributedMixIn):
             recv_buf = ncp.empty(shape=global_shape, dtype=ncp.float64)
         if ord in ["fro", "nuc"]:
             raise ValueError(f"norm-{ord} not possible for vectors")
+        elif ord == 2 and local_array.ndim == 1:
+            # 2-norm of a vector: no float64 temporaries
+            recv_buf = self._allreduce_subcomm(
+                self.sub_comm,
+                self.base_comm_nccl,
+                self._local_sqnorm(),
+                engine=self.engine,
+            )
+            recv_buf = ncp.sqrt(recv_buf)
         elif ord == 0:
             # Count non-zero then sum reduction
             recv_buf = self._allreduce_subcomm(
@@ -947,17 +1029,8 @@ class DistributedArray(DistributedMixIn):
 
     def zeros_like(self):
         """Creates a copy of the DistributedArray filled with zeros"""
-        arr = DistributedArray(
-            global_shape=self.global_shape,
-            base_comm=self.base_comm,
-            base_comm_nccl=self.base_comm_nccl,
-            partition=self.partition,
-            axis=self.axis,
-            local_shapes=self.local_shapes,
-            engine=self.engine,
-            dtype=self.dtype,
-        )
-        arr[:] = 0.0
+        arr = self._like()
+        arr.local_array[...] = 0.0
         return arr
 
     def norm(
@@ -994,7 +1067,7 @@ class DistributedArray(DistributedMixIn):
             # _compute_vector_norm returns a size-1 array, which is converted
             # into a scalar to be consistent with numpy.linalg.norm
             return to_scalar(
-                x._compute_vector_norm(x.local_array.flatten(), axis=0, ord=ord)
+                x._compute_vector_norm(x.local_array.ravel(), axis=0, ord=ord)
             )
         if axis >= self.ndim:
             raise ValueError(
@@ -1015,37 +1088,11 @@ class DistributedArray(DistributedMixIn):
 
     def conj(self):
         """Distributed conj() method"""
-        local_array = self.local_array.conj()
-        conj = DistributedArray(
-            global_shape=self.global_shape,
-            base_comm=self.base_comm,
-            base_comm_nccl=self.base_comm_nccl,
-            partition=self.partition,
-            axis=self.axis,
-            local_array=local_array,
-            local_shapes=self.local_shapes,
-            mask=self.mask,
-            engine=self.engine,
-            dtype=self.dtype,
-        )
-        return conj
+        return self._like(local_array=self.local_array.conj())
 
     def copy(self):
         """Creates a copy of the DistributedArray"""
-        local_array = self.local_array.copy()
-        arr = DistributedArray(
-            global_shape=self.global_shape,
-            base_comm=self.base_comm,
-            base_comm_nccl=self.base_comm_nccl,
-            partition=self.partition,
-            axis=self.axis,
-            local_array=local_array,
-            local_shapes=self.local_shapes,
-            mask=self.mask,
-            engine=self.engine,
-            dtype=self.dtype,
-        )
-        return arr
+        return self._like(local_array=self.local_array.copy())
 
     def ravel(self, order: Optional[str] = "C"):
         """Return a flattened DistributedArray
@@ -1132,18 +1179,7 @@ class DistributedArray(DistributedMixIn):
 
     def empty_like(self):
         """Creates an empty like DistributedArray with uninitialized values"""
-        dist = DistributedArray(
-            global_shape=self.global_shape,
-            base_comm=self.base_comm,
-            base_comm_nccl=self.base_comm_nccl,
-            partition=self.partition,
-            axis=self.axis,
-            local_shapes=self.local_shapes,
-            mask=self.mask,
-            engine=self.engine,
-            dtype=self.dtype,
-        )
-        return dist
+        return self._like()
 
     def add_ghost_cells(
         self, cells_front: Optional[int] = None, cells_back: Optional[int] = None
@@ -1541,39 +1577,12 @@ class StackedDistributedArray:
 
     def zeros_like(self) -> Self:
         """Creates a zero like StackedDistributedArray"""
-        dists = []
-        for iarr in range(self.narrays):
-            distarray = self.distarrays[iarr]
-            dist = DistributedArray(
-                global_shape=distarray.global_shape,
-                base_comm=distarray.base_comm,
-                base_comm_nccl=distarray.base_comm_nccl,
-                partition=distarray.partition,
-                axis=distarray.axis,
-                local_shapes=distarray.local_shapes,
-                mask=distarray.mask,
-                engine=distarray.engine,
-                dtype=distarray.dtype,
-            )
-            dist[:] = 0.0
-            dists.append(dist)
-        return StackedDistributedArray(distarrays=dists)
+        return StackedDistributedArray(
+            distarrays=[distarray.zeros_like() for distarray in self.distarrays]
+        )
 
     def empty_like(self) -> Self:
         """Creates an empty like StackedDistributedArray with uninitialized values"""
-        dists = []
-        for iarr in range(self.narrays):
-            distarray = self.distarrays[iarr]
-            dist = DistributedArray(
-                global_shape=distarray.global_shape,
-                base_comm=distarray.base_comm,
-                base_comm_nccl=distarray.base_comm_nccl,
-                partition=distarray.partition,
-                axis=distarray.axis,
-                local_shapes=distarray.local_shapes,
-                mask=distarray.mask,
-                engine=distarray.engine,
-                dtype=distarray.dtype,
-            )
-            dists.append(dist)
-        return StackedDistributedArray(distarrays=dists)
+        return StackedDistributedArray(
+            distarrays=[distarray.empty_like() for distarray in self.distarrays]
+        )
