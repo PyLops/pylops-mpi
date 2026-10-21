@@ -6,7 +6,7 @@ Changelog
 Version 0.8.0
 -------------
 
-*Released on 22/10/2026*
+*Released on 21/10/2026*
 
 * Added :class:`pylops_mpi.proximal.proximal.MPIL21` proximal operator.
 * Added :func:`pylops__mpi.proximal.optimization.PrimalDual` solver.
