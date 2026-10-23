@@ -425,3 +425,89 @@ def test_cgls_stacked(par):
         y1 = StackedBDiag * x_global
         xinv1 = pylops.cgls(StackedBDiag, y1, x0=x0, niter=par["nx"], tol=1e-5, show=True)[0]
         assert_allclose(xinv_array, xinv1, rtol=1e-12)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("dtype", ["float64", "complex128"])
+@pytest.mark.parametrize("damp", [0.0, 0.5])
+@pytest.mark.parametrize("stacked", [False, True])
+def test_cgls_damp_inplace(stacked, damp, dtype):
+    """CGLS with and without damping (in-place updates): compare with serial
+    pylops and check that data and initial guess are not modified"""
+    rng = np.random.default_rng(10)
+    nx, ny, niter = 8, 12, 6
+    imag = 1j if dtype == "complex128" else 0.0
+
+    def rand(*shape):
+        return rng.standard_normal(shape) + imag * rng.standard_normal(shape)
+
+    Amats = [[rand(ny, nx) for _ in range(size)] for _ in range(2 if stacked else 1)]
+    x_global = [rand(size * nx) for _ in Amats]
+    x0_global = [rand(size * nx) for _ in Amats]
+
+    def dist(vec):
+        d = DistributedArray(global_shape=size * nx, dtype=dtype, engine=backend)
+        d[:] = np.asarray(vec[rank * nx:(rank + 1) * nx])
+        return d
+
+    ops = [MPIBlockDiag(ops=[MatrixMult(np.asarray(A[rank]), dtype=dtype)], dtype=dtype)
+           for A in Amats]
+    if stacked:
+        Op = MPIStackedBlockDiag(ops=ops)
+        x = StackedDistributedArray([dist(v) for v in x_global])
+        x0 = StackedDistributedArray([dist(v) for v in x0_global])
+    else:
+        Op = ops[0]
+        x, x0 = dist(x_global[0]), dist(x0_global[0])
+    y = Op @ x
+    y_before, x0_before = y.asarray().copy(), x0.asarray().copy()
+
+    xinv, _, iiter, _, _, cost = cgls(Op, y, x0=x0, niter=niter, damp=damp, tol=0)
+    assert iiter == niter
+    assert_allclose(y.asarray(), y_before, rtol=1e-14)
+    assert_allclose(x0.asarray(), x0_before, rtol=1e-14)
+
+    # serial reference
+    serial = BlockDiag(
+        ops=[BlockDiag(ops=[MatrixMult(np.asarray(A[r]), dtype=dtype) for r in range(size)])
+             for A in Amats], forceflat=True) if stacked else \
+        BlockDiag(ops=[MatrixMult(np.asarray(Amats[0][r]), dtype=dtype) for r in range(size)])
+    xg = np.concatenate([np.asarray(v) for v in x_global])
+    x0g = np.concatenate([np.asarray(v) for v in x0_global])
+    xinv1, _, _, _, _, cost1 = pylops.cgls(serial, serial @ xg, x0=x0g, niter=niter,
+                                           damp=damp, tol=0)
+    assert_allclose(xinv.asarray(), xinv1, rtol=1e-8)
+    assert_allclose(cost, cost1, rtol=1e-8)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("stacked", [False, True])
+def test_cg_cgls_allreduces(stacked):
+    """CGLS (no damping) needs 3 allreduces per iteration, CG 2"""
+    import pylops_mpi.Distributed as D
+
+    nx, niter = 6, 5
+    mats = [np.random.normal(0, 1, (nx, nx)) + 5 * np.eye(nx) for _ in range(size)]
+    op1 = MPIBlockDiag(ops=[MatrixMult(np.asarray(mats[rank]))])
+    Op = MPIStackedBlockDiag(ops=[op1, op1]) if stacked else op1
+
+    def dist():
+        d = DistributedArray(global_shape=size * nx, engine=backend)
+        d[:] = np.random.normal(0, 1, nx)
+        return d
+    y = StackedDistributedArray([dist(), dist()]) if stacked else dist()
+
+    orig, n = D.mpi_allreduce, [0]
+
+    def counting(*args, **kwargs):
+        n[0] += 1
+        return orig(*args, **kwargs)
+    D.mpi_allreduce = counting
+    try:
+        for solver, per_iter, nsetup in [(cgls, 3, 2), (cg, 2, 1)]:
+            n[0] = 0
+            x0 = y.zeros_like()
+            solver(Op, y, x0=x0, niter=niter, tol=0)
+            assert n[0] == per_iter * niter + nsetup
+    finally:
+        D.mpi_allreduce = orig
