@@ -126,13 +126,20 @@ class MPIProxOperator:
         **kwargs: Any,
     ) -> DistributedArray | StackedDistributedArray:
         """Proximal operator applied to a vector"""
-        if isinstance(x, DistributedArray):
-            y = x.empty_like()
-            y[:] = self.proxop.prox(x.local_array, tau)
-        else:  # StackedDistributedArray
-            y = x.empty_like()
-            for iarr in range(x.narrays):
-                y[iarr][:] = self.proxop.prox(x[iarr].local_array, tau)
+        if hasattr(self, "proxop"):
+            # Use prox of the pyproximal operator being wrapped
+            if isinstance(x, DistributedArray):
+                y = x.empty_like()
+                y[:] = self.proxop.prox(x.local_array, tau)
+            else:  # StackedDistributedArray
+                y = x.empty_like()
+                for iarr in range(x.narrays):
+                    y[iarr][:] = self.proxop.prox(x[iarr].local_array, tau)
+        else:
+            # Directly implement prox as Moreau identity: this is
+            # for non-separable operators that suclass MPIProxOperator
+            # and implement proxdual
+            y = x - tau * self.proxdual((1.0 / tau) * x, 1.0 / tau, **kwargs)
         return y
 
     @_check_tau
@@ -143,13 +150,20 @@ class MPIProxOperator:
         **kwargs: Any,
     ) -> DistributedArray | StackedDistributedArray:
         """Dual Proximal operator applied to a vector"""
-        if isinstance(x, DistributedArray):
-            y = x.empty_like()
-            y[:] = self.proxop.proxdual(x.local_array, tau)
-        else:  # StackedDistributedArray
-            y = x.empty_like()
-            for iarr in range(x.narrays):
-                y[iarr][:] = self.proxop.proxdual(x[iarr].local_array, tau)
+        if hasattr(self, "proxop"):
+            # Use proxdual of the pyproximal operator being wrapped
+            if isinstance(x, DistributedArray):
+                y = x.empty_like()
+                y[:] = self.proxop.proxdual(x.local_array, tau)
+            else:  # StackedDistributedArray
+                y = x.empty_like()
+                for iarr in range(x.narrays):
+                    y[iarr][:] = self.proxop.proxdual(x[iarr].local_array, tau)
+        else:
+            # Directly implement proxdual as Moreau identity: this is
+            # for non-separable operators that suclass MPIProxOperator
+            # and implement prox
+            y = x - tau * self.prox((1.0 / tau) * x, 1.0 / tau, **kwargs)
         return y
 
     def postcomposition(self, sigma: float) -> "MPIProxOperator":
