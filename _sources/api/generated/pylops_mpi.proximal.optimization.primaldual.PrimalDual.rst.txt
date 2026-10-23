@@ -1,0 +1,12 @@
+﻿pylops\_mpi.proximal.optimization.primaldual.PrimalDual
+=======================================================
+
+.. currentmodule:: pylops_mpi.proximal.optimization.primaldual
+
+.. autofunction:: PrimalDual
+
+.. include:: backreferences/pylops_mpi.proximal.optimization.primaldual.PrimalDual.examples
+
+.. raw:: html
+
+     <div style='clear:both'></div>
