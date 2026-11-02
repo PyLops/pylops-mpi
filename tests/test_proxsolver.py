@@ -22,8 +22,8 @@ from pyproximal import L1, L2
 from pyproximal.optimization.primal import ADMML2, ProximalGradient
 from pyproximal.optimization.primaldual import PrimalDual
 
-from pylops_mpi import DistributedArray, Partition
-from pylops_mpi.basicoperators import MPIBlockDiag, MPIVStack
+from pylops_mpi import DistributedArray, Partition, StackedDistributedArray
+from pylops_mpi.basicoperators import MPIBlockDiag, MPIStackedBlockDiag, MPIVStack
 from pylops_mpi.proximal import MPIL2, MPIProxOperator
 from pylops_mpi.proximal.optimization.primal import ADMML2 as MPIADMML2
 from pylops_mpi.proximal.optimization.primal import (
@@ -180,6 +180,75 @@ def test_proximalgradient_broadcast(par):
 @pytest.mark.parametrize(
     "par", [(par1), (par1j), (par2), (par2j), (par3), (par3j), (par4), (par4j)]
 )
+def test_proximalgradient_stacked_broadcast(par):
+    """ProximalGradient with stacked broadcasted model"""
+    np.random.seed(rank)
+
+    # two blocks, each a vertical stack with one matrix per rank
+    As = [
+        np.random.normal(0, 1, (par["ny"], par["nx"]))
+        + par["imag"] * np.random.normal(0, 1, (par["ny"], par["nx"]))
+        for _ in range(2)
+    ]
+    AVStack_MPI = MPIStackedBlockDiag(
+        ops=[MPIVStack(ops=[pylops.MatrixMult(A, dtype=par["dtype"])]) for A in As]
+    )
+
+    def _make_array(fill):
+        arrs = []
+        for _ in range(2):
+            arr = DistributedArray(
+                global_shape=par["nx"],
+                dtype=par["dtype"],
+                partition=Partition.BROADCAST,
+                engine=backend,
+            )
+            if fill:
+                arr[:] = np.random.normal(1, 10, par["nx"]) + par[
+                    "imag"
+                ] * np.random.normal(10, 10, par["nx"])
+            else:
+                arr[:] = 0
+            arrs.append(arr)
+        return StackedDistributedArray(arrs)
+
+    x = _make_array(True)
+    x_global = x.asarray()
+    # x0 set to 0s if par["x0"] is False
+    x0 = _make_array(par["x0"])
+    x0_global = x0.asarray()
+
+    y = AVStack_MPI * x
+
+    # L2 prox
+    l2d = MPIL2(Op=AVStack_MPI, b=y, x0=x0)
+
+    # L1 prox
+    l1 = L1(sigma=1e-1)
+    l1d = MPIProxOperator(l1)
+
+    xinv = MPIProximalGradient(l2d, l1d, x0=x0, tau=1e-3, niter=50, show=False)
+    assert isinstance(xinv, StackedDistributedArray)
+    xinv_array = xinv.asarray()
+
+    As_all = [np.vstack(comm.allgather(A)) for A in As]
+    if rank == 0:
+        AVStack = BlockDiag([MatrixMult(A, dtype=par["dtype"]) for A in As_all])
+        y1 = AVStack * x_global
+
+        l2local = L2(Op=AVStack, b=y1, x0=x0_global)
+        l1local = L1(sigma=1e-1)
+
+        xinv1 = ProximalGradient(
+            l2local, l1local, x0=x0_global, tau=1e-3, niter=50, show=False
+        )
+        assert_allclose(xinv_array, xinv1, rtol=1e-5, atol=1e-10)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize(
+    "par", [(par1), (par1j), (par2), (par2j), (par3), (par3j), (par4), (par4j)]
+)
 def test_proximalgradient_scatter(par):
     """ProximalGradient with scattered model"""
     np.random.seed(rank)
@@ -254,6 +323,78 @@ def test_proximalgradient_scatter(par):
             l2local, l1local, x0=x0, tau=1e-3, niter=50, show=False
         )
         assert_allclose(xinv_array, xinv1, rtol=1e-5)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize(
+    "par", [(par1), (par1j), (par2), (par2j), (par3), (par3j), (par4), (par4j)]
+)
+def test_proximalgradient_stacked(par):
+    """ProximalGradient with stacked scattered model"""
+    np.random.seed(rank)
+
+    def _make_array(fill):
+        arrs = []
+        for _ in range(2):
+            arr = DistributedArray(
+                global_shape=par["nx"] * size,
+                dtype=par["dtype"],
+                partition=Partition.SCATTER,
+                engine=backend,
+            )
+            if fill:
+                arr[:] = np.random.normal(1, 10, par["nx"]) + par[
+                    "imag"
+                ] * np.random.normal(10, 10, par["nx"])
+            else:
+                arr[:] = 0
+            arrs.append(arr)
+        return StackedDistributedArray(arrs)
+
+    # Two blocks, each a block-diagonal operator with one matrix per rank
+    As = [
+        np.random.normal(0, 1, (par["ny"], par["nx"]))
+        + par["imag"] * np.random.normal(0, 1, (par["ny"], par["nx"]))
+        for _ in range(2)
+    ]
+    ABDiag_MPI = MPIStackedBlockDiag(
+        ops=[MPIBlockDiag(ops=[pylops.MatrixMult(A, dtype=par["dtype"])]) for A in As]
+    )
+
+    x = _make_array(True)
+    x_global = x.asarray()
+    # x0 set to 0s if par["x0"] is False
+    x0 = _make_array(par["x0"])
+    x0_global = x0.asarray()
+
+    y = ABDiag_MPI * x
+
+    # L2 prox
+    l2d = MPIL2(Op=ABDiag_MPI, b=y, x0=x0)
+
+    # L1 prox
+    l1 = L1(sigma=1e-1)
+    l1d = MPIProxOperator(l1)
+
+    xinv = MPIProximalGradient(l2d, l1d, x0=x0, tau=1e-3, niter=50, show=False)
+    assert isinstance(xinv, StackedDistributedArray)
+    xinv_array = xinv.asarray()
+
+    As_all = [comm.allgather(A) for A in As]
+    if rank == 0:
+        # Stacked asarray concatenates block 1 (all ranks) then block 2
+        ABDiag = BlockDiag(
+            [MatrixMult(A, dtype=par["dtype"]) for As_blk in As_all for A in As_blk]
+        )
+        y1 = ABDiag * x_global
+
+        l2local = L2(Op=ABDiag, b=y1, x0=x0_global)
+        l1local = L1(sigma=1e-1)
+
+        xinv1 = ProximalGradient(
+            l2local, l1local, x0=x0_global, tau=1e-3, niter=50, show=False
+        )
+        assert_allclose(xinv_array, xinv1, rtol=1e-5, atol=1e-10)
 
 
 @pytest.mark.mpi(min_size=2)
@@ -397,7 +538,6 @@ def test_primaldual_scatter(par):
         x0[:] = np.random.normal(1, 10, par["nx"]) + par["imag"] * np.random.normal(
             10, 10, par["nx"]
         )
-        x0_global = x0.asarray()
     else:
         # Set to 0s if x0 = False
         x0 = DistributedArray(
@@ -407,7 +547,7 @@ def test_primaldual_scatter(par):
             engine=backend,
         )
         x0[:] = 0
-        x0_global = x0.asarray()
+    x0_global = x0.asarray()
 
     y = ABDiag_MPI * x
 
@@ -447,7 +587,7 @@ def test_primaldual_scatter(par):
         Iop = pylops.Identity(par["nx"] * size, dtype=par["dtype"])
         l1local = L1(sigma=1e-1)
 
-        y0 = Iop * x0
+        y0 = Iop * x0_global
         xinv1 = PrimalDual(
             l2local,
             l1local,
@@ -464,3 +604,87 @@ def test_primaldual_scatter(par):
         # linear solver is used internally in the
         # serial vs distributed versions of L2
         assert_allclose(xinv_array, xinv1, rtol=5e-2)
+
+
+@pytest.mark.skipif(
+    int(os.environ.get("TEST_CUPY_PYLOPS", 0)) == 1, reason="Not CuPy enabled"
+)
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize(
+    "par",
+    [
+        (par1),
+        (par2),
+        (par3),
+        (par4),
+    ],
+)
+def test_primaldual_stacked(par):
+    """PrimalDual with stacked scattered model (L2 prox without Op)"""
+    np.random.seed(rank)
+
+    def _make_array(fill):
+        arrs = []
+        for _ in range(2):
+            arr = DistributedArray(
+                global_shape=par["nx"] * size,
+                dtype=par["dtype"],
+                partition=Partition.SCATTER,
+                engine=backend,
+            )
+            if fill:
+                arr[:] = np.random.normal(1, 10, par["nx"]) + par[
+                    "imag"
+                ] * np.random.normal(10, 10, par["nx"])
+            else:
+                arr[:] = 0
+            arrs.append(arr)
+        return StackedDistributedArray(arrs)
+
+    # Data vector (L2 prox is applied without an operator, so b plays the
+    # role of the data) and initial guess (zeros if par["x0"] is False)
+    b = _make_array(True)
+    b_global = b.asarray()
+    x0 = _make_array(par["x0"])
+    x0_global = x0.asarray()
+
+    # L2 prox
+    l2d = MPIL2(b=b, sigma=1.0)
+
+    # Regularizer (identity)
+    Iopd = MPIStackedBlockDiag(
+        ops=[
+            MPIBlockDiag(ops=[pylops.Identity(par["nx"], dtype=par["dtype"])])
+            for _ in range(2)
+        ]
+    )
+
+    # L1 prox
+    l1 = L1(sigma=1e-1)
+    l1d = MPIProxOperator(l1)
+
+    y0 = Iopd * x0
+    xinv = MPIPrimalDual(
+        l2d, l1d, Iopd, x0=x0, y0=y0, tau=0.99, mu=0.99, niter=50, show=True
+    )
+    assert isinstance(xinv, StackedDistributedArray)
+    xinv_array = xinv.asarray()
+
+    if rank == 0:
+        l2local = L2(b=b_global, sigma=1.0)
+        Iop = pylops.Identity(2 * par["nx"] * size, dtype=par["dtype"])
+        l1local = L1(sigma=1e-1)
+
+        y0 = Iop * x0_global
+        xinv1 = PrimalDual(
+            l2local,
+            l1local,
+            Iop,
+            x0=x0_global,
+            y0=y0,
+            tau=0.99,
+            mu=0.99,
+            niter=50,
+            show=False,
+        )
+        assert_allclose(xinv_array, xinv1, rtol=1e-6, atol=1e-10)

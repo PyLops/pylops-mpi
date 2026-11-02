@@ -7,7 +7,7 @@ import numpy as np
 from pylops.utils.backend import get_array_module, to_numpy
 from pylops.utils.typing import NDArray
 
-from pylops_mpi import DistributedArray
+from pylops_mpi import DistributedArray, StackedDistributedArray
 from pylops_mpi.proximal.ProxOperator import MPIProxOperator
 
 if TYPE_CHECKING:
@@ -18,19 +18,26 @@ def PrimalDual(
     proxf: MPIProxOperator,
     proxg: MPIProxOperator,
     A: "MPILinearOperator",
-    x0: DistributedArray,
-    y0: DistributedArray,
+    x0: DistributedArray | StackedDistributedArray,
+    y0: DistributedArray | StackedDistributedArray,
     tau: float | NDArray,
     mu: float | NDArray,
     z: DistributedArray | None = None,
     theta: float = 1.0,
     niter: int = 10,
     gfirst: bool = True,
-    callback: Callable[[DistributedArray], None] | None = None,
+    callback: Callable[[DistributedArray | StackedDistributedArray], None]
+    | None = None,
     callbacky: bool = False,
     returny: bool = False,
     show: bool = False,
-) -> Union[DistributedArray, tuple[DistributedArray, DistributedArray]]:
+) -> Union[
+    DistributedArray | StackedDistributedArray,
+    tuple[
+        DistributedArray | StackedDistributedArray,
+        DistributedArray | StackedDistributedArray,
+    ],
+]:
     r"""Primal-dual algorithm
 
     Solves the following (possibly) nonlinear minimization problem using
@@ -64,9 +71,9 @@ def PrimalDual(
         Proximal operator of g function
     A : :obj:`pylops.LinearOperator`
         Linear operator of g
-    x0 : :obj:`pylops_mpi.DistributedArray`
+    x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
         Initial vector
-    y0 : :obj:`pylops_mpi.DistributedArray`
+    y0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
         Initial auxiliary vector.
     tau : :obj:`float` or :obj:`np.ndarray`
         Stepsize of subgradient of :math:`f`. This can be constant
@@ -74,7 +81,7 @@ def PrimalDual(
     mu : :obj:`float` or :obj:`np.ndarray`
         Stepsize of subgradient of :math:`g^*`. This can be constant
         or function of iterations (in the latter cases provided as np.ndarray)
-    z :  :obj:`pylops_mpi.DistributedArray`, optional
+    z :  :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`, optional
         Additional vector
     theta : :obj:`float`, optional
         Scalar between 0 and 1 that defines the update of the
@@ -98,9 +105,9 @@ def PrimalDual(
 
     Returns
     -------
-    x : :obj:`pylops_mpi.DistributedArray`
+    x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
         Inverted model
-    y : :obj:`pylops_mpi.DistributedArray`, optional
+    y : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`, optional
         Inverted second model, only returned if ``returny=True``
 
     Notes
@@ -177,6 +184,9 @@ def PrimalDual(
                 callback(x)
         if show:
             if iiter < 10 or niter - iiter < 10 or iiter % (niter // 10) == 0:
+                xprint = (
+                    x.distarrays[0] if isinstance(x, StackedDistributedArray) else x
+                )
                 pf, pg = proxf(x), proxg(A.matvec(x))
                 pf = 0.0 if isinstance(pf, bool) else pf
                 pg = 0.0 if isinstance(pg, bool) else pg
@@ -184,7 +194,7 @@ def PrimalDual(
                 if rank == 0:
                     msg = "%6g  %12.5e  %10.3e  %10.3e  %10.3e      %10.3e" % (
                         iiter + 1,
-                        np.real(to_numpy(x[0])),
+                        np.real(to_numpy(xprint[0])),
                         pf,
                         pg,
                         zx,
