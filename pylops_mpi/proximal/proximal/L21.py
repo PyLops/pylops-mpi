@@ -103,9 +103,7 @@ class MPIL21(MPIProxOperator):
         distrsum2 = self.sum_squared(x)
 
         # Compute prox for each distributed array
-        distrstacked = StackedDistributedArray(
-            [x[iarr].empty_like() for iarr in range(self.ndim)]
-        )
+        distrstacked = x.empty_like()
         for iarr in range(self.ndim):
             distrstacked[iarr].local_array[:] = (
                 1
@@ -126,9 +124,7 @@ class MPIL21(MPIProxOperator):
         distrsum2 = self.sum_squared(x)
 
         # Compute prox for each distributed array
-        distrstacked = StackedDistributedArray(
-            [x[iarr].empty_like() for iarr in range(self.ndim)]
-        )
+        distrstacked = x.empty_like()
         for iarr in range(self.ndim):
             distrstacked[iarr].local_array[:] = (
                 self.sigma
