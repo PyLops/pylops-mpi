@@ -154,7 +154,12 @@ def test_proximalgradient_broadcast(par):
     l1 = L1(sigma=1e-1)
     l1d = MPIProxOperator(l1)
 
-    xinv = MPIProximalGradient(l2d, l1d, x0=x0, tau=1e-3, niter=50, show=True)
+    # tau is passed as float32 because PyProximal cast it to
+    # float32 internally: this ensures the serial and MPI solvers use the
+    # exact same step size (and hence match within tolerance)
+    xinv = MPIProximalGradient(
+        l2d, l1d, x0=x0, tau=np.float32(1e-3), niter=50, show=True
+    )
     assert isinstance(xinv, DistributedArray)
     xinv_array = xinv.asarray()
 
@@ -171,7 +176,7 @@ def test_proximalgradient_broadcast(par):
         l1local = L1(sigma=1e-1)
 
         xinv1 = ProximalGradient(
-            l2local, l1local, x0=x0, tau=1e-3, niter=50, show=False
+            l2local, l1local, x0=x0, tau=np.float32(1e-3), niter=50, show=False
         )
         assert_allclose(xinv_array, xinv1, rtol=1e-5, atol=1e-10)
 
@@ -227,7 +232,9 @@ def test_proximalgradient_stacked_broadcast(par):
     l1 = L1(sigma=1e-1)
     l1d = MPIProxOperator(l1)
 
-    xinv = MPIProximalGradient(l2d, l1d, x0=x0, tau=1e-3, niter=50, show=True)
+    xinv = MPIProximalGradient(
+        l2d, l1d, x0=x0, tau=np.float32(1e-3), niter=50, show=True
+    )
     assert isinstance(xinv, StackedDistributedArray)
     xinv_array = xinv.asarray()
 
@@ -240,7 +247,7 @@ def test_proximalgradient_stacked_broadcast(par):
         l1local = L1(sigma=1e-1)
 
         xinv1 = ProximalGradient(
-            l2local, l1local, x0=x0_global, tau=1e-3, niter=50, show=False
+            l2local, l1local, x0=x0_global, tau=np.float32(1e-3), niter=50, show=False
         )
         assert_allclose(xinv_array, xinv1, rtol=1e-5, atol=1e-10)
 
@@ -303,7 +310,9 @@ def test_proximalgradient_scatter(par):
     l1 = L1(sigma=1e-1)
     l1d = MPIProxOperator(l1)
 
-    xinv = MPIProximalGradient(l2d, l1d, x0=x0, tau=1e-3, niter=50, show=True)
+    xinv = MPIProximalGradient(
+        l2d, l1d, x0=x0, tau=np.float32(1e-3), niter=50, show=True
+    )
     assert isinstance(xinv, DistributedArray)
     xinv_array = xinv.asarray()
 
@@ -320,7 +329,7 @@ def test_proximalgradient_scatter(par):
         l1local = L1(sigma=1e-1)
 
         xinv1 = ProximalGradient(
-            l2local, l1local, x0=x0, tau=1e-3, niter=50, show=False
+            l2local, l1local, x0=x0, tau=np.float32(1e-3), niter=50, show=False
         )
         assert_allclose(xinv_array, xinv1, rtol=1e-5, atol=1e-10)
 
@@ -376,7 +385,9 @@ def test_proximalgradient_stacked(par):
     l1 = L1(sigma=1e-1)
     l1d = MPIProxOperator(l1)
 
-    xinv = MPIProximalGradient(l2d, l1d, x0=x0, tau=1e-3, niter=50, show=True)
+    xinv = MPIProximalGradient(
+        l2d, l1d, x0=x0, tau=np.float32(1e-3), niter=50, show=True
+    )
     assert isinstance(xinv, StackedDistributedArray)
     xinv_array = xinv.asarray()
 
@@ -392,7 +403,7 @@ def test_proximalgradient_stacked(par):
         l1local = L1(sigma=1e-1)
 
         xinv1 = ProximalGradient(
-            l2local, l1local, x0=x0_global, tau=1e-3, niter=50, show=False
+            l2local, l1local, x0=x0_global, tau=np.float32(1e-3), niter=50, show=False
         )
         assert_allclose(xinv_array, xinv1, rtol=1e-5, atol=1e-10)
 
