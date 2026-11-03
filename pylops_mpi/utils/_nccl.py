@@ -9,15 +9,17 @@ __all__ = [
     "nccl_send",
     "nccl_recv",
     "nccl_sendrecv",
-    "_prepare_allgather_inputs_nccl"
+    "_prepare_allgather_inputs_nccl",
 ]
 
-from enum import IntEnum
-from mpi4py import MPI
 import os
+from enum import IntEnum
+
 import cupy as cp
 import cupy.cuda.nccl as nccl
+from mpi4py import MPI
 from pylops.utils.backend import get_module
+
 from pylops_mpi.utils._common import _unroll_allgather_recv
 
 cupy_to_nccl_dtype = {
@@ -43,7 +45,7 @@ class NcclOp(IntEnum):
 
 
 def _nccl_buf_size(buf, count=None):
-    """ Get an appropriate buffer size according to the dtype of buf
+    """Get an appropriate buffer size according to the dtype of buf
 
     Parameters
     ----------
@@ -57,7 +59,7 @@ def _nccl_buf_size(buf, count=None):
     :obj:`int`
         An appropriate number of elements to send from `send_buf` for NCCL communication.
     """
-    if buf.dtype in ['complex64', 'complex128']:
+    if buf.dtype in ["complex64", "complex128"]:
         return 2 * count if count else 2 * buf.size
     else:
         return count if count else buf.size
@@ -71,7 +73,7 @@ def _nccl_sync():
 
 
 def mpi_op_to_nccl(mpi_op) -> NcclOp:
-    """ Map MPI reduction operation to NCCL equivalent
+    """Map MPI reduction operation to NCCL equivalent
 
     Parameters
     ----------
@@ -91,12 +93,18 @@ def mpi_op_to_nccl(mpi_op) -> NcclOp:
         return NcclOp.MAX
     elif mpi_op is MPI.MIN:
         return NcclOp.MIN
+    # logical operations are only supported for boolean (0/1) buffers,
+    # for which they are equivalent to min/max
+    elif mpi_op is MPI.LAND:
+        return NcclOp.MIN
+    elif mpi_op is MPI.LOR:
+        return NcclOp.MAX
     else:
         raise ValueError(f"Unsupported MPI.Op for NCCL: {mpi_op}")
 
 
 def initialize_nccl_comm() -> nccl.NcclCommunicator:
-    """ Initialize NCCL world communicator for every GPU device
+    """Initialize NCCL world communicator for every GPU device
 
     Each GPU must be managed by exactly one MPI process.
     i.e. the number of MPI process launched must be equal to
@@ -133,7 +141,7 @@ def initialize_nccl_comm() -> nccl.NcclCommunicator:
 
 
 def nccl_split(mask) -> nccl.NcclCommunicator:
-    """ NCCL-equivalent of MPI.Split()
+    """NCCL-equivalent of MPI.Split()
 
     Splitting the communicator into multiple NCCL subcommunicators
 
@@ -166,7 +174,7 @@ def nccl_split(mask) -> nccl.NcclCommunicator:
 
 
 def nccl_allgather(nccl_comm, send_buf, recv_buf=None) -> cp.ndarray:
-    """ NCCL equivalent of MPI_Allgather. Gathers data from all GPUs
+    """NCCL equivalent of MPI_Allgather. Gathers data from all GPUs
     and distributes the concatenated result to all participants.
 
     Parameters
@@ -184,9 +192,7 @@ def nccl_allgather(nccl_comm, send_buf, recv_buf=None) -> cp.ndarray:
     recv_buf : :obj:`cupy.ndarray`
         A buffer containing the gathered data from all GPUs.
     """
-    send_buf = (
-        send_buf if isinstance(send_buf, cp.ndarray) else cp.asarray(send_buf)
-    )
+    send_buf = send_buf if isinstance(send_buf, cp.ndarray) else cp.asarray(send_buf)
     if recv_buf is None:
         recv_buf = cp.zeros(
             nccl_comm.size() * send_buf.size,
@@ -202,8 +208,10 @@ def nccl_allgather(nccl_comm, send_buf, recv_buf=None) -> cp.ndarray:
     return recv_buf
 
 
-def nccl_allreduce(nccl_comm, send_buf, recv_buf=None, op: MPI.Op = MPI.SUM) -> cp.ndarray:
-    """ NCCL equivalent of MPI_Allreduce. Applies a reduction operation
+def nccl_allreduce(
+    nccl_comm, send_buf, recv_buf=None, op: MPI.Op = MPI.SUM
+) -> cp.ndarray:
+    """NCCL equivalent of MPI_Allreduce. Applies a reduction operation
     (e.g., sum, max) across all GPUs and distributes the result.
 
     Parameters
@@ -224,9 +232,12 @@ def nccl_allreduce(nccl_comm, send_buf, recv_buf=None, op: MPI.Op = MPI.SUM) -> 
         A buffer containing the result of the reduction, broadcasted
         to all GPUs.
     """
-    send_buf = (
-        send_buf if isinstance(send_buf, cp.ndarray) else cp.asarray(send_buf)
-    )
+    send_buf = send_buf if isinstance(send_buf, cp.ndarray) else cp.asarray(send_buf)
+    # NCCL has no boolean type: reduce as uint8 and cast back
+    isbool = send_buf.dtype == cp.bool_
+    if isbool:
+        send_buf = send_buf.astype(cp.uint8)
+        recv_buf = None if recv_buf is None else recv_buf.astype(cp.uint8)
     if recv_buf is None:
         recv_buf = cp.zeros(send_buf.size, dtype=send_buf.dtype)
 
@@ -238,7 +249,7 @@ def nccl_allreduce(nccl_comm, send_buf, recv_buf=None, op: MPI.Op = MPI.SUM) -> 
         mpi_op_to_nccl(op),
         cp.cuda.Stream.null.ptr,
     )
-    return recv_buf
+    return recv_buf.astype(cp.bool_) if isbool else recv_buf
 
 
 def nccl_bcast(nccl_comm, send_buf, root: int = 0) -> None:
@@ -284,7 +295,9 @@ def nccl_asarray(nccl_comm, local_array, local_shapes, axis) -> cp.ndarray:
         Global array gathered from all GPUs and concatenated along `axis`.
     """
 
-    send_buf, recv_buf = _prepare_allgather_inputs_nccl(local_array, local_shapes, engine="cupy")
+    send_buf, recv_buf = _prepare_allgather_inputs_nccl(
+        local_array, local_shapes, engine="cupy"
+    )
     nccl_allgather(nccl_comm, send_buf, recv_buf)
     chunks = _unroll_allgather_recv(recv_buf, send_buf.shape, local_shapes)
 
@@ -307,12 +320,13 @@ def nccl_send(nccl_comm, send_buf, dest, count):
     count : :obj:`int`
         Number of elements to send from `send_buf`.
     """
-    nccl_comm.send(send_buf.data.ptr,
-                   _nccl_buf_size(send_buf, count),
-                   cupy_to_nccl_dtype[str(send_buf.dtype)],
-                   dest,
-                   cp.cuda.Stream.null.ptr
-                   )
+    nccl_comm.send(
+        send_buf.data.ptr,
+        _nccl_buf_size(send_buf, count),
+        cupy_to_nccl_dtype[str(send_buf.dtype)],
+        dest,
+        cp.cuda.Stream.null.ptr,
+    )
 
 
 def nccl_recv(nccl_comm, recv_buf, source, count=None):
@@ -330,12 +344,13 @@ def nccl_recv(nccl_comm, recv_buf, source, count=None):
     count : :obj:`int`, optional
         Number of elements to receive.
     """
-    nccl_comm.recv(recv_buf.data.ptr,
-                   _nccl_buf_size(recv_buf, count),
-                   cupy_to_nccl_dtype[str(recv_buf.dtype)],
-                   source,
-                   cp.cuda.Stream.null.ptr
-                   )
+    nccl_comm.recv(
+        recv_buf.data.ptr,
+        _nccl_buf_size(recv_buf, count),
+        cupy_to_nccl_dtype[str(recv_buf.dtype)],
+        source,
+        cp.cuda.Stream.null.ptr,
+    )
 
 
 def nccl_sendrecv(nccl_comm, sendbuf, dest, recvbuf, source):
@@ -361,7 +376,7 @@ def nccl_sendrecv(nccl_comm, sendbuf, dest, recvbuf, source):
 
 
 def _prepare_allgather_inputs_nccl(send_buf, send_buf_shapes, engine):
-    r""" Prepare send_buf and recv_buf for NCCL allgather (nccl_allgather)
+    r"""Prepare send_buf and recv_buf for NCCL allgather (nccl_allgather)
 
     Buffered Allgather (NCCL) requires the sending buffer to have the same size for every device.
     Therefore, padding is required when the array is not evenly partitioned across
@@ -393,9 +408,7 @@ def _prepare_allgather_inputs_nccl(send_buf, send_buf_shapes, engine):
         (0, s_shape - l_shape) for s_shape, l_shape in zip(send_shape, send_buf.shape)
     ]
 
-    send_buf = ncp.pad(
-        send_buf, pad_size, mode="constant", constant_values=0
-    )
+    send_buf = ncp.pad(send_buf, pad_size, mode="constant", constant_values=0)
 
     ndev = len(send_buf_shapes)
     recv_buf = ncp.zeros(ndev * send_buf.size, dtype=send_buf.dtype)

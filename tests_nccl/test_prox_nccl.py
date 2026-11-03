@@ -8,10 +8,10 @@ import pytest
 from mpi4py import MPI
 from numpy.testing import assert_allclose
 from pylops.basicoperators import Diagonal
-from pyproximal.proximal import L0, L1, L2, L21, Box
+from pyproximal.proximal import L0, L1, L2, L21, Box, Simplex
 
 import pylops_mpi
-from pylops_mpi.proximal import MPIL2, MPIL21
+from pylops_mpi.proximal import MPIL2, MPIL21, MPISimplex
 from pylops_mpi.utils._nccl import initialize_nccl_comm
 
 nccl_comm = initialize_nccl_comm()
@@ -52,6 +52,7 @@ def test_box(par):
         global_shape=par["n"],
         dtype=par["dtype"],
         partition=par["partition"],
+        base_comm_nccl=nccl_comm,
         engine="cupy",
     )
     x[:] = cp.random.normal(rank, 10, x.local_shape).astype(par["dtype"]) + par[
@@ -84,6 +85,7 @@ def test_l0(par):
         global_shape=par["n"],
         dtype=par["dtype"],
         partition=par["partition"],
+        base_comm_nccl=nccl_comm,
         engine="cupy",
     )
     x[:] = cp.random.normal(rank, 10, x.local_shape).astype(par["dtype"]) + par[
@@ -115,6 +117,7 @@ def test_l1(par):
         global_shape=par["n"],
         dtype=par["dtype"],
         partition=par["partition"],
+        base_comm_nccl=nccl_comm,
         engine="cupy",
     )
     x[:] = cp.random.normal(rank, 10, x.local_shape).astype(par["dtype"]) + par[
@@ -146,6 +149,7 @@ def test_precomposition(par):
         global_shape=par["n"],
         dtype=par["dtype"],
         partition=par["partition"],
+        base_comm_nccl=nccl_comm,
         engine="cupy",
     )
     x[:] = cp.random.normal(rank, 10, x.local_shape).astype(par["dtype"]) + par[
@@ -195,6 +199,7 @@ def test_L2(par, solver):
         * (size if par["partition"] == pylops_mpi.Partition.SCATTER else 1),
         dtype=par["dtype"],
         partition=par["partition"],
+        base_comm_nccl=nccl_comm,
         engine="cupy",
     )
     x[:] = cp.random.normal(rank, 10, x.local_shape).astype(par["dtype"]) + par[
@@ -207,6 +212,7 @@ def test_L2(par, solver):
         * (size if par["partition"] == pylops_mpi.Partition.SCATTER else 1),
         dtype=par["dtype"],
         partition=par["partition"],
+        base_comm_nccl=nccl_comm,
         engine="cupy",
     )
     b[:] = cp.random.normal(rank, 10, x.local_shape).astype(par["dtype"]) + par[
@@ -273,6 +279,7 @@ def test_l21_wrongdim(par):
             global_shape=par["n"],
             dtype=par["dtype"],
             partition=par["partition"],
+            base_comm_nccl=nccl_comm,
             engine="cupy",
         )
         x_[:] = cp.random.normal(rank, 10, x_.local_shape).astype(par["dtype"])
@@ -306,6 +313,7 @@ def test_l21(par):
             global_shape=par["n"],
             dtype=par["dtype"],
             partition=par["partition"],
+            base_comm_nccl=nccl_comm,
             engine="cupy",
         )
         x_[:] = cp.random.normal(rank, 10, x_.local_shape).astype(par["dtype"]) + par[
@@ -332,3 +340,44 @@ def test_l21(par):
         assert_allclose(f, f_np, rtol=1e-14)
         assert_allclose(prox.get(), prox_np.get(), rtol=1e-14)
         assert_allclose(proxd.get(), proxd_np.get(), rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par1), (par1b)])
+def test_simplex(par):
+    """Simplex call/prox vs pyproximal"""
+    cp.random.seed(42)
+
+    ndim = 3
+    radius = 1.0
+    x = []
+    for _ in range(ndim):
+        x_ = pylops_mpi.DistributedArray(
+            global_shape=par["n"],
+            dtype=par["dtype"],
+            partition=par["partition"],
+            base_comm_nccl=nccl_comm,
+            engine="cupy",
+        )
+        x_[:] = cp.random.normal(rank, 10, x_.local_shape).astype(par["dtype"])
+        x.append(x_)
+    x = pylops_mpi.StackedDistributedArray(x)
+    # gather input for local comparison, shape (ndim, n)
+    x_global = cp.vstack([xi.asarray() for xi in x])
+
+    # each column (same index across the ndim arrays) is projected onto the simplex
+    nloc = x[0].local_shape[0]
+    simplexd = MPISimplex(dims=(ndim, nloc), radius=radius, engine="cuda")
+    prox = simplexd.prox(x, 0.1)
+    c_in = simplexd(x)
+    c_out = simplexd(prox, tol=1e-6)
+    prox = prox.asarray()
+    assert not c_in
+    assert c_out
+
+    if rank == 0:
+        simplex = Simplex(
+            ndim * par["n"], radius, dims=(ndim, par["n"]), axis=0, engine="cuda"
+        )
+        prox_np = simplex.prox(x_global.ravel(), 0.1)
+        assert_allclose(prox.get(), prox_np.get(), rtol=1e-12)
