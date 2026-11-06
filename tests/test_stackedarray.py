@@ -326,3 +326,137 @@ def test_stacked_nested_math(par):
                     rtol=1e-10)  # needed to raise it due to how partial norms are combined (with power applied)
     assert_allclose(linfnorm, np.linalg.norm(stacked_array1.asarray().flatten(), np.inf),
                     rtol=1e-14)
+
+
+# Random data for the tests below is generated with numpy (with the same seed in all
+# ranks) and then moved to the backend: cupy random generators are per device, so
+# the ranks would otherwise generate different "global" arrays
+_rng = npp.random.default_rng(42)
+
+
+def _randn(*shape, cplx=False):
+    x = _rng.standard_normal(shape)
+    if cplx:
+        x = x + 1j * _rng.standard_normal(shape)
+    return np.asarray(x)
+
+
+def _make_stack(vals, nested=False, partition=Partition.SCATTER, mask=None,
+                dtype=np.float64):
+    """Stack of arrays (optionally with a nested stack) with given global values"""
+    arrs = [DistributedArray.to_dist(x=np.asarray(v, dtype=dtype),
+                                     partition=partition, mask=mask)
+            for v in vals]
+    if nested:
+        return StackedDistributedArray([arrs[0], StackedDistributedArray(arrs[1:])])
+    return StackedDistributedArray(arrs)
+
+
+def _stack_globals(stack):
+    return [np.asarray(a.asarray()) for a in stack.distarrays[:1]] + \
+        [np.asarray(s.asarray()) for s in stack.distarrays[1:]]
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("dtype", [np.float64, np.complex128])
+@pytest.mark.parametrize("nested", [False, True])
+def test_stacked_out(nested, dtype):
+    """Stacked arithmetic with out= and in-place operators"""
+    size = MPI.COMM_WORLD.Get_size()
+    g1 = [_randn(4 * size, 3, cplx=True),
+          _randn(5 * size, cplx=True),
+          _randn(3 * size, 2, cplx=True)]
+    g2 = [2 * g + 1 for g in g1]
+    if dtype == np.float64:
+        g1, g2 = [g.real for g in g1], [g.real for g in g2]
+    a = _make_stack(g1, nested, dtype=dtype)
+    b = _make_stack(g2, nested, dtype=dtype)
+
+    def check(res, expected):
+        full = np.hstack([x.ravel() for x in expected])
+        assert_allclose(res.asarray(), full, rtol=1e-14)
+
+    for name, op in [("add", np.add), ("subtract", np.subtract),
+                     ("multiply", np.multiply)]:
+        for other, other_g in [(b, g2), (2.5, [2.5] * 3)]:
+            out = a.empty_like()
+            res = getattr(a, name)(other, out=out)
+            assert res is out
+            check(out, [op(x, y) for x, y in zip(g1, other_g)])
+            # operands are not modified
+            check(a, g1)
+    check(a + b, [x + y for x, y in zip(g1, g2)])
+    check(a - b, [x - y for x, y in zip(g1, g2)])
+    check(a * b, [x * y for x, y in zip(g1, g2)])
+    check(-a, [-x for x in g1])
+    # in-place operators keep the storage of every leaf
+    for opname, op in [("__iadd__", np.add), ("__isub__", np.subtract),
+                       ("__imul__", np.multiply)]:
+        for other, other_g in [(b, g2), (2.5, [2.5] * 3)]:
+            y = a.copy()
+            locals_before = [leaf.local_array for leaf in y._leaves()]
+            res = getattr(y, opname)(other)
+            assert res is y
+            assert all(leaf.local_array is lb
+                       for leaf, lb in zip(y._leaves(), locals_before))
+            check(y, [op(x, z) for x, z in zip(g1, other_g)])
+
+
+def _count_allreduces(fn):
+    import pylops_mpi.Distributed as D
+    orig = D.mpi_allreduce
+    n = [0]
+
+    def counting(*args, **kwargs):
+        n[0] += 1
+        return orig(*args, **kwargs)
+    D.mpi_allreduce = counting
+    try:
+        res = fn()
+    finally:
+        D.mpi_allreduce = orig
+    return res, n[0]
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("dtype", [np.float64, np.complex128])
+@pytest.mark.parametrize("nested", [False, True])
+@pytest.mark.parametrize("kind", ["scatter", "broadcast", "masked"])
+def test_stacked_fused_reductions(kind, nested, dtype):
+    """Fused dot/norm equal the combination of the per-child results,
+    both on the fast path (SCATTER) and the fallback path (BROADCAST, masked)"""
+    size = MPI.COMM_WORLD.Get_size()
+    if kind == "masked" and size % 2 != 0:
+        pytest.skip("Number of processes is not divisible by 2")
+    partition = Partition.BROADCAST if kind == "broadcast" else Partition.SCATTER
+    mask = np.repeat(np.arange(2), size // 2) if kind == "masked" else None
+    cplx = dtype == np.complex128
+    g1 = [_randn(4 * size, 3, cplx=cplx),
+          _randn(4 * size, cplx=cplx),
+          _randn(6 * size, 2, cplx=cplx)]
+    g2 = [_randn(*g.shape, cplx=cplx) for g in g1]
+    if kind == "masked":
+        # replicate the data in the two sub-communicators
+        g1 = [np.concatenate([g[:g.shape[0] // 2]] * 2) for g in g1]
+        g2 = [np.concatenate([g[:g.shape[0] // 2]] * 2) for g in g2]
+    a = _make_stack(g1, nested, partition, mask, dtype)
+    b = _make_stack(g2, nested, partition, mask, dtype)
+
+    for vdot in (False, True):
+        expected = sum(a_.dot(b_, vdot=vdot) for a_, b_ in zip(a._leaves(), b._leaves()))
+        res, nred = _count_allreduces(lambda: a.dot(b, vdot=vdot))
+        assert_allclose(res, expected, rtol=1e-12)
+        if kind == "scatter":
+            assert nred == 1
+    for ord in (None, 2, 1, npp.inf):
+        norms = npp.array([leaf.norm(ord) for leaf in a._leaves()])
+        if ord in (None, 2):
+            expected = npp.sqrt(npp.sum(norms ** 2))
+        elif ord == 1:
+            expected = npp.sum(norms)
+        else:
+            expected = npp.max(norms)
+        res, nred = _count_allreduces(lambda: a.norm(ord))
+        assert_allclose(res, expected, rtol=1e-12)
+        if kind == "scatter" and ord in (None, 2):
+            assert nred == 1

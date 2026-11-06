@@ -15,6 +15,7 @@ else:
 
     backend = "numpy"
 from mpi4py import MPI
+import numpy as npp
 import pytest
 
 from pylops_mpi import DistributedArray, Partition
@@ -359,3 +360,130 @@ def test_distributed_maskednorm(par):
         np.linalg.norm(par['x'], ord=np.inf, axis=par['norm_axis']),
         rtol=1e-14
     )
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par1, par2", [(par4, par5), (par4j, par5j)])
+def test_distributed_out(par1, par2):
+    """Arithmetic with out= and in-place operators"""
+    x1 = DistributedArray.to_dist(x=par1['x'])
+    x2 = DistributedArray.to_dist(x=par2['x'])
+    for name, op in [('add', np.add), ('subtract', np.subtract),
+                     ('multiply', np.multiply)]:
+        expected = op(par1['x'], par2['x'])
+        # array operand
+        out = x1.empty_like()
+        res = getattr(x1, name)(x2, out=out)
+        assert res is out
+        assert_allclose(out.asarray(), expected, rtol=1e-14)
+        # scalar operand
+        out = x1.empty_like()
+        getattr(x1, name)(2.5, out=out)
+        assert_allclose(out.asarray(), op(par1['x'], 2.5), rtol=1e-14)
+        # operands untouched
+        assert_allclose(x1.asarray(), par1['x'], rtol=1e-14)
+        assert_allclose(x2.asarray(), par2['x'], rtol=1e-14)
+    # out aliasing the second operand
+    out = x2.copy()
+    x1.subtract(out, out=out)
+    assert_allclose(out.asarray(), par1['x'] - par2['x'], rtol=1e-14)
+    # negation
+    assert_allclose((-x1).asarray(), -par1['x'], rtol=1e-14)
+    # in-place operators keep the storage
+    for opname, op in [('__iadd__', np.add), ('__isub__', np.subtract),
+                       ('__imul__', np.multiply)]:
+        for other, other_g in [(x2, par2['x']), (2.5, 2.5)]:
+            y = x1.copy()
+            local = y.local_array
+            res = getattr(y, opname)(other)
+            assert res is y
+            assert y.local_array is local
+            assert_allclose(y.asarray(), op(par1['x'], other_g), rtol=1e-14)
+
+
+@pytest.mark.skipif(
+    int(os.environ.get("TEST_CUPY_PYLOPS", 0)) == 1, reason="Not CuPy enabled"
+)
+@pytest.mark.mpi(min_size=2)
+def test_distributed_out_cast():
+    """out= requiring an unsafe cast falls back to assignment (as before)"""
+    x = DistributedArray(global_shape=(10 * MPI.COMM_WORLD.Get_size(),),
+                         dtype=np.float64, engine=backend)
+    x[:] = 1.0
+    y = DistributedArray(global_shape=x.global_shape,
+                         dtype=np.complex128, engine=backend)
+    y[:] = 1.0 + 2.0j
+    with pytest.warns(Warning):
+        x.add(y, out=x)
+    assert_allclose(x.local_array, 2.0)
+
+
+@pytest.mark.mpi(min_size=2)
+def test_distributed_like_no_collectives():
+    """Result arrays reuse communicator and cached local shapes"""
+    size = MPI.COMM_WORLD.Get_size()
+    if size % 2 != 0:
+        pytest.skip("Number of processes is not divisible by 2")
+    mask = np.repeat(np.arange(2), size // 2)
+    x = DistributedArray(global_shape=(4 * size, 3), mask=mask,
+                         engine=backend)
+    x[:] = 1.0
+    _ = x.local_shapes
+    for arr in [x + x, x - x, x * x, x * 2.0, -x, x.copy(), x.conj(),
+                x.zeros_like(), x.empty_like()]:
+        assert arr.sub_comm is x.sub_comm
+        assert arr.mask is x.mask
+        assert arr.local_shapes is x.local_shapes
+        assert arr.local_shape == x.local_shape
+
+
+@pytest.mark.mpi(min_size=2)
+def test_distributed_broadcast_math():
+    """Arithmetic on BROADCAST arrays is equal on every rank"""
+    xg = np.asarray(npp.random.default_rng(42).standard_normal((20, 7)))
+    for part in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
+        x = DistributedArray.to_dist(x=xg, partition=part)
+        y = DistributedArray.to_dist(x=2 * xg, partition=part)
+        for res, expected in [(x + y, 3 * xg), (y - x, xg), (x * y, 2 * xg * xg),
+                              (-x, -xg)]:
+            assert res.partition is part
+            assert_allclose(res.local_array, expected, rtol=1e-14)
+        x += y
+        assert_allclose(x.local_array, 3 * xg, rtol=1e-14)
+        assert_allclose(x.dot(y), np.sum(3 * xg * 2 * xg), rtol=1e-12)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par4), (par4j)])
+def test_distributed_norm_dot_views(par):
+    """2-norm and dot do not modify (or depend on copies of) local arrays"""
+    x = DistributedArray.to_dist(x=par['x'])
+    before = x.local_array.copy()
+    assert_allclose(x.norm(), np.linalg.norm(par['x'].ravel()), rtol=1e-12)
+    assert_allclose(x.dot(x, vdot=True), np.vdot(par['x'], par['x']), rtol=1e-12)
+    assert_allclose(x.local_array, before)
+
+
+@pytest.mark.mpi(min_size=2)
+def test_distributed_norm_overflow():
+    """2-norm of overflowing complex data is inf (not nan)"""
+    x = DistributedArray(global_shape=(4 * MPI.COMM_WORLD.Get_size(),),
+                         dtype=np.complex128, engine=backend)
+    x[:] = (1.0 + 1.0j) * 1e160
+    assert np.isinf(x.norm())
+
+
+@pytest.mark.mpi(min_size=2)
+def test_distributed_like_checks():
+    """_like uses the dtype of local_array and checks its shape"""
+    x = DistributedArray(global_shape=(4 * MPI.COMM_WORLD.Get_size(), 3),
+                         dtype=np.float64, engine=backend)
+    # dtype of local_array wins over dtype
+    y = x._like(local_array=np.zeros(x.local_shape, dtype=np.complex64),
+                dtype=np.float64)
+    assert y.dtype == np.complex64
+    # dtype is used when allocating
+    assert x._like(dtype=np.float32).local_array.dtype == np.float32
+    assert x._like().local_array.dtype == np.float64
+    with pytest.raises(ValueError, match="expected"):
+        x._like(local_array=np.zeros((x.local_shape[0] + 1, 3)))
