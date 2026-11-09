@@ -1456,7 +1456,9 @@ class StackedDistributedArray:
     def __rmul__(self, x):
         return self.multiply(x)
 
-    def _apply(self, name: str, other, out: Optional[Self] = None) -> Self:
+    def _apply(
+        self, name: str, other: float | int | Self, out: Optional[Self] = None
+    ) -> Self:
         """Apply the binary method ``name`` of the children, writing into ``out``
 
         The result is allocated once (if ``out`` is not provided) and each
@@ -1474,50 +1476,7 @@ class StackedDistributedArray:
             )
         return out
 
-    def add(self, stacked_array: float | int | Self, out: Optional[Self] = None) -> Self:
-        """Stacked Distributed Addition of arrays
-
-        Parameters
-        ----------
-        stacked_array : :obj:`pylops_mpi.StackedDistributedArray` or scalar
-            Array to add.
-        out : :obj:`pylops_mpi.StackedDistributedArray`, optional
-            Array where the result is stored (it can be ``self``).
-            If ``None``, a new array is created.
-        """
-        return self._apply("add", stacked_array, out)
-
-    def iadd(self, stacked_array: Self) -> Self:
-        """Stacked Distributed In-Place Addition of arrays"""
-        return self.add(stacked_array, out=self)
-
-    def subtract(self, stacked_array: float | int | Self, out: Optional[Self] = None) -> Self:
-        """Stacked Distributed Subtraction of arrays
-
-        Parameters
-        ----------
-        stacked_array : :obj:`pylops_mpi.StackedDistributedArray` or scalar
-            Array to subtract.
-        out : :obj:`pylops_mpi.StackedDistributedArray`, optional
-            Array where the result is stored (it can be ``self``).
-            If ``None``, a new array is created.
-        """
-        return self._apply("subtract", stacked_array, out)
-
-    def multiply(self, stacked_array: float | int | Self, out: Optional[Self] = None) -> Self:
-        """Stacked Distributed Multiplication of arrays
-
-        Parameters
-        ----------
-        stacked_array : :obj:`pylops_mpi.StackedDistributedArray` or scalar
-            Array to multiply by.
-        out : :obj:`pylops_mpi.StackedDistributedArray`, optional
-            Array where the result is stored (it can be ``self``).
-            If ``None``, a new array is created.
-        """
-        return self._apply("multiply", stacked_array, out)
-
-    def _leaves(self) -> List:
+    def _leaves(self) -> List[DistributedArray]:
         """Flat list of the (non-stacked) DistributedArrays"""
         leaves = []
         for distarray in self.distarrays:
@@ -1527,8 +1486,33 @@ class StackedDistributedArray:
                 leaves.append(distarray)
         return leaves
 
-    def _fusable(self, leaves: List) -> bool:
-        """Whether the reductions of all leaves can share a single allreduce"""
+    def _fusable(self, leaves: List[DistributedArray]) -> bool:
+        """Whether the reductions of all leaves can share a single allreduce
+
+        The partial results of the leaves can be summed in one allreduce
+        (instead of one per leaf) only if every leaf:
+
+        - is partitioned as ``Partition.SCATTER``, so that each rank holds
+          a distinct portion of the data and the global result is the sum of
+          the local ones (``BROADCAST`` leaves hold a full copy on every rank
+          and would be counted multiple times);
+        - has no ``mask``, i.e. the reduction is over all ranks and not over
+          subgroups of ranks;
+        - uses the same MPI communicator (``base_comm``) and the same NCCL
+          communicator (``base_comm_nccl``) as the first leaf, so a single
+          collective call is valid for all of them.
+
+        Parameters
+        ----------
+        leaves : :obj:`list` of :obj:`pylops_mpi.DistributedArray`
+            Flat list of the non-stacked arrays (see ``_leaves``).
+
+        Returns
+        -------
+        fusable : :obj:`bool`
+            ``True`` if a single allreduce can be used, ``False`` if each
+            leaf must be reduced separately.
+        """
         first = leaves[0]
         return all(
             leaf.partition is Partition.SCATTER
@@ -1538,8 +1522,30 @@ class StackedDistributedArray:
             for leaf in leaves
         )
 
-    def _fused_allreduce(self, leaves: List, local):
-        """Sum-reduce the local partial result of the leaves in one allreduce"""
+    def _fused_allreduce(self, leaves: List[DistributedArray], local):
+        """Sum-reduce the local partial result of the leaves in one allreduce
+
+        Used by :meth:`dot` and :meth:`norm` to replace one allreduce per leaf
+        with a single one. The leaves must satisfy :meth:`_fusable`, which
+        guarantees that they share the same communicator, engine and
+        partitioning, so the collective call is issued through the first leaf.
+
+        Parameters
+        ----------
+        leaves : :obj:`list` of :obj:`pylops_mpi.DistributedArray`
+            Flat list of the non-stacked arrays (see ``_leaves``). Only the
+            first leaf is used to select the communicator and engine.
+        local : :obj:`float` or :obj:`complex` or array-like
+            Partial result computed locally on this rank, already summed over
+            all leaves (e.g., sum of the local dot products or of the
+            local squared norms).
+
+        Returns
+        -------
+        result : :obj:`float` or :obj:`complex`
+            Sum of ``local`` over all ranks, converted to a scalar
+            irrespective of the engine used (NumPy, CuPy or NCCL).
+        """
         first = leaves[0]
         return to_scalar(
             first._allreduce_subcomm(
@@ -1549,6 +1555,84 @@ class StackedDistributedArray:
                 engine=first.engine,
             )
         )
+
+    def add(
+        self, stacked_array: float | int | Self, out: Optional[Self] = None
+    ) -> Self:
+        """Stacked Distributed Addition of arrays
+
+        Parameters
+        ----------
+        stacked_array : :obj:`pylops_mpi.StackedDistributedArray` or scalar
+            Array to add.
+        out : :obj:`pylops_mpi.StackedDistributedArray`, optional
+            Array where the result is stored (it can be ``self``).
+            If ``None``, a new array is created.
+
+        Returns
+        -------
+        out : :obj:`pylops_mpi.StackedDistributedArray`
+            Result of the addition. This is the ``out`` array if provided,
+            otherwise a newly created array.
+        """
+        return self._apply("add", stacked_array, out)
+
+    def iadd(self, stacked_array: float | int | Self) -> Self:
+        """Stacked Distributed In-Place Addition of arrays
+
+        Parameters
+        ----------
+        stacked_array : :obj:`pylops_mpi.StackedDistributedArray` or scalar
+            Array to add.
+
+        Returns
+        -------
+        out : :obj:`pylops_mpi.StackedDistributedArray`
+            This array (``self``), updated in place with the result of the addition.
+        """
+        return self.add(stacked_array, out=self)
+
+    def subtract(
+        self, stacked_array: float | int | Self, out: Optional[Self] = None
+    ) -> Self:
+        """Stacked Distributed Subtraction of arrays
+
+        Parameters
+        ----------
+        stacked_array : :obj:`pylops_mpi.StackedDistributedArray` or scalar
+            Array to subtract.
+        out : :obj:`pylops_mpi.StackedDistributedArray`, optional
+            Array where the result is stored (it can be ``self``).
+            If ``None``, a new array is created.
+
+        Returns
+        -------
+        out : :obj:`pylops_mpi.StackedDistributedArray`
+            Result of the subtraction. This is the ``out`` array if provided,
+            otherwise a newly created array.
+        """
+        return self._apply("subtract", stacked_array, out)
+
+    def multiply(
+        self, stacked_array: float | int | Self, out: Optional[Self] = None
+    ) -> Self:
+        """Stacked Distributed Multiplication of arrays
+
+        Parameters
+        ----------
+        stacked_array : :obj:`pylops_mpi.StackedDistributedArray` or scalar
+            Array to multiply by.
+        out : :obj:`pylops_mpi.StackedDistributedArray`, optional
+            Array where the result is stored (it can be ``self``).
+            If ``None``, a new array is created.
+
+        Returns
+        -------
+        out : :obj:`pylops_mpi.StackedDistributedArray`
+            Result of the multiplication. This is the ``out`` array if provided,
+            otherwise a newly created array.
+        """
+        return self._apply("multiply", stacked_array, out)
 
     def dot(self, stacked_array: Self, vdot: bool = False) -> Self:
         """
@@ -1601,16 +1685,17 @@ class StackedDistributedArray:
         norm : :obj:`float`
             The computed norm of the stacked distributed array.
         """
+        ord = 2 if ord is None else ord
         leaves = self._leaves()
-        if ord in (None, 2) and self._fusable(leaves):
+        # Fast-fused L2 norm
+        if ord == 2 and self._fusable(leaves):
             # sum the local squared norms and reduce only once
             local = sum(leaf._local_sqnorm() for leaf in leaves)
             return to_scalar(np.sqrt(self._fused_allreduce(leaves, local)))
-        # Note that the norms of the individual distributed arrays are
-        # scalars (irrespective of the engine used), thus numpy is used
-        # to combine them
+        # Other norms - note that the norms of the individual distributed
+        # arrays are scalars (irrespective of the engine used), thus numpy
+        # is used to combine them
         norms = np.array([distarray.norm(ord) for distarray in self.distarrays])
-        ord = 2 if ord is None else ord
         if ord in ["fro", "nuc"]:
             raise ValueError(f"norm-{ord} not possible for vectors")
         elif ord == 0:
