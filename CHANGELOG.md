@@ -1,3 +1,10 @@
+# 0.8.0
+* Added `pylops_mpi.proximal.proximal.MPIL21` proximal operator.
+* Added `pylops__mpi.proximal.optimization.PrimalDual` solver.
+* Added precomposition and postcomposition to `pylops_mpi.proximal.MPIProxOperator`.
+* Fixed DeprecationWarning from `float()` on `norm` and `dot` results by returning true scalars
+* Fixed the import of PyProximal’s `_x0z0_init` to work with both before and after v0.13.0 releases.
+
 # 0.7.0
 * Introduced `dims` and `dimsd` as parameters in `pylops_mpi.MPILinearOperator` and `pylops_mpi.MPIStackedLinearOperator`.
 * Added `dims` and `dimsd` to all the MPI Operators.

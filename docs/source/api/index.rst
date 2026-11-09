@@ -153,7 +153,6 @@ Sparsity
     ista
     fista
 
-
 Proximal
 ~~~~~~~~
 
@@ -164,6 +163,12 @@ Proximal
 
     ProximalGradient
     ADMML2
+
+.. currentmodule:: pylops_mpi.proximal.optimization.primaldual
+
+.. autosummary::
+   :toctree: generated/
+
     PrimalDual
 
 
