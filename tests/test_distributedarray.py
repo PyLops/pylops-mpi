@@ -412,7 +412,7 @@ def test_distributed_broadcast_math(par1, par2):
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par1, par2", [(par4, par5), (par4j, par5j)])
-def test_distributed_out(par1, par2):
+def test_distributed_math_out(par1, par2):
     """Test arithmetic with out= and in-place operators"""
     arr1 = DistributedArray.to_dist(x=par1["x"])
     arr2 = DistributedArray.to_dist(x=par2["x"])
@@ -471,7 +471,7 @@ def test_distributed_out(par1, par2):
 @pytest.mark.parametrize(
     "par1, par2", [(par4b, par5b), (par4jb, par5jb), (par4u, par5u), (par4ju, par5ju)]
 )
-def test_distributed_broadcast_out(par1, par2):
+def test_distributed_broadcast_math_out(par1, par2):
     """Test arithmetic with out= and in-place operators for BROADCAST and
     UNSAFE_BROADCAST arrays"""
     arr1 = DistributedArray.to_dist(x=par1["x"], partition=par1["partition"])
