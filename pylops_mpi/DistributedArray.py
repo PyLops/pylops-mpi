@@ -1,6 +1,6 @@
 from enum import Enum
 from numbers import Integral
-from typing import Any, List, NewType, Optional, Self, Tuple, Union
+from typing import Any, Callable, List, NewType, Optional, Self, Tuple, Union
 
 import numpy as np
 from mpi4py import MPI
@@ -634,56 +634,6 @@ class DistributedArray(DistributedMixIn):
         redist_array[:] = ncp.concatenate(recv_list, axis=self.axis)
         return redist_array
 
-    def _like(self, local_array: Optional[NDArray] = None, dtype=None):
-        """Create a DistributedArray with the same metadata as ``self``
-
-        The metadata comes from an array that is already valid, so no
-        collective communication is performed and the sub-communicator is
-        reused. The only check is a local one on the shape of ``local_array``.
-
-        Parameters
-        ----------
-        local_array : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`, optional
-            Local array to use as storage, whose shape must be equal to the
-            local shape of ``self``. Its dtype becomes the dtype of the new
-            array (``dtype`` is ignored). If ``None``, an uninitialized array
-            is allocated.
-        dtype : :obj:`str`, optional
-            Type of the elements of the allocated array. Only used when
-            ``local_array`` is ``None``, where it defaults to ``self.dtype``.
-
-        Raises
-        ------
-        ValueError
-            If ``local_array`` is provided and its shape does not match the
-            local shape of ``self``.
-        """
-        arr = object.__new__(type(self))
-        arr._global_shape = self._global_shape
-        arr._base_comm = self._base_comm
-        arr._base_comm_nccl = self._base_comm_nccl
-        arr._partition = self._partition
-        arr._axis = self._axis
-        arr._mask = self._mask
-        arr._sub_comm = self._sub_comm
-        arr._local_shape = self._local_shape
-        arr._local_shapes = self._local_shapes
-        arr._engine = self._engine
-        if local_array is None:
-            arr.dtype = self.dtype if dtype is None else dtype
-            arr._local_array = get_module(self._engine).empty(
-                self._local_shape, dtype=arr.dtype
-            )
-        else:
-            if local_array.shape != self._local_shape:
-                raise ValueError(
-                    f"local_array has shape {local_array.shape}, "
-                    f"expected {self._local_shape}"
-                )
-            arr.dtype = local_array.dtype
-            arr._local_array = local_array
-        return arr
-
     def _check_local_shapes(self, local_shapes):
         """Check if the local shapes align with the global shape"""
         if local_shapes:
@@ -732,7 +682,8 @@ class DistributedArray(DistributedMixIn):
 
     def _nccl_local_shapes(self, masked: bool):
         """Get the the list of shapes of every GPU in the communicator"""
-        # gather tuple of shapes from every rank within thee communicator and copy from GPU to CPU
+        # gather tuple of shapes from every rank within thee communicator
+        # and copy from GPU to CPU
         if masked:
             all_tuples = self._allgather_subcomm(
                 self.sub_comm, self.base_comm_nccl, self.local_shape
@@ -749,6 +700,106 @@ class DistributedArray(DistributedMixIn):
             for i in range(0, len(all_tuples), tuple_len)
         ]
         return local_shapes
+
+    def _like(self, local_array: Optional[NDArray] = None, dtype=None):
+        """Create a DistributedArray with the same metadata as ``self``
+
+        The metadata comes from an array that is already valid, so no
+        collective communication is performed and the sub-communicator is
+        reused. The only check is a local one on the shape of ``local_array``.
+
+        Parameters
+        ----------
+        local_array : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`, optional
+            Local array to use as storage, whose shape must be equal to the
+            local shape of ``self``. Its dtype becomes the dtype of the new
+            array (``dtype`` is ignored). If ``None``, an uninitialized array
+            is allocated.
+        dtype : :obj:`str`, optional
+            Type of the elements of the allocated array. Only used when
+            ``local_array`` is ``None``. If ``None``, it defaults to
+            ``self.dtype``.
+
+        Raises
+        ------
+        ValueError
+            If ``local_array`` is provided and its shape does not match the
+            local shape of ``self``.
+        """
+        arr = object.__new__(type(self))
+        arr._global_shape = self._global_shape
+        arr._base_comm = self._base_comm
+        arr._base_comm_nccl = self._base_comm_nccl
+        arr._partition = self._partition
+        arr._axis = self._axis
+        arr._mask = self._mask
+        arr._sub_comm = self._sub_comm
+        arr._local_shape = self._local_shape
+        arr._local_shapes = self._local_shapes
+        arr._engine = self._engine
+        if local_array is None:
+            arr.dtype = self.dtype if dtype is None else dtype
+            arr._local_array = get_module(self._engine).empty(
+                self._local_shape, dtype=arr.dtype
+            )
+        else:
+            if local_array.shape != self._local_shape:
+                raise ValueError(
+                    f"local_array has shape {local_array.shape}, "
+                    f"expected {self._local_shape}"
+                )
+            arr.dtype = local_array.dtype
+            arr._local_array = local_array
+        return arr
+
+    def _ufunc(
+        self,
+        ufunc: Callable,
+        other: Union[float, int, NDArray, Self],
+        out: Optional[Self] = None,
+    ) -> Self:
+        """Apply a binary ufunc between ``self`` and ``other``
+
+        The ufunc is applied to the local arrays, optionally writing directly
+        into ``out``. If the cast into ``out`` is unsafe (e.g., complex into
+        real), the result is computed first and then assigned to ``out``,
+        which casts it.
+
+        Parameters
+        ----------
+        ufunc : :obj:`callable`
+            Binary ufunc of the array module of the engine (e.g.,
+            ``numpy.add``).
+        other : :obj:`pylops_mpi.DistributedArray`, scalar or array-like
+            Second operand. If a :obj:`pylops_mpi.DistributedArray`, it must
+            have the same partition, shape and mask as ``self``.
+        out : :obj:`pylops_mpi.DistributedArray`, optional
+            Array where the result is stored (it can be ``self`` or
+            ``other``). If ``None``, a new array is created.
+
+        Returns
+        -------
+        out : :obj:`pylops_mpi.DistributedArray`
+            Result of the operation. This is the ``out`` array if provided,
+            otherwise a newly created array.
+        """
+        if isinstance(other, DistributedArray):
+            self._check_partition_shape(other)
+            self._check_mask(other)
+            other = other.local_array
+        if out is None:
+            out = self._like()
+        if self.partition is not Partition.BROADCAST:
+            try:
+                # single pass, no temporary for safe cast
+                ufunc(self.local_array, other, out=out.local_array)
+                return out
+            except TypeError:
+                # unsafe cast into out (e.g., complex into real): fall back
+                # to the assignment, which casts
+                pass
+        out[:] = ufunc(self.local_array, other)
+        return out
 
     def __neg__(self):
         out = self._like()
@@ -779,28 +830,9 @@ class DistributedArray(DistributedMixIn):
     def __rmul__(self, x):
         return self.multiply(x)
 
-    def _ufunc(self, ufunc, other, out=None):
-        """Apply a binary ufunc between ``self`` and ``other`` (distributed
-        array or scalar/array-like), optionally writing into ``out``"""
-        if isinstance(other, DistributedArray):
-            self._check_partition_shape(other)
-            self._check_mask(other)
-            other = other.local_array
-        if out is None:
-            out = self._like()
-        if self.partition is not Partition.BROADCAST:
-            try:
-                # single pass, no temporary
-                ufunc(self.local_array, other, out=out.local_array)
-                return out
-            except TypeError:
-                # unsafe cast into out (e.g., complex into real): fall back
-                # to the assignment, which casts
-                pass
-        out[:] = ufunc(self.local_array, other)
-        return out
-
-    def add(self, dist_array, out=None):
+    def add(
+        self, dist_array: Union[float, int, Self], out: Optional[Self] = None
+    ) -> Self:
         """Distributed Addition of arrays
 
         Parameters
@@ -810,14 +842,33 @@ class DistributedArray(DistributedMixIn):
         out : :obj:`pylops_mpi.DistributedArray`, optional
             Array where the result is stored (it can be ``self`` or
             ``dist_array``). If ``None``, a new array is created.
+
+        Returns
+        -------
+        out : :obj:`pylops_mpi.DistributedArray`
+            Result of the addition. This is the ``out`` array if provided,
+            otherwise a newly created array.
         """
         return self._ufunc(get_module(self.engine).add, dist_array, out)
 
-    def iadd(self, dist_array):
-        """Distributed In-place Addition of arrays"""
+    def iadd(self, dist_array: Union[float, int, Self]) -> Self:
+        """Distributed In-place Addition of arrays
+
+        Parameters
+        ----------
+        dist_array : :obj:`pylops_mpi.DistributedArray` or scalar
+            Array to add.
+
+        Returns
+        -------
+        out : :obj:`pylops_mpi.DistributedArray`
+            This array (``self``), updated in place with the result of the addition.
+        """
         return self.add(dist_array, out=self)
 
-    def subtract(self, dist_array, out=None):
+    def subtract(
+        self, dist_array: Union[float, int, Self], out: Optional[Self] = None
+    ) -> Self:
         """Distributed Subtraction of arrays
 
         Parameters
@@ -825,12 +876,20 @@ class DistributedArray(DistributedMixIn):
         dist_array : :obj:`pylops_mpi.DistributedArray` or scalar
             Array to subtract.
         out : :obj:`pylops_mpi.DistributedArray`, optional
-            Array where the result is stored. If ``None``, a new array is
-            created.
+            Array where the result is stored (it can be ``self`` or
+            ``dist_array``). If ``None``, a new array is created.
+
+        Returns
+        -------
+        out : :obj:`pylops_mpi.DistributedArray`
+            Result of the subtraction. This is the ``out`` array if provided,
+            otherwise a newly created array.
         """
         return self._ufunc(get_module(self.engine).subtract, dist_array, out)
 
-    def multiply(self, dist_array, out=None):
+    def multiply(
+        self, dist_array: Union[float, int, Self], out: Optional[Self] = None
+    ) -> Self:
         """Distributed Element-wise multiplication
 
         Parameters
@@ -838,13 +897,26 @@ class DistributedArray(DistributedMixIn):
         dist_array : :obj:`pylops_mpi.DistributedArray` or scalar
             Array to multiply by.
         out : :obj:`pylops_mpi.DistributedArray`, optional
-            Array where the result is stored. If ``None``, a new array is
-            created.
+            Array where the result is stored (it can be ``self`` or
+            ``dist_array``). If ``None``, a new array is created.
+
+        Returns
+        -------
+        out : :obj:`pylops_mpi.DistributedArray`
+            Result of the multiplication. This is the ``out`` array if
+            provided, otherwise a newly created array.
         """
         return self._ufunc(get_module(self.engine).multiply, dist_array, out)
 
-    def dot(self, dist_array, vdot: bool = False):
-        """
+    def _local_dot(self, dist_array: Self, vdot: bool = False) -> Union[float, complex]:
+        """Dot product of the local arrays (no communication)"""
+        ncp = get_module(self.engine)
+        dot_func = ncp.vdot if vdot else ncp.dot
+        return dot_func(self.local_array.ravel(), dist_array.local_array.ravel())
+
+    def dot(self, dist_array: Self, vdot: bool = False) -> Union[float, complex]:
+        """Distributed dot-product
+
         Compute the distributed dot product between this array and another
         distributed array.
 
@@ -895,13 +967,7 @@ class DistributedArray(DistributedMixIn):
             )
         )
 
-    def _local_dot(self, dist_array, vdot: bool = False):
-        """Dot product of the local arrays (no communication)"""
-        ncp = get_module(self.engine)
-        dot_func = ncp.vdot if vdot else ncp.dot
-        return dot_func(self.local_array.ravel(), dist_array.local_array.ravel())
-
-    def _local_sqnorm(self):
+    def _local_sqnorm(self) -> float:
         """Squared 2-norm of the local array (no communication)"""
         ncp = get_module(self.engine)
         local = self.local_array.ravel()
@@ -1634,7 +1700,7 @@ class StackedDistributedArray:
         """
         return self._apply("multiply", stacked_array, out)
 
-    def dot(self, stacked_array: Self, vdot: bool = False) -> Self:
+    def dot(self, stacked_array: Self, vdot: bool = False) -> Union[float, complex]:
         """
         Compute the distributed dot product between this array and another
         distributed array.
