@@ -14,9 +14,8 @@ else:
     from numpy.testing import assert_allclose
 
     backend = "numpy"
-from mpi4py import MPI
-import numpy as npp
 import pytest
+from mpi4py import MPI
 
 from pylops_mpi import DistributedArray, Partition
 from pylops_mpi.DistributedArray import local_split
@@ -27,148 +26,337 @@ if backend == "cupy":
     device_id = rank % np.cuda.runtime.getDeviceCount()
     np.cuda.Device(device_id).use()
 
-par1 = {'global_shape': (500, 501),
-        'partition': Partition.SCATTER, 'dtype': np.float64,
-        'axis': 1}
-par1j = {'global_shape': (501, 500),
-         'partition': Partition.SCATTER, 'dtype': np.complex128,
-         'axis': 0}
-par2 = {'global_shape': (500, 501),
-        'partition': Partition.BROADCAST, 'dtype': np.float64,
-        'axis': 1}
-par2j = {'global_shape': (501, 500),
-         'partition': Partition.BROADCAST, 'dtype': np.complex128,
-         'axis': 0}
+par1 = {
+    "global_shape": (500, 501),
+    "partition": Partition.SCATTER,
+    "dtype": np.float64,
+    "axis": 1,
+}
+par1j = {
+    "global_shape": (501, 500),
+    "partition": Partition.SCATTER,
+    "dtype": np.complex128,
+    "axis": 0,
+}
+par2 = {
+    "global_shape": (500, 501),
+    "partition": Partition.BROADCAST,
+    "dtype": np.float64,
+    "axis": 1,
+}
+par2j = {
+    "global_shape": (501, 500),
+    "partition": Partition.BROADCAST,
+    "dtype": np.complex128,
+    "axis": 0,
+}
 
-par3 = {'global_shape': (200, 201, 101),
-        'partition': Partition.SCATTER,
-        'dtype': np.float64, 'axis': 1}
+par3 = {
+    "global_shape": (200, 201, 101),
+    "partition": Partition.SCATTER,
+    "dtype": np.float64,
+    "axis": 1,
+}
 
-par3j = {'global_shape': (200, 201, 101),
-         'partition': Partition.SCATTER,
-         'dtype': np.complex128, 'axis': 2}
+par3j = {
+    "global_shape": (200, 201, 101),
+    "partition": Partition.SCATTER,
+    "dtype": np.complex128,
+    "axis": 2,
+}
 
-par4 = {'x': np.random.normal(100, 100, (500, 501)),
-        'partition': Partition.SCATTER, 'axis': 1, 'norm_axis': 0}
+par4 = {
+    "x": np.random.normal(100, 100, (500, 501)),
+    "partition": Partition.SCATTER,
+    "axis": 1,
+    "norm_axis": 0,
+}
 
-par4j = {'x': np.random.normal(100, 100, (500, 501)) + 1.0j * np.random.normal(50, 50, (500, 501)),
-         'partition': Partition.SCATTER, 'axis': 1, 'norm_axis': 0}
+par4j = {
+    "x": np.random.normal(100, 100, (500, 501))
+    + 1.0j * np.random.normal(50, 50, (500, 501)),
+    "partition": Partition.SCATTER,
+    "axis": 1,
+    "norm_axis": 0,
+}
 
-par5 = {'x': np.random.normal(300, 300, (500, 501)),
-        'partition': Partition.SCATTER, 'axis': 1, 'norm_axis': 1}
+par5 = {
+    "x": np.random.normal(300, 300, (500, 501)),
+    "partition": Partition.SCATTER,
+    "axis": 1,
+    "norm_axis": 1,
+}
 
-par5j = {'x': np.random.normal(300, 300, (500, 501)) + 1.0j * np.random.normal(50, 50, (500, 501)),
-         'partition': Partition.SCATTER, 'axis': 1, 'norm_axis': 0}
+par5j = {
+    "x": np.random.normal(300, 300, (500, 501))
+    + 1.0j * np.random.normal(50, 50, (500, 501)),
+    "partition": Partition.SCATTER,
+    "axis": 1,
+    "norm_axis": 0,
+}
 
-par6 = {'x': np.random.normal(100, 100, (600, 600)),
-        'partition': Partition.SCATTER, 'axis': 0, 'norm_axis': 1}
+par6 = {
+    "x": np.random.normal(100, 100, (600, 600)),
+    "partition": Partition.SCATTER,
+    "axis": 0,
+    "norm_axis": 1,
+}
 
-par6b = {'x': np.random.normal(100, 100, (600, 600)),
-         'partition': Partition.BROADCAST, 'axis': 0, 'norm_axis': 1}
+par7 = {
+    "x": np.random.normal(300, 300, (600, 600)),
+    "partition": Partition.SCATTER,
+    "axis": 0,
+    "norm_axis": 0,
+}
 
-par7 = {'x': np.random.normal(300, 300, (600, 600)),
-        'partition': Partition.SCATTER, 'axis': 0, 'norm_axis': 0}
+par8 = {
+    "x": np.random.normal(100, 100, (1200,)),
+    "partition": Partition.SCATTER,
+    "axis": 0,
+    "norm_axis": 0,
+}
 
-par7b = {'x': np.random.normal(300, 300, (600, 600)),
-         'partition': Partition.BROADCAST, 'axis': 0, 'norm_axis': 0}
+par9 = {
+    "x": np.random.normal(300, 300, (1200,)),
+    "partition": Partition.SCATTER,
+    "axis": 0,
+    "norm_axis": 0,
+}
 
-par8 = {'x': np.random.normal(100, 100, (1200,)),
-        'partition': Partition.SCATTER, 'axis': 0, 'norm_axis': 0}
-
-par8b = {'x': np.random.normal(100, 100, (1200,)),
-         'partition': Partition.BROADCAST, 'axis': 0, 'norm_axis': 0}
-
-par9 = {'x': np.random.normal(300, 300, (1200,)),
-        'partition': Partition.SCATTER, 'axis': 0, 'norm_axis': 0}
-
-par9b = {'x': np.random.normal(300, 300, (1200,)),
-         'partition': Partition.BROADCAST, 'axis': 0, 'norm_axis': 0}
+# BROADCAST and UNSAFE_BROADCAST counterparts
+par4b = {**par4, "partition": Partition.BROADCAST}
+par5b = {**par5, "partition": Partition.BROADCAST}
+par6b = {**par6, "partition": Partition.BROADCAST}
+par7b = {**par7, "partition": Partition.BROADCAST}
+par8b = {**par8, "partition": Partition.BROADCAST}
+par9b = {**par9, "partition": Partition.BROADCAST}
+par4jb = {**par4j, "partition": Partition.BROADCAST}
+par5jb = {**par5j, "partition": Partition.BROADCAST}
+par4u = {**par4, "partition": Partition.UNSAFE_BROADCAST}
+par5u = {**par5, "partition": Partition.UNSAFE_BROADCAST}
+par4ju = {**par4j, "partition": Partition.UNSAFE_BROADCAST}
+par5ju = {**par5j, "partition": Partition.UNSAFE_BROADCAST}
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par1j), (par2),
-                                 (par2j), (par3), (par3j)])
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j), (par3), (par3j)])
 def test_creation(par):
     """Test creation of local arrays"""
-    distributed_array = DistributedArray(global_shape=par['global_shape'],
-                                         partition=par['partition'],
-                                         dtype=par['dtype'], axis=par['axis'],
-                                         engine=backend)
-    loc_shape = local_split(distributed_array.global_shape,
-                            distributed_array.base_comm,
-                            distributed_array.partition,
-                            distributed_array.axis)
-    assert distributed_array.global_shape == par['global_shape']
+    distributed_array = DistributedArray(
+        global_shape=par["global_shape"],
+        partition=par["partition"],
+        dtype=par["dtype"],
+        axis=par["axis"],
+        engine=backend,
+    )
+    loc_shape = local_split(
+        distributed_array.global_shape,
+        distributed_array.base_comm,
+        distributed_array.partition,
+        distributed_array.axis,
+    )
+    assert distributed_array.global_shape == par["global_shape"]
     assert distributed_array.local_shape == loc_shape
     assert isinstance(distributed_array, DistributedArray)
     # Distributed array of ones
-    distributed_ones = DistributedArray(global_shape=par['global_shape'],
-                                        partition=par['partition'],
-                                        dtype=par['dtype'], axis=par['axis'],
-                                        engine=backend)
+    distributed_ones = DistributedArray(
+        global_shape=par["global_shape"],
+        partition=par["partition"],
+        dtype=par["dtype"],
+        axis=par["axis"],
+        engine=backend,
+    )
     distributed_ones[:] = 1
     # Distributed array of zeroes
-    distributed_zeroes = DistributedArray(global_shape=par['global_shape'],
-                                          partition=par['partition'],
-                                          dtype=par['dtype'], axis=par['axis'],
-                                          engine=backend)
+    distributed_zeroes = DistributedArray(
+        global_shape=par["global_shape"],
+        partition=par["partition"],
+        dtype=par["dtype"],
+        axis=par["axis"],
+        engine=backend,
+    )
     distributed_zeroes[:] = 0
     # Test for distributed ones
     assert isinstance(distributed_ones, DistributedArray)
-    assert_allclose(distributed_ones.local_array, np.ones(shape=distributed_ones.local_shape,
-                                                          dtype=par['dtype']), rtol=1e-14)
-    assert_allclose(distributed_ones.asarray(), np.ones(shape=distributed_ones.global_shape,
-                                                        dtype=par['dtype']), rtol=1e-14)
+    assert_allclose(
+        distributed_ones.local_array,
+        np.ones(shape=distributed_ones.local_shape, dtype=par["dtype"]),
+        rtol=1e-14,
+    )
+    assert_allclose(
+        distributed_ones.asarray(),
+        np.ones(shape=distributed_ones.global_shape, dtype=par["dtype"]),
+        rtol=1e-14,
+    )
     # Test for distributed zeroes
     assert isinstance(distributed_zeroes, DistributedArray)
-    assert_allclose(distributed_zeroes.local_array, np.zeros(shape=distributed_zeroes.local_shape,
-                                                             dtype=par['dtype']), rtol=1e-14)
-    assert_allclose(distributed_zeroes.asarray(), np.zeros(shape=distributed_zeroes.global_shape,
-                                                           dtype=par['dtype']), rtol=1e-14)
+    assert_allclose(
+        distributed_zeroes.local_array,
+        np.zeros(shape=distributed_zeroes.local_shape, dtype=par["dtype"]),
+        rtol=1e-14,
+    )
+    assert_allclose(
+        distributed_zeroes.asarray(),
+        np.zeros(shape=distributed_zeroes.global_shape, dtype=par["dtype"]),
+        rtol=1e-14,
+    )
+    # Test for zeros_like (source is left untouched)
+    zeros_like = distributed_ones.zeros_like()
+    assert isinstance(zeros_like, DistributedArray)
+    assert_allclose(
+        zeros_like.local_array,
+        np.zeros(shape=distributed_ones.local_shape, dtype=par["dtype"]),
+        rtol=1e-14,
+    )
+    assert_allclose(
+        zeros_like.asarray(),
+        np.zeros(shape=distributed_ones.global_shape, dtype=par["dtype"]),
+        rtol=1e-14,
+    )
+    assert_allclose(
+        distributed_ones.local_array,
+        np.ones(shape=distributed_ones.local_shape, dtype=par["dtype"]),
+        rtol=1e-14,
+    )
+    # Test for empty_like (uninitialized values, separate buffer)
+    empty_like = distributed_ones.empty_like()
+    assert isinstance(empty_like, DistributedArray)
+    assert empty_like.global_shape == distributed_ones.global_shape
+    assert empty_like.local_shape == distributed_ones.local_shape
+    assert empty_like.dtype == distributed_ones.dtype
+    assert empty_like.partition == distributed_ones.partition
+    assert empty_like.axis == distributed_ones.axis
+    empty_like[:] = 0
+    assert_allclose(
+        distributed_ones.local_array,
+        np.ones(shape=distributed_ones.local_shape, dtype=par["dtype"]),
+        rtol=1e-14,
+    )
+    # Test for copy (same values, separate buffer)
+    copy = distributed_ones.copy()
+    assert isinstance(copy, DistributedArray)
+    assert_allclose(copy.local_array, distributed_ones.local_array, rtol=1e-14)
+    copy[:] = 0
+    assert_allclose(
+        distributed_ones.local_array,
+        np.ones(shape=distributed_ones.local_shape, dtype=par["dtype"]),
+        rtol=1e-14,
+    )
+
+
+@pytest.mark.mpi(min_size=2)
+def test_distributed_like_checks():
+    """Check behaviour of _like"""
+    x = DistributedArray(
+        global_shape=(4 * MPI.COMM_WORLD.Get_size(), 3),
+        dtype=np.float64,
+        engine=backend,
+    )
+
+    # dtype of local_array wins over dtype
+    y = x._like(
+        local_array=np.zeros(x.local_shape, dtype=np.complex64), dtype=np.float64
+    )
+    assert y.dtype == np.complex64
+
+    # dtype is used when allocating
+    assert x._like(dtype=np.float32).local_array.dtype == np.float32
+    assert x._like().local_array.dtype == np.float64
+
+    # check error is raised if local_array shape does not match
+    # that of the input distributed array
+    with pytest.raises(ValueError, match="expected"):
+        x._like(local_array=np.zeros((x.local_shape[0] + 1, 3)))
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("masked", [False, True])
+def test_distributed_like_no_collectives(masked):
+    """Check that the output DistributedArray of a basic operation
+    reuses communicator and cached local shapes"""
+    size = MPI.COMM_WORLD.Get_size()
+    mask = None
+    if masked:
+        if size % 2 != 0:
+            pytest.skip("Number of processes is not divisible by 2")
+        mask = np.repeat(np.arange(2), size // 2)
+    x = DistributedArray(global_shape=(4 * size, 3), mask=mask, engine=backend)
+    x[:] = 1.0
+    _ = x.local_shapes
+
+    for arr in [
+        x + x,
+        x - x,
+        x * x,
+        x * 2.0,
+        -x,
+        x.copy(),
+        x.conj(),
+        x.zeros_like(),
+        x.empty_like(),
+    ]:
+        assert arr.sub_comm is x.sub_comm
+        if not masked:
+            assert arr.sub_comm is arr.base_comm
+        assert arr.mask is x.mask
+        assert arr.local_shapes is x.local_shapes
+        assert arr.local_shape == x.local_shape
 
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par4), (par4j), (par5), (par5j)])
 def test_to_dist(par):
     """Test the ``to_dist`` method"""
-    dist_array = DistributedArray.to_dist(x=par['x'],
-                                          partition=par['partition'],
-                                          axis=par['axis'])
+    dist_array = DistributedArray.to_dist(
+        x=par["x"], partition=par["partition"], axis=par["axis"]
+    )
     assert isinstance(dist_array, DistributedArray)
-    assert dist_array.global_shape == par['x'].shape
-    assert dist_array.axis == par['axis']
+    assert dist_array.global_shape == par["x"].shape
+    assert dist_array.axis == par["axis"]
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par1j), (par2),
-                                 (par2j), (par3), (par3j)])
+@pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j), (par3), (par3j)])
 def test_local_shapes(par):
     """Test the `local_shapes` parameter in DistributedArray"""
     # Reverse the local_shapes to test the local_shapes parameter
-    loc_shapes = MPI.COMM_WORLD.allgather(local_split(par['global_shape'],
-                                                      MPI.COMM_WORLD, par['partition'], par['axis']))[::-1]
-    distributed_array = DistributedArray(global_shape=par['global_shape'],
-                                         partition=par['partition'],
-                                         axis=par['axis'], local_shapes=loc_shapes,
-                                         dtype=par['dtype'],
-                                         engine=backend)
+    loc_shapes = MPI.COMM_WORLD.allgather(
+        local_split(par["global_shape"], MPI.COMM_WORLD, par["partition"], par["axis"])
+    )[::-1]
+    distributed_array = DistributedArray(
+        global_shape=par["global_shape"],
+        partition=par["partition"],
+        axis=par["axis"],
+        local_shapes=loc_shapes,
+        dtype=par["dtype"],
+        engine=backend,
+    )
     assert isinstance(distributed_array, DistributedArray)
     assert distributed_array.local_shape == loc_shapes[distributed_array.rank]
 
     # Distributed ones
     distributed_array[:] = 1
-    assert_allclose(distributed_array.local_array, np.ones(loc_shapes[distributed_array.rank],
-                                                           dtype=par['dtype']), rtol=1e-14)
-    assert_allclose(distributed_array.asarray(), np.ones(par['global_shape'],
-                                                         dtype=par['dtype']), rtol=1e-14)
+    assert_allclose(
+        distributed_array.local_array,
+        np.ones(loc_shapes[distributed_array.rank], dtype=par["dtype"]),
+        rtol=1e-14,
+    )
+    assert_allclose(
+        distributed_array.asarray(),
+        np.ones(par["global_shape"], dtype=par["dtype"]),
+        rtol=1e-14,
+    )
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par4), (par4j), (par5), (par5j),
-                                 (par6), (par6b), (par7), (par7b)])
+@pytest.mark.parametrize(
+    "par", [(par4), (par4j), (par5), (par5j), (par6), (par6b), (par7), (par7b)]
+)
 def test_redistribute(par):
-    arr = DistributedArray.to_dist(x=par['x'], axis=par['axis'], partition=par['partition'])
-    redist_arr = arr.redistribute(axis=par['axis'] - 1)
+    arr = DistributedArray.to_dist(
+        x=par["x"], axis=par["axis"], partition=par["partition"]
+    )
+    redist_arr = arr.redistribute(axis=par["axis"] - 1)
     assert isinstance(redist_arr, DistributedArray)
     assert_allclose(arr.asarray(), redist_arr.asarray(), rtol=1e-14)
 
@@ -177,8 +365,8 @@ def test_redistribute(par):
 @pytest.mark.parametrize("par1, par2", [(par4, par5), (par4j, par5j)])
 def test_distributed_math(par1, par2):
     """Test the Element-Wise Addition, Subtraction and Multiplication"""
-    arr1 = DistributedArray.to_dist(x=par1['x'], partition=par1['partition'])
-    arr2 = DistributedArray.to_dist(x=par2['x'], partition=par2['partition'])
+    arr1 = DistributedArray.to_dist(x=par1["x"], partition=par1["partition"])
+    arr2 = DistributedArray.to_dist(x=par2["x"], partition=par2["partition"])
     # Addition
     sum_array = arr1 + arr2
     assert isinstance(sum_array, DistributedArray)
@@ -189,38 +377,248 @@ def test_distributed_math(par1, par2):
     mult_array = arr1 * arr2
     assert isinstance(mult_array, DistributedArray)
     # Global array of Sum with np.add
-    assert_allclose(sum_array.asarray(), np.add(par1['x'], par2['x']),
-                    rtol=1e-14)
+    assert_allclose(sum_array.asarray(), np.add(par1["x"], par2["x"]), rtol=1e-14)
     # Global array of Subtract with np.subtract
-    assert_allclose(sub_array.asarray(), np.subtract(par1['x'], par2['x']),
-                    rtol=1e-14)
+    assert_allclose(sub_array.asarray(), np.subtract(par1["x"], par2["x"]), rtol=1e-14)
     # Global array of Multiplication with np.multiply
-    assert_allclose(mult_array.asarray(), np.multiply(par1['x'], par2['x']),
-                    rtol=1e-14)
+    assert_allclose(mult_array.asarray(), np.multiply(par1["x"], par2["x"]), rtol=1e-14)
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par1, par2", [(par6, par7), (par6b, par7b),
-                                        (par8, par9), (par8b, par9b)])
+@pytest.mark.parametrize(
+    "par1, par2", [(par4b, par5b), (par4jb, par5jb), (par4u, par5u), (par4ju, par5ju)]
+)
+def test_distributed_broadcast_math(par1, par2):
+    """Test the Element-Wise Addition, Subtraction and Multiplication
+    for BROADCAST and UNSAFE_BROADCAST arrays"""
+    arr1 = DistributedArray.to_dist(x=par1["x"], partition=par1["partition"])
+    arr2 = DistributedArray.to_dist(x=par2["x"], partition=par2["partition"])
+    # Addition
+    sum_array = arr1 + arr2
+    assert isinstance(sum_array, DistributedArray)
+    # Subtraction
+    sub_array = arr1 - arr2
+    assert isinstance(sub_array, DistributedArray)
+    # Multiplication
+    mult_array = arr1 * arr2
+    assert isinstance(mult_array, DistributedArray)
+    # Global array of Sum with np.add
+    assert_allclose(sum_array.asarray(), np.add(par1["x"], par2["x"]), rtol=1e-14)
+    # Global array of Subtract with np.subtract
+    assert_allclose(sub_array.asarray(), np.subtract(par1["x"], par2["x"]), rtol=1e-14)
+    # Global array of Multiplication with np.multiply
+    assert_allclose(mult_array.asarray(), np.multiply(par1["x"], par2["x"]), rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par1, par2", [(par4, par5), (par4j, par5j)])
+def test_distributed_out(par1, par2):
+    """Test arithmetic with out= and in-place operators"""
+    arr1 = DistributedArray.to_dist(x=par1["x"])
+    arr2 = DistributedArray.to_dist(x=par2["x"])
+
+    for name, op in [
+        ("add", np.add),
+        ("subtract", np.subtract),
+        ("multiply", np.multiply),
+    ]:
+        # Benchmark, writing output to fresh DistributedArray
+        expected = op(par1["x"], par2["x"])
+
+        # Out as emtpy from arr1
+        out = arr1.empty_like()
+
+        # Ops with 2 DistributedArray writing to
+        # pre-instantiated DistributedArray
+        res = getattr(arr1, name)(arr2, out=out)
+        assert res is out
+        assert_allclose(out.asarray(), expected, rtol=1e-14)
+
+        # Ops with DistributedArray and scalar writing to
+        # pre-instantiated DistributedArray
+        out = arr1.empty_like()
+        getattr(arr1, name)(2.5, out=out)
+        assert_allclose(out.asarray(), op(par1["x"], 2.5), rtol=1e-14)
+
+        # Check input operands are untouched
+        assert_allclose(arr1.asarray(), par1["x"], rtol=1e-14)
+        assert_allclose(arr2.asarray(), par2["x"], rtol=1e-14)
+
+    # Out acting as second operand as well as output
+    out = arr2.copy()
+    arr1.subtract(out, out=out)
+    assert_allclose(out.asarray(), par1["x"] - par2["x"], rtol=1e-14)
+
+    # Negation
+    assert_allclose((-arr1).asarray(), -par1["x"], rtol=1e-14)
+
+    # In-place operators: check correctness and that they keep the storage
+    for opname, op in [
+        ("__iadd__", np.add),
+        ("__isub__", np.subtract),
+        ("__imul__", np.multiply),
+    ]:
+        for other, other_g in [(arr2, par2["x"]), (2.5, 2.5)]:
+            y = arr1.copy()
+            local = y.local_array
+            res = getattr(y, opname)(other)
+            assert res is y
+            assert y.local_array is local
+            assert_allclose(y.asarray(), op(par1["x"], other_g), rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize(
+    "par1, par2", [(par4b, par5b), (par4jb, par5jb), (par4u, par5u), (par4ju, par5ju)]
+)
+def test_distributed_broadcast_out(par1, par2):
+    """Test arithmetic with out= and in-place operators for BROADCAST and
+    UNSAFE_BROADCAST arrays"""
+    arr1 = DistributedArray.to_dist(x=par1["x"], partition=par1["partition"])
+    arr2 = DistributedArray.to_dist(x=par2["x"], partition=par2["partition"])
+
+    for name, op in [
+        ("add", np.add),
+        ("subtract", np.subtract),
+        ("multiply", np.multiply),
+    ]:
+
+        # Benchmark, writing output to fresh DistributedArray
+        expected = op(par1["x"], par2["x"])
+
+        # Out as emtpy from arr1
+        out = arr1.empty_like()
+
+        # Ops with 2 DistributedArray writing to
+        # pre-instantiated DistributedArray
+        res = getattr(arr1, name)(arr2, out=out)
+        assert res is out
+        assert_allclose(out.asarray(), expected, rtol=1e-14)
+
+        # Ops with DistributedArray and scalar writing to
+        # pre-instantiated DistributedArray
+        out = arr1.empty_like()
+        getattr(arr1, name)(2.5, out=out)
+        assert_allclose(out.asarray(), op(par1["x"], 2.5), rtol=1e-14)
+
+        # Check input operands are untouched
+        assert_allclose(arr1.asarray(), par1["x"], rtol=1e-14)
+        assert_allclose(arr2.asarray(), par2["x"], rtol=1e-14)
+
+    # Out acting as second operand as well as output
+    out = arr2.copy()
+    arr1.subtract(out, out=out)
+    assert_allclose(out.asarray(), par1["x"] - par2["x"], rtol=1e-14)
+
+    # Negation
+    assert_allclose((-arr1).asarray(), -par1["x"], rtol=1e-14)
+
+    # In-place operators: check correctness and that they keep the storage
+    for opname, op in [
+        ("__iadd__", np.add),
+        ("__isub__", np.subtract),
+        ("__imul__", np.multiply),
+    ]:
+        for other, other_g in [(arr2, par2["x"]), (2.5, 2.5)]:
+            y = arr1.copy()
+            local = y.local_array
+            res = getattr(y, opname)(other)
+            assert res is y
+            assert y.local_array is local
+            assert_allclose(y.asarray(), op(par1["x"], other_g), rtol=1e-14)
+
+
+@pytest.mark.skipif(
+    int(os.environ.get("TEST_CUPY_PYLOPS", 0)) == 1, reason="Not CuPy enabled"
+)
+@pytest.mark.mpi(min_size=2)
+def test_distributed_out_cast():
+    """Check out= requiring an unsafe cast falls back to assignment (as before)"""
+    x = DistributedArray(
+        global_shape=(10 * MPI.COMM_WORLD.Get_size(),), dtype=np.float64, engine=backend
+    )
+    x[:] = 1.0
+    y = DistributedArray(
+        global_shape=x.global_shape, dtype=np.complex128, engine=backend
+    )
+    y[:] = 1.0 + 2.0j
+    with pytest.warns(Warning):
+        x.add(y, out=x)
+    assert_allclose(x.local_array, 2.0)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize(
+    "par1, par2", [(par6, par7), (par6b, par7b), (par8, par9), (par8b, par9b)]
+)
 def test_distributed_dot(par1, par2):
     """Test Distributed Dot product"""
-    arr1 = DistributedArray.to_dist(x=par1['x'], partition=par1['partition'], axis=par1['axis'])
-    arr2 = DistributedArray.to_dist(x=par2['x'], partition=par2['partition'], axis=par2['axis'])
-    assert_allclose(arr1.dot(arr2), np.dot(par1['x'].flatten(), par2['x'].flatten()), rtol=1e-14)
+    arr1 = DistributedArray.to_dist(
+        x=par1["x"], partition=par1["partition"], axis=par1["axis"]
+    )
+    arr2 = DistributedArray.to_dist(
+        x=par2["x"], partition=par2["partition"], axis=par2["axis"]
+    )
+    assert_allclose(
+        arr1.dot(arr2), np.dot(par1["x"].flatten(), par2["x"].flatten()), rtol=1e-14
+    )
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par4), (par4j), (par5), (par5j),
-                                 (par6), (par6b), (par7), (par7b),
-                                 (par8), (par8b), (par9), (par9b)])
+@pytest.mark.parametrize(
+    "par",
+    [
+        (par4),
+        (par4j),
+        (par5),
+        (par5j),
+        (par6),
+        (par6b),
+        (par7),
+        (par7b),
+        (par8),
+        (par8b),
+        (par9),
+        (par9b),
+    ],
+)
 def test_distributed_norm(par):
     """Test Distributed numpy.linalg.norm method"""
-    arr = DistributedArray.to_dist(x=par['x'], axis=par['axis'])
-    assert_allclose(arr.norm(ord=1, axis=par['norm_axis']),
-                    np.linalg.norm(par['x'], ord=1, axis=par['norm_axis']), rtol=1e-14)
-    assert_allclose(arr.norm(ord=np.inf, axis=par['norm_axis']),
-                    np.linalg.norm(par['x'], ord=np.inf, axis=par['norm_axis']), rtol=1e-14)
-    assert_allclose(arr.norm(), np.linalg.norm(par['x'].flatten()), rtol=1e-13)
+    arr = DistributedArray.to_dist(x=par["x"], axis=par["axis"])
+    assert_allclose(
+        arr.norm(ord=1, axis=par["norm_axis"]),
+        np.linalg.norm(par["x"], ord=1, axis=par["norm_axis"]),
+        rtol=1e-14,
+    )
+    assert_allclose(
+        arr.norm(ord=np.inf, axis=par["norm_axis"]),
+        np.linalg.norm(par["x"], ord=np.inf, axis=par["norm_axis"]),
+        rtol=1e-14,
+    )
+    assert_allclose(arr.norm(), np.linalg.norm(par["x"].flatten()), rtol=1e-13)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par4), (par4j)])
+def test_distributed_norm_dot_views(par):
+    """Check 2-norm and dot do not modify (or depend on copies of) local arrays"""
+    x = DistributedArray.to_dist(x=par["x"])
+    x_before = x.local_array.copy()
+    assert_allclose(x.norm(), np.linalg.norm(par["x"].ravel()), rtol=1e-12)
+    assert_allclose(x.dot(x, vdot=True), np.vdot(par["x"], par["x"]), rtol=1e-12)
+    assert_allclose(x.local_array, x_before)
+
+
+@pytest.mark.mpi(min_size=2)
+def test_distributed_norm_overflow():
+    """Check 2-norm of overflowing complex data is inf (not nan)"""
+    x = DistributedArray(
+        global_shape=(4 * MPI.COMM_WORLD.Get_size(),),
+        dtype=np.complex128,
+        engine=backend,
+    )
+    x[:] = (1.0 + 1.0j) * 1e160
+    assert np.isinf(x.norm())
 
 
 @pytest.mark.mpi(min_size=2)
@@ -231,31 +629,35 @@ def test_distributed_masked(par):
     size = MPI.COMM_WORLD.Get_size()
 
     # Exclude not handled cases
-    shape_axis = par['x'].shape[par['axis']]
-    print('shape_axis, size', shape_axis, size, shape_axis % size != 0)
+    shape_axis = par["x"].shape[par["axis"]]
     if shape_axis % size != 0:
-        pytest.skip(f"Array dimension to distributed ({shape_axis}) is not  "
-                    f"divisible by the number of processes ({size})...")
+        pytest.skip(
+            f"Array dimension to distributed ({shape_axis}) is not  "
+            f"divisible by the number of processes ({size})..."
+        )
     if size % 2 == 0:
         nsub = 2
     elif size % 3 == 0:
         nsub = 3
     else:
-        pytest.skip(f"Number of processes ({size}) is not divisible "
-                    "by 2 or 3...")
+        pytest.skip(f"Number of processes ({size}) is not divisible " "by 2 or 3...")
     subsize = max(1, MPI.COMM_WORLD.Get_size() // nsub)
     mask = np.repeat(np.arange(nsub), subsize)
 
     # Replicate x as required in masked arrays
-    x = par['x']
-    if par['axis'] != 0:
-        x = np.swapaxes(x, par['axis'], 0)
+    x = par["x"]
+    if par["axis"] != 0:
+        x = np.swapaxes(x, par["axis"], 0)
     for isub in range(1, nsub):
-        x[(x.shape[0] // nsub) * isub:(x.shape[0] // nsub) * (isub + 1)] = x[:x.shape[0] // nsub]
-    if par['axis'] != 0:
-        x = np.swapaxes(x, 0, par['axis'])
+        x[(x.shape[0] // nsub) * isub : (x.shape[0] // nsub) * (isub + 1)] = x[
+            : x.shape[0] // nsub
+        ]
+    if par["axis"] != 0:
+        x = np.swapaxes(x, 0, par["axis"])
 
-    arr = DistributedArray.to_dist(x=x, partition=par['partition'], mask=mask, axis=par['axis'])
+    arr = DistributedArray.to_dist(
+        x=x, partition=par["partition"], mask=mask, axis=par["axis"]
+    )
 
     # Global view
     xloc = arr.asarray()
@@ -264,226 +666,115 @@ def test_distributed_masked(par):
     # Global masked view
     xmaskedloc = arr.asarray(masked=True)
     xmasked_shape = list(x.shape)
-    xmasked_shape[par['axis']] = int(xmasked_shape[par['axis']] // nsub)
+    xmasked_shape[par["axis"]] = int(xmasked_shape[par["axis"]] // nsub)
     assert xmaskedloc.shape == tuple(xmasked_shape)
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par1, par2", [(par6, par7), (par6b, par7b),
-                                        (par8, par9), (par8b, par9b)])
+@pytest.mark.parametrize(
+    "par1, par2", [(par6, par7), (par6b, par7b), (par8, par9), (par8b, par9b)]
+)
 def test_distributed_maskeddot(par1, par2):
     """Test Distributed Dot product with masked array"""
     # Number of subcommunicators
     size = MPI.COMM_WORLD.Get_size()
 
     # Exclude not handled cases
-    shape_axis = par1['x'].shape[par1['axis']]
-    print('shape_axis, size', shape_axis, size, shape_axis % size != 0)
+    shape_axis = par1["x"].shape[par1["axis"]]
     if shape_axis % size != 0:
-        pytest.skip(f"Array dimension to distributed ({shape_axis}) is not  "
-                    f"divisible by the number of processes ({size})...")
+        pytest.skip(
+            f"Array dimension to distributed ({shape_axis}) is not  "
+            f"divisible by the number of processes ({size})..."
+        )
     if size % 2 == 0:
         nsub = 2
     elif size % 3 == 0:
         nsub = 3
     else:
-        pytest.skip(f"Number of processes ({size}) is not divisible "
-                    "by 2 or 3...")
+        pytest.skip(f"Number of processes ({size}) is not divisible " "by 2 or 3...")
     subsize = max(1, MPI.COMM_WORLD.Get_size() // nsub)
     mask = np.repeat(np.arange(nsub), subsize)
 
     # Replicate x1 and x2 as required in masked arrays
-    x1, x2 = par1['x'], par2['x']
-    if par1['axis'] != 0:
-        x1 = np.swapaxes(x1, par1['axis'], 0)
+    x1, x2 = par1["x"], par2["x"]
+    if par1["axis"] != 0:
+        x1 = np.swapaxes(x1, par1["axis"], 0)
     for isub in range(1, nsub):
-        x1[(x1.shape[0] // nsub) * isub:(x1.shape[0] // nsub) * (isub + 1)] = x1[:x1.shape[0] // nsub]
-    if par1['axis'] != 0:
-        x1 = np.swapaxes(x1, 0, par1['axis'])
-    if par2['axis'] != 0:
-        x2 = np.swapaxes(x2, par2['axis'], 0)
+        x1[(x1.shape[0] // nsub) * isub : (x1.shape[0] // nsub) * (isub + 1)] = x1[
+            : x1.shape[0] // nsub
+        ]
+    if par1["axis"] != 0:
+        x1 = np.swapaxes(x1, 0, par1["axis"])
+    if par2["axis"] != 0:
+        x2 = np.swapaxes(x2, par2["axis"], 0)
     for isub in range(1, nsub):
-        x2[(x2.shape[0] // nsub) * isub:(x2.shape[0] // nsub) * (isub + 1)] = x2[:x2.shape[0] // nsub]
-    if par2['axis'] != 0:
-        x2 = np.swapaxes(x2, 0, par2['axis'])
+        x2[(x2.shape[0] // nsub) * isub : (x2.shape[0] // nsub) * (isub + 1)] = x2[
+            : x2.shape[0] // nsub
+        ]
+    if par2["axis"] != 0:
+        x2 = np.swapaxes(x2, 0, par2["axis"])
 
-    arr1 = DistributedArray.to_dist(x=x1, partition=par1['partition'], mask=mask, axis=par1['axis'])
-    arr2 = DistributedArray.to_dist(x=x2, partition=par2['partition'], mask=mask, axis=par2['axis'])
-    assert_allclose(arr1.dot(arr2), np.dot(x1.flatten(), x2.flatten()) / nsub, rtol=1e-14)
+    arr1 = DistributedArray.to_dist(
+        x=x1, partition=par1["partition"], mask=mask, axis=par1["axis"]
+    )
+    arr2 = DistributedArray.to_dist(
+        x=x2, partition=par2["partition"], mask=mask, axis=par2["axis"]
+    )
+    assert_allclose(
+        arr1.dot(arr2), np.dot(x1.flatten(), x2.flatten()) / nsub, rtol=1e-14
+    )
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par6), (par6b), (par7), (par7b),
-                                 (par8), (par8b), (par9), (par9b)])
+@pytest.mark.parametrize(
+    "par", [(par6), (par6b), (par7), (par7b), (par8), (par8b), (par9), (par9b)]
+)
 def test_distributed_maskednorm(par):
     """Test Distributed numpy.linalg.norm method with masked array"""
     # Number of subcommunicators
     size = MPI.COMM_WORLD.Get_size()
 
     # Exclude not handled cases
-    shape_axis = par['x'].shape[par['axis']]
-    print('shape_axis, size', shape_axis, size, shape_axis % size != 0)
+    shape_axis = par["x"].shape[par["axis"]]
     if shape_axis % size != 0:
-        pytest.skip(f"Array dimension to distributed ({shape_axis}) is not  "
-                    f"divisible by the number of processes ({size})...")
+        pytest.skip(
+            f"Array dimension to distributed ({shape_axis}) is not  "
+            f"divisible by the number of processes ({size})..."
+        )
     if size % 2 == 0:
         nsub = 2
     elif size % 3 == 0:
         nsub = 3
     else:
-        pytest.skip(f"Number of processes ({size}) is not divisible "
-                    "by 2 or 3...")
+        pytest.skip(f"Number of processes ({size}) is not divisible " "by 2 or 3...")
     subsize = max(1, MPI.COMM_WORLD.Get_size() // nsub)
     mask = np.repeat(np.arange(nsub), subsize)
     # Replicate x as required in masked arrays
-    x = par['x']
-    if par['axis'] != 0:
-        x = np.swapaxes(x, par['axis'], 0)
+    x = par["x"]
+    if par["axis"] != 0:
+        x = np.swapaxes(x, par["axis"], 0)
     for isub in range(1, nsub):
-        x[(x.shape[0] // nsub) * isub:(x.shape[0] // nsub) * (isub + 1)] = x[:x.shape[0] // nsub]
-    if par['axis'] != 0:
-        x = np.swapaxes(x, 0, par['axis'])
-    arr = DistributedArray.to_dist(x=x, mask=mask, axis=par['axis'])
+        x[(x.shape[0] // nsub) * isub : (x.shape[0] // nsub) * (isub + 1)] = x[
+            : x.shape[0] // nsub
+        ]
+    if par["axis"] != 0:
+        x = np.swapaxes(x, 0, par["axis"])
+    arr = DistributedArray.to_dist(x=x, mask=mask, axis=par["axis"])
 
     assert_allclose(
-        arr.norm(ord=1, axis=par['norm_axis']),
-        np.linalg.norm(par['x'], ord=1, axis=par['norm_axis']) / (nsub if par['axis'] == par['norm_axis'] else 1),
-        rtol=1e-14
+        arr.norm(ord=1, axis=par["norm_axis"]),
+        np.linalg.norm(par["x"], ord=1, axis=par["norm_axis"])
+        / (nsub if par["axis"] == par["norm_axis"] else 1),
+        rtol=1e-14,
     )
     assert_allclose(
-        arr.norm(ord=2, axis=par['norm_axis']),
-        np.linalg.norm(par['x'], ord=2, axis=par['norm_axis']) / (np.sqrt(nsub) if par['axis'] == par['norm_axis'] else 1),
-        rtol=1e-13
+        arr.norm(ord=2, axis=par["norm_axis"]),
+        np.linalg.norm(par["x"], ord=2, axis=par["norm_axis"])
+        / (np.sqrt(nsub) if par["axis"] == par["norm_axis"] else 1),
+        rtol=1e-13,
     )
     assert_allclose(
-        arr.norm(ord=np.inf, axis=par['norm_axis']),
-        np.linalg.norm(par['x'], ord=np.inf, axis=par['norm_axis']),
-        rtol=1e-14
+        arr.norm(ord=np.inf, axis=par["norm_axis"]),
+        np.linalg.norm(par["x"], ord=np.inf, axis=par["norm_axis"]),
+        rtol=1e-14,
     )
-
-
-@pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par1, par2", [(par4, par5), (par4j, par5j)])
-def test_distributed_out(par1, par2):
-    """Arithmetic with out= and in-place operators"""
-    x1 = DistributedArray.to_dist(x=par1['x'])
-    x2 = DistributedArray.to_dist(x=par2['x'])
-    for name, op in [('add', np.add), ('subtract', np.subtract),
-                     ('multiply', np.multiply)]:
-        expected = op(par1['x'], par2['x'])
-        # array operand
-        out = x1.empty_like()
-        res = getattr(x1, name)(x2, out=out)
-        assert res is out
-        assert_allclose(out.asarray(), expected, rtol=1e-14)
-        # scalar operand
-        out = x1.empty_like()
-        getattr(x1, name)(2.5, out=out)
-        assert_allclose(out.asarray(), op(par1['x'], 2.5), rtol=1e-14)
-        # operands untouched
-        assert_allclose(x1.asarray(), par1['x'], rtol=1e-14)
-        assert_allclose(x2.asarray(), par2['x'], rtol=1e-14)
-    # out aliasing the second operand
-    out = x2.copy()
-    x1.subtract(out, out=out)
-    assert_allclose(out.asarray(), par1['x'] - par2['x'], rtol=1e-14)
-    # negation
-    assert_allclose((-x1).asarray(), -par1['x'], rtol=1e-14)
-    # in-place operators keep the storage
-    for opname, op in [('__iadd__', np.add), ('__isub__', np.subtract),
-                       ('__imul__', np.multiply)]:
-        for other, other_g in [(x2, par2['x']), (2.5, 2.5)]:
-            y = x1.copy()
-            local = y.local_array
-            res = getattr(y, opname)(other)
-            assert res is y
-            assert y.local_array is local
-            assert_allclose(y.asarray(), op(par1['x'], other_g), rtol=1e-14)
-
-
-@pytest.mark.skipif(
-    int(os.environ.get("TEST_CUPY_PYLOPS", 0)) == 1, reason="Not CuPy enabled"
-)
-@pytest.mark.mpi(min_size=2)
-def test_distributed_out_cast():
-    """out= requiring an unsafe cast falls back to assignment (as before)"""
-    x = DistributedArray(global_shape=(10 * MPI.COMM_WORLD.Get_size(),),
-                         dtype=np.float64, engine=backend)
-    x[:] = 1.0
-    y = DistributedArray(global_shape=x.global_shape,
-                         dtype=np.complex128, engine=backend)
-    y[:] = 1.0 + 2.0j
-    with pytest.warns(Warning):
-        x.add(y, out=x)
-    assert_allclose(x.local_array, 2.0)
-
-
-@pytest.mark.mpi(min_size=2)
-def test_distributed_like_no_collectives():
-    """Result arrays reuse communicator and cached local shapes"""
-    size = MPI.COMM_WORLD.Get_size()
-    if size % 2 != 0:
-        pytest.skip("Number of processes is not divisible by 2")
-    mask = np.repeat(np.arange(2), size // 2)
-    x = DistributedArray(global_shape=(4 * size, 3), mask=mask,
-                         engine=backend)
-    x[:] = 1.0
-    _ = x.local_shapes
-    for arr in [x + x, x - x, x * x, x * 2.0, -x, x.copy(), x.conj(),
-                x.zeros_like(), x.empty_like()]:
-        assert arr.sub_comm is x.sub_comm
-        assert arr.mask is x.mask
-        assert arr.local_shapes is x.local_shapes
-        assert arr.local_shape == x.local_shape
-
-
-@pytest.mark.mpi(min_size=2)
-def test_distributed_broadcast_math():
-    """Arithmetic on BROADCAST arrays is equal on every rank"""
-    xg = np.asarray(npp.random.default_rng(42).standard_normal((20, 7)))
-    for part in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
-        x = DistributedArray.to_dist(x=xg, partition=part)
-        y = DistributedArray.to_dist(x=2 * xg, partition=part)
-        for res, expected in [(x + y, 3 * xg), (y - x, xg), (x * y, 2 * xg * xg),
-                              (-x, -xg)]:
-            assert res.partition is part
-            assert_allclose(res.local_array, expected, rtol=1e-14)
-        x += y
-        assert_allclose(x.local_array, 3 * xg, rtol=1e-14)
-        assert_allclose(x.dot(y), np.sum(3 * xg * 2 * xg), rtol=1e-12)
-
-
-@pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par4), (par4j)])
-def test_distributed_norm_dot_views(par):
-    """2-norm and dot do not modify (or depend on copies of) local arrays"""
-    x = DistributedArray.to_dist(x=par['x'])
-    before = x.local_array.copy()
-    assert_allclose(x.norm(), np.linalg.norm(par['x'].ravel()), rtol=1e-12)
-    assert_allclose(x.dot(x, vdot=True), np.vdot(par['x'], par['x']), rtol=1e-12)
-    assert_allclose(x.local_array, before)
-
-
-@pytest.mark.mpi(min_size=2)
-def test_distributed_norm_overflow():
-    """2-norm of overflowing complex data is inf (not nan)"""
-    x = DistributedArray(global_shape=(4 * MPI.COMM_WORLD.Get_size(),),
-                         dtype=np.complex128, engine=backend)
-    x[:] = (1.0 + 1.0j) * 1e160
-    assert np.isinf(x.norm())
-
-
-@pytest.mark.mpi(min_size=2)
-def test_distributed_like_checks():
-    """_like uses the dtype of local_array and checks its shape"""
-    x = DistributedArray(global_shape=(4 * MPI.COMM_WORLD.Get_size(), 3),
-                         dtype=np.float64, engine=backend)
-    # dtype of local_array wins over dtype
-    y = x._like(local_array=np.zeros(x.local_shape, dtype=np.complex64),
-                dtype=np.float64)
-    assert y.dtype == np.complex64
-    # dtype is used when allocating
-    assert x._like(dtype=np.float32).local_array.dtype == np.float32
-    assert x._like().local_array.dtype == np.float64
-    with pytest.raises(ValueError, match="expected"):
-        x._like(local_array=np.zeros((x.local_shape[0] + 1, 3)))
