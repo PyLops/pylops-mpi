@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import numpy as np
 from mpi4py import MPI
 from pylops.basicoperators import SecondDerivative
