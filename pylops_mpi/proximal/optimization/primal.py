@@ -12,6 +12,7 @@ from pylops.utils.typing import NDArray
 from pylops_mpi import DistributedArray, StackedDistributedArray
 from pylops_mpi.basicoperators import MPIStackedVStack
 from pylops_mpi.optimization.basic import cgls
+from pylops_mpi.optimization.utils import first_distarray
 from pylops_mpi.proximal.ProxOperator import MPIProxOperator
 
 # need to check pyproximal version since _x0z0_init moved from primal to cls_primal
@@ -23,7 +24,7 @@ else:
     from pyproximal.optimization.cls_primal import _x0z0_init
 
 if TYPE_CHECKING:
-    from pylops_mpi.linearoperator import MPILinearOperator
+    from pylops_mpi.LinearOperator import MPILinearOperator
 
 
 def ProximalGradient(
@@ -182,9 +183,7 @@ def ProximalGradient(
         # show iteration logger
         if show:
             if iiter < 10 or niter - iiter < 10 or iiter % (niter // 10) == 0:
-                xprint = (
-                    x.distarrays[0] if isinstance(x, StackedDistributedArray) else x
-                )
+                xprint = first_distarray(x)
                 if tol is None:
                     pf, pg = proxf(x), proxg(x)
                     pfg = pf + np.sum(epsg[iiter] * pg)

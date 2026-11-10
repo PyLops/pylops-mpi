@@ -8,21 +8,23 @@ from pylops.utils.backend import get_array_module, to_numpy
 from pylops.utils.typing import NDArray
 
 from pylops_mpi import DistributedArray, StackedDistributedArray
+from pylops_mpi.optimization.utils import first_distarray
 from pylops_mpi.proximal.ProxOperator import MPIProxOperator
 
 if TYPE_CHECKING:
-    from pylops_mpi.linearoperator import MPILinearOperator
+    from pylops_mpi.LinearOperator import MPILinearOperator
+    from pylops_mpi.StackedLinearOperator import MPIStackedLinearOperator
 
 
 def PrimalDual(
     proxf: MPIProxOperator,
     proxg: MPIProxOperator,
-    A: "MPILinearOperator",
+    A: "MPILinearOperator | MPIStackedLinearOperator",
     x0: DistributedArray | StackedDistributedArray,
     y0: DistributedArray | StackedDistributedArray,
     tau: float | NDArray,
     mu: float | NDArray,
-    z: DistributedArray | None = None,
+    z: DistributedArray | StackedDistributedArray | None = None,
     theta: float = 1.0,
     niter: int = 10,
     gfirst: bool = True,
@@ -65,11 +67,11 @@ def PrimalDual(
 
     Parameters
     ----------
-    proxf : :obj:`pyproximal.ProxOperator`
+    proxf : :obj:`pylops_mpi.proximal.MPIProxOperator`
         Proximal operator of f function
-    proxg : :obj:`pyproximal.ProxOperator`
+    proxg : :obj:`pylops_mpi.proximal.MPIProxOperator`
         Proximal operator of g function
-    A : :obj:`pylops.LinearOperator`
+    A : :obj:`pylops_mpi.MPILinearOperator` or :obj:`pylops_mpi.MPIStackedLinearOperator`
         Linear operator of g
     x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
         Initial vector
@@ -184,9 +186,7 @@ def PrimalDual(
                 callback(x)
         if show:
             if iiter < 10 or niter - iiter < 10 or iiter % (niter // 10) == 0:
-                xprint = (
-                    x.distarrays[0] if isinstance(x, StackedDistributedArray) else x
-                )
+                xprint = first_distarray(x)
                 pf, pg = proxf(x), proxg(A.matvec(x))
                 pf = 0.0 if isinstance(pf, bool) else pf
                 pg = 0.0 if isinstance(pg, bool) else pg
