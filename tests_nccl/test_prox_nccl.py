@@ -377,7 +377,12 @@ def test_simplex(par):
 
     if rank == 0:
         simplex = Simplex(
-            ndim * par["n"], radius, dims=(ndim, par["n"]), axis=0, engine="cuda"
+            ndim * par["n"],
+            radius,
+            dims=(ndim, par["n"]),
+            axis=0,
+            engine="cuda",
         )
         prox_np = simplex.prox(x_global.ravel(), 0.1)
-        assert_allclose(prox.get(), prox_np.get(), rtol=1e-12)
+        # tolerances selected in line with ftol/xtol in Simplex
+        assert_allclose(prox.get(), prox_np.get(), rtol=1e-6, atol=1e-7)

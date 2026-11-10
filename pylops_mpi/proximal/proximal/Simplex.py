@@ -8,6 +8,7 @@ from pyproximal.proximal import Simplex
 from pyproximal.ProxOperator import _check_tau
 
 from pylops_mpi import DistributedArray, Partition, StackedDistributedArray
+from pylops_mpi.DistributedArray import to_scalar
 from pylops_mpi.proximal import MPIProxOperator
 
 
@@ -96,7 +97,7 @@ class MPISimplex(MPIProxOperator):
                 op=MPI.LAND,
                 engine=x0.engine,
             )
-            return bool(c.item())
+            return bool(to_scalar(c))
         return bool(clocal)
 
     @_check_tau

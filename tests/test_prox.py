@@ -414,7 +414,11 @@ def test_simplex(par):
     # each column (same index across the ndim arrays) is
     # projected onto the simplex
     nloc = x[0].local_shape[0]
-    simplexd = MPISimplex(dims=(ndim, nloc), radius=radius)
+    simplexd = MPISimplex(
+        dims=(ndim, nloc),
+        radius=radius,
+        engine="numba" if backend == "numpy" else "cuda",
+    )
 
     prox = simplexd.prox(x, 0.1)
     c_in = simplexd(x)
@@ -424,6 +428,13 @@ def test_simplex(par):
     assert c_out
 
     if rank == 0:
-        simplex = Simplex(ndim * par["n"], radius, dims=(ndim, par["n"]), axis=0)
+        simplex = Simplex(
+            ndim * par["n"],
+            radius,
+            dims=(ndim, par["n"]),
+            axis=0,
+            engine="numba" if backend == "numpy" else "cuda",
+        )
         prox_np = simplex.prox(x_global.ravel(), 0.1)
-        assert_allclose(prox, prox_np, rtol=1e-12)
+        # tolerances selected in line with ftol/xtol in Simplex
+        assert_allclose(prox, prox_np, rtol=1e-6, atol=1e-7)
