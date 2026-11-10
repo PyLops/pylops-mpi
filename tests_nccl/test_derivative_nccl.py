@@ -5,16 +5,16 @@
 This file employs the same test sets as test_derivative under NCCL environment
 """
 
-import numpy as np
 import cupy as cp
+import numpy as np
+import pylops
+import pytest
 from mpi4py import MPI
 from numpy.testing import assert_allclose
-import pytest
 
-import pylops
 import pylops_mpi
-from pylops_mpi.utils.dottest import dottest
 from pylops_mpi.utils._nccl import initialize_nccl_comm
+from pylops_mpi.utils.dottest import dottest
 
 nccl_comm = initialize_nccl_comm()
 
@@ -43,7 +43,7 @@ par1j = {
     "dz": 1.0,
     "edge": False,
     "dtype": np.complex128,
-    "partition": pylops_mpi.Partition.SCATTER
+    "partition": pylops_mpi.Partition.SCATTER,
 }
 
 par1e = {
@@ -75,7 +75,7 @@ par2j = {
     "dz": 1.0,
     "edge": False,
     "dtype": np.complex128,
-    "partition": pylops_mpi.Partition.SCATTER
+    "partition": pylops_mpi.Partition.SCATTER,
 }
 
 par2e = {
@@ -107,7 +107,7 @@ par3j = {
     "dz": 0.4,
     "edge": True,
     "dtype": np.complex128,
-    "partition": pylops_mpi.Partition.SCATTER
+    "partition": pylops_mpi.Partition.SCATTER,
 }
 
 par3e = {
@@ -139,7 +139,7 @@ par4j = {
     "dz": 0.4,
     "edge": True,
     "dtype": np.complex128,
-    "partition": pylops_mpi.Partition.SCATTER
+    "partition": pylops_mpi.Partition.SCATTER,
 }
 
 par4e = {
@@ -151,6 +151,42 @@ par4e = {
 }
 
 par5 = {
+    "n": (120, 101),
+    "axes": (0, 1),
+    "weights": (0.7, 0.7),
+    "sampling": (1, 1),
+    "edge": False,
+    "dtype": np.float64,
+}
+
+par5e = {
+    "n": (120, 101),
+    "axes": (-1, -2),
+    "weights": (0.7, 0.7),
+    "sampling": (1, 1),
+    "edge": True,
+    "dtype": np.float64,
+}
+
+par6 = {
+    "n": (79, 60),
+    "axes": (0, 1),
+    "weights": (1.0, 1.0),
+    "sampling": (0.4, 0.4),
+    "edge": False,
+    "dtype": np.float64,
+}
+
+par6e = {
+    "n": (79, 60),
+    "axes": (-1, -2),
+    "weights": (1.0, 1.0),
+    "sampling": (0.4, 0.4),
+    "edge": True,
+    "dtype": np.float64,
+}
+
+par7 = {
     "n": (120, 101, 60),
     "axes": (0, 1, 2),
     "weights": (0.7, 0.7, 0.7),
@@ -159,7 +195,7 @@ par5 = {
     "dtype": np.float64,
 }
 
-par5e = {
+par7e = {
     "n": (120, 101, 60),
     "axes": (-1, -2, -3),
     "weights": (0.7, 0.7, 0.7),
@@ -168,19 +204,19 @@ par5e = {
     "dtype": np.float64,
 }
 
-par6 = {
+par8 = {
     "n": (79, 60, 101),
     "axes": (0, 1, 2),
-    "weights": (1, 1, 1),
+    "weights": (1.0, 1.0, 1.0),
     "sampling": (0.4, 0.4, 0.4),
     "edge": False,
     "dtype": np.float64,
 }
 
-par6e = {
+par8e = {
     "n": (79, 60, 101),
     "axes": (-1, -2, -3),
-    "weights": (1, 1, 1),
+    "weights": (1.0, 1.0, 1.0),
     "sampling": (0.4, 0.4, 0.4),
     "edge": True,
     "dtype": np.float64,
@@ -188,9 +224,27 @@ par6e = {
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par1b), (par1j), (par1e), (par2), (par2b),
-                                 (par2j), (par2e), (par3), (par3b), (par3j), (par3e),
-                                 (par4), (par4b), (par4j), (par4e)])
+@pytest.mark.parametrize(
+    "par",
+    [
+        (par1),
+        (par1b),
+        (par1j),
+        (par1e),
+        (par2),
+        (par2b),
+        (par2j),
+        (par2e),
+        (par3),
+        (par3b),
+        (par3j),
+        (par3e),
+        (par4),
+        (par4b),
+        (par4j),
+        (par4e),
+    ],
+)
 def test_first_derivative_forward_nccl(par):
     """MPIFirstDerivative operator (forward stencil)"""
     Fop_MPI = pylops_mpi.MPIFirstDerivative(
@@ -236,9 +290,27 @@ def test_first_derivative_forward_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par1b), (par1j), (par1e), (par2), (par2b),
-                                 (par2j), (par2e), (par3), (par3b), (par3j), (par3e),
-                                 (par4), (par4b), (par4j), (par4e)])
+@pytest.mark.parametrize(
+    "par",
+    [
+        (par1),
+        (par1b),
+        (par1j),
+        (par1e),
+        (par2),
+        (par2b),
+        (par2j),
+        (par2e),
+        (par3),
+        (par3b),
+        (par3j),
+        (par3e),
+        (par4),
+        (par4b),
+        (par4j),
+        (par4e),
+    ],
+)
 def test_first_derivative_backward_nccl(par):
     """MPIFirstDerivative operator (backward stencil)"""
     Fop_MPI = pylops_mpi.MPIFirstDerivative(
@@ -283,9 +355,27 @@ def test_first_derivative_backward_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par1b), (par1j), (par1e), (par2), (par2b),
-                                 (par2j), (par2e), (par3), (par3b), (par3j), (par3e),
-                                 (par4), (par4b), (par4j), (par4e)])
+@pytest.mark.parametrize(
+    "par",
+    [
+        (par1),
+        (par1b),
+        (par1j),
+        (par1e),
+        (par2),
+        (par2b),
+        (par2j),
+        (par2e),
+        (par3),
+        (par3b),
+        (par3j),
+        (par3e),
+        (par4),
+        (par4b),
+        (par4j),
+        (par4e),
+    ],
+)
 def test_first_derivative_centered_nccl(par):
     """MPIFirstDerivative operator (centered stencil)"""
     for order in [3, 5]:
@@ -333,9 +423,27 @@ def test_first_derivative_centered_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par1b), (par1j), (par1e), (par2), (par2b),
-                                 (par2j), (par2e), (par3), (par3b), (par3j), (par3e),
-                                 (par4), (par4b), (par4j), (par4e)])
+@pytest.mark.parametrize(
+    "par",
+    [
+        (par1),
+        (par1b),
+        (par1j),
+        (par1e),
+        (par2),
+        (par2b),
+        (par2j),
+        (par2e),
+        (par3),
+        (par3b),
+        (par3j),
+        (par3e),
+        (par4),
+        (par4b),
+        (par4j),
+        (par4e),
+    ],
+)
 def test_second_derivative_forward_nccl(par):
     """MPISecondDerivative operator (forward stencil)"""
     Sop_MPI = pylops_mpi.basicoperators.MPISecondDerivative(
@@ -380,9 +488,27 @@ def test_second_derivative_forward_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par1b), (par1j), (par1e), (par2), (par2b),
-                                 (par2j), (par2e), (par3), (par3b), (par3j), (par3e),
-                                 (par4), (par4b), (par4j), (par4e)])
+@pytest.mark.parametrize(
+    "par",
+    [
+        (par1),
+        (par1b),
+        (par1j),
+        (par1e),
+        (par2),
+        (par2b),
+        (par2j),
+        (par2e),
+        (par3),
+        (par3b),
+        (par3j),
+        (par3e),
+        (par4),
+        (par4b),
+        (par4j),
+        (par4e),
+    ],
+)
 def test_second_derivative_backward_nccl(par):
     """MPISecondDerivative operator (backward stencil)"""
     Sop_MPI = pylops_mpi.basicoperators.MPISecondDerivative(
@@ -427,9 +553,27 @@ def test_second_derivative_backward_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par1b), (par1j), (par1e), (par2), (par2b),
-                                 (par2j), (par2e), (par3), (par3b), (par3j), (par3e),
-                                 (par4), (par4b), (par4j), (par4e)])
+@pytest.mark.parametrize(
+    "par",
+    [
+        (par1),
+        (par1b),
+        (par1j),
+        (par1e),
+        (par2),
+        (par2b),
+        (par2j),
+        (par2e),
+        (par3),
+        (par3b),
+        (par3j),
+        (par3e),
+        (par4),
+        (par4b),
+        (par4j),
+        (par4e),
+    ],
+)
 def test_second_derivative_centered_nccl(par):
     """MPISecondDerivative operator (centered stencil)"""
     Sop_MPI = pylops_mpi.basicoperators.MPISecondDerivative(
@@ -474,7 +618,9 @@ def test_second_derivative_centered_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par5), (par5e), (par6), (par6e)])
+@pytest.mark.parametrize(
+    "par", [(par5), (par5e), (par6), (par6e), (par7), (par7e), (par8), (par8e)]
+)
 def test_laplacian_nccl(par):
     """MPILaplacian Operator"""
     for kind in ["forward", "backward", "centered"]:
@@ -504,6 +650,17 @@ def test_laplacian_nccl(par):
         # Dot test
         dottest(Lop_MPI, x, y_dist, np.prod(par["n"]), np.prod(par["n"]))
 
+        # Check that weights are not applied when equal to 1.0
+        if par["weights"][0] == 1.0:
+            assert isinstance(
+                Lop_MPI.Op.args[0]
+                if len(par["weights"]) == 2
+                else Lop_MPI.Op.args[0].args[0],
+                pylops_mpi.basicoperators.MPISecondDerivative
+                if Lop_MPI.axes[0] == 0
+                else pylops_mpi.basicoperators.MPIBlockDiag,
+            )
+
         if rank == 0:
             Lop = pylops.Laplacian(
                 dims=par["n"],
@@ -522,7 +679,9 @@ def test_laplacian_nccl(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par5), (par5e), (par6), (par6e)])
+@pytest.mark.parametrize(
+    "par", [(par5), (par5e), (par6), (par6e), (par7), (par7e), (par8), (par8e)]
+)
 def test_gradient_nccl(par):
     """MPIGradient Operator"""
     for kind in ["forward", "backward", "centered"]:
@@ -569,8 +728,9 @@ def test_gradient_nccl(par):
             engine="cupy",
         )
         x_adj_dist3[:] = cp.random.normal(rank, 30, x_adj_dist3.local_shape)
+        x_adj = [x_adj_dist1, x_adj_dist2, x_adj_dist3]
         x_adj = pylops_mpi.StackedDistributedArray(
-            distarrays=[x_adj_dist1, x_adj_dist2, x_adj_dist3]
+            distarrays=x_adj[: len(par["sampling"])]
         )
         x_adj_global = x_adj.asarray()
         y_adj_dist = Gop_MPI.H @ x_adj
