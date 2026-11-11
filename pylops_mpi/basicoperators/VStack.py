@@ -1,18 +1,18 @@
-import numpy as np
-from scipy.sparse.linalg._interface import _get_dtype
-from mpi4py import MPI
-from typing import Sequence, Optional
+from typing import Optional, Sequence
 
+import numpy as np
+from mpi4py import MPI
 from pylops import LinearOperator
 from pylops.utils import DTypeLike
 from pylops.utils.backend import get_module
+from scipy.sparse.linalg._interface import _get_dtype
 
 from pylops_mpi import (
+    DistributedArray,
     MPILinearOperator,
     MPIStackedLinearOperator,
-    DistributedArray,
     Partition,
-    StackedDistributedArray
+    StackedDistributedArray,
 )
 from pylops_mpi.Distributed import DistributedMixIn
 from pylops_mpi.utils.decorators import reshaped
@@ -98,55 +98,68 @@ class MPIVStack(DistributedMixIn, MPILinearOperator):
 
     """
 
-    def __init__(self, ops: Sequence[LinearOperator],
-                 base_comm: MPI.Comm = MPI.COMM_WORLD,
-                 dtype: Optional[DTypeLike] = None):
+    def __init__(
+        self,
+        ops: Sequence[LinearOperator],
+        base_comm: MPI.Comm = MPI.COMM_WORLD,
+        dtype: Optional[DTypeLike] = None,
+    ):
         self.ops = ops
         nops = np.zeros(len(self.ops), dtype=np.int64)
         for iop, oper in enumerate(self.ops):
             nops[iop] = oper.shape[0]
         self.nops = nops.sum()
-        self.local_shapes_n = base_comm.allgather((self.nops, ))
+        self.local_shapes_n = base_comm.allgather((self.nops,))
         mops = [oper.shape[1] for oper in self.ops]
         mops = np.concatenate(base_comm.allgather(mops), axis=0)
         if len(set(mops)) > 1:
             raise ValueError("Operators have different number of columns")
         self.mops = int(mops[0])
         self.nnops = np.insert(np.cumsum(nops), 0, 0)
-        dimsd = (base_comm.allreduce(self.nops), )
-        dims = (self.mops, )
+        dimsd = (base_comm.allreduce(self.nops),)
+        dims = (self.mops,)
         dtype = _get_dtype(self.ops) if dtype is None else np.dtype(dtype)
         super().__init__(dims=dims, dimsd=dimsd, dtype=dtype, base_comm=base_comm)
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
-        ncp = get_module(x.engine)
         if x.partition not in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
-            raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
-                             f"Got  {x.partition} instead...")
+            raise ValueError(
+                f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
+                f"Got  {x.partition} instead..."
+            )
         # the output y should use NCCL if the operand x uses it
-        y = DistributedArray(global_shape=self.shape[0], base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl, local_shapes=self.local_shapes_n,
-                             engine=x.engine, dtype=self.dtype)
-        y1 = []
+        y = DistributedArray(
+            global_shape=self.shape[0],
+            base_comm=x.base_comm,
+            base_comm_nccl=x.base_comm_nccl,
+            local_shapes=self.local_shapes_n,
+            engine=x.engine,
+            dtype=self.dtype,
+        )
         for iop, oper in enumerate(self.ops):
-            y1.append(oper.matvec(x.local_array))
-        y[:] = ncp.concatenate(y1)
+            y.local_array[self.nnops[iop] : self.nnops[iop + 1]] = oper.matvec(
+                x.local_array
+            )
         return y
 
     @reshaped(forward=False, stacking=True)
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
-        y = DistributedArray(global_shape=self.shape[1],
-                             base_comm=x.base_comm,
-                             base_comm_nccl=x.base_comm_nccl,
-                             partition=Partition.BROADCAST,
-                             engine=x.engine,
-                             dtype=self.dtype)
-        y1 = []
+        y = DistributedArray(
+            global_shape=self.shape[1],
+            base_comm=x.base_comm,
+            base_comm_nccl=x.base_comm_nccl,
+            partition=Partition.BROADCAST,
+            engine=x.engine,
+            dtype=self.dtype,
+        )
+        y1 = ncp.zeros(self.mops, dtype=self.dtype)
         for iop, oper in enumerate(self.ops):
-            y1.append(oper.rmatvec(x.local_array[self.nnops[iop]: self.nnops[iop + 1]]))
-        y1 = ncp.sum(ncp.vstack(y1), axis=0)
-        y[:] = self._allreduce(x.base_comm, x.base_comm_nccl,
-                               y1, op=MPI.SUM, engine=x.engine)
+            # Accumulate the local adjoints
+            y1 += oper.rmatvec(x.local_array[self.nnops[iop] : self.nnops[iop + 1]])
+        y[:] = self._allreduce(
+            x.base_comm, x.base_comm_nccl, y1, op=MPI.SUM, engine=x.engine
+        )
         return y
 
 
@@ -178,14 +191,17 @@ class MPIStackedVStack(MPIStackedLinearOperator):
 
     """
 
-    def __init__(self, ops: Sequence[MPILinearOperator],
-                 base_comm: MPI.Comm = MPI.COMM_WORLD,
-                 dtype: Optional[DTypeLike] = None):
+    def __init__(
+        self,
+        ops: Sequence[MPILinearOperator],
+        base_comm: MPI.Comm = MPI.COMM_WORLD,
+        dtype: Optional[DTypeLike] = None,
+    ):
         self.ops = ops
         if len(set(op.shape[1] for op in ops)) > 1:
             raise ValueError("Operators have different number of columns")
-        dims = (ops[0].shape[1], )
-        dimsd = (int(sum(op.shape[0] for op in ops)), )
+        dims = (ops[0].shape[1],)
+        dimsd = (int(sum(op.shape[0] for op in ops)),)
         dtype = _get_dtype(self.ops) if dtype is None else np.dtype(dtype)
         super().__init__(dims=dims, dimsd=dimsd, dtype=dtype, base_comm=base_comm)
 
