@@ -32,11 +32,12 @@ jobs:
           $PIP install flake8 pytest setuptools-scm
           $PIP install -r requirements-dev.txt
           $PIP install cupy-cuda12x[ctk]
+          $PIP install numba-cuda[cu12]
           $PYTHON -m setuptools_scm
           $PIP install .
           EOF
           srun --account=yuxilab -n 1 -N 1 --gres=gpu:L40S:1 bash pylops_tests.sh
-      - name: Tests with pytest 
+      - name: Tests with pytest
         run: |
           export CUPY_PYLOPS=1; export TEST_CUPY_PYLOPS=1; export PYLOPS_MPI_CUDA_AWARE=0
           export PYTEST=".venv-pylops/bin/pytest tests/ --with-mpi"
@@ -69,7 +70,7 @@ jobs:
           $PIP install .
           EOF
           srun --account=yuxilab -n 1 -N 1 --gres=gpu:L40S:1 bash pylops_tests.sh
-      - name: Tests with pytest 
+      - name: Tests with pytest
         run: |
           export CUPY_PYLOPS=1;
           export PYTEST=".venv-pylops/bin/pytest tests_nccl/ --with-mpi"
