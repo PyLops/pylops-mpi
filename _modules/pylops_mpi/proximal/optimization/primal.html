@@ -480,6 +480,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi</span><span class="w"> </span><span class="kn">import</span> <span class="n">DistributedArray</span><span class="p">,</span> <span class="n">StackedDistributedArray</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.basicoperators</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPIStackedVStack</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.optimization.basic</span><span class="w"> </span><span class="kn">import</span> <span class="n">cgls</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.optimization.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">first_distarray</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.proximal.ProxOperator</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPIProxOperator</span>
 
 <span class="c1"># need to check pyproximal version since _x0z0_init moved from primal to cls_primal</span>
@@ -491,7 +492,7 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">pyproximal.optimization.cls_primal</span><span class="w"> </span><span class="kn">import</span> <span class="n">_x0z0_init</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.linearoperator</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPILinearOperator</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.LinearOperator</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPILinearOperator</span>
 
 
 <div class="viewcode-block" id="ProximalGradient">
@@ -499,7 +500,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">ProximalGradient</span><span class="p">(</span>
     <span class="n">proxf</span><span class="p">:</span> <span class="n">MPIProxOperator</span><span class="p">,</span>
     <span class="n">proxg</span><span class="p">:</span> <span class="n">MPIProxOperator</span><span class="p">,</span>
-    <span class="n">x0</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">,</span>
+    <span class="n">x0</span><span class="p">:</span> <span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span><span class="p">,</span>
     <span class="n">epsg</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
     <span class="n">tau</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">eta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
@@ -507,9 +508,10 @@
     <span class="n">niterback</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
     <span class="n">acceleration</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">DistributedArray</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span> <span class="o">|</span> <span class="n">StackedDistributedArray</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""Proximal gradient (optionally accelerated)</span>
 
 <span class="sd">    Solves the following minimization problem using (Accelerated) Proximal</span>
@@ -530,7 +532,7 @@
 <span class="sd">        Proximal operator of f function (must have ``grad`` implemented)</span>
 <span class="sd">    proxg : :obj:`pylops_mpi.proximal.MPIProxOperator`</span>
 <span class="sd">        Proximal operator of g function</span>
-<span class="sd">    x0 : :obj:`pylops_mpi.DistributedArray`</span>
+<span class="sd">    x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
 <span class="sd">        Initial vector</span>
 <span class="sd">    epsg : :obj:`float` or :obj:`numpy.ndarray`, optional</span>
 <span class="sd">        Scaling factor of g function. Can be a scalar</span>
@@ -560,7 +562,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    x : :obj:`pylops_mpi.DistributedArray`</span>
+<span class="sd">    x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`</span>
 <span class="sd">        Inverted model</span>
 
 <span class="sd">    Notes</span>
@@ -651,17 +653,14 @@
         <span class="c1"># show iteration logger</span>
         <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">iiter</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="ow">or</span> <span class="n">niter</span> <span class="o">-</span> <span class="n">iiter</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="ow">or</span> <span class="n">iiter</span> <span class="o">%</span> <span class="p">(</span><span class="n">niter</span> <span class="o">//</span> <span class="mi">10</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">xprint</span> <span class="o">=</span> <span class="n">first_distarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">tol</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">pf</span><span class="p">,</span> <span class="n">pg</span> <span class="o">=</span> <span class="n">proxf</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">proxg</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
                     <span class="n">pfg</span> <span class="o">=</span> <span class="n">pf</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">epsg</span><span class="p">[</span><span class="n">iiter</span><span class="p">]</span> <span class="o">*</span> <span class="n">pg</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="n">msg</span> <span class="o">=</span> <span class="s2">"</span><span class="si">%6g</span><span class="s2">  </span><span class="si">%12.5e</span><span class="s2">  </span><span class="si">%10.3e</span><span class="s2">  </span><span class="si">%10.3e</span><span class="s2">  </span><span class="si">%10.3e</span><span class="s2">  </span><span class="si">%10.3e</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span>
                         <span class="n">iiter</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
-                        <span class="p">(</span>
-                            <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-                            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span>
-                            <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))</span>
-                        <span class="p">),</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">xprint</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span>
                         <span class="n">pf</span><span class="p">,</span>
                         <span class="n">pg</span><span class="p">,</span>
                         <span class="n">pfg</span><span class="p">,</span>
