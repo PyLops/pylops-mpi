@@ -15,10 +15,10 @@ else:
 
     backend = "numpy"
 import numpy as npp
-from mpi4py import MPI
-import pytest
-
 import pylops
+import pytest
+from mpi4py import MPI
+
 import pylops_mpi
 from pylops_mpi.utils.dottest import dottest
 
@@ -35,7 +35,7 @@ par1 = {
     "dz": 1.0,
     "edge": False,
     "dtype": np.float64,
-    "partition": pylops_mpi.Partition.SCATTER
+    "partition": pylops_mpi.Partition.SCATTER,
 }
 
 par1b = {
@@ -43,7 +43,7 @@ par1b = {
     "dz": 1.0,
     "edge": False,
     "dtype": np.float64,
-    "partition": pylops_mpi.Partition.BROADCAST
+    "partition": pylops_mpi.Partition.BROADCAST,
 }
 
 par1j = {
@@ -51,7 +51,7 @@ par1j = {
     "dz": 1.0,
     "edge": False,
     "dtype": np.complex128,
-    "partition": pylops_mpi.Partition.SCATTER
+    "partition": pylops_mpi.Partition.SCATTER,
 }
 
 par1e = {
@@ -59,7 +59,7 @@ par1e = {
     "dz": 1.0,
     "edge": True,
     "dtype": np.float64,
-    "partition": pylops_mpi.Partition.SCATTER
+    "partition": pylops_mpi.Partition.SCATTER,
 }
 
 par2 = {
@@ -67,7 +67,7 @@ par2 = {
     "dz": 1.0,
     "edge": False,
     "dtype": np.float64,
-    "partition": pylops_mpi.Partition.SCATTER
+    "partition": pylops_mpi.Partition.SCATTER,
 }
 
 par2b = {
@@ -75,7 +75,7 @@ par2b = {
     "dz": 1.0,
     "edge": False,
     "dtype": np.float64,
-    "partition": pylops_mpi.Partition.BROADCAST
+    "partition": pylops_mpi.Partition.BROADCAST,
 }
 
 par2j = {
@@ -83,7 +83,7 @@ par2j = {
     "dz": 1.0,
     "edge": False,
     "dtype": np.complex128,
-    "partition": pylops_mpi.Partition.SCATTER
+    "partition": pylops_mpi.Partition.SCATTER,
 }
 
 par2e = {
@@ -91,7 +91,7 @@ par2e = {
     "dz": 1.0,
     "edge": True,
     "dtype": np.float64,
-    "partition": pylops_mpi.Partition.SCATTER
+    "partition": pylops_mpi.Partition.SCATTER,
 }
 
 par3 = {
@@ -99,7 +99,7 @@ par3 = {
     "dz": 0.4,
     "edge": False,
     "dtype": np.float64,
-    "partition": pylops_mpi.Partition.SCATTER
+    "partition": pylops_mpi.Partition.SCATTER,
 }
 
 par3b = {
@@ -107,7 +107,7 @@ par3b = {
     "dz": 0.4,
     "edge": False,
     "dtype": np.float64,
-    "partition": pylops_mpi.Partition.BROADCAST
+    "partition": pylops_mpi.Partition.BROADCAST,
 }
 
 par3j = {
@@ -115,7 +115,7 @@ par3j = {
     "dz": 0.4,
     "edge": True,
     "dtype": np.complex128,
-    "partition": pylops_mpi.Partition.SCATTER
+    "partition": pylops_mpi.Partition.SCATTER,
 }
 
 par3e = {
@@ -123,7 +123,7 @@ par3e = {
     "dz": 0.4,
     "edge": True,
     "dtype": np.float64,
-    "partition": pylops_mpi.Partition.SCATTER
+    "partition": pylops_mpi.Partition.SCATTER,
 }
 
 par4 = {
@@ -131,7 +131,7 @@ par4 = {
     "dz": 0.4,
     "edge": False,
     "dtype": np.float64,
-    "partition": pylops_mpi.Partition.SCATTER
+    "partition": pylops_mpi.Partition.SCATTER,
 }
 
 par4b = {
@@ -139,7 +139,7 @@ par4b = {
     "dz": 0.4,
     "edge": False,
     "dtype": np.float64,
-    "partition": pylops_mpi.Partition.BROADCAST
+    "partition": pylops_mpi.Partition.BROADCAST,
 }
 
 par4j = {
@@ -147,7 +147,7 @@ par4j = {
     "dz": 0.4,
     "edge": True,
     "dtype": np.complex128,
-    "partition": pylops_mpi.Partition.SCATTER
+    "partition": pylops_mpi.Partition.SCATTER,
 }
 
 par4e = {
@@ -155,19 +155,55 @@ par4e = {
     "dz": 0.4,
     "edge": True,
     "dtype": np.float64,
-    "partition": pylops_mpi.Partition.SCATTER
+    "partition": pylops_mpi.Partition.SCATTER,
 }
 
 par5 = {
-    "n": (120, 101, 60),
-    "axes": (0, 1, 2),
-    "weights": (0.7, 0.7, 0.7),
-    "sampling": (1, 1, 1),
+    "n": (120, 101),
+    "axes": (0, 1),
+    "weights": (0.7, 0.7),
+    "sampling": (1, 1),
     "edge": False,
     "dtype": np.float64,
 }
 
 par5e = {
+    "n": (120, 101),
+    "axes": (-1, -2),
+    "weights": (0.7, 0.7),
+    "sampling": (1, 1),
+    "edge": True,
+    "dtype": np.float64,
+}
+
+par6 = {
+    "n": (79, 60),
+    "axes": (0, 1),
+    "weights": (1.0, 1.0),
+    "sampling": (0.4, 0.4),
+    "edge": False,
+    "dtype": np.float64,
+}
+
+par6e = {
+    "n": (79, 60),
+    "axes": (-1, -2),
+    "weights": (1.0, 1.0),
+    "sampling": (0.4, 0.4),
+    "edge": True,
+    "dtype": np.float64,
+}
+
+par7 = {
+    "n": (120, 101, 60),
+    "axes": (0, 1, 2),
+    "weights": (0.7, 0.7, 0.7),
+    "sampling": (1, 1, 1),
+    "edge": False,
+    "dtype": np.float64,
+}
+
+par7e = {
     "n": (120, 101, 60),
     "axes": (-1, -2, -3),
     "weights": (0.7, 0.7, 0.7),
@@ -176,19 +212,19 @@ par5e = {
     "dtype": np.float64,
 }
 
-par6 = {
+par8 = {
     "n": (79, 60, 101),
     "axes": (0, 1, 2),
-    "weights": (1, 1, 1),
+    "weights": (1.0, 1.0, 1.0),
     "sampling": (0.4, 0.4, 0.4),
     "edge": False,
     "dtype": np.float64,
 }
 
-par6e = {
+par8e = {
     "n": (79, 60, 101),
     "axes": (-1, -2, -3),
-    "weights": (1, 1, 1),
+    "weights": (1.0, 1.0, 1.0),
     "sampling": (0.4, 0.4, 0.4),
     "edge": True,
     "dtype": np.float64,
@@ -196,16 +232,42 @@ par6e = {
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par1b), (par1j), (par1e), (par2), (par2b),
-                                 (par2j), (par2e), (par3), (par3b), (par3j), (par3e),
-                                 (par4), (par4b), (par4j), (par4e)])
+@pytest.mark.parametrize(
+    "par",
+    [
+        (par1),
+        (par1b),
+        (par1j),
+        (par1e),
+        (par2),
+        (par2b),
+        (par2j),
+        (par2e),
+        (par3),
+        (par3b),
+        (par3j),
+        (par3e),
+        (par4),
+        (par4b),
+        (par4j),
+        (par4e),
+    ],
+)
 def test_first_derivative_forward(par):
     """MPIFirstDerivative operator (forward stencil)"""
-    Fop_MPI = pylops_mpi.MPIFirstDerivative(dims=par['nz'], sampling=par['dz'],
-                                            kind="forward", edge=par['edge'],
-                                            dtype=par['dtype'])
-    x = pylops_mpi.DistributedArray(global_shape=npp.prod(par['nz']), dtype=par['dtype'],
-                                    partition=par['partition'], engine=backend)
+    Fop_MPI = pylops_mpi.MPIFirstDerivative(
+        dims=par["nz"],
+        sampling=par["dz"],
+        kind="forward",
+        edge=par["edge"],
+        dtype=par["dtype"],
+    )
+    x = pylops_mpi.DistributedArray(
+        global_shape=npp.prod(par["nz"]),
+        dtype=par["dtype"],
+        partition=par["partition"],
+        engine=backend,
+    )
     x[:] = np.random.normal(rank, 10, x.local_shape)
     x_global = x.asarray()
     # Forward
@@ -215,13 +277,17 @@ def test_first_derivative_forward(par):
     y_adj_dist = Fop_MPI.H @ x
     y_adj = y_adj_dist.asarray()
     # Dot test
-    dottest(Fop_MPI, x, y_dist, npp.prod(par['nz']), npp.prod(par['nz']))
+    dottest(Fop_MPI, x, y_dist, npp.prod(par["nz"]), npp.prod(par["nz"]))
 
     if rank == 0:
-        Fop = pylops.FirstDerivative(dims=par['nz'], axis=0,
-                                     sampling=par['dz'],
-                                     kind="forward", edge=par['edge'],
-                                     dtype=par['dtype'])
+        Fop = pylops.FirstDerivative(
+            dims=par["nz"],
+            axis=0,
+            sampling=par["dz"],
+            kind="forward",
+            edge=par["edge"],
+            dtype=par["dtype"],
+        )
         assert Fop_MPI.shape == Fop.shape
         y_np = Fop @ x_global
         y_adj_np = Fop.H @ x_global
@@ -230,16 +296,42 @@ def test_first_derivative_forward(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par1b), (par1j), (par1e), (par2), (par2b),
-                                 (par2j), (par2e), (par3), (par3b), (par3j), (par3e),
-                                 (par4), (par4b), (par4j), (par4e)])
+@pytest.mark.parametrize(
+    "par",
+    [
+        (par1),
+        (par1b),
+        (par1j),
+        (par1e),
+        (par2),
+        (par2b),
+        (par2j),
+        (par2e),
+        (par3),
+        (par3b),
+        (par3j),
+        (par3e),
+        (par4),
+        (par4b),
+        (par4j),
+        (par4e),
+    ],
+)
 def test_first_derivative_backward(par):
     """MPIFirstDerivative operator (backward stencil)"""
-    Fop_MPI = pylops_mpi.MPIFirstDerivative(dims=par['nz'], sampling=par['dz'],
-                                            kind="backward", edge=par['edge'],
-                                            dtype=par['dtype'])
-    x = pylops_mpi.DistributedArray(global_shape=npp.prod(par['nz']), dtype=par['dtype'],
-                                    partition=par['partition'], engine=backend)
+    Fop_MPI = pylops_mpi.MPIFirstDerivative(
+        dims=par["nz"],
+        sampling=par["dz"],
+        kind="backward",
+        edge=par["edge"],
+        dtype=par["dtype"],
+    )
+    x = pylops_mpi.DistributedArray(
+        global_shape=npp.prod(par["nz"]),
+        dtype=par["dtype"],
+        partition=par["partition"],
+        engine=backend,
+    )
     x[:] = np.random.normal(rank, 10, x.local_shape)
     x_global = x.asarray()
     # Forward
@@ -249,13 +341,17 @@ def test_first_derivative_backward(par):
     y_adj_dist = Fop_MPI.H @ x
     y_adj = y_adj_dist.asarray()
     # Dot test
-    dottest(Fop_MPI, x, y_dist, npp.prod(par['nz']), npp.prod(par['nz']))
+    dottest(Fop_MPI, x, y_dist, npp.prod(par["nz"]), npp.prod(par["nz"]))
 
     if rank == 0:
-        Fop = pylops.FirstDerivative(dims=par['nz'], axis=0,
-                                     sampling=par['dz'],
-                                     kind="backward", edge=par['edge'],
-                                     dtype=par['dtype'])
+        Fop = pylops.FirstDerivative(
+            dims=par["nz"],
+            axis=0,
+            sampling=par["dz"],
+            kind="backward",
+            edge=par["edge"],
+            dtype=par["dtype"],
+        )
         assert Fop_MPI.shape == Fop.shape
         y_np = Fop @ x_global
         y_adj_np = Fop.H @ x_global
@@ -264,17 +360,44 @@ def test_first_derivative_backward(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par1b), (par1j), (par1e), (par2), (par2b),
-                                 (par2j), (par2e), (par3), (par3b), (par3j), (par3e),
-                                 (par4), (par4b), (par4j), (par4e)])
+@pytest.mark.parametrize(
+    "par",
+    [
+        (par1),
+        (par1b),
+        (par1j),
+        (par1e),
+        (par2),
+        (par2b),
+        (par2j),
+        (par2e),
+        (par3),
+        (par3b),
+        (par3j),
+        (par3e),
+        (par4),
+        (par4b),
+        (par4j),
+        (par4e),
+    ],
+)
 def test_first_derivative_centered(par):
     """MPIFirstDerivative operator (centered stencil)"""
     for order in [3, 5]:
-        Fop_MPI = pylops_mpi.MPIFirstDerivative(dims=par['nz'], sampling=par['dz'],
-                                                kind="centered", edge=par['edge'],
-                                                order=order, dtype=par['dtype'])
-        x = pylops_mpi.DistributedArray(global_shape=npp.prod(par['nz']), dtype=par['dtype'],
-                                        partition=par['partition'], engine=backend)
+        Fop_MPI = pylops_mpi.MPIFirstDerivative(
+            dims=par["nz"],
+            sampling=par["dz"],
+            kind="centered",
+            edge=par["edge"],
+            order=order,
+            dtype=par["dtype"],
+        )
+        x = pylops_mpi.DistributedArray(
+            global_shape=npp.prod(par["nz"]),
+            dtype=par["dtype"],
+            partition=par["partition"],
+            engine=backend,
+        )
         x[:] = np.random.normal(rank, 10, x.local_shape)
         x_global = x.asarray()
         # Forward
@@ -284,13 +407,18 @@ def test_first_derivative_centered(par):
         y_adj_dist = Fop_MPI.H @ x
         y_adj = y_adj_dist.asarray()
         # Dot test
-        dottest(Fop_MPI, x, y_dist, npp.prod(par['nz']), npp.prod(par['nz']))
+        dottest(Fop_MPI, x, y_dist, npp.prod(par["nz"]), npp.prod(par["nz"]))
 
         if rank == 0:
-            Fop = pylops.FirstDerivative(dims=par['nz'], axis=0,
-                                         sampling=par['dz'],
-                                         kind="centered", edge=par['edge'],
-                                         order=order, dtype=par['dtype'])
+            Fop = pylops.FirstDerivative(
+                dims=par["nz"],
+                axis=0,
+                sampling=par["dz"],
+                kind="centered",
+                edge=par["edge"],
+                order=order,
+                dtype=par["dtype"],
+            )
             assert Fop_MPI.shape == Fop.shape
             y_np = Fop @ x_global
             y_adj_np = Fop.H @ x_global
@@ -299,16 +427,42 @@ def test_first_derivative_centered(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par1b), (par1j), (par1e), (par2), (par2b),
-                                 (par2j), (par2e), (par3), (par3b), (par3j), (par3e),
-                                 (par4), (par4b), (par4j), (par4e)])
+@pytest.mark.parametrize(
+    "par",
+    [
+        (par1),
+        (par1b),
+        (par1j),
+        (par1e),
+        (par2),
+        (par2b),
+        (par2j),
+        (par2e),
+        (par3),
+        (par3b),
+        (par3j),
+        (par3e),
+        (par4),
+        (par4b),
+        (par4j),
+        (par4e),
+    ],
+)
 def test_second_derivative_forward(par):
     """MPISecondDerivative operator (forward stencil)"""
-    Sop_MPI = pylops_mpi.basicoperators.MPISecondDerivative(dims=par['nz'], sampling=par['dz'],
-                                                            kind="forward", edge=par['edge'],
-                                                            dtype=par['dtype'])
-    x = pylops_mpi.DistributedArray(global_shape=npp.prod(par['nz']), dtype=par['dtype'],
-                                    partition=par['partition'], engine=backend)
+    Sop_MPI = pylops_mpi.basicoperators.MPISecondDerivative(
+        dims=par["nz"],
+        sampling=par["dz"],
+        kind="forward",
+        edge=par["edge"],
+        dtype=par["dtype"],
+    )
+    x = pylops_mpi.DistributedArray(
+        global_shape=npp.prod(par["nz"]),
+        dtype=par["dtype"],
+        partition=par["partition"],
+        engine=backend,
+    )
     x[:] = np.random.normal(rank, 10, x.local_shape)
     x_global = x.asarray()
     # Forward
@@ -318,13 +472,17 @@ def test_second_derivative_forward(par):
     y_adj_dist = Sop_MPI.H @ x
     y_adj = y_adj_dist.asarray()
     # Dot test
-    dottest(Sop_MPI, x, y_dist, npp.prod(par['nz']), npp.prod(par['nz']))
+    dottest(Sop_MPI, x, y_dist, npp.prod(par["nz"]), npp.prod(par["nz"]))
 
     if rank == 0:
-        Sop = pylops.SecondDerivative(dims=par['nz'], axis=0,
-                                      sampling=par['dz'],
-                                      kind="forward", edge=par['edge'],
-                                      dtype=par['dtype'])
+        Sop = pylops.SecondDerivative(
+            dims=par["nz"],
+            axis=0,
+            sampling=par["dz"],
+            kind="forward",
+            edge=par["edge"],
+            dtype=par["dtype"],
+        )
         assert Sop_MPI.shape == Sop.shape
         y_np = Sop @ x_global
         y_adj_np = Sop.H @ x_global
@@ -333,16 +491,42 @@ def test_second_derivative_forward(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par1b), (par1j), (par1e), (par2), (par2b),
-                                 (par2j), (par2e), (par3), (par3b), (par3j), (par3e),
-                                 (par4), (par4b), (par4j), (par4e)])
+@pytest.mark.parametrize(
+    "par",
+    [
+        (par1),
+        (par1b),
+        (par1j),
+        (par1e),
+        (par2),
+        (par2b),
+        (par2j),
+        (par2e),
+        (par3),
+        (par3b),
+        (par3j),
+        (par3e),
+        (par4),
+        (par4b),
+        (par4j),
+        (par4e),
+    ],
+)
 def test_second_derivative_backward(par):
     """MPISecondDerivative operator (backward stencil)"""
-    Sop_MPI = pylops_mpi.basicoperators.MPISecondDerivative(dims=par['nz'], sampling=par['dz'],
-                                                            kind="backward", edge=par['edge'],
-                                                            dtype=par['dtype'])
-    x = pylops_mpi.DistributedArray(global_shape=npp.prod(par['nz']), dtype=par['dtype'],
-                                    partition=par['partition'], engine=backend)
+    Sop_MPI = pylops_mpi.basicoperators.MPISecondDerivative(
+        dims=par["nz"],
+        sampling=par["dz"],
+        kind="backward",
+        edge=par["edge"],
+        dtype=par["dtype"],
+    )
+    x = pylops_mpi.DistributedArray(
+        global_shape=npp.prod(par["nz"]),
+        dtype=par["dtype"],
+        partition=par["partition"],
+        engine=backend,
+    )
     x[:] = np.random.normal(rank, 10, x.local_shape)
     x_global = x.asarray()
     # Forward
@@ -352,13 +536,17 @@ def test_second_derivative_backward(par):
     y_adj_dist = Sop_MPI.H @ x
     y_adj = y_adj_dist.asarray()
     # Dot test
-    dottest(Sop_MPI, x, y_dist, npp.prod(par['nz']), npp.prod(par['nz']))
+    dottest(Sop_MPI, x, y_dist, npp.prod(par["nz"]), npp.prod(par["nz"]))
 
     if rank == 0:
-        Sop = pylops.SecondDerivative(dims=par['nz'], axis=0,
-                                      sampling=par['dz'],
-                                      kind="backward", edge=par['edge'],
-                                      dtype=par['dtype'])
+        Sop = pylops.SecondDerivative(
+            dims=par["nz"],
+            axis=0,
+            sampling=par["dz"],
+            kind="backward",
+            edge=par["edge"],
+            dtype=par["dtype"],
+        )
         assert Sop_MPI.shape == Sop.shape
         y_np = Sop @ x_global
         y_adj_np = Sop.H @ x_global
@@ -367,16 +555,42 @@ def test_second_derivative_backward(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par1b), (par1j), (par1e), (par2), (par2b),
-                                 (par2j), (par2e), (par3), (par3b), (par3j), (par3e),
-                                 (par4), (par4b), (par4j), (par4e)])
+@pytest.mark.parametrize(
+    "par",
+    [
+        (par1),
+        (par1b),
+        (par1j),
+        (par1e),
+        (par2),
+        (par2b),
+        (par2j),
+        (par2e),
+        (par3),
+        (par3b),
+        (par3j),
+        (par3e),
+        (par4),
+        (par4b),
+        (par4j),
+        (par4e),
+    ],
+)
 def test_second_derivative_centered(par):
     """MPISecondDerivative operator (centered stencil)"""
-    Sop_MPI = pylops_mpi.basicoperators.MPISecondDerivative(dims=par['nz'], sampling=par['dz'],
-                                                            kind="centered", edge=par['edge'],
-                                                            dtype=par['dtype'])
-    x = pylops_mpi.DistributedArray(global_shape=npp.prod(par['nz']), dtype=par['dtype'],
-                                    partition=par['partition'], engine=backend)
+    Sop_MPI = pylops_mpi.basicoperators.MPISecondDerivative(
+        dims=par["nz"],
+        sampling=par["dz"],
+        kind="centered",
+        edge=par["edge"],
+        dtype=par["dtype"],
+    )
+    x = pylops_mpi.DistributedArray(
+        global_shape=npp.prod(par["nz"]),
+        dtype=par["dtype"],
+        partition=par["partition"],
+        engine=backend,
+    )
     x[:] = np.random.normal(rank, 10, x.local_shape)
     x_global = x.asarray()
     # Forward
@@ -386,13 +600,17 @@ def test_second_derivative_centered(par):
     y_adj_dist = Sop_MPI.H @ x
     y_adj = y_adj_dist.asarray()
     # Dot test
-    dottest(Sop_MPI, x, y_dist, npp.prod(par['nz']), npp.prod(par['nz']))
+    dottest(Sop_MPI, x, y_dist, npp.prod(par["nz"]), npp.prod(par["nz"]))
 
     if rank == 0:
-        Sop = pylops.SecondDerivative(dims=par['nz'], axis=0,
-                                      sampling=par['dz'],
-                                      kind="centered", edge=par['edge'],
-                                      dtype=par['dtype'])
+        Sop = pylops.SecondDerivative(
+            dims=par["nz"],
+            axis=0,
+            sampling=par["dz"],
+            kind="centered",
+            edge=par["edge"],
+            dtype=par["dtype"],
+        )
         assert Sop_MPI.shape == Sop.shape
         y_np = Sop @ x_global
         y_adj_np = Sop.H @ x_global
@@ -401,15 +619,24 @@ def test_second_derivative_centered(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par5), (par5e), (par6), (par6e)])
+@pytest.mark.parametrize(
+    "par", [(par5), (par5e), (par6), (par6e), (par7), (par7e), (par8), (par8e)]
+)
 def test_laplacian(par):
     """MPILaplacian Operator"""
     for kind in ["forward", "backward", "centered"]:
-        Lop_MPI = pylops_mpi.basicoperators.MPILaplacian(dims=par['n'], axes=par['axes'],
-                                                         weights=par['weights'], sampling=par['sampling'],
-                                                         kind=kind, edge=par['edge'],
-                                                         dtype=par['dtype'])
-        x = pylops_mpi.DistributedArray(global_shape=npp.prod(par['n']), dtype=par['dtype'], engine=backend)
+        Lop_MPI = pylops_mpi.basicoperators.MPILaplacian(
+            dims=par["n"],
+            axes=par["axes"],
+            weights=par["weights"],
+            sampling=par["sampling"],
+            kind=kind,
+            edge=par["edge"],
+            dtype=par["dtype"],
+        )
+        x = pylops_mpi.DistributedArray(
+            global_shape=npp.prod(par["n"]), dtype=par["dtype"], engine=backend
+        )
         x[:] = np.random.normal(rank, 10, x.local_shape)
         x_global = x.asarray()
         # Forward
@@ -419,13 +646,29 @@ def test_laplacian(par):
         y_adj_dist = Lop_MPI.H @ x
         y_adj = y_adj_dist.asarray()
         # Dot test
-        dottest(Lop_MPI, x, y_dist, npp.prod(par['n']), npp.prod(par['n']))
+        dottest(Lop_MPI, x, y_dist, npp.prod(par["n"]), npp.prod(par["n"]))
+
+        # Check that weights are not applied when equal to 1.0
+        if par["weights"][0] == 1.0:
+            assert isinstance(
+                Lop_MPI.Op.args[0]
+                if len(par["weights"]) == 2
+                else Lop_MPI.Op.args[0].args[0],
+                pylops_mpi.basicoperators.MPISecondDerivative
+                if Lop_MPI.axes[0] == 0
+                else pylops_mpi.basicoperators.MPIBlockDiag,
+            )
 
         if rank == 0:
-            Lop = pylops.Laplacian(dims=par['n'], axes=par['axes'],
-                                   weights=par['weights'], sampling=par['sampling'],
-                                   kind=kind, edge=par['edge'],
-                                   dtype=par['dtype'])
+            Lop = pylops.Laplacian(
+                dims=par["n"],
+                axes=par["axes"],
+                weights=par["weights"],
+                sampling=par["sampling"],
+                kind=kind,
+                edge=par["edge"],
+                dtype=par["dtype"],
+            )
             assert Lop_MPI.shape == Lop.shape
             y_np = Lop @ x_global
             y_adj_np = Lop.H @ x_global
@@ -434,14 +677,22 @@ def test_laplacian(par):
 
 
 @pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par5), (par5e), (par6), (par6e)])
+@pytest.mark.parametrize(
+    "par", [(par5), (par5e), (par6), (par6e), (par7), (par7e), (par8), (par8e)]
+)
 def test_gradient(par):
     """MPIGradient Operator"""
     for kind in ["forward", "backward", "centered"]:
-        Gop_MPI = pylops_mpi.basicoperators.MPIGradient(dims=par['n'], sampling=par['sampling'],
-                                                        kind=kind, edge=par['edge'],
-                                                        dtype=par['dtype'])
-        x_fwd = pylops_mpi.DistributedArray(global_shape=npp.prod(par['n']), dtype=par['dtype'], engine=backend)
+        Gop_MPI = pylops_mpi.basicoperators.MPIGradient(
+            dims=par["n"],
+            sampling=par["sampling"],
+            kind=kind,
+            edge=par["edge"],
+            dtype=par["dtype"],
+        )
+        x_fwd = pylops_mpi.DistributedArray(
+            global_shape=npp.prod(par["n"]), dtype=par["dtype"], engine=backend
+        )
         x_fwd[:] = np.random.normal(rank, 10, x_fwd.local_shape)
         x_global = x_fwd.asarray()
 
@@ -451,25 +702,44 @@ def test_gradient(par):
         y = y_dist.asarray()
 
         # Adjoint
-        x_adj_dist1 = pylops_mpi.DistributedArray(global_shape=int(npp.prod(par['n'])), dtype=par['dtype'], engine=backend)
+        x_adj_dist1 = pylops_mpi.DistributedArray(
+            global_shape=int(npp.prod(par["n"])), dtype=par["dtype"], engine=backend
+        )
         x_adj_dist1[:] = np.random.normal(rank, 10, x_adj_dist1.local_shape)
-        x_adj_dist2 = pylops_mpi.DistributedArray(global_shape=int(npp.prod(par['n'])), dtype=par['dtype'], engine=backend)
+        x_adj_dist2 = pylops_mpi.DistributedArray(
+            global_shape=int(npp.prod(par["n"])), dtype=par["dtype"], engine=backend
+        )
         x_adj_dist2[:] = np.random.normal(rank, 20, x_adj_dist2.local_shape)
-        x_adj_dist3 = pylops_mpi.DistributedArray(global_shape=int(npp.prod(par['n'])), dtype=par['dtype'], engine=backend)
+        x_adj_dist3 = pylops_mpi.DistributedArray(
+            global_shape=int(npp.prod(par["n"])), dtype=par["dtype"], engine=backend
+        )
         x_adj_dist3[:] = np.random.normal(rank, 30, x_adj_dist3.local_shape)
-        x_adj = pylops_mpi.StackedDistributedArray(distarrays=[x_adj_dist1, x_adj_dist2, x_adj_dist3])
+        x_adj = [x_adj_dist1, x_adj_dist2, x_adj_dist3]
+        x_adj = pylops_mpi.StackedDistributedArray(
+            distarrays=x_adj[: len(par["sampling"])]
+        )
         x_adj_global = x_adj.asarray()
         y_adj_dist = Gop_MPI.H @ x_adj
         assert isinstance(y_adj_dist, pylops_mpi.DistributedArray)
         y_adj = y_adj_dist.asarray()
 
         # Dot test
-        dottest(Gop_MPI, x_fwd, y_dist, len(par['n']) * npp.prod(par['n']), npp.prod(par['n']))
+        dottest(
+            Gop_MPI,
+            x_fwd,
+            y_dist,
+            len(par["n"]) * npp.prod(par["n"]),
+            npp.prod(par["n"]),
+        )
 
         if rank == 0:
-            Gop = pylops.Gradient(dims=par['n'], sampling=par['sampling'],
-                                  kind=kind, edge=par['edge'],
-                                  dtype=par['dtype'])
+            Gop = pylops.Gradient(
+                dims=par["n"],
+                sampling=par["sampling"],
+                kind=kind,
+                edge=par["edge"],
+                dtype=par["dtype"],
+            )
             assert Gop_MPI.shape == Gop.shape
             y_np = Gop @ x_global
             y_adj_np = Gop.H @ x_adj_global

@@ -1,15 +1,13 @@
-from typing import Tuple
 import numpy as np
 from mpi4py import MPI
-
-from pylops.utils.typing import DTypeLike, InputDimsLike
 from pylops.basicoperators import SecondDerivative
-from pylops.utils.backend import get_normalize_axis_index
 from pylops.utils._internal import _value_or_sized_to_tuple
+from pylops.utils.backend import get_normalize_axis_index
+from pylops.utils.typing import DTypeLike, InputDimsLike, SamplingLike
 
 from pylops_mpi import DistributedArray, MPILinearOperator, Partition
-from pylops_mpi.DistributedArray import local_split
 from pylops_mpi.basicoperators import MPIBlockDiag, MPISecondDerivative
+from pylops_mpi.DistributedArray import local_split
 
 
 class MPILaplacian(MPILinearOperator):
@@ -67,14 +65,17 @@ class MPILaplacian(MPILinearOperator):
 
     """
 
-    def __init__(self, dims: InputDimsLike,
-                 axes: InputDimsLike = (-2, -1),
-                 weights: Tuple[float, ...] = (1, 1),
-                 sampling: Tuple[float, ...] = (1, 1),
-                 edge: bool = False,
-                 kind: str = "centered",
-                 base_comm: MPI.Comm = MPI.COMM_WORLD,
-                 dtype: DTypeLike = np.float64):
+    def __init__(
+        self,
+        dims: InputDimsLike,
+        axes: InputDimsLike = (-2, -1),
+        weights: SamplingLike = (1.0, 1.0),
+        sampling: SamplingLike = (1.0, 1.0),
+        edge: bool = False,
+        kind: str = "centered",
+        base_comm: MPI.Comm = MPI.COMM_WORLD,
+        dtype: DTypeLike = np.float64,
+    ):
         dims = _value_or_sized_to_tuple(dims)
         axes = tuple(get_normalize_axis_index()(ax, len(dims)) for ax in axes)
         if not (len(axes) == len(weights) == len(sampling)):
@@ -86,7 +87,9 @@ class MPILaplacian(MPILinearOperator):
         self.kind = kind
         self.dtype = np.dtype(dtype)
         self.Op = self._calc_l2op(dims, base_comm)
-        super().__init__(dims=dims, dimsd=self.Op.dimsd, dtype=self.dtype, base_comm=base_comm)
+        super().__init__(
+            dims=dims, dimsd=self.Op.dimsd, dtype=self.dtype, base_comm=base_comm
+        )
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         return self.Op @ x
@@ -97,30 +100,52 @@ class MPILaplacian(MPILinearOperator):
     def _calc_l2op(self, dims: tuple, base_comm: MPI.Comm):
         local_dims = local_split(tuple(dims), base_comm, Partition.SCATTER, axis=0)
         if self.axes[0] == 0:
-            l2op = self.weights[0] * MPISecondDerivative(dims=dims,
-                                                         sampling=self.sampling[0],
-                                                         kind=self.kind,
-                                                         edge=self.edge,
-                                                         dtype=self.dtype)
+            l2op = MPISecondDerivative(
+                dims=dims,
+                sampling=self.sampling[0],
+                kind=self.kind,
+                edge=self.edge,
+                dtype=self.dtype,
+            )
         else:
-            l2op = self.weights[0] * MPIBlockDiag(ops=[SecondDerivative(dims=local_dims,
-                                                                        axis=self.axes[0],
-                                                                        sampling=self.sampling[0],
-                                                                        kind=self.kind,
-                                                                        edge=self.edge,
-                                                                        dtype=self.dtype)])
+            l2op = MPIBlockDiag(
+                ops=[
+                    SecondDerivative(
+                        dims=local_dims,
+                        axis=self.axes[0],
+                        sampling=self.sampling[0],
+                        kind=self.kind,
+                        edge=self.edge,
+                        dtype=self.dtype,
+                    )
+                ]
+            )
+        if self.weights[0] != 1.0:
+            l2op *= self.weights[0]
+
         for ax, samp, weight in zip(self.axes[1:], self.sampling[1:], self.weights[1:]):
             if ax == 0:
-                l2op += weight * MPISecondDerivative(dims=dims,
-                                                     sampling=samp,
-                                                     kind=self.kind,
-                                                     edge=self.edge,
-                                                     dtype=self.dtype)
+                tmpop = MPISecondDerivative(
+                    dims=dims,
+                    sampling=samp,
+                    kind=self.kind,
+                    edge=self.edge,
+                    dtype=self.dtype,
+                )
             else:
-                l2op += weight * MPIBlockDiag(ops=[SecondDerivative(dims=local_dims,
-                                                                    axis=ax,
-                                                                    sampling=samp,
-                                                                    kind=self.kind,
-                                                                    edge=self.edge,
-                                                                    dtype=self.dtype)])
+                tmpop = MPIBlockDiag(
+                    ops=[
+                        SecondDerivative(
+                            dims=local_dims,
+                            axis=ax,
+                            sampling=samp,
+                            kind=self.kind,
+                            edge=self.edge,
+                            dtype=self.dtype,
+                        )
+                    ]
+                )
+            if weight != 1.0:
+                tmpop *= weight
+            l2op += tmpop
         return l2op
