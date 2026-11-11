@@ -17,6 +17,7 @@ from pylops.utils.typing import NDArray
 from pylops_mpi.DistributedArray import DistributedArray, StackedDistributedArray
 from pylops_mpi.LinearOperator import MPILinearOperator
 from pylops_mpi.optimization.eigs import power_iteration
+from pylops_mpi.optimization.utils import first_distarray
 from pylops_mpi.StackedLinearOperator import MPIStackedLinearOperator
 
 logger = logging.getLogger(__name__)
@@ -128,7 +129,7 @@ class ISTA(Solver):
         xupdate: float,
     ) -> None:
         if isinstance(x, StackedDistributedArray):
-            x = x.distarrays[0]
+            x = first_distarray(x)
         strx = (
             f"  {x[0]:1.2e}   "
             if np.iscomplexobj(x.local_array)

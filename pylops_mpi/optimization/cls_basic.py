@@ -7,6 +7,7 @@ from pylops.optimization.basesolver import Solver
 from pylops.utils import NDArray
 
 from pylops_mpi import DistributedArray, StackedDistributedArray
+from pylops_mpi.optimization.utils import first_distarray
 
 
 class CG(Solver):
@@ -45,7 +46,7 @@ class CG(Solver):
 
     def _print_step(self, x: Union[DistributedArray, StackedDistributedArray]) -> None:
         if isinstance(x, StackedDistributedArray):
-            x = x.distarrays[0]
+            x = first_distarray(x)
         strx = (
             f"{x[0]:1.2e}        "
             if np.iscomplexobj(x.local_array)
@@ -296,7 +297,7 @@ class CGLS(Solver):
 
     def _print_step(self, x: Union[DistributedArray, StackedDistributedArray]) -> None:
         if isinstance(x, StackedDistributedArray):
-            x = x.distarrays[0]
+            x = first_distarray(x)
         strx = (
             f"{x[0]:1.2e}   "
             if np.iscomplexobj(x.local_array)

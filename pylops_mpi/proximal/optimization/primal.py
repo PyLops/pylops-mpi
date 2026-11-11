@@ -12,6 +12,7 @@ from pylops.utils.typing import NDArray
 from pylops_mpi import DistributedArray, StackedDistributedArray
 from pylops_mpi.basicoperators import MPIStackedVStack
 from pylops_mpi.optimization.basic import cgls
+from pylops_mpi.optimization.utils import first_distarray
 from pylops_mpi.proximal.ProxOperator import MPIProxOperator
 
 # need to check pyproximal version since _x0z0_init moved from primal to cls_primal
@@ -23,13 +24,13 @@ else:
     from pyproximal.optimization.cls_primal import _x0z0_init
 
 if TYPE_CHECKING:
-    from pylops_mpi.linearoperator import MPILinearOperator
+    from pylops_mpi.LinearOperator import MPILinearOperator
 
 
 def ProximalGradient(
     proxf: MPIProxOperator,
     proxg: MPIProxOperator,
-    x0: DistributedArray,
+    x0: DistributedArray | StackedDistributedArray,
     epsg: float | NDArray = 1.0,
     tau: float | None = None,
     eta: float = 1.0,
@@ -37,9 +38,10 @@ def ProximalGradient(
     niterback: int = 100,
     acceleration: str | None = None,
     tol: float | None = None,
-    callback: Callable[[DistributedArray], None] | None = None,
+    callback: Callable[[DistributedArray | StackedDistributedArray], None]
+    | None = None,
     show: bool = False,
-) -> DistributedArray:
+) -> DistributedArray | StackedDistributedArray:
     r"""Proximal gradient (optionally accelerated)
 
     Solves the following minimization problem using (Accelerated) Proximal
@@ -60,7 +62,7 @@ def ProximalGradient(
         Proximal operator of f function (must have ``grad`` implemented)
     proxg : :obj:`pylops_mpi.proximal.MPIProxOperator`
         Proximal operator of g function
-    x0 : :obj:`pylops_mpi.DistributedArray`
+    x0 : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
         Initial vector
     epsg : :obj:`float` or :obj:`numpy.ndarray`, optional
         Scaling factor of g function. Can be a scalar
@@ -90,7 +92,7 @@ def ProximalGradient(
 
     Returns
     -------
-    x : :obj:`pylops_mpi.DistributedArray`
+    x : :obj:`pylops_mpi.DistributedArray` or :obj:`pylops_mpi.StackedDistributedArray`
         Inverted model
 
     Notes
@@ -181,17 +183,14 @@ def ProximalGradient(
         # show iteration logger
         if show:
             if iiter < 10 or niter - iiter < 10 or iiter % (niter // 10) == 0:
+                xprint = first_distarray(x)
                 if tol is None:
                     pf, pg = proxf(x), proxg(x)
                     pfg = pf + np.sum(epsg[iiter] * pg)
                 if rank == 0:
                     msg = "%6g  %12.5e  %10.3e  %10.3e  %10.3e  %10.3e" % (
                         iiter + 1,
-                        (
-                            np.real(to_numpy(x[0]))
-                            if x.ndim == 1
-                            else np.real(to_numpy(x[0, 0]))
-                        ),
+                        np.real(to_numpy(xprint[0])),
                         pf,
                         pg,
                         pfg,
