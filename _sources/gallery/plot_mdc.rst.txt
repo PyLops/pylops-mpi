@@ -204,7 +204,7 @@ demanding computations can be run in parallel.
 
  .. code-block:: none
 
-    /opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/pylops/signalprocessing/fft.py:707: UserWarning: numpy backend always returns complex128 dtype. To respect the passed dtype, data will be casted to complex64.
+    /opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/pylops/signalprocessing/fft.py:719: UserWarning: numpy backend always returns complex128 dtype. To respect the passed dtype, data will be casted to complex64.
       f = _FFT_numpy(
 
 

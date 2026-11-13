@@ -538,7 +538,7 @@ i.e., <code class="xref py py-func docutils literal notranslate"><span class="pr
 </span></pre></div></div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:836: RuntimeWarning: invalid value encountered in dot
   dot_func(x.local_array.flatten(), y.local_array.flatten()),
-[decorator]inner_func: total runtime: 0.000825 s
+[decorator]inner_func: total runtime: 0.000780 s
 </pre></div>
 </div>
 <p>We may want to get the fine-grained time measurements by timing the execution
@@ -558,9 +558,9 @@ time of arbitary lines of code. <a class="reference internal" href="../api/gener
 measurement of the top-level function and those that comes from <a class="reference internal" href="../api/generated/pylops_mpi.utils.mark.html#pylops_mpi.utils.mark" title="pylops_mpi.utils.mark"><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.mark</span></code></a></p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span class="n">inner_func_with_mark</span><span class="p">(</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="dict"><span class="n">par</span></a><span class="p">)</span><span class="w">
 </span></pre></div></div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[decorator]inner_func_with_mark: total runtime: 0.000300 s
-        Begin array constructor--&gt;Begin dot: 0.000020 s
-        Begin dot--&gt;Finish dot: 0.000276 s
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[decorator]inner_func_with_mark: total runtime: 0.000312 s
+        Begin array constructor--&gt;Begin dot: 0.000022 s
+        Begin dot--&gt;Finish dot: 0.000287 s
 </pre></div>
 </div>
 <p>This utility benchmarking routines can also be nested. Let’s define
@@ -583,11 +583,11 @@ printed out with the nested indentation to specify that nested calls.</p>
   SumArray[:] = self.local_array + dist_array.local_array
 /opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:748: RuntimeWarning: invalid value encountered in add
   SumArray[:] = self.local_array + dist_array.local_array
-[decorator]outer_func_with_mark: total runtime: 0.000813 s
-        [decorator]inner_func_with_mark: total runtime: 0.000284 s
+[decorator]outer_func_with_mark: total runtime: 0.000866 s
+        [decorator]inner_func_with_mark: total runtime: 0.000296 s
                 Begin array constructor--&gt;Begin dot: 0.000016 s
-                Begin dot--&gt;Finish dot: 0.000266 s
-        Outer func start--&gt;Outer func ends: 0.000811 s
+                Begin dot--&gt;Finish dot: 0.000278 s
+        Outer func start--&gt;Outer func ends: 0.000864 s
 </pre></div>
 </div>
 <p>In some cases, we may want to write benchmark output to a text file.
