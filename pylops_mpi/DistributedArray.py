@@ -967,10 +967,10 @@ class DistributedArray(DistributedMixIn):
             )
         )
 
-    def _local_sqnorm(self) -> float:
+    def _local_sqnorm(self, local_array=None) -> float:
         """Squared 2-norm of the local array (no communication)"""
         ncp = get_module(self.engine)
-        local = self.local_array.ravel()
+        local = (self.local_array if local_array is None else local_array).ravel()
         if ncp.iscomplexobj(local):
             # real view of the same buffer: sum of squares of real and
             # imaginary parts (overflows to inf rather than nan)
@@ -1007,7 +1007,7 @@ class DistributedArray(DistributedMixIn):
             recv_buf = self._allreduce_subcomm(
                 self.sub_comm,
                 self.base_comm_nccl,
-                self._local_sqnorm(),
+                self._local_sqnorm(local_array),
                 engine=self.engine,
             )
             recv_buf = ncp.sqrt(recv_buf)
