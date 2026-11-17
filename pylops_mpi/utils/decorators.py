@@ -39,6 +39,13 @@ def reshaped(
     where x will be reshaped to ``self.dims`` and y will be raveled to give a 1-D
     DistributedArray as output.
 
+    .. warning::
+        When ``x`` already has the shape and distribution expected by the operator
+        (fast path), it is passed to the decorated function as is, without any copy.
+        The decorated function must therefore **not modify** ``x`` in-place, nor
+        return ``x`` (or a view of it) as output. Create a copy of ``x`` first if
+        in-place operations are required.
+
     """
 
     def decorator(f):
@@ -89,7 +96,7 @@ def reshaped(
                 return y
 
             # Slow path: x does not have the shape and/or distribution expected by the operator,
-            # on at least for one rank. Create a new DistributedArray with the expected layout, exchange
+            # on at least one rank. Create a new DistributedArray with the expected layout, exchange
             # the required elements between neighbouring ranks (via ghost cells), and fill it with
             # the (reshaped) local portion of x before passing it to f.
             arr = DistributedArray(
