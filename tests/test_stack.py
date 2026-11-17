@@ -14,10 +14,10 @@ else:
     from numpy.testing import assert_allclose
 
     backend = "numpy"
-from mpi4py import MPI
-import pytest
-
 import pylops
+import pytest
+from mpi4py import MPI
+
 import pylops_mpi
 from pylops_mpi.utils.dottest import dottest
 
@@ -26,10 +26,10 @@ if backend == "cupy":
     device_id = rank % np.cuda.runtime.getDeviceCount()
     np.cuda.Device(device_id).use()
 
-par1 = {'ny': 101, 'nx': 101, 'imag': 0, 'dtype': np.float64}
-par1j = {'ny': 101, 'nx': 101, 'imag': 1j, 'dtype': np.complex128}
-par2 = {'ny': 301, 'nx': 101, 'imag': 0, 'dtype': np.float64}
-par2j = {'ny': 301, 'nx': 101, 'imag': 1j, 'dtype': np.complex128}
+par1 = {"ny": 101, "nx": 101, "imag": 0, "dtype": np.float64}
+par1j = {"ny": 101, "nx": 101, "imag": 1j, "dtype": np.complex128}
+par2 = {"ny": 301, "nx": 101, "imag": 0, "dtype": np.float64}
+par2j = {"ny": 301, "nx": 101, "imag": 1j, "dtype": np.complex128}
 
 
 @pytest.mark.mpi(min_size=2)
@@ -38,24 +38,34 @@ def test_vstack(par):
     """Test the MPIVStack operator"""
     size = MPI.COMM_WORLD.Get_size()
     rank = MPI.COMM_WORLD.Get_rank()
-    A = np.ones(shape=(par['ny'], par['nx'])) + par['imag'] * np.ones(shape=(par['ny'], par['nx']))
-    Op = pylops.MatrixMult(A=((rank + 1) * A).astype(par['dtype']))
-    VStack_MPI = pylops_mpi.MPIVStack(ops=[Op, ])
+    A = np.ones(shape=(par["ny"], par["nx"])) + par["imag"] * np.ones(
+        shape=(par["ny"], par["nx"])
+    )
+    Op = pylops.MatrixMult(A=((rank + 1) * A).astype(par["dtype"]))
+    VStack_MPI = pylops_mpi.MPIVStack(
+        ops=[
+            Op,
+        ]
+    )
 
     # Broadcasted DistributedArray(global_shape == local_shape)
-    x = pylops_mpi.DistributedArray(global_shape=par['nx'],
-                                    partition=pylops_mpi.Partition.BROADCAST,
-                                    dtype=par['dtype'],
-                                    engine=backend)
-    x[:] = np.ones(shape=par['nx'], dtype=par['dtype'])
+    x = pylops_mpi.DistributedArray(
+        global_shape=par["nx"],
+        partition=pylops_mpi.Partition.BROADCAST,
+        dtype=par["dtype"],
+        engine=backend,
+    )
+    x[:] = np.ones(shape=par["nx"], dtype=par["dtype"])
     x_global = x.asarray()
 
     # Scattered DistributedArray
-    y = pylops_mpi.DistributedArray(global_shape=size * par['ny'],
-                                    partition=pylops_mpi.Partition.SCATTER,
-                                    dtype=par['dtype'],
-                                    engine=backend)
-    y[:] = np.ones(shape=par['ny'], dtype=par['dtype'])
+    y = pylops_mpi.DistributedArray(
+        global_shape=size * par["ny"],
+        partition=pylops_mpi.Partition.SCATTER,
+        dtype=par["dtype"],
+        engine=backend,
+    )
+    y[:] = np.ones(shape=par["ny"], dtype=par["dtype"])
     y_global = y.asarray()
 
     # Forward
@@ -65,13 +75,15 @@ def test_vstack(par):
     assert isinstance(x_mat, pylops_mpi.DistributedArray)
     assert isinstance(y_rmat, pylops_mpi.DistributedArray)
     # Dot test
-    dottest(VStack_MPI, x, y, size * par['ny'], par['nx'])
+    dottest(VStack_MPI, x, y, size * par["ny"], par["nx"])
 
     x_mat_mpi = x_mat.asarray()
     y_rmat_mpi = y_rmat.asarray()
 
     if rank == 0:
-        ops = [pylops.MatrixMult(A=((i + 1) * A).astype(par['dtype'])) for i in range(size)]
+        ops = [
+            pylops.MatrixMult(A=((i + 1) * A).astype(par["dtype"])) for i in range(size)
+        ]
         VStack = pylops.VStack(ops=ops)
         x_mat_np = VStack @ x_global
         y_rmat_np = VStack.H @ y_global
@@ -80,29 +92,81 @@ def test_vstack(par):
 
 
 @pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par1), (par1j)])
+def test_vstack_input_unchanged(par):
+    """Check that matvec/rmatvec do not modify their input (reshaped fast path)"""
+    size = MPI.COMM_WORLD.Get_size()
+    rank = MPI.COMM_WORLD.Get_rank()
+    A = np.ones(shape=(par["ny"], par["nx"])) + par["imag"] * np.ones(
+        shape=(par["ny"], par["nx"])
+    )
+    Op = pylops.MatrixMult(A=((rank + 1) * A).astype(par["dtype"]))
+    VStack_MPI = pylops_mpi.MPIVStack(
+        ops=[
+            Op,
+        ]
+    )
+
+    x = pylops_mpi.DistributedArray(
+        global_shape=par["nx"],
+        partition=pylops_mpi.Partition.BROADCAST,
+        dtype=par["dtype"],
+        engine=backend,
+    )
+    x[:] = np.random.normal(1, 1, par["nx"]).astype(par["dtype"])
+    y = pylops_mpi.DistributedArray(
+        global_shape=size * par["ny"], dtype=par["dtype"], engine=backend
+    )
+    y[:] = np.random.normal(1, 1, par["ny"]).astype(par["dtype"])
+    x0, y0 = x.local_array.copy(), y.local_array.copy()
+
+    yout = VStack_MPI @ x
+    xout = VStack_MPI.H @ y
+
+    assert_allclose(x.local_array, x0)
+    assert_allclose(y.local_array, y0)
+    yout[:] = 0
+    xout[:] = 0
+    assert_allclose(x.local_array, x0)
+    assert_allclose(y.local_array, y0)
+
+
+@pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par1j), (par2), (par2j)])
 def test_stacked_vstack(par):
     """Test the MPIStackedVStack operator"""
     size = MPI.COMM_WORLD.Get_size()
     rank = MPI.COMM_WORLD.Get_rank()
-    A = np.ones(shape=(par['ny'], par['nx'])) + par['imag'] * np.ones(shape=(par['ny'], par['nx']))
-    Op = pylops.MatrixMult(A=((rank + 1) * A).astype(par['dtype']))
-    VStack_MPI = pylops_mpi.MPIVStack(ops=[Op, ])
+    A = np.ones(shape=(par["ny"], par["nx"])) + par["imag"] * np.ones(
+        shape=(par["ny"], par["nx"])
+    )
+    Op = pylops.MatrixMult(A=((rank + 1) * A).astype(par["dtype"]))
+    VStack_MPI = pylops_mpi.MPIVStack(
+        ops=[
+            Op,
+        ]
+    )
     StackedVStack_MPI = pylops_mpi.MPIStackedVStack([VStack_MPI, VStack_MPI])
 
     # Broadcasted DistributedArray(global_shape == local_shape)
-    x = pylops_mpi.DistributedArray(global_shape=par['nx'],
-                                    partition=pylops_mpi.Partition.BROADCAST,
-                                    dtype=par['dtype'],
-                                    engine=backend)
-    x[:] = np.ones(shape=par['nx'], dtype=par['dtype'])
+    x = pylops_mpi.DistributedArray(
+        global_shape=par["nx"],
+        partition=pylops_mpi.Partition.BROADCAST,
+        dtype=par["dtype"],
+        engine=backend,
+    )
+    x[:] = np.ones(shape=par["nx"], dtype=par["dtype"])
     x_global = x.asarray()
 
     # Stacked DistributedArray
-    dist1 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
-    dist1[:] = np.ones(dist1.local_shape, dtype=par['dtype'])
-    dist2 = pylops_mpi.DistributedArray(global_shape=size * par['ny'], dtype=par['dtype'], engine=backend)
-    dist2[:] = np.ones(dist1.local_shape, dtype=par['dtype'])
+    dist1 = pylops_mpi.DistributedArray(
+        global_shape=size * par["ny"], dtype=par["dtype"], engine=backend
+    )
+    dist1[:] = np.ones(dist1.local_shape, dtype=par["dtype"])
+    dist2 = pylops_mpi.DistributedArray(
+        global_shape=size * par["ny"], dtype=par["dtype"], engine=backend
+    )
+    dist2[:] = np.ones(dist1.local_shape, dtype=par["dtype"])
     y = pylops_mpi.StackedDistributedArray(distarrays=[dist1, dist2])
     y_global = y.asarray()
 
@@ -115,7 +179,9 @@ def test_stacked_vstack(par):
     y_rmat_mpi = y_rmat.asarray()
 
     if rank == 0:
-        ops = [pylops.MatrixMult(A=((i + 1) * A).astype(par['dtype'])) for i in range(size)]
+        ops = [
+            pylops.MatrixMult(A=((i + 1) * A).astype(par["dtype"])) for i in range(size)
+        ]
         VStack = pylops.VStack(ops=ops)
         VStack_final = pylops.VStack(ops=[VStack, VStack])
         x_mat_np = VStack_final @ x_global
@@ -130,24 +196,34 @@ def test_hstack(par):
     """Test the MPIHStack operator"""
     size = MPI.COMM_WORLD.Get_size()
     rank = MPI.COMM_WORLD.Get_rank()
-    A = np.ones(shape=(par['ny'], par['nx'])) + par['imag'] * np.ones(shape=(par['ny'], par['nx']))
-    Op = pylops.MatrixMult(A=((rank + 1) * A).astype(par['dtype']))
-    HStack_MPI = pylops_mpi.MPIHStack(ops=[Op, ])
+    A = np.ones(shape=(par["ny"], par["nx"])) + par["imag"] * np.ones(
+        shape=(par["ny"], par["nx"])
+    )
+    Op = pylops.MatrixMult(A=((rank + 1) * A).astype(par["dtype"]))
+    HStack_MPI = pylops_mpi.MPIHStack(
+        ops=[
+            Op,
+        ]
+    )
 
     # Scattered DistributedArray
-    x = pylops_mpi.DistributedArray(global_shape=size * par['nx'],
-                                    partition=pylops_mpi.Partition.SCATTER,
-                                    dtype=par['dtype'],
-                                    engine=backend)
-    x[:] = np.ones(shape=par['nx'], dtype=par['dtype'])
+    x = pylops_mpi.DistributedArray(
+        global_shape=size * par["nx"],
+        partition=pylops_mpi.Partition.SCATTER,
+        dtype=par["dtype"],
+        engine=backend,
+    )
+    x[:] = np.ones(shape=par["nx"], dtype=par["dtype"])
     x_global = x.asarray()
 
     # Broadcasted DistributedArray(global_shape == local_shape)
-    y = pylops_mpi.DistributedArray(global_shape=par['ny'],
-                                    partition=pylops_mpi.Partition.BROADCAST,
-                                    dtype=par['dtype'],
-                                    engine=backend)
-    y[:] = np.ones(shape=par['ny'], dtype=par['dtype'])
+    y = pylops_mpi.DistributedArray(
+        global_shape=par["ny"],
+        partition=pylops_mpi.Partition.BROADCAST,
+        dtype=par["dtype"],
+        engine=backend,
+    )
+    y[:] = np.ones(shape=par["ny"], dtype=par["dtype"])
     y_global = y.asarray()
 
     x_mat = HStack_MPI @ x
@@ -159,7 +235,9 @@ def test_hstack(par):
     y_rmat_mpi = y_rmat.asarray()
 
     if rank == 0:
-        ops = [pylops.MatrixMult(A=((i + 1) * A).astype(par['dtype'])) for i in range(size)]
+        ops = [
+            pylops.MatrixMult(A=((i + 1) * A).astype(par["dtype"])) for i in range(size)
+        ]
         HStack = pylops.HStack(ops=ops)
         x_mat_np = HStack @ x_global
         y_rmat_np = HStack.H @ y_global
