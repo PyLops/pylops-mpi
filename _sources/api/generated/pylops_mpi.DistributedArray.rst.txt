@@ -23,6 +23,7 @@
         ~DistributedArray.ravel
         ~DistributedArray.redistribute
         ~DistributedArray.reshape
+        ~DistributedArray.subtract
         ~DistributedArray.to_dist
         ~DistributedArray.zeros_like
 

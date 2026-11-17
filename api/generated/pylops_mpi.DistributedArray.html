@@ -638,7 +638,7 @@ expected local shape for the current rank.</p>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code>(global_shape[, base_comm, ...])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add</span></code>(dist_array)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add</span></code>(dist_array[, out])</p></td>
 <td><p>Distributed Addition of arrays</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_ghost_cells</span></code>([cells_front, cells_back])</p></td>
@@ -654,7 +654,7 @@ expected local shape for the current rank.</p>
 <td><p>Creates a copy of the DistributedArray</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dot</span></code>(dist_array[, vdot])</p></td>
-<td><p>Compute the distributed dot product between this array and another distributed array.</p></td>
+<td><p>Distributed dot-product</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">empty_like</span></code>()</p></td>
 <td><p>Creates an empty like DistributedArray with uninitialized values</p></td>
@@ -662,7 +662,7 @@ expected local shape for the current rank.</p>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">iadd</span></code>(dist_array)</p></td>
 <td><p>Distributed In-place Addition of arrays</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">multiply</span></code>(dist_array)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">multiply</span></code>(dist_array[, out])</p></td>
 <td><p>Distributed Element-wise multiplication</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm</span></code>([ord, axis])</p></td>
@@ -677,10 +677,13 @@ expected local shape for the current rank.</p>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">reshape</span></code>(local_shape[, axis])</p></td>
 <td><p>Return a reshaped DistributedArray</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_dist</span></code>(x[, base_comm, base_comm_nccl, ...])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">subtract</span></code>(dist_array[, out])</p></td>
+<td><p>Distributed Subtraction of arrays</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_dist</span></code>(x[, base_comm, base_comm_nccl, ...])</p></td>
 <td><p>Convert A Global Array to a Distributed Array</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">zeros_like</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">zeros_like</span></code>()</p></td>
 <td><p>Creates a copy of the DistributedArray filled with zeros</p></td>
 </tr>
 </tbody>

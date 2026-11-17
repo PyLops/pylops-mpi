@@ -601,7 +601,7 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code>(distarrays[, base_comm])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add</span></code>(stacked_array)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add</span></code>(stacked_array[, out])</p></td>
 <td><p>Stacked Distributed Addition of arrays</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">asarray</span></code>()</p></td>
@@ -622,13 +622,16 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">iadd</span></code>(stacked_array)</p></td>
 <td><p>Stacked Distributed In-Place Addition of arrays</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">multiply</span></code>(stacked_array)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">multiply</span></code>(stacked_array[, out])</p></td>
 <td><p>Stacked Distributed Multiplication of arrays</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm</span></code>([ord])</p></td>
 <td><p>numpy.linalg.norm method on stacked Distributed arrays</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">zeros_like</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">subtract</span></code>(stacked_array[, out])</p></td>
+<td><p>Stacked Distributed Subtraction of arrays</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">zeros_like</span></code>()</p></td>
 <td><p>Creates a zero like StackedDistributedArray</p></td>
 </tr>
 </tbody>
