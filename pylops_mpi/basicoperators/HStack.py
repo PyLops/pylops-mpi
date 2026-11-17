@@ -1,10 +1,12 @@
+from typing import Optional, Sequence
+
 import numpy as np
-from typing import Sequence, Optional
 from mpi4py import MPI
 from pylops import LinearOperator
 from pylops.utils import DTypeLike
 
 from pylops_mpi import DistributedArray, MPILinearOperator
+
 from .VStack import MPIVStack
 
 
@@ -23,7 +25,14 @@ class MPIHStack(MPILinearOperator):
     base_comm : :obj:`mpi4py.MPI.Comm`, optional
         Base MPI Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.
     dtype : :obj:`str`, optional
-        Type of elements in input array.
+        Type of elements in input array. If ``None``, it is inferred from
+        the dtypes of ``ops``.
+
+        Note that this must be at least as wide as (i.e., able to safely
+        represent) the dtype of the outputs of both the forward and adjoint
+        of each operator in ``ops``, since results are written (or accumulated)
+        in-place into arrays of this dtype (e.g., use a complex dtype if any
+        of the operators is complex).
 
     Attributes
     ----------
@@ -87,9 +96,12 @@ class MPIHStack(MPILinearOperator):
 
     """
 
-    def __init__(self, ops: Sequence[LinearOperator],
-                 base_comm: MPI.Comm = MPI.COMM_WORLD,
-                 dtype: Optional[DTypeLike] = None):
+    def __init__(
+        self,
+        ops: Sequence[LinearOperator],
+        base_comm: MPI.Comm = MPI.COMM_WORLD,
+        dtype: Optional[DTypeLike] = None,
+    ):
         self.ops = ops
         nops = [oper.shape[0] for oper in self.ops]
         nops = np.concatenate(base_comm.allgather(nops), axis=0)
@@ -97,7 +109,12 @@ class MPIHStack(MPILinearOperator):
             raise ValueError("Operators have different number of rows")
         hops = [oper.H for oper in self.ops]
         self.HStack = MPIVStack(ops=hops, base_comm=base_comm, dtype=dtype).H
-        super().__init__(dims=self.HStack.dims, dimsd=self.HStack.dimsd, dtype=self.HStack.dtype, base_comm=base_comm)
+        super().__init__(
+            dims=self.HStack.dims,
+            dimsd=self.HStack.dimsd,
+            dtype=self.HStack.dtype,
+            base_comm=base_comm,
+        )
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         return self.HStack.matvec(x)

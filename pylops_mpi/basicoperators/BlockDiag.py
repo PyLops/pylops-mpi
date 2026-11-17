@@ -36,7 +36,14 @@ class MPIBlockDiag(MPILinearOperator):
         Mask defining subsets of ranks to consider when performing 'global' operations on
         the distributed array such as dot product or norm.
     dtype : :obj:`str`, optional
-        Type of elements in input array.
+        Type of elements in input array. If ``None``, it is inferred from
+        the dtypes of ``ops``.
+
+        Note that this must be at least as wide as (i.e., able to safely
+        represent) the dtype of the outputs of both the forward and adjoint
+        of each operator in ``ops``, since results are written (or accumulated)
+        in-place into arrays of this dtype (e.g., use a complex dtype if any
+        of the operators is complex).
 
     Attributes
     ----------
@@ -169,6 +176,11 @@ class MPIStackedBlockDiag(MPIStackedLinearOperator):
     ----------
     ops : :obj:`list`
         One or more :class:`pylops_mpi.MPILinearOperator` to be stacked.
+    base_comm : :obj:`mpi4py.MPI.Comm`, optional
+        Base MPI Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.
+    dtype : :obj:`str`, optional
+        Type of elements in input array. If ``None``, it is inferred from
+        the dtypes of ``ops``.
 
     Attributes
     ----------
