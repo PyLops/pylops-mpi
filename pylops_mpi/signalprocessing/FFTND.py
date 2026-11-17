@@ -224,12 +224,12 @@ class MPIFFTND(_MPIBaseFFTND):
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         if x.engine == "cupy":
             raise ValueError(
-                f"x should be a numpy array with engine=numpy"
+                f"x should be a numpy array with engine=numpy. "
                 f"Got  {x.engine} instead..."
             )
         if x.partition != Partition.SCATTER:
             raise ValueError(
-                f"x should have partition={Partition.SCATTER}"
+                f"x should have partition={Partition.SCATTER}. "
                 f"Got  {x.partition} instead..."
             )
         if self.ifftshift_before.any() or not self.clinear:
@@ -269,12 +269,12 @@ class MPIFFTND(_MPIBaseFFTND):
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         if x.engine == "cupy":
             raise ValueError(
-                f"x should be a numpy array with engine=numpy"
+                f"x should be a numpy array with engine=numpy. "
                 f"Got  {x.engine} instead..."
             )
         if x.partition != Partition.SCATTER:
             raise ValueError(
-                f"x should have partition={Partition.SCATTER}, "
+                f"x should have partition={Partition.SCATTER}. "
                 f"Got  {x.partition} instead..."
             )
         if self.fftshift_after.any() or self.real:
