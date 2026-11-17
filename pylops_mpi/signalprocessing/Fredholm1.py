@@ -1,14 +1,9 @@
 import numpy as np
-
 from mpi4py import MPI
 from pylops.utils.backend import get_module
 from pylops.utils.typing import DTypeLike, NDArray
 
-from pylops_mpi import (
-    DistributedArray,
-    MPILinearOperator,
-    Partition
-)
+from pylops_mpi import DistributedArray, MPILinearOperator, Partition
 
 
 class MPIFredholm1(MPILinearOperator):
@@ -88,16 +83,20 @@ class MPIFredholm1(MPILinearOperator):
         self.nsl, self.nx, self.ny = G.shape
         self.nsls = base_comm.allgather(self.nsl)
         if base_comm.Get_rank() == 0 and 1 in self.nsls:
-            raise NotImplementedError(f'All ranks must have at least 2 or more '
-                                      f'elements in the first dimension: '
-                                      f'local split is instead {self.nsls}...')
+            raise NotImplementedError(
+                f"All ranks must have at least 2 or more "
+                f"elements in the first dimension: "
+                f"local split is instead {self.nsls}..."
+            )
         nslstot = base_comm.allreduce(self.nsl)
         self.islstart = np.insert(np.cumsum(self.nsls)[:-1], 0, 0)
         self.islend = np.cumsum(self.nsls)
         self.rank = base_comm.Get_rank()
         dims = (nslstot, self.ny, self.nz)
         dimsd = (nslstot, self.nx, self.nz)
-        super().__init__(dims=dims, dimsd=dimsd, dtype=np.dtype(dtype), base_comm=base_comm)
+        super().__init__(
+            dims=dims, dimsd=dimsd, dtype=np.dtype(dtype), base_comm=base_comm
+        )
 
         self.G = G
         if saveGt:
@@ -107,41 +106,54 @@ class MPIFredholm1(MPILinearOperator):
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
         if x.partition not in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
-            raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
-                             f"Got  {x.partition} instead...")
-        y = DistributedArray(global_shape=self.shape[0],
-                             base_comm=x.base_comm,
-                             base_comm_nccl=x.base_comm_nccl,
-                             partition=x.partition,
-                             engine=x.engine, dtype=self.dtype)
+            raise ValueError(
+                f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}. "
+                f"Got  {x.partition} instead..."
+            )
+        y = DistributedArray(
+            global_shape=self.shape[0],
+            base_comm=x.base_comm,
+            base_comm_nccl=x.base_comm_nccl,
+            partition=x.partition,
+            engine=x.engine,
+            dtype=self.dtype,
+        )
         x = x.local_array.reshape(self.dims).squeeze()
-        x = x[self.islstart[self.rank]:self.islend[self.rank]]
+        x = x[self.islstart[self.rank] : self.islend[self.rank]]
         # apply matmul for portion of the rank of interest
         if self.usematmul:
             if self.nz == 1:
                 x = x[..., ncp.newaxis]
             y1 = ncp.matmul(self.G, x)
         else:
-            y1 = ncp.squeeze(ncp.zeros((self.nsls[self.rank], self.nx, self.nz), dtype=self.dtype))
+            y1 = ncp.squeeze(
+                ncp.zeros((self.nsls[self.rank], self.nx, self.nz), dtype=self.dtype)
+            )
             for isl in range(self.nsls[self.rank]):
                 y1[isl] = ncp.dot(self.G[isl], x[isl])
         # gather results
-        y[:] = ncp.vstack(y._allgather(y.base_comm, y.base_comm_nccl, y1,
-                                       engine=y.engine)).ravel()
+        y[:] = ncp.vstack(
+            y._allgather(y.base_comm, y.base_comm_nccl, y1, engine=y.engine)
+        ).ravel()
         return y
 
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         ncp = get_module(x.engine)
         if x.partition not in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
-            raise ValueError(f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
-                             f"Got  {x.partition} instead...")
-        y = DistributedArray(global_shape=self.shape[1],
-                             base_comm=x.base_comm,
-                             base_comm_nccl=x.base_comm_nccl,
-                             partition=x.partition,
-                             engine=x.engine, dtype=self.dtype)
+            raise ValueError(
+                f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}. "
+                f"Got  {x.partition} instead..."
+            )
+        y = DistributedArray(
+            global_shape=self.shape[1],
+            base_comm=x.base_comm,
+            base_comm_nccl=x.base_comm_nccl,
+            partition=x.partition,
+            engine=x.engine,
+            dtype=self.dtype,
+        )
         x = x.local_array.reshape(self.dimsd).squeeze()
-        x = x[self.islstart[self.rank]:self.islend[self.rank]]
+        x = x[self.islstart[self.rank] : self.islend[self.rank]]
         # apply matmul for portion of the rank of interest
         if self.usematmul:
             if self.nz == 1:
@@ -155,7 +167,9 @@ class MPIFredholm1(MPILinearOperator):
                     .conj()
                 )
         else:
-            y1 = ncp.squeeze(ncp.zeros((self.nsls[self.rank], self.ny, self.nz), dtype=self.dtype))
+            y1 = ncp.squeeze(
+                ncp.zeros((self.nsls[self.rank], self.ny, self.nz), dtype=self.dtype)
+            )
             if hasattr(self, "GT"):
                 for isl in range(self.nsls[self.rank]):
                     y1[isl] = ncp.dot(self.GT[isl], x[isl])
@@ -164,6 +178,7 @@ class MPIFredholm1(MPILinearOperator):
                     y1[isl] = ncp.dot(x[isl].T.conj(), self.G[isl]).T.conj()
 
         # gather results
-        y[:] = ncp.vstack(y._allgather(y.base_comm, y.base_comm_nccl, y1,
-                                       engine=y.engine)).ravel()
+        y[:] = ncp.vstack(
+            y._allgather(y.base_comm, y.base_comm_nccl, y1, engine=y.engine)
+        ).ravel()
         return y

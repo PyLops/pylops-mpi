@@ -131,7 +131,7 @@ class MPIVStack(DistributedMixIn, MPILinearOperator):
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         if x.partition not in [Partition.BROADCAST, Partition.UNSAFE_BROADCAST]:
             raise ValueError(
-                f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}"
+                f"x should have partition={Partition.BROADCAST},{Partition.UNSAFE_BROADCAST}. "
                 f"Got  {x.partition} instead..."
             )
         # the output y should use NCCL if the operand x uses it
