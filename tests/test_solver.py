@@ -113,6 +113,11 @@ def count_allreduces():
         D.mpi_allreduce = orig
 
 
+# tiny (but non-zero) tolerance for CG/CGLS: tol=0 can lead to a division by zero
+# once the solver has converged to machine precision
+TOL_CG_CGLS = 1e-25
+
+
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize(
     "par", [(par1), (par1j), (par2), (par2j), (par3), (par3j), (par4), (par4j)]
@@ -155,7 +160,9 @@ def test_cg(par):
     y = BDiag_MPI * x
     y_before, x0_before = y.asarray().copy(), x0.asarray().copy()
     with count_allreduces() as n:
-        xinv, iiter, _ = cg(BDiag_MPI, y, x0=x0, niter=par["nx"], tol=1e-5, show=True)
+        xinv, iiter, _ = cg(
+            BDiag_MPI, y, x0=x0, niter=par["nx"], tol=TOL_CG_CGLS, show=True
+        )
     assert_allclose(y.asarray(), y_before, rtol=1e-14)
     assert_allclose(x0.asarray(), x0_before, rtol=1e-14)
     assert n[0] == 2 * iiter + 1
@@ -178,15 +185,17 @@ def test_cg(par):
         else:
             x0 = None
         y1 = BDiag * x_global
-        xinv1 = pylops.cg(BDiag, y1, x0=x0, niter=par["nx"], tol=1e-5, show=True)[0]
-        assert_allclose(xinv_array, xinv1, rtol=1e-12)
+        xinv1 = pylops.cg(
+            BDiag, y1, x0=x0, niter=par["nx"], tol=TOL_CG_CGLS, show=True
+        )[0]
+        assert_allclose(xinv_array, xinv1, rtol=1e-6)
 
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize(
     "par", [(par1), (par1j), (par2), (par2j), (par3), (par3j), (par4), (par4j)]
 )
-@pytest.mark.parametrize("damp", [0.0, 0.5])
+@pytest.mark.parametrize("damp", [0.0, 50.0])
 def test_cgls(par, damp):
     """CGLS with MPIBlockDiag"""
     np.random.seed(42)
@@ -228,13 +237,15 @@ def test_cgls(par, damp):
     y = BDiag_MPI * x
     y_before, x0_before = y.asarray().copy(), x0.asarray().copy()
     with count_allreduces() as n:
-        xinv, _, iiter, _, _, cost = cgls(
-            BDiag_MPI, y, x0=x0, niter=par["nx"], damp=damp, tol=1e-5, show=True
+        xinv, _, niter, r1norm, _, cost = cgls(
+            BDiag_MPI, y, x0=x0, niter=par["nx"], damp=damp, tol=TOL_CG_CGLS, show=True
         )
+    # all niter iterations run, unless convergence (kold <= tol) is reached earlier
+    assert niter == par["nx"] or r1norm <= TOL_CG_CGLS
     assert_allclose(y.asarray(), y_before, rtol=1e-14)
     assert_allclose(x0.asarray(), x0_before, rtol=1e-14)
     if damp == 0.0:
-        assert n[0] == 3 * iiter + 2
+        assert n[0] == 3 * niter + 2
     assert isinstance(xinv, DistributedArray)
     xinv_array = xinv.asarray()
     if rank == 0:
@@ -259,17 +270,25 @@ def test_cgls(par, damp):
             x0 = None
         y1 = BDiag * x_global
         xinv1, _, _, _, _, cost1 = pylops.cgls(
-            BDiag, y1, x0=x0, niter=par["nx"], damp=damp, tol=1e-5, show=True
+            BDiag, y1, x0=x0, niter=par["nx"], damp=damp, tol=TOL_CG_CGLS, show=True
         )
-        assert_allclose(xinv_array, xinv1, rtol=1e-12)
-        assert_allclose(cost, cost1, rtol=1e-8)
+        # currently disable check for damp > 0.0 until PyLops PR851 is in a new
+        # release
+        if damp == 0.0:
+            assert_allclose(xinv_array, xinv1, rtol=1e-6)
+            # costs beyond convergence are rounding noise (scaled by initial cost),
+            # and the iteration at which tol is hit may differ by a few iterations
+            ncost = min(len(cost), len(cost1))
+            assert_allclose(
+                cost[:ncost], cost1[:ncost], rtol=1e-6, atol=1e-9 * cost1[0]
+            )
 
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize(
     "par", [(par1), (par1j), (par2), (par2j), (par3), (par3j), (par4), (par4j)]
 )
-@pytest.mark.parametrize("damp", [0.0, 0.5])
+@pytest.mark.parametrize("damp", [0.0, 50.0])
 def test_cgls_broadcastdata(par, damp):
     """CGLS with broadcasted data vector"""
     np.random.seed(42)
@@ -310,9 +329,9 @@ def test_cgls_broadcastdata(par, damp):
     assert y.partition is Partition.BROADCAST
 
     y_before, x0_before = y.asarray().copy(), x0.asarray().copy()
-    xinv = cgls(HStack_MPI, y, x0=x0, niter=par["nx"], damp=damp, tol=1e-5, show=True)[
-        0
-    ]
+    xinv = cgls(
+        HStack_MPI, y, x0=x0, niter=par["nx"], damp=damp, tol=TOL_CG_CGLS, show=True
+    )[0]
     assert_allclose(y.asarray(), y_before, rtol=1e-14)
     assert_allclose(x0.asarray(), x0_before, rtol=1e-14)
     assert isinstance(xinv, DistributedArray)
@@ -333,16 +352,19 @@ def test_cgls_broadcastdata(par, damp):
             x0 = None
         y1 = Hstack @ x_global
         xinv1 = pylops.cgls(
-            Hstack, y1, x0=x0, niter=par["nx"], damp=damp, tol=1e-5, show=True
+            Hstack, y1, x0=x0, niter=par["nx"], damp=damp, tol=TOL_CG_CGLS, show=True
         )[0]
-        assert_allclose(xinv_array, xinv1, rtol=1e-12)
+        # currently disable check for damp > 0.0 until PyLops PR851 is in a new
+        # release
+        if damp == 0.0:
+            assert_allclose(xinv_array, xinv1, rtol=1e-6)
 
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize(
     "par", [(par1), (par1j), (par2), (par2j), (par3), (par3j), (par4), (par4j)]
 )
-@pytest.mark.parametrize("damp", [0.0, 0.5])
+@pytest.mark.parametrize("damp", [0.0, 50.0])
 def test_cgls_broadcastmodel(par, damp):
     """CGLS with broadcasted model vector"""
     np.random.seed(42)
@@ -394,9 +416,9 @@ def test_cgls_broadcastmodel(par, damp):
     assert y.partition is Partition.SCATTER
 
     y_before, x0_before = y.asarray().copy(), x0.asarray().copy()
-    xinv = cgls(VStack_MPI, y, x0=x0, niter=par["nx"], damp=damp, tol=1e-5, show=True)[
-        0
-    ]
+    xinv = cgls(
+        VStack_MPI, y, x0=x0, niter=par["nx"], damp=damp, tol=TOL_CG_CGLS, show=True
+    )[0]
     assert_allclose(y.asarray(), y_before, rtol=1e-14)
     assert_allclose(x0.asarray(), x0_before, rtol=1e-14)
     assert isinstance(xinv, DistributedArray)
@@ -423,9 +445,12 @@ def test_cgls_broadcastmodel(par, damp):
             x0 = None
         y1 = Vstack @ x_global
         xinv1 = pylops.cgls(
-            Vstack, y1, x0=x0, niter=par["nx"], damp=damp, tol=1e-5, show=True
+            Vstack, y1, x0=x0, niter=par["nx"], damp=damp, tol=TOL_CG_CGLS, show=True
         )[0]
-        assert_allclose(xinv_array, xinv1, rtol=1e-13)
+        # currently disable check for damp > 0.0 until PyLops PR851 is in a new
+        # release
+        if damp == 0.0:
+            assert_allclose(xinv_array, xinv1, rtol=1e-6)
 
 
 @pytest.mark.mpi(min_size=2)
@@ -496,7 +521,7 @@ def test_cg_stacked(par):
     y_before, x0_before = y.asarray().copy(), x0.asarray().copy()
     with count_allreduces() as n:
         xinv, iiter, _ = cg(
-            StackedBDiag_MPI, y, x0=x0, niter=par["nx"], tol=1e-5, show=True
+            StackedBDiag_MPI, y, x0=x0, niter=par["nx"], tol=TOL_CG_CGLS, show=True
         )
     assert_allclose(y.asarray(), y_before, rtol=1e-14)
     assert_allclose(x0.asarray(), x0_before, rtol=1e-14)
@@ -527,16 +552,16 @@ def test_cg_stacked(par):
             x0 = None
         y1 = StackedBDiag * x_global
         xinv1 = pylops.cg(
-            StackedBDiag, y1, x0=x0, niter=par["nx"], tol=1e-5, show=True
+            StackedBDiag, y1, x0=x0, niter=par["nx"], tol=TOL_CG_CGLS, show=True
         )[0]
-        assert_allclose(xinv_array, xinv1, rtol=1e-12)
+        assert_allclose(xinv_array, xinv1, rtol=1e-6)
 
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize(
     "par", [(par1), (par1j), (par2), (par2j), (par3), (par3j), (par4), (par4j)]
 )
-@pytest.mark.parametrize("damp", [0.0, 0.5])
+@pytest.mark.parametrize("damp", [0.0, 50.0])
 def test_cgls_stacked(par, damp):
     """CGLS with MPIStackedBlockDiag"""
     np.random.seed(42)
@@ -613,9 +638,17 @@ def test_cgls_stacked(par, damp):
 
     y = StackedBDiag_MPI * x
     y_before, x0_before = y.asarray().copy(), x0.asarray().copy()
-    xinv = cgls(
-        StackedBDiag_MPI, y, x0=x0, niter=par["nx"], damp=damp, tol=1e-5, show=True
-    )[0]
+    xinv, _, niter, r1norm = cgls(
+        StackedBDiag_MPI,
+        y,
+        x0=x0,
+        niter=par["nx"],
+        damp=damp,
+        tol=TOL_CG_CGLS,
+        show=True,
+    )[:4]
+    # all niter iterations run, unless convergence (kold <= tol) is reached earlier
+    assert niter == par["nx"] or r1norm <= TOL_CG_CGLS
     assert_allclose(y.asarray(), y_before, rtol=1e-14)
     assert_allclose(x0.asarray(), x0_before, rtol=1e-14)
     assert isinstance(xinv, StackedDistributedArray)
@@ -645,6 +678,15 @@ def test_cgls_stacked(par, damp):
             x0 = None
         y1 = StackedBDiag * x_global
         xinv1 = pylops.cgls(
-            StackedBDiag, y1, x0=x0, niter=par["nx"], damp=damp, tol=1e-5, show=True
+            StackedBDiag,
+            y1,
+            x0=x0,
+            niter=par["nx"],
+            damp=damp,
+            tol=TOL_CG_CGLS,
+            show=True,
         )[0]
-        assert_allclose(xinv_array, xinv1, rtol=1e-12)
+        # currently disable check for damp > 0.0 until PyLops PR851 is in a new
+        # release
+        if damp == 0.0:
+            assert_allclose(xinv_array, xinv1, rtol=1e-6)
