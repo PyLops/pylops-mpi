@@ -909,7 +909,24 @@ class DistributedArray(DistributedMixIn):
         return self._ufunc(get_module(self.engine).multiply, dist_array, out)
 
     def _local_dot(self, dist_array: Self, vdot: bool = False) -> Union[float, complex]:
-        """Dot product of the local arrays (no communication)"""
+        """Dot product of the local arrays (no communication)
+
+        Parameters
+        ----------
+        dist_array : :obj:`pylops_mpi.DistributedArray`
+            The distributed array whose local array is used as the second
+            operand of the dot product.
+        vdot : :obj:`bool`, optional
+            If ``True``, conjugate the local array of ``self`` (like
+            :func:`numpy.vdot`). If ``False``, compute the standard dot
+            product (like :func:`numpy.dot`). Defaults to ``False``.
+
+        Returns
+        -------
+        result : :obj:`float` or :obj:`complex`
+            Dot product of the flattened local arrays on this rank.
+
+        """
         ncp = get_module(self.engine)
         dot_func = ncp.vdot if vdot else ncp.dot
         return dot_func(self.local_array.ravel(), dist_array.local_array.ravel())
@@ -967,10 +984,23 @@ class DistributedArray(DistributedMixIn):
             )
         )
 
-    def _local_sqnorm(self, local_array=None) -> float:
-        """Squared 2-norm of the local array (no communication)"""
+    def _local_sqnorm(self, local_array: NDArray) -> float:
+        """Squared 2-norm of the local array (no communication)
+
+        Parameters
+        ----------
+        local_array : :obj:`numpy.ndarray`
+            Local array whose squared 2-norm is computed.
+
+        Returns
+        -------
+        result : :obj:`float`
+            Sum of the squared absolute values of the flattened array on
+            this rank, as ``float64``.
+
+        """
         ncp = get_module(self.engine)
-        local = (self.local_array if local_array is None else local_array).ravel()
+        local = local_array.ravel()
         if ncp.iscomplexobj(local):
             # real view of the same buffer: sum of squares of real and
             # imaginary parts (overflows to inf rather than nan)
@@ -1756,7 +1786,7 @@ class StackedDistributedArray:
         # Fast-fused L2 norm
         if ord == 2 and self._fusable(leaves):
             # sum the local squared norms and reduce only once
-            local = sum(leaf._local_sqnorm() for leaf in leaves)
+            local = sum(leaf._local_sqnorm(leaf.local_array) for leaf in leaves)
             return to_scalar(np.sqrt(self._fused_allreduce(leaves, local)))
         # Other norms - note that the norms of the individual distributed
         # arrays are scalars (irrespective of the engine used), thus numpy
