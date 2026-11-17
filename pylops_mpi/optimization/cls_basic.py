@@ -92,12 +92,14 @@ class CG(Solver):
         self.y = y
         self.niter = niter
         self.tol = tol
+        self.rank = x0.rank
 
         x = x0.copy()
-        self.r = self.y - self.Op.matvec(x)
-        self.rank = x.rank
+        # residual computed in-place into the output of the matvec
+        self.r = self.Op.matvec(x)
+        self.y.subtract(self.r, out=self.r)
         self.c = self.r.copy()
-        self.kold = float(np.abs(self.r.dot(self.r.conj())))
+        self.kold = float(np.abs(self.r.dot(self.r, vdot=True)))
 
         # create variables to track the residual norm and iterations
         self.cost: List = []
@@ -130,14 +132,21 @@ class CG(Solver):
             Updated model vector
 
         """
-        Opc = self.Op.matvec(self.c)
-        cOpc = np.abs(self.c.dot(Opc.conj()))
+
+        # tmp holds Op*c first and is then reused as scratch space,
+        # so that all updates are done in-place
+        tmp = self.Op.matvec(self.c)
+        cOpc = np.abs(self.c.dot(tmp.conj()))
         a = float(self.kold / cOpc)
-        x += a * self.c
-        self.r -= a * Opc
-        k = float(np.abs(self.r.dot(self.r.conj())))
+
+        tmp *= a
+        self.r -= tmp
+        self.c.multiply(a, out=tmp)
+        x += tmp
+        k = float(np.abs(self.r.dot(self.r, vdot=True)))
         b = float(k / self.kold)
-        self.c = self.r + b * self.c
+        self.c *= b
+        self.c += self.r
         self.kold = k
         self.iiter += 1
         self.cost.append(float(np.sqrt(self.kold)))
@@ -349,25 +358,33 @@ class CGLS(Solver):
         """
         self.y = y
         self.damp = damp**2
-        self.tol = tol
         self.niter = niter
+        self.tol = tol
+        self.rank = x0.rank
 
         x = x0.copy()
-        self.s = self.y - self.Op.matvec(x)
-        damped_x = x * damp
-        r = self.Op.rmatvec(self.s) - damped_x
-        self.rank = x.rank
-        self.c = r.copy()
+        # residual computed in-place into the output of the matvec
+        self.s = self.Op.matvec(x)
+        self.y.subtract(self.s, out=self.s)
+        self.c = self.Op.rmatvec(self.s)
+        # scratch space for the steps (also used here for the damping term)
+        self.tmp = self.c.copy()
+        if damp != 0.0:
+            x.multiply(damp, out=self.tmp)
+            self.c -= self.tmp
         self.q = self.Op.matvec(self.c)
-        self.kold = float(np.abs(r.dot(r.conj())))
+        self.kold = float(np.abs(self.c.dot(self.c, vdot=True)))
 
         # create variables to track the residual norm and iterations
         self.cost = []
         self.cost1 = []
         self.cost.append(float(self.s.norm()))
-        self.cost1.append(
-            np.sqrt(float(self.cost[0] ** 2 + damp * np.abs(x.dot(x.conj()))))
-        )
+        if damp == 0.0:
+            self.cost1.append(self.cost[0])
+        else:
+            self.cost1.append(
+                np.sqrt(float(self.cost[0] ** 2 + damp * np.abs(x.dot(x, vdot=True))))
+            )
         self.iiter = 0
 
         # print setup
@@ -398,28 +415,41 @@ class CGLS(Solver):
 
         """
 
-        a = float(
-            np.abs(
-                self.kold
-                / (self.q.dot(self.q.conj()) + self.damp * self.c.dot(self.c.conj()))
-            )
-        )
-        x += a * self.c
-        self.s -= a * self.q
-        damped_x = self.damp * x
-        r = self.Op.rmatvec(self.s) - damped_x
-        k = float(np.abs(r.dot(r.conj())))
+        qq = self.q.dot(self.q, vdot=True)
+        if self.damp != 0.0:
+            qq += self.damp * self.c.dot(self.c, vdot=True)
+        a = float(np.abs(self.kold / qq))
+        # all updates are done in-place using tmp as scratch space; q is
+        # replaced by the next matvec
+        self.c.multiply(a, out=self.tmp)
+        x += self.tmp
+        self.q *= a
+        self.s -= self.q
+        r = self.Op.rmatvec(self.s)
+        if self.damp != 0.0:
+            x.multiply(self.damp, out=self.tmp)
+            r -= self.tmp
+        k = float(np.abs(r.dot(r, vdot=True)))
         b = float(k / self.kold)
-        self.c = r + b * self.c
+        self.c *= b
+        self.c += r
+        # r is dead after the update of c: it becomes the scratch space
+        self.tmp = r
         self.q = self.Op.matvec(self.c)
         self.kold = k
         self.iiter += 1
         self.cost.append(float(self.s.norm()))
-        self.cost1.append(
-            np.sqrt(
-                float(self.cost[self.iiter] ** 2 + self.damp * np.abs(x.dot(x.conj())))
+        if self.damp == 0.0:
+            self.cost1.append(self.cost[self.iiter])
+        else:
+            self.cost1.append(
+                np.sqrt(
+                    float(
+                        self.cost[self.iiter] ** 2
+                        + self.damp * np.abs(x.dot(x, vdot=True))
+                    )
+                )
             )
-        )
         if show and self.rank == 0:
             self._print_step(x)
         return x
