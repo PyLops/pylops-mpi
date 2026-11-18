@@ -290,11 +290,9 @@ class CGLS(Solver):
         self._print_solver(nbar=65)
 
         if self.niter is not None:
-            strpar = (
-                f"damp = {self.damp:10e}\ttol = {self.tol:10e}\tniter = {self.niter}"
-            )
+            strpar = f"damp = {np.sqrt(self.damp):10e}\ttol = {self.tol:10e}\tniter = {self.niter}"
         else:
-            strpar = f"damp = {self.damp:10e}\ttol = {self.tol:10e}\t"
+            strpar = f"damp = {np.sqrt(self.damp):10e}\ttol = {self.tol:10e}\t"
         print(strpar)
         print("-" * 65 + "\n")
         if not xcomplex:
@@ -369,8 +367,8 @@ class CGLS(Solver):
         self.c = self.Op.rmatvec(self.s)
         # scratch space for the steps (also used here for the damping term)
         self.tmp = self.c.copy()
-        if damp != 0.0:
-            x.multiply(damp, out=self.tmp)
+        if self.damp != 0.0:
+            x.multiply(self.damp, out=self.tmp)
             self.c -= self.tmp
         self.q = self.Op.matvec(self.c)
         self.kold = float(np.abs(self.c.dot(self.c, vdot=True)))
@@ -379,11 +377,13 @@ class CGLS(Solver):
         self.cost = []
         self.cost1 = []
         self.cost.append(float(self.s.norm()))
-        if damp == 0.0:
+        if self.damp == 0.0:
             self.cost1.append(self.cost[0])
         else:
             self.cost1.append(
-                np.sqrt(float(self.cost[0] ** 2 + damp * np.abs(x.dot(x, vdot=True))))
+                np.sqrt(
+                    float(self.cost[0] ** 2 + self.damp * np.abs(x.dot(x, vdot=True)))
+                )
             )
         self.iiter = 0
 
