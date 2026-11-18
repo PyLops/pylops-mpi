@@ -8,6 +8,7 @@ functionalities using MPI.
 
 A list of operators present in pylops_mpi.signalprocessing :
     MPIFredholm1                      Fredholm integral of first kind.
+    MPIFredholm1SUMMA                 Fredholm integral using batched SUMMA.
     MPINonStationaryConvolve1D        1D non-stationary convolution operator.
     MPIFFT2D                          Two-dimensional Fast-Fourier Transform
     MPIFFTND                          N-dimensional Fast-Fourier Transform
@@ -21,6 +22,7 @@ from .FFTND import *
 
 __all__ = [
     "MPIFredholm1",
+    "MPIFredholm1SUMMA",
     "MPINonStationaryConvolve1D",
     "MPIFFT2D",
     "MPIFFTND",

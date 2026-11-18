@@ -1,8 +1,8 @@
 import math
-import numpy as np
+from typing import Any, Optional, Tuple
 
+import numpy as np
 from mpi4py import MPI
-from typing import Optional, Any, Tuple
 from pylops.utils.backend import get_module
 from pylops.utils.typing import DTypeLike, NDArray
 
@@ -16,52 +16,50 @@ from pylops_mpi.DistributedArray import subcomm_split
 
 
 def _choose_pb_and_p(P: int, nsl: int) -> Tuple[int, int]:
-    """
-    Choose Pb to minimize the α-β model under constraint P/Pb is a perfect square.
-    Heuristic: largest Pb <= nsl such that P % Pb == 0 and is_square(P/Pb).
-    """
-    best = None
-    for Pb in range(min(P, nsl), 0, -1):
-        if P % Pb != 0: continue
-        P2 = P // Pb
-        p = int(math.isqrt(P2))
-        if p * p == P2:
-            best = (Pb, p)
-            break
-    if best is None:
-        raise ValueError(
-            f"No valid (Pb,p) with Pb<=nsl and P/Pb square. P={P}, nsl={nsl}."
-        )
-    return best
+    """Choose the largest batch count that leaves a square grid per batch."""
+    for pb in range(min(P, nsl), 0, -1):
+        p = math.isqrt(P // pb)
+        if pb * p * p == P:
+            return pb, p
+    raise ValueError(f"No square process grid for {P} ranks and {nsl} slices.")
 
 
 class MPIFredholm1SUMMA(DistributedMixIn, MPILinearOperator):
-    """
-    Distributed Fredholm-1 using batched SUMMA on contraction:
-        d[k,:,:] = G[k,:,:] @ m[k,:,:]
-
-    G is distributed as tiles (batch, x_tile, y_tile) over (batch_group, grid_row, grid_col).
-    m is distributed as tiles (batch, y_tile, z_tile) over (batch_group, grid_row, grid_col).
-    d is distributed as tiles (batch, x_tile, z_tile) over (batch_group, grid_row, grid_col).
-
-    This operator uses Partition.SCATTER for both input and output.
+    """Fredholm integral of the first kind using batched SUMMA.
 
     Parameters
     ----------
-    G_local : ndarray
-        Local tile of G of shape (B_g, nx_loc, ny_loc) for this rank.
+    G_local : numpy.ndarray or cupy.ndarray
+        Unpadded kernel tile of shape (local slices, local x, local y).
     nz : int
-        Global nz dimension.
+        Global number of columns in each model and data slice.
     nsl_global : int, optional
-        Global number of slices. If None, inferred from batch sizes across ranks.
+        Total number of slices. By default, infer it from the batch groups.
     saveGt : bool, optional
-        Save local conjugate-transpose of G tile for adjoint.
+        Store the conjugate transpose of the local kernel for adjoint products.
     pb : int, optional
-        Number of batch groups. If None, auto-chosen.
-    base_comm : MPI.Comm
-    base_comm_nccl : optional NCCL comm (only if base_comm == COMM_WORLD)
-    dtype : str
+        Number of batch groups. Each group must contain a square number of ranks.
+        With a known slice count, the default is the largest valid group count
+        up to that count. With an inferred slice count, the default is one group.
+    base_comm : mpi4py.MPI.Comm, optional
+        MPI communicator containing the batch groups.
+    base_comm_nccl : cupy.cuda.nccl.NcclCommunicator, optional
+        NCCL communicator for GPU transfers when using MPI.COMM_WORLD.
+    dtype : str or numpy.dtype, optional
+        Kernel dtype. Products use the common dtype of the kernel and vector.
+
+    Notes
+    -----
+    Each slice evaluates ``data[s] = G[s] @ model[s]``. Consecutive groups of
+    ranks own consecutive batches of slices. Within a group of ``p * p`` ranks,
+    grid coordinates follow row-major order. Each matrix axis of length ``n``
+    uses blocks of width ``ceil(n / p)``, clipped at the boundary.
+
+    Supply model tiles over (slices, y, z) and data tiles over (slices, x, z).
+    Each rank stores its tile flattened in C order in a one-dimensional
+    :class:`pylops_mpi.DistributedArray` with ``Partition.SCATTER``.
     """
+
     def __init__(
         self,
         G_local: NDArray,
@@ -81,302 +79,148 @@ class MPIFredholm1SUMMA(DistributedMixIn, MPILinearOperator):
         self.rank = base_comm.Get_rank()
         self.size = base_comm.Get_size()
 
-        # Local batch size
-        if G_local.ndim != 3: raise ValueError(f"G_local must be 3D (B,nx_loc,ny_loc). Got {G_local.shape}")
-        self.B  = int(G_local.shape[0])
         self.nz = int(nz)
-
-        # Determine batch-grouping (Pb) and inner SUMMA grid size (p)
-        # Need nsl_global for optimal choice; if not provided, use a conservative estimate from all ranks:
-        if nsl_global is None:
-            # Infer: sum(B_rank) over all ranks = p^2 * nsl_global (only true after we pick p)
-            # So we first pick Pb,p using nsl_est = sum(B_rank)/min_square_factor_guess
-            # Practical approach: assume Pb=1 initially, require P square, then compute nsl_global
-            # If user doesn't provide nsl_global, we do *no* auto-optimization; pb must be given or P must be square
-            if pb is None:
-                p0 = int(math.isqrt(self.size))
-                if p0 * p0 != self.size:
-                    raise ValueError(
-                        "If nsl_global is not provided, pb must be provided, "
-                        "or P must be a perfect square (so pb=1 is valid)."
-                    )
-                pb = 1
-
-        if pb is None:
-            pb, p = _choose_pb_and_p(self.size, int(nsl_global))
+        if self.nz < 0:
+            raise ValueError("nz must be nonnegative.")
+        if pb is None and nsl_global is not None:
+            self.pb, self.p = _choose_pb_and_p(self.size, int(nsl_global))
         else:
-            # For now we error but we could do something like where we would deactivate certain procs
-            if self.size % pb != 0:
-                raise ValueError(f"pb must divide P. Got pb={pb}, P={self.size}.")
-            P2 = self.size // pb
-            p = int(math.isqrt(P2))
-            if p * p != P2:
-                raise ValueError(f"P/pb must be a perfect square. Got P/pb={P2}.")
-            if nsl_global is not None and pb > nsl_global:
-                raise ValueError(f"pb must be <= nsl_global. Got pb={pb}, nsl_global={nsl_global}.")
+            self.pb = 1 if pb is None else pb
+            if self.pb < 1 or self.size % self.pb:
+                raise ValueError(f"pb must be a positive divisor of {self.size}.")
+            self.p = math.isqrt(self.size // self.pb)
+            if self.pb * self.p ** 2 != self.size:
+                raise ValueError("P/pb must be a perfect square.")
+            if nsl_global is not None and self.pb > nsl_global:
+                raise ValueError("pb must be <= nsl_global.")
 
-        self.pb = int(pb)
-        self.p = int(p)
-        self.P2 = self.p * self.p
+        self.P2 = self.p ** 2
+        self.batch_id, self.rank_in_group = divmod(self.rank, self.P2)
 
-        # Batch-group id and rank within group
-        self.batch_id = self.rank // self.P2
-        self.rank_in_group = self.rank % self.P2
-
-        if self.batch_id >= self.pb:
-            raise ValueError(
-                f"Rank mapping expects P == pb*p^2. "
-                f"Got P={self.size}, pb={self.pb}, p={self.p} => pb*p^2={self.pb*self.P2}."
-            )
-
-        # Create batch communicator
-        self.batch_comm = base_comm.Split(color=self.batch_id, key=self.rank_in_group)
-
-        # Within group, 2D grid coords
         self.row_id, self.col_id = divmod(self.rank_in_group, self.p)
 
-        # Row/col communicators (within group)
+        # Inspect all tile shapes before communicating panels. A bad tile must
+        # raise on every rank, including ranks in other batch groups.
+        shapes = base_comm.allgather(G_local.shape)
+        if any(len(shape) != 3 for shape in shapes):
+            raise ValueError("G_local must be a 3D (slices, x, y) tile.")
+        shapes = np.asarray(shapes).reshape(self.pb, self.p, self.p, 3)
+        batch_sizes = shapes[:, 0, 0, 0]
+        self.B = int(batch_sizes[self.batch_id])
+        self.nsl = int(batch_sizes.sum())
+        if nsl_global is not None and self.nsl != nsl_global:
+            raise ValueError("Batch sizes do not sum to nsl_global.")
+        self.nx = int(shapes[0, :, 0, 1].sum())
+        self.ny = int(shapes[0, 0, :, 2].sum())
+
+        # Pad each matrix dimension to a multiple of the grid width.
+        self.bn = (self.nx + self.p - 1) // self.p
+        self.bk = (self.ny + self.p - 1) // self.p
+        self.bm = (self.nz + self.p - 1) // self.p
+        self.nx_pad, self.ny_pad, self.nz_pad = (
+            self.bn * self.p, self.bk * self.p, self.bm * self.p
+        )
+        coords = np.arange(self.p)
+        x_sizes = np.clip(self.nx - coords * self.bn, 0, self.bn)
+        y_sizes = np.clip(self.ny - coords * self.bk, 0, self.bk)
+        z_sizes = np.clip(self.nz - coords * self.bm, 0, self.bm)
+        if not (np.all(shapes[..., 0] == batch_sizes[:, None, None])
+                and np.all(shapes[..., 1] == x_sizes[None, :, None])
+                and np.all(shapes[..., 2] == y_sizes[None, None, :])):
+            raise ValueError("G_local shapes do not match the batch and grid layout.")
+        self.local_n = x_sizes[self.row_id]
+        self.local_k = y_sizes[self.row_id]
+        self.local_ka = y_sizes[self.col_id]
+        self.local_m = z_sizes[self.col_id]
+        batch_cols = batch_sizes[:, None, None] * z_sizes[None, None, :]
+        self._model_sizes = (batch_cols * y_sizes[None, :, None]).ravel().tolist()
+        self._data_sizes = (batch_cols * x_sizes[None, :, None]).ravel().tolist()
+
+        self.batch_comm = base_comm.Split(color=self.batch_id, key=self.rank_in_group)
         self.row_comm = self.batch_comm.Split(color=self.row_id, key=self.col_id)
         self.col_comm = self.batch_comm.Split(color=self.col_id, key=self.row_id)
-
-        # # NCCL subcomms if provided
+        self.batch_comm_nccl = self.row_comm_nccl = self.col_comm_nccl = None
         if base_comm_nccl is not None:
-            # subcomm_split expects mask per WORLD rank
-            # batch_comm: group by batch_id
-            mask_batch = [r // self.P2 for r in range(self.size)]
-            self.batch_comm_nccl = subcomm_split(mask_batch, base_comm_nccl)
+            # Subcommunicator ranks follow the same ordering as their MPI peers.
+            ranks = np.arange(self.size)
+            groups = ranks // self.P2
+            rows, cols = np.divmod(ranks % self.P2, self.p)
+            self.batch_comm_nccl = subcomm_split(groups.tolist(), base_comm_nccl)
+            self.row_comm_nccl = subcomm_split((groups * self.p + rows).tolist(), base_comm_nccl)
+            self.col_comm_nccl = subcomm_split((groups * self.p + cols).tolist(), base_comm_nccl)
 
-            # row_comm: group by (batch_id,row_id)
-            mask_row = []
-            mask_col = []
-            for r in range(self.size):
-                bid = r // self.P2
-                rig = r % self.P2
-                rr, cc = divmod(rig, self.p)
-                mask_row.append(bid * self.p + rr)
-                mask_col.append(bid * self.p + cc)
-            self.row_comm_nccl = subcomm_split(mask_row, base_comm_nccl)
-            self.col_comm_nccl = subcomm_split(mask_col, base_comm_nccl)
-        else:
-            self.batch_comm_nccl = None
-            self.row_comm_nccl = None
-            self.col_comm_nccl = None
-
-        # Store G tile and optional GT
-        self.G = G_local.astype(np.dtype(dtype))
+        self.G = G_local.astype(dtype)
         if saveGt:
-            self.GT = self.G.transpose(0, 2, 1).conj() # (B, nx_loc, ny_loc) -> (B, ny_loc, nx_loc)
-
-        # Infer global nx, ny from within-group tiling
-        # A tile: (nx_loc, ny_loc) where nx is reduced on col_comm, ny on row_comm
-        nx_loc = self.G.shape[1]
-        ny_loc = self.G.shape[2]
-        self.nx = int(self.col_comm.allreduce(nx_loc, op=MPI.SUM))
-        self.ny = int(self.row_comm.allreduce(ny_loc, op=MPI.SUM))
-
-        # Determine global nsl
-        if nsl_global is None:
-            # sum B over WORLD ranks = p^2 * sum(B over batch groups) = p^2 * nsl_global
-            Bsum = int(self.base_comm.allreduce(self.B, op=MPI.SUM))
-            if Bsum % self.P2 != 0:
-                raise ValueError(
-                    f"Cannot infer nsl_global cleanly: sum(B)={Bsum} not divisible by p^2={self.P2}."
-                )
-            self.nsl = Bsum // self.P2
-        else:
-            self.nsl = int(nsl_global)
-
-        # Padding sizes for SUMMA blocks
-        self.nx_pad = math.ceil(self.nx / self.p) * self.p
-        self.ny_pad = math.ceil(self.ny / self.p) * self.p
-        self.nz_pad = math.ceil(self.nz / self.p) * self.p
-
-        self.bn = self.nx_pad // self.p
-        self.bk = self.ny_pad // self.p
-        self.bm = self.nz_pad // self.p
-
-        # Local (unpadded) extents for this rank’s output tile (x,z) and input tile (y,z)
-        self.local_n = max(0, min(self.bn, self.nx - self.row_id * self.bn))
-        self.local_k = max(0, min(self.bk, self.ny - self.row_id * self.bk))  # for m (K rows) uses row_id
-        self.local_ka = max(0, min(self.bk, self.ny - self.col_id * self.bk))  # for G (K cols) uses col_id
-        self.local_m = max(0, min(self.bm, self.nz - self.col_id * self.bm))
-
-        # Operator global shapes (conceptual / unpadded)
+            self.GT = self.G.transpose(0, 2, 1).conj()
         self.dims_model = (self.nsl, self.ny, self.nz)
         self.dims_data = (self.nsl, self.nx, self.nz)
-        shape = (int(np.prod(self.dims_data)), int(np.prod(self.dims_model)))
-        super().__init__(shape=shape, dtype=np.dtype(dtype), base_comm=base_comm)
-
-        # Ensure local G matches expected tile sizes in (nx_loc, ny_loc) for A distribution
-        # We allow edge tiles to be smaller since we will pad later
-        if self.G.shape[1] != self.local_n or self.G.shape[2] != self.local_ka:
-            # Not necessarily fatal if user pre-padded; allow larger, but disallow mismatch that breaks slicing
-            if self.G.shape[1] < self.local_n or self.G.shape[2] < self.local_ka:
-                raise ValueError(
-                    f"G_local tile too small for this rank. "
-                    f"Expected at least ({self.B},{self.local_n},{self.local_ka}), got {self.G.shape}."
-                )
+        super().__init__(dims=self.dims_model, dimsd=self.dims_data,
+                         dtype=np.dtype(dtype), base_comm=base_comm)
 
     def _matvec(self, x: DistributedArray) -> DistributedArray:
-        ncp = get_module(x.engine)
-        if x.partition != Partition.SCATTER:
-            raise ValueError(f"x should have partition={Partition.SCATTER}. Got {x.partition} instead.")
-
-        # Input local tile expected shape: (B, local_k (by row_id), local_m (by col_id))
-        expected_in = self.B * self.local_k * self.local_m
-        if x.local_array.size != expected_in:
-            raise ValueError(
-                f"Local x size mismatch. Expected {expected_in} elements "
-                f"(B={self.B}, local_k={self.local_k}, local_m={self.local_m}), "
-                f"got {x.local_array.size}."
-            )
-
-        output_dtype = np.result_type(self.dtype, x.dtype)
-
-        # Output local shapes for SCATTER vector
-        my_out = self.B * self.local_n * self.local_m
-        local_shapes = self.base_comm.allgather(my_out)
-
-        y = DistributedArray(
-            global_shape=int(np.prod(self.dims_data)),
-            local_shapes=local_shapes,
-            mask=x.mask,
-            partition=Partition.SCATTER,
-            engine=x.engine,
-            dtype=output_dtype,
-            base_comm=x.base_comm,
-            base_comm_nccl=x.base_comm_nccl,
-        )
-
-        # Reshape local x tile and pad to (B, bk, bm)
-        X = x.local_array.reshape((self.B, self.local_k, self.local_m)).astype(output_dtype)
-        if self.local_k != self.bk or self.local_m != self.bm:
-            X_padded = ncp.zeros((self.B, self.bk, self.bm), dtype=output_dtype)
-            X_padded[:, :self.local_k, :self.local_m] = X
-            X = X_padded
-
-        # Pad local G tile to (B, bn, bk) for SUMMA A tiles
-        G = self.G[:, :self.local_n, :self.local_ka].astype(output_dtype)
-        if self.local_n != self.bn or self.local_ka != self.bk:
-            G_padded = ncp.zeros((self.B, self.bn, self.bk), dtype=output_dtype)
-            G_padded[:, :self.local_n, :self.local_ka] = G
-            G = G_padded
-
-        Y = ncp.zeros((self.B, self.bn, self.bm), dtype=output_dtype)
-
-        row_nccl = self.row_comm_nccl if x.engine == "cupy" else None
-        col_nccl = self.col_comm_nccl if x.engine == "cupy" else None
-
-        # Batched SUMMA
-        for k in range(self.p):
-            Atemp = G.copy() if self.col_id == k else ncp.empty_like(G)
-            Btemp = X.copy() if self.row_id == k else ncp.empty_like(X)
-
-            Atemp = self._bcast(self.row_comm, row_nccl, Atemp, root=k, engine=x.engine)
-            Btemp = self._bcast(self.col_comm, col_nccl, Btemp, root=k, engine=x.engine)
-
-            Y += ncp.matmul(Atemp, Btemp)
-        
-        Y = Y[:, :self.local_n, :self.local_m]  # Unpad to local (B, local_n, local_m) and write out
-        y[:] = Y.ravel()
-        return y
+        return self._multiply(x, adjoint=False)
 
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
+        return self._multiply(x, adjoint=True)
+
+    def _multiply(self, x: DistributedArray, adjoint: bool) -> DistributedArray:
         ncp = get_module(x.engine)
-        if x.partition != Partition.SCATTER:
-            raise ValueError(f"x should have partition={Partition.SCATTER}. Got {x.partition} instead.")
-
-        # Input to adjoint is data tile: (B, local_n, local_m)
-        expected_in = self.B * self.local_n * self.local_m
-        if x.local_array.size != expected_in:
-            raise ValueError(
-                f"Local x size mismatch for adjoint. Expected {expected_in} elements "
-                f"(B={self.B}, local_n={self.local_n}, local_m={self.local_m}), got {x.local_array.size}."
-            )
-
-        # Output dtype rules similar to your matrix-mult operators
-        if np.iscomplexobj(self.G):
-            output_dtype = np.result_type(self.dtype, x.dtype)
+        dtype = np.result_type(self.dtype, x.dtype)
+        if adjoint:
+            in_rows, out_rows = self.local_n, self.local_k
+            in_block, out_block = self.bn, self.bk
+            out_sizes, out_size = self._model_sizes, self.shape[1]
         else:
-            output_dtype = x.dtype if np.iscomplexobj(x.local_array) else self.dtype
-            output_dtype = np.result_type(self.dtype, output_dtype)
+            in_rows, out_rows = self.local_k, self.local_n
+            in_block, out_block = self.bk, self.bn
+            out_sizes, out_size = self._data_sizes, self.shape[0]
 
-        # Output local shapes for SCATTER model vector
-        my_out = self.B * self.local_k * self.local_m  # (B, local_k(row_id), local_m(col_id))
-        local_shapes = self.base_comm.allgather(my_out)
+        if MPI.Comm.Compare(self.base_comm, x.base_comm) not in (MPI.IDENT, MPI.CONGRUENT):
+            raise ValueError("The vector must use the same MPI rank ordering as the operator.")
+        if x.partition != Partition.SCATTER:
+            raise ValueError("SUMMA requires a SCATTER vector.")
+        valid = x.local_array.size == self.B * in_rows * self.local_m
+        if not self.base_comm.allreduce(valid, op=MPI.LAND):
+            raise ValueError("Local vector sizes do not match the SUMMA tiles.")
+
+        def pad(tile, rows, cols):
+            if tile.shape[1:] == (rows, cols):
+                return ncp.ascontiguousarray(tile, dtype=dtype)
+            padded = ncp.zeros((self.B, rows, cols), dtype=dtype)
+            padded[:, :tile.shape[1], :tile.shape[2]] = tile
+            return padded
+
+        X = pad(x.local_array.reshape(self.B, in_rows, self.local_m), in_block, self.bm)
+        if adjoint:
+            GT = self.GT if hasattr(self, "GT") else self.G.transpose(0, 2, 1).conj()
+            G = pad(GT, out_block, in_block)
+            # Rank (i,j) needs the conjugate-transposed tile from (j,i).
+            if self.row_id != self.col_id:
+                peer = self.col_id * self.p + self.row_id
+                comm_nccl = self.batch_comm_nccl if x.engine == "cupy" else None
+                G = self._sendrecv(self.batch_comm, comm_nccl, G, ncp.empty_like(G),
+                                   dest=peer, source=peer, engine=x.engine)
+        else:
+            G = pad(self.G, out_block, in_block)
+
+        Y = ncp.zeros((self.B, out_block, self.bm), dtype=dtype)
+        row_nccl = self.row_comm_nccl if x.engine == "cupy" else None
+        col_nccl = self.col_comm_nccl if x.engine == "cupy" else None
+        for k in range(self.p):
+            A = G if self.col_id == k else ncp.empty_like(G)
+            B = X if self.row_id == k else ncp.empty_like(X)
+            A = self._bcast(self.row_comm, row_nccl, A, root=k, engine=x.engine)
+            B = self._bcast(self.col_comm, col_nccl, B, root=k, engine=x.engine)
+            Y += ncp.matmul(A, B)
 
         y = DistributedArray(
-            global_shape=int(np.prod(self.dims_model)),
-            local_shapes=local_shapes,
-            mask=x.mask,
-            partition=Partition.SCATTER,
-            engine=x.engine,
-            dtype=output_dtype,
-            base_comm=x.base_comm,
-            base_comm_nccl=x.base_comm_nccl,
+            global_shape=out_size, local_shapes=out_sizes, mask=x.mask,
+            partition=Partition.SCATTER, engine=x.engine, dtype=dtype,
+            base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl,
         )
-
-        # Reshape x tile and pad to (B, bn, bm)
-        X = x.local_array.reshape((self.B, self.local_n, self.local_m)).astype(output_dtype)
-        if self.local_n != self.bn or self.local_m != self.bm:
-            X_padded = ncp.zeros((self.B, self.bn, self.bm), dtype=output_dtype)
-            X_padded[:, :self.local_n, :self.local_m] = X
-            X = X_padded
-
-        # Local A^H tile (transpose-conj of A tile): (B, bk, bn)
-        if hasattr(self, "GT"):
-            AT_local = self.GT[:, :self.local_ka, :self.local_n].astype(output_dtype)
-        else:
-            AT_local = self.G[:, :self.local_n, :self.local_ka].transpose(0, 2, 1).conj().astype(output_dtype)
-
-        if self.local_ka != self.bk or self.local_n != self.bn:
-            AT_padded = ncp.zeros((self.B, self.bk, self.bn), dtype=output_dtype)
-            AT_padded[:, :self.local_ka, :self.local_n] = AT_local
-            AT_local = AT_padded
-        AT_local = ncp.ascontiguousarray(AT_local)
-
-        Y = ncp.zeros((self.B, self.bk, self.bm), dtype=output_dtype)
-
-        base_nccl = self.base_comm_nccl if x.engine == "cupy" else None
-        col_nccl = self.col_comm_nccl if x.engine == "cupy" else None
-
-        # Batched adjoint SUMMA variant matching your existing _MPISummaMatrixMult._rmatvec:
-        # - broadcast X panels down col_comm
-        # - move AT blocks across WORLD ranks to emulate transposed distribution
-        for k in range(self.p):
-            Xtemp = X.copy() if self.row_id == k else ncp.empty_like(X)
-            Xtemp = self._bcast(self.col_comm, col_nccl, Xtemp, root=k, engine=x.engine)
-
-            # Determine source rank for A^T block needed this iteration
-            # WORLD rank mapping inside batch group:
-            #   world_rank = batch_id*P2 + (row*p + col)
-            # Need AT from srcA = (row=k, col=row_id) within this batch group:
-            srcA_in_group = k * self.p + self.row_id
-            srcA = self.batch_id * self.P2 + srcA_in_group
-
-            ATtemp = AT_local if (self.rank == srcA) else None
-
-            # Send from ranks with row_id==k (within group) to row=col_id targets, across all columns (within group),
-            # using WORLD communicator for explicit point-to-point
-            for moving_col in range(self.p):
-                if self.row_id == k:
-                    # sender is (row=k, col=self.col_id)
-                    dest_in_group = self.col_id * self.p + moving_col
-                    destA = self.batch_id * self.P2 + dest_in_group
-                    if destA != self.rank:
-                        tagA = (100 + k) * 100000 + destA
-                        self._send(self.base_comm, base_nccl, AT_local, dest=destA, tag=tagA, engine=x.engine)
-
-                if self.col_id == moving_col and ATtemp is None:
-                    tagA = (100 + k) * 100000 + self.rank
-                    recv_buf = ncp.empty_like(AT_local)
-                    ATtemp = self._recv(self.base_comm, base_nccl, recv_buf, source=srcA, tag=tagA, engine=x.engine)
-
-            Y += ncp.matmul(ATtemp, Xtemp)
-
-        Y = Y[:, :self.local_k, :self.local_m] # Unpad output to (B, local_k(row_id), local_m)
-        y[:] = Y.ravel()
+        y[:] = Y[:, :out_rows, :self.local_m].ravel()
         return y
+
 
 class MPIFredholm1(MPILinearOperator):
     r"""Fredholm integral of first kind.

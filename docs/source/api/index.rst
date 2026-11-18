@@ -73,6 +73,7 @@ Signal Processing
    :toctree: generated/
 
     MPIFredholm1
+    MPIFredholm1SUMMA
     MPINonStationaryConvolve1D
     MPIFFT2D
     MPIFFTND

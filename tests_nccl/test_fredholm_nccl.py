@@ -15,7 +15,7 @@ import pylops_mpi
 
 from pylops_mpi import DistributedArray
 from pylops_mpi.DistributedArray import local_split, Partition
-from pylops_mpi.signalprocessing import MPIFredholm1
+from pylops_mpi.signalprocessing import MPIFredholm1, MPIFredholm1SUMMA
 from pylops_mpi.utils.dottest import dottest
 from pylops_mpi.utils._nccl import initialize_nccl_comm
 
@@ -159,3 +159,29 @@ def test_Fredholm1_nccl(par):
         y_adj_np = Fop.H @ y_np
         assert_allclose(y.get(), y_np, rtol=1e-14)
         assert_allclose(y_adj.get(), y_adj_np, rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=4)
+def test_Fredholm1SUMMA_nccl():
+    """Exchange complex adjoint tiles across each 2 x 2 GPU grid."""
+    if size % 4:
+        pytest.skip("requires groups of four ranks")
+    batch, grid_rank = divmod(rank, 4)
+    row, col = divmod(grid_rank, 2)
+    rows, cols = slice(2 * row, 2 * row + 2), slice(2 * col, 2 * col + 2)
+    rng = np.random.default_rng(batch)
+    G = rng.normal(size=(2, 4, 4)) + 1j * rng.normal(size=(2, 4, 4))
+    model = rng.normal(size=(2, 4, 2)) + 1j * rng.normal(size=(2, 4, 2))
+    op = MPIFredholm1SUMMA(cp.asarray(G[:, rows, cols]), nz=2, pb=size // 4,
+                           base_comm_nccl=nccl_comm, dtype="complex128")
+    model_tile = model[:, rows, col:col + 1]
+    x = DistributedArray(global_shape=op.shape[1], partition=Partition.SCATTER,
+                         base_comm_nccl=nccl_comm, engine="cupy", dtype="complex128")
+    x[:] = cp.asarray(model_tile.ravel())
+    y = op @ x
+    adjoint = op.H @ y
+
+    expected = G @ model
+    expected_adj = G.conj().transpose(0, 2, 1) @ expected
+    assert_allclose(y.local_array.get(), expected[:, rows, col:col + 1].ravel())
+    assert_allclose(adjoint.local_array.get(), expected_adj[:, rows, col:col + 1].ravel())
