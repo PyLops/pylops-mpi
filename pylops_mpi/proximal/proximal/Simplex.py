@@ -7,7 +7,7 @@ from pylops.utils.typing import ShapeLike
 from pyproximal.proximal import Simplex
 from pyproximal.ProxOperator import _check_tau
 
-from pylops_mpi import DistributedArray, Partition, StackedDistributedArray
+from pylops_mpi import Partition, StackedDistributedArray
 from pylops_mpi.DistributedArray import to_scalar
 from pylops_mpi.proximal import MPIProxOperator
 
