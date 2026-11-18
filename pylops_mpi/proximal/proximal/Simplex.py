@@ -103,8 +103,7 @@ class MPISimplex(MPIProxOperator):
     @_check_tau
     def prox(
         self, x: StackedDistributedArray, tau: float, **kwargs: Any
-    ) -> DistributedArray:
-        """Proximal operator applied to a vector"""
+    ) -> StackedDistributedArray:
         ncp = get_module(x.engine)
         y = x.empty_like()
         xlocal = ncp.hstack([xi.local_array for xi in x])

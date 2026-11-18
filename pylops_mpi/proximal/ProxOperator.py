@@ -11,6 +11,7 @@ _call_reduce_op = dict(
     Box=(MPI.LAND, all),
     L0=(MPI.SUM, sum),
     L1=(MPI.SUM, sum),
+    VStack=(MPI.SUM, sum),
 )
 
 
