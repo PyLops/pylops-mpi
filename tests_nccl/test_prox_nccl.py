@@ -8,10 +8,11 @@ import pytest
 from mpi4py import MPI
 from numpy.testing import assert_allclose
 from pylops.basicoperators import Diagonal
-from pyproximal.proximal import L0, L1, L2, L21, Box
+from pyproximal.proximal import L0, L1, L2, L21, Box, Simplex
+from pyproximal.proximal import VStack as ProxVStack
 
 import pylops_mpi
-from pylops_mpi.proximal import MPIL2, MPIL21
+from pylops_mpi.proximal import MPIL2, MPIL21, MPISimplex
 from pylops_mpi.utils._nccl import initialize_nccl_comm
 
 nccl_comm = initialize_nccl_comm()
@@ -44,96 +45,82 @@ par1b = {
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par1j), (par1b)])
-def test_box(par):
-    """Box call/prox vs pyproximal"""
+@pytest.mark.parametrize(
+    "proxop",
+    [Box(lower=0.0, upper=1.0), L0(sigma=2.0), L1(sigma=2.0)],
+    ids=["box", "l0", "l1"],
+)
+@pytest.mark.parametrize("stacked", [False, True])
+def test_separable(par, proxop, stacked):
+    """Separable prox (Box, L0, L1) call/prox vs pyproximal,
+    for DistributedArray and StackedDistributedArray"""
     cp.random.seed(42)
 
-    x = pylops_mpi.DistributedArray(
-        global_shape=par["n"],
-        dtype=par["dtype"],
-        partition=par["partition"],
-        engine="cupy",
-    )
-    x[:] = cp.random.normal(rank, 10, x.local_shape).astype(par["dtype"]) + par[
-        "imag"
-    ] * cp.random.normal(rank, 10, x.local_shape).astype(par["dtype"])
-    x_global = x.asarray()
+    narrays = 3 if stacked else 1
+    xs = []
+    for _ in range(narrays):
+        x_ = pylops_mpi.DistributedArray(
+            global_shape=par["n"],
+            dtype=par["dtype"],
+            partition=par["partition"],
+            base_comm_nccl=nccl_comm,
+            engine="cupy",
+        )
+        x_[:] = cp.random.normal(rank, 10, x_.local_shape).astype(par["dtype"]) + par[
+            "imag"
+        ] * cp.random.normal(rank, 10, x_.local_shape).astype(par["dtype"])
+        xs.append(x_)
+    x = pylops_mpi.StackedDistributedArray(xs) if stacked else xs[0]
+    x_global = cp.concatenate([xi.asarray() for xi in xs])
 
-    if par["imag"] == 0:
-        box = Box(lower=0.0, upper=1.0)
-        boxd = pylops_mpi.proximal.MPIProxOperator(box)
-
-        f = boxd(x)
-        prox = boxd.prox(x, 0.1)
-        prox = prox.asarray()
-
-        if rank == 0:
-            f_np = box(x_global)
-            prox_np = box.prox(x_global, 0.1)
-            assert_allclose(f, f_np, rtol=1e-14)
-            assert_allclose(prox.get(), prox_np.get(), rtol=1e-14)
-
-
-@pytest.mark.mpi(min_size=2)
-@pytest.mark.parametrize("par", [(par1), (par1j), (par1b)])
-def test_l0(par):
-    """L0 call/prox vs pyproximal"""
-    cp.random.seed(42)
-
-    x = pylops_mpi.DistributedArray(
-        global_shape=par["n"],
-        dtype=par["dtype"],
-        partition=par["partition"],
-        engine="cupy",
-    )
-    x[:] = cp.random.normal(rank, 10, x.local_shape).astype(par["dtype"]) + par[
-        "imag"
-    ] * cp.random.normal(rank, 10, x.local_shape).astype(par["dtype"])
-    x_global = x.asarray()
-
-    l0 = L0(sigma=2.0)
-    l0d = pylops_mpi.proximal.MPIProxOperator(l0)
-
-    f = l0d(x)
-    prox = l0d.prox(x, 0.1)
-    prox = prox.asarray()
+    proxd = pylops_mpi.proximal.MPIProxOperator(proxop)
+    f = proxd(x)
+    prox = proxd.prox(x, 0.1).asarray()
 
     if rank == 0:
-        f_np = l0(x_global)
-        prox_np = l0.prox(x_global, 0.1)
+        f_np = proxop(x_global)
+        prox_np = proxop.prox(x_global, 0.1)
         assert_allclose(f, f_np, rtol=1e-14)
         assert_allclose(prox.get(), prox_np.get(), rtol=1e-14)
 
 
 @pytest.mark.mpi(min_size=2)
 @pytest.mark.parametrize("par", [(par1), (par1j), (par1b)])
-def test_l1(par):
-    """L1 call/prox vs pyproximal"""
-    cp.random.seed(42)
+def test_postcomposition(par):
+    """Check postcomposition method for L2 norm"""
+    cp.random.seed(10)
 
     x = pylops_mpi.DistributedArray(
         global_shape=par["n"],
         dtype=par["dtype"],
         partition=par["partition"],
+        base_comm_nccl=nccl_comm,
         engine="cupy",
     )
     x[:] = cp.random.normal(rank, 10, x.local_shape).astype(par["dtype"]) + par[
         "imag"
     ] * cp.random.normal(rank, 10, x.local_shape).astype(par["dtype"])
-    x_global = x.asarray()
 
-    l1 = L1(sigma=2.0)
-    l1d = pylops_mpi.proximal.MPIProxOperator(l1)
+    sigma = 2.0
+    l2d = MPIL2()
+    l2dpostc = l2d.postcomposition(sigma=sigma)
 
-    f = l1d(x)
-    prox = l1d.prox(x, 0.1)
-    prox = prox.asarray()
+    # norm
+    assert l2dpostc(x) == sigma * l2d(x)
 
-    if rank == 0:
-        f_np = l1(x_global)
-        prox_np = l1.prox(x_global, 0.1)
-        assert_allclose(f, f_np, rtol=1e-14)
-        assert_allclose(prox.get(), prox_np.get(), rtol=1e-14)
+    # grad
+    assert_allclose(
+        l2dpostc.grad(x).asarray().get(),
+        sigma * l2d.grad(x).asarray().get(),
+        rtol=1e-12,
+    )
+
+    # prox
+    assert_allclose(
+        l2dpostc.prox(x, 1.0).asarray().get(),
+        l2d.prox(x, sigma).asarray().get(),
+        rtol=1e-12,
+    )
 
 
 @pytest.mark.mpi(min_size=2)
@@ -146,6 +133,7 @@ def test_precomposition(par):
         global_shape=par["n"],
         dtype=par["dtype"],
         partition=par["partition"],
+        base_comm_nccl=nccl_comm,
         engine="cupy",
     )
     x[:] = cp.random.normal(rank, 10, x.local_shape).astype(par["dtype"]) + par[
@@ -195,6 +183,7 @@ def test_L2(par, solver):
         * (size if par["partition"] == pylops_mpi.Partition.SCATTER else 1),
         dtype=par["dtype"],
         partition=par["partition"],
+        base_comm_nccl=nccl_comm,
         engine="cupy",
     )
     x[:] = cp.random.normal(rank, 10, x.local_shape).astype(par["dtype"]) + par[
@@ -207,6 +196,7 @@ def test_L2(par, solver):
         * (size if par["partition"] == pylops_mpi.Partition.SCATTER else 1),
         dtype=par["dtype"],
         partition=par["partition"],
+        base_comm_nccl=nccl_comm,
         engine="cupy",
     )
     b[:] = cp.random.normal(rank, 10, x.local_shape).astype(par["dtype"]) + par[
@@ -273,6 +263,7 @@ def test_l21_wrongdim(par):
             global_shape=par["n"],
             dtype=par["dtype"],
             partition=par["partition"],
+            base_comm_nccl=nccl_comm,
             engine="cupy",
         )
         x_[:] = cp.random.normal(rank, 10, x_.local_shape).astype(par["dtype"])
@@ -306,6 +297,7 @@ def test_l21(par):
             global_shape=par["n"],
             dtype=par["dtype"],
             partition=par["partition"],
+            base_comm_nccl=nccl_comm,
             engine="cupy",
         )
         x_[:] = cp.random.normal(rank, 10, x_.local_shape).astype(par["dtype"]) + par[
@@ -332,3 +324,95 @@ def test_l21(par):
         assert_allclose(f, f_np, rtol=1e-14)
         assert_allclose(prox.get(), prox_np.get(), rtol=1e-14)
         assert_allclose(proxd.get(), proxd_np.get(), rtol=1e-14)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par1), (par1b)])
+def test_simplex(par):
+    """Simplex call/prox vs pyproximal"""
+    cp.random.seed(42)
+
+    ndim = 3
+    radius = 1.0
+    x = []
+    for _ in range(ndim):
+        x_ = pylops_mpi.DistributedArray(
+            global_shape=par["n"],
+            dtype=par["dtype"],
+            partition=par["partition"],
+            base_comm_nccl=nccl_comm,
+            engine="cupy",
+        )
+        x_[:] = cp.random.normal(rank, 10, x_.local_shape).astype(par["dtype"])
+        x.append(x_)
+    x = pylops_mpi.StackedDistributedArray(x)
+    # gather input for local comparison, shape (ndim, n)
+    x_global = cp.vstack([xi.asarray() for xi in x])
+
+    # each column (same index across the ndim arrays) is projected onto the simplex
+    nloc = x[0].local_shape[0]
+    simplexd = MPISimplex(dims=(ndim, nloc), radius=radius, engine="cuda")
+    prox = simplexd.prox(x, 0.1)
+    c_in = simplexd(x)
+    c_out = simplexd(prox, tol=1e-6)
+    prox = prox.asarray()
+    assert not c_in
+    assert c_out
+
+    if rank == 0:
+        simplex = Simplex(
+            ndim * par["n"],
+            radius,
+            dims=(ndim, par["n"]),
+            axis=0,
+            engine="cuda",
+        )
+        prox_np = simplex.prox(x_global.ravel(), 0.1)
+        # tolerances selected in line with ftol/xtol in Simplex
+        assert_allclose(prox.get(), prox_np.get(), rtol=1e-6, atol=1e-7)
+
+
+@pytest.mark.mpi(min_size=2)
+@pytest.mark.parametrize("par", [(par1), (par1j), (par1b)])
+@pytest.mark.parametrize("proxop", [Box, L2, L1, L0])
+@pytest.mark.parametrize("nstack", [3, 4])
+def test_vstack(par, proxop, nstack):
+    """VStack call/prox vs pyproximal"""
+    cp.random.seed(42)
+
+    is_scatter = par["partition"] == pylops_mpi.Partition.SCATTER
+    x = pylops_mpi.DistributedArray(
+        global_shape=par["n"] * (size if is_scatter else 1),
+        dtype=par["dtype"],
+        partition=par["partition"],
+        base_comm_nccl=nccl_comm,
+        engine="cupy",
+    )
+    x[:] = cp.random.normal(rank, 10, x.local_shape).astype(par["dtype"]) + par[
+        "imag"
+    ] * cp.random.normal(rank, 10, x.local_shape).astype(par["dtype"])
+    x_global = x.asarray()
+
+    nlocal = x.local_shape[0]
+    ns = [nlocal // nstack] * nstack
+    ns[-1] = nlocal - int(np.sum(ns[:-1]))
+    nsg = base_comm.allgather(ns)
+    nsg = [n for ns in nsg for n in ns]  # flatten list
+
+    pop = proxop()
+    pvstack = ProxVStack([pop] * nstack, ns)
+    pvstackd = pylops_mpi.proximal.MPIProxOperator(pvstack)
+
+    f = pvstackd(x)
+    prox = pvstackd.prox(x, 0.1)
+    prox = prox.asarray()
+
+    if rank == 0:
+        pvstack = ProxVStack(
+            [pop] * nstack * (size if is_scatter else 1),
+            nsg if is_scatter else ns,
+        )
+        f_np = pvstack(x_global)
+        prox_np = pvstack.prox(x_global, 0.1)
+        assert_allclose(f, f_np, rtol=1e-14)
+        assert_allclose(prox.get(), prox_np.get(), rtol=1e-14)

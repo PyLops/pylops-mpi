@@ -227,3 +227,43 @@ if rank == 0:
     print("||x||_2,1: ", f, flocal)
     print("prox_||x||_2,1: ", all(proxdlocal == proxlocal))
     print("proxd_||x||_2,1: ", all(dproxdlocal == dproxlocal))
+
+###############################################################################
+# Similarly, the :py:class:`pylops_mpi.proximal.proximal.MPISimplex`
+# operator requires an ad-hoc implementation. More specifically, in pylops-mpi
+# we consider only the case where multiple Simplex evaluations are applied over
+# columns of a matrix represented by a
+# :py:class:`pylops_mpi.StackedDistributedArray`.
+
+ndim, dim = 3, 50
+radius = 1.0
+
+# 2D input as stack of DistributedArray
+arr = []
+for i in range(ndim):
+    arr_ = pylops_mpi.DistributedArray(
+        global_shape=dim,
+    )
+    arr_[:] = np.random.normal(rank, 10, arr_.local_shape)
+    arr.append(arr_)
+arr = pylops_mpi.StackedDistributedArray(arr)
+arrlocal = np.vstack([arr_.asarray() for arr_ in arr])
+
+simplex = pyproximal.proximal.Simplex(ndim * dim, radius, dims=(ndim, dim), axis=0)
+# dims is the shape of the local matrix (ndim, local size of each DistributedArray)
+simplexd = pylops_mpi.proximal.MPISimplex(
+    dims=(ndim, arr[0].local_shape[0]), radius=radius
+)
+
+# Call
+f = simplexd(arr)
+
+# Proximal
+prox = simplexd.prox(arr, 0.1)
+proxdlocal = prox.asarray()
+
+if rank == 0:
+    flocal = simplex(arrlocal.ravel())
+    proxlocal = simplex.prox(arrlocal.ravel(), 0.1)
+    print("Simplex: ", f, flocal)
+    print("prox_Simplex: ", np.allclose(proxdlocal, proxlocal))
