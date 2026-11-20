@@ -1,16 +1,15 @@
 import warnings
 from typing import Sequence
 
-from mpi4py import MPI
 import numpy as np
-
+from mpi4py import MPI
 from pylops.signalprocessing._baseffts import _FFTNorms
 from pylops.utils import DTypeLike, InputDimsLike
 
-from pylops_mpi.utils.decorators import reshaped
 from pylops_mpi.DistributedArray import DistributedArray, Partition
 from pylops_mpi.signalprocessing._baseffts import _MPIBaseFFTND
 from pylops_mpi.utils import deps, fftshift_nd, ifftshift_nd
+from pylops_mpi.utils.decorators import reshaped
 
 mpi4py_fft_message = deps.mpi4py_fft_import("mpi4py_fft")
 
@@ -151,6 +150,7 @@ class MPIFFTND(_MPIBaseFFTND):
     :class:`pylops_mpi.DistributedArray`. All inter-rank data movement is handled internally by
     ``mpi4py_fft``.
     """
+
     def __init__(
         self,
         dims: InputDimsLike,
@@ -161,7 +161,7 @@ class MPIFFTND(_MPIBaseFFTND):
         ifftshift_before: bool = False,
         fftshift_after: bool = False,
         dtype: DTypeLike = "complex128",
-        base_comm: MPI.Comm = MPI.COMM_WORLD
+        base_comm: MPI.Comm = MPI.COMM_WORLD,
     ) -> None:
         super().__init__(
             dims=dims,
@@ -172,7 +172,7 @@ class MPIFFTND(_MPIBaseFFTND):
             fftshift_after=fftshift_after,
             ifftshift_before=ifftshift_before,
             dtype=dtype,
-            base_comm=base_comm
+            base_comm=base_comm,
         )
         if self.cdtype != np.complex128:
             warnings.warn(
@@ -203,21 +203,38 @@ class MPIFFTND(_MPIBaseFFTND):
 
         # Distributed axis in the pre-transform (pencil[False]) layout.
         self._pfft_in_axis = next(
-            (i for i, s in enumerate(self.fft.pencil[False].subcomm) if s.Get_size() > 1), 0
+            (
+                i
+                for i, s in enumerate(self.fft.pencil[False].subcomm)
+                if s.Get_size() > 1
+            ),
+            0,
         )
         # Distributed axis in the post-transform (pencil[True]) layout.
         self._pfft_out_axis = next(
-            (i for i, s in enumerate(self.fft.pencil[True].subcomm) if s.Get_size() > 1), 0
+            (
+                i
+                for i, s in enumerate(self.fft.pencil[True].subcomm)
+                if s.Get_size() > 1
+            ),
+            0,
         )
 
     @reshaped
     def _matvec(self, x: DistributedArray) -> DistributedArray:
         if x.engine == "cupy":
-            raise ValueError(f"x should be a numpy array with engine=numpy"
-                             f"Got  {x.engine} instead...")
+            raise ValueError(
+                f"x should be a numpy array with engine=numpy. "
+                f"Got  {x.engine} instead..."
+            )
         if x.partition != Partition.SCATTER:
-            raise ValueError(f"x should have partition={Partition.SCATTER}"
-                             f"Got  {x.partition} instead...")
+            raise ValueError(
+                f"x should have partition={Partition.SCATTER}. "
+                f"Got  {x.partition} instead..."
+            )
+        if self.ifftshift_before.any() or not self.clinear:
+            # The steps below modify x in-place, work on a copy to leave the input untouched
+            x = x.copy()
         if self.ifftshift_before.any():
             x = ifftshift_nd(x, axes=self.axes[self.ifftshift_before])
         if not self.clinear:
@@ -230,8 +247,14 @@ class MPIFFTND(_MPIBaseFFTND):
         # Perform the parallel forward FFT
         self.fft.forward(x_dist_pfft, y_dist_pfft, normalize=False)
 
-        y = DistributedArray(global_shape=self.dimsd, dtype=self.dtype, axis=self._pfft_out_axis,
-                             base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl, engine=x.engine)
+        y = DistributedArray(
+            global_shape=self.dimsd,
+            dtype=self.dtype,
+            axis=self._pfft_out_axis,
+            base_comm=x.base_comm,
+            base_comm_nccl=x.base_comm_nccl,
+            engine=x.engine,
+        )
         y[:] = y_dist_pfft
         if self.real:
             self._scale_real_fft(y, inverse=False)
@@ -245,11 +268,18 @@ class MPIFFTND(_MPIBaseFFTND):
     @reshaped
     def _rmatvec(self, x: DistributedArray) -> DistributedArray:
         if x.engine == "cupy":
-            raise ValueError(f"x should be a numpy array with engine=numpy"
-                             f"Got  {x.engine} instead...")
+            raise ValueError(
+                f"x should be a numpy array with engine=numpy. "
+                f"Got  {x.engine} instead..."
+            )
         if x.partition != Partition.SCATTER:
-            raise ValueError(f"x should have partition={Partition.SCATTER}, "
-                             f"Got  {x.partition} instead...")
+            raise ValueError(
+                f"x should have partition={Partition.SCATTER}. "
+                f"Got  {x.partition} instead..."
+            )
+        if self.fftshift_after.any() or self.real:
+            # The steps below modify x in-place, work on a copy to leave the input untouched
+            x = x.copy()
         if self.fftshift_after.any():
             x = ifftshift_nd(x, axes=self.axes[self.fftshift_after])
         if self.real:
@@ -263,8 +293,14 @@ class MPIFFTND(_MPIBaseFFTND):
         # Perform the parallel backward FFT
         self.fft.backward(x_dist_pfft, y_dist_pfft, normalize=True)
 
-        y = DistributedArray(global_shape=self.dims, dtype=self.dtype, axis=self._pfft_in_axis,
-                             base_comm=x.base_comm, base_comm_nccl=x.base_comm_nccl, engine=x.engine)
+        y = DistributedArray(
+            global_shape=self.dims,
+            dtype=self.dtype,
+            axis=self._pfft_in_axis,
+            base_comm=x.base_comm,
+            base_comm_nccl=x.base_comm_nccl,
+            engine=x.engine,
+        )
         y[:] = y_dist_pfft
         if self.norm is _FFTNorms.NONE:
             y[:] *= self._scale
@@ -294,13 +330,17 @@ class MPIFFTND(_MPIBaseFFTND):
         scale = 1 / np.sqrt(2) if inverse else np.sqrt(2)
         if x.axis == self.axes[-1]:
             sizes = [loc_shape[self.axes[-1]] for loc_shape in x.local_shapes]
-            local_start = sum(sizes[:self.base_comm.rank])
+            local_start = sum(sizes[: self.base_comm.rank])
             local_stop = local_start + sizes[self.base_comm.rank]
-            freq_start, freq_stop = max(1, local_start), min(1 + (self.nffts[-1] - 1) // 2, local_stop)
+            freq_start, freq_stop = max(1, local_start), min(
+                1 + (self.nffts[-1] - 1) // 2, local_stop
+            )
             # Local overlap with the global frequency slice [1:k]
             if freq_stop > freq_start:
                 local_slice = [slice(None)] * x.ndim
-                local_slice[self.axes[-1]] = slice(freq_start - local_start, freq_stop - local_start)
+                local_slice[self.axes[-1]] = slice(
+                    freq_start - local_start, freq_stop - local_start
+                )
                 x[tuple(local_slice)] *= scale
         else:
             # Axis is local on this rank, so direct slicing
