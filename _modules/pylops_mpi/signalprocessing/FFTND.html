@@ -469,16 +469,15 @@
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops.signalprocessing._baseffts</span><span class="w"> </span><span class="kn">import</span> <span class="n">_FFTNorms</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">DTypeLike</span><span class="p">,</span> <span class="n">InputDimsLike</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.utils.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">reshaped</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.DistributedArray</span><span class="w"> </span><span class="kn">import</span> <span class="n">DistributedArray</span><span class="p">,</span> <span class="n">Partition</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.signalprocessing._baseffts</span><span class="w"> </span><span class="kn">import</span> <span class="n">_MPIBaseFFTND</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">deps</span><span class="p">,</span> <span class="n">fftshift_nd</span><span class="p">,</span> <span class="n">ifftshift_nd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi.utils.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">reshaped</span>
 
 <span class="n">mpi4py_fft_message</span> <span class="o">=</span> <span class="n">deps</span><span class="o">.</span><span class="n">mpi4py_fft_import</span><span class="p">(</span><span class="s2">"mpi4py_fft"</span><span class="p">)</span>
 
@@ -621,6 +620,7 @@
 <span class="sd">    :class:`pylops_mpi.DistributedArray`. All inter-rank data movement is handled internally by</span>
 <span class="sd">    ``mpi4py_fft``.</span>
 <span class="sd">    """</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">dims</span><span class="p">:</span> <span class="n">InputDimsLike</span><span class="p">,</span>
@@ -631,7 +631,7 @@
         <span class="n">ifftshift_before</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">fftshift_after</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">dtype</span><span class="p">:</span> <span class="n">DTypeLike</span> <span class="o">=</span> <span class="s2">"complex128"</span><span class="p">,</span>
-        <span class="n">base_comm</span><span class="p">:</span> <span class="n">MPI</span><span class="o">.</span><span class="n">Comm</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span>
+        <span class="n">base_comm</span><span class="p">:</span> <span class="n">MPI</span><span class="o">.</span><span class="n">Comm</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">dims</span><span class="o">=</span><span class="n">dims</span><span class="p">,</span>
@@ -642,7 +642,7 @@
             <span class="n">fftshift_after</span><span class="o">=</span><span class="n">fftshift_after</span><span class="p">,</span>
             <span class="n">ifftshift_before</span><span class="o">=</span><span class="n">ifftshift_before</span><span class="p">,</span>
             <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
-            <span class="n">base_comm</span><span class="o">=</span><span class="n">base_comm</span>
+            <span class="n">base_comm</span><span class="o">=</span><span class="n">base_comm</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cdtype</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
@@ -673,21 +673,38 @@
 
         <span class="c1"># Distributed axis in the pre-transform (pencil[False]) layout.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_pfft_in_axis</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-            <span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">pencil</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span><span class="o">.</span><span class="n">subcomm</span><span class="p">)</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">Get_size</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">0</span>
+            <span class="p">(</span>
+                <span class="n">i</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">pencil</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span><span class="o">.</span><span class="n">subcomm</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">Get_size</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span>
+            <span class="p">),</span>
+            <span class="mi">0</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="c1"># Distributed axis in the post-transform (pencil[True]) layout.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_pfft_out_axis</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-            <span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">pencil</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span><span class="o">.</span><span class="n">subcomm</span><span class="p">)</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">Get_size</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">0</span>
+            <span class="p">(</span>
+                <span class="n">i</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">pencil</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span><span class="o">.</span><span class="n">subcomm</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">Get_size</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span>
+            <span class="p">),</span>
+            <span class="mi">0</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="nd">@reshaped</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">engine</span> <span class="o">==</span> <span class="s2">"cupy"</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"x should be a numpy array with engine=numpy"</span>
-                             <span class="sa">f</span><span class="s2">"Got  </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="si">}</span><span class="s2"> instead..."</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"x should be a numpy array with engine=numpy. "</span>
+                <span class="sa">f</span><span class="s2">"Got  </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="si">}</span><span class="s2"> instead..."</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">partition</span> <span class="o">!=</span> <span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"x should have partition=</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="si">}</span><span class="s2">"</span>
-                             <span class="sa">f</span><span class="s2">"Got  </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">partition</span><span class="si">}</span><span class="s2"> instead..."</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"x should have partition=</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="si">}</span><span class="s2">. "</span>
+                <span class="sa">f</span><span class="s2">"Got  </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">partition</span><span class="si">}</span><span class="s2"> instead..."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ifftshift_before</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">clinear</span><span class="p">:</span>
+            <span class="c1"># The steps below modify x in-place, work on a copy to leave the input untouched</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ifftshift_before</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">ifftshift_nd</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ifftshift_before</span><span class="p">])</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">clinear</span><span class="p">:</span>
@@ -700,8 +717,14 @@
         <span class="c1"># Perform the parallel forward FFT</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">x_dist_pfft</span><span class="p">,</span> <span class="n">y_dist_pfft</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-        <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dimsd</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pfft_out_axis</span><span class="p">,</span>
-                             <span class="n">base_comm</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span> <span class="n">base_comm_nccl</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span>
+            <span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dimsd</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pfft_out_axis</span><span class="p">,</span>
+            <span class="n">base_comm</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span>
+            <span class="n">base_comm_nccl</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span>
+            <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="n">y</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">y_dist_pfft</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">real</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_scale_real_fft</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -715,11 +738,18 @@
     <span class="nd">@reshaped</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">engine</span> <span class="o">==</span> <span class="s2">"cupy"</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"x should be a numpy array with engine=numpy"</span>
-                             <span class="sa">f</span><span class="s2">"Got  </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="si">}</span><span class="s2"> instead..."</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"x should be a numpy array with engine=numpy. "</span>
+                <span class="sa">f</span><span class="s2">"Got  </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="si">}</span><span class="s2"> instead..."</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">partition</span> <span class="o">!=</span> <span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"x should have partition=</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="si">}</span><span class="s2">, "</span>
-                             <span class="sa">f</span><span class="s2">"Got  </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">partition</span><span class="si">}</span><span class="s2"> instead..."</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"x should have partition=</span><span class="si">{</span><span class="n">Partition</span><span class="o">.</span><span class="n">SCATTER</span><span class="si">}</span><span class="s2">. "</span>
+                <span class="sa">f</span><span class="s2">"Got  </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">partition</span><span class="si">}</span><span class="s2"> instead..."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fftshift_after</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">real</span><span class="p">:</span>
+            <span class="c1"># The steps below modify x in-place, work on a copy to leave the input untouched</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fftshift_after</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">ifftshift_nd</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">fftshift_after</span><span class="p">])</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">real</span><span class="p">:</span>
@@ -733,8 +763,14 @@
         <span class="c1"># Perform the parallel backward FFT</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">backward</span><span class="p">(</span><span class="n">x_dist_pfft</span><span class="p">,</span> <span class="n">y_dist_pfft</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span><span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pfft_in_axis</span><span class="p">,</span>
-                             <span class="n">base_comm</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span> <span class="n">base_comm_nccl</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">DistributedArray</span><span class="p">(</span>
+            <span class="n">global_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pfft_in_axis</span><span class="p">,</span>
+            <span class="n">base_comm</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm</span><span class="p">,</span>
+            <span class="n">base_comm_nccl</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">base_comm_nccl</span><span class="p">,</span>
+            <span class="n">engine</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="n">y</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">y_dist_pfft</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="ow">is</span> <span class="n">_FFTNorms</span><span class="o">.</span><span class="n">NONE</span><span class="p">:</span>
             <span class="n">y</span><span class="p">[:]</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
@@ -764,13 +800,17 @@
         <span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="k">if</span> <span class="n">inverse</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">axis</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
             <span class="n">sizes</span> <span class="o">=</span> <span class="p">[</span><span class="n">loc_shape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="k">for</span> <span class="n">loc_shape</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">local_shapes</span><span class="p">]</span>
-            <span class="n">local_start</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">sizes</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="o">.</span><span class="n">rank</span><span class="p">])</span>
+            <span class="n">local_start</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">sizes</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="o">.</span><span class="n">rank</span><span class="p">])</span>
             <span class="n">local_stop</span> <span class="o">=</span> <span class="n">local_start</span> <span class="o">+</span> <span class="n">sizes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">base_comm</span><span class="o">.</span><span class="n">rank</span><span class="p">]</span>
-            <span class="n">freq_start</span><span class="p">,</span> <span class="n">freq_stop</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">local_start</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nffts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">local_stop</span><span class="p">)</span>
+            <span class="n">freq_start</span><span class="p">,</span> <span class="n">freq_stop</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">local_start</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span>
+                <span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nffts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">local_stop</span>
+            <span class="p">)</span>
             <span class="c1"># Local overlap with the global frequency slice [1:k]</span>
             <span class="k">if</span> <span class="n">freq_stop</span> <span class="o">&gt;</span> <span class="n">freq_start</span><span class="p">:</span>
                 <span class="n">local_slice</span> <span class="o">=</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)]</span> <span class="o">*</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span>
-                <span class="n">local_slice</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">freq_start</span> <span class="o">-</span> <span class="n">local_start</span><span class="p">,</span> <span class="n">freq_stop</span> <span class="o">-</span> <span class="n">local_start</span><span class="p">)</span>
+                <span class="n">local_slice</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span>
+                    <span class="n">freq_start</span> <span class="o">-</span> <span class="n">local_start</span><span class="p">,</span> <span class="n">freq_stop</span> <span class="o">-</span> <span class="n">local_start</span>
+                <span class="p">)</span>
                 <span class="n">x</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">local_slice</span><span class="p">)]</span> <span class="o">*=</span> <span class="n">scale</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Axis is local on this rank, so direct slicing</span>

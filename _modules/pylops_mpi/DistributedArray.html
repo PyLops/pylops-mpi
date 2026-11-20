@@ -1755,7 +1755,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">add_ghost_cells</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">cells_front</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cells_back</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Add ghost cells to the DistributedArray along the axis</span>
 <span class="sd">        of partition at each rank.</span>
 

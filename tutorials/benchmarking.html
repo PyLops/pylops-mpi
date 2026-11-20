@@ -538,7 +538,7 @@ i.e., <code class="xref py py-func docutils literal notranslate"><span class="pr
 </span></pre></div></div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:932: RuntimeWarning: invalid value encountered in dot
   return dot_func(self.local_array.ravel(), dist_array.local_array.ravel())
-[decorator]inner_func: total runtime: 0.000618 s
+[decorator]inner_func: total runtime: 0.000767 s
 </pre></div>
 </div>
 <p>We may want to get the fine-grained time measurements by timing the execution
@@ -558,9 +558,9 @@ time of arbitary lines of code. <a class="reference internal" href="../api/gener
 measurement of the top-level function and those that comes from <a class="reference internal" href="../api/generated/pylops_mpi.utils.mark.html#pylops_mpi.utils.mark" title="pylops_mpi.utils.mark"><code class="xref py py-func docutils literal notranslate"><span class="pre">pylops_mpi.utils.mark</span></code></a></p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span class="n">inner_func_with_mark</span><span class="p">(</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="dict"><span class="n">par</span></a><span class="p">)</span><span class="w">
 </span></pre></div></div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[decorator]inner_func_with_mark: total runtime: 0.000085 s
-        Begin array constructor--&gt;Begin dot: 0.000022 s
-        Begin dot--&gt;Finish dot: 0.000060 s
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[decorator]inner_func_with_mark: total runtime: 0.000150 s
+        Begin array constructor--&gt;Begin dot: 0.000032 s
+        Begin dot--&gt;Finish dot: 0.000114 s
 </pre></div>
 </div>
 <p>This utility benchmarking routines can also be nested. Let’s define
@@ -583,11 +583,11 @@ printed out with the nested indentation to specify that nested calls.</p>
   ufunc(self.local_array, other, out=out.local_array)
 /opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/pylops_mpi/DistributedArray.py:795: RuntimeWarning: invalid value encountered in add
   ufunc(self.local_array, other, out=out.local_array)
-[decorator]outer_func_with_mark: total runtime: 0.000306 s
-        [decorator]inner_func_with_mark: total runtime: 0.000068 s
-                Begin array constructor--&gt;Begin dot: 0.000016 s
-                Begin dot--&gt;Finish dot: 0.000050 s
-        Outer func start--&gt;Outer func ends: 0.000304 s
+[decorator]outer_func_with_mark: total runtime: 0.000582 s
+        [decorator]inner_func_with_mark: total runtime: 0.000105 s
+                Begin array constructor--&gt;Begin dot: 0.000022 s
+                Begin dot--&gt;Finish dot: 0.000081 s
+        Outer func start--&gt;Outer func ends: 0.000577 s
 </pre></div>
 </div>
 <p>In some cases, we may want to write benchmark output to a text file.
@@ -625,7 +625,7 @@ to isolate the logging of our benchmark from that of the rest of the code</p>
 <p>Run this function and observe that the file <cite>benchmark.log</cite> is written.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span class="n">inner_func_with_logger</span><span class="p">(</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="dict"><span class="n">par</span></a><span class="p">)</span><span class="w">
 </span></pre></div></div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.004 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.005 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-tutorials-benchmarking-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/65850c3b40d96f2a8d2e87ae991d4428/benchmarking.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">benchmarking.ipynb</span></code></a></p>

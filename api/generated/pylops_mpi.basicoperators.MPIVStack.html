@@ -583,7 +583,13 @@ be computed within each rank. Both model and data vectors are of
 </dd>
 <dt><strong>base_comm</strong><span class="classifier"><a class="reference external" href="https://mpi4py.readthedocs.io/en/stable/reference/mpi4py.MPI.Comm.html#mpi4py.MPI.Comm" title="(in MPI for Python v4.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpi4py.MPI.Comm</span></code></a>, optional</span></dt><dd><p>Base MPI Communicator. Defaults to <code class="docutils literal notranslate"><span class="pre">mpi4py.MPI.COMM_WORLD</span></code>.</p>
 </dd>
-<dt><strong>dtype</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Type of elements in input array.</p>
+<dt><strong>dtype</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Type of elements in input array. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, it is inferred from
+the dtypes of <code class="docutils literal notranslate"><span class="pre">ops</span></code>.</p>
+<p>Note that this must be at least as wide as (i.e., able to safely
+represent) the dtype of the outputs of both the forward and adjoint
+of each operator in <code class="docutils literal notranslate"><span class="pre">ops</span></code>, since results are written (or accumulated)
+in-place into arrays of this dtype (e.g., use a complex dtype if any
+of the operators is complex).</p>
 </dd>
 </dl>
 </dd>

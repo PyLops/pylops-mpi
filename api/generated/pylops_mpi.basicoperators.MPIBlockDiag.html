@@ -587,7 +587,13 @@ according to the shapes of the different linear operators.</p>
 <dt><strong>mask</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code></a>, optional</span></dt><dd><p>Mask defining subsets of ranks to consider when performing ‘global’ operations on
 the distributed array such as dot product or norm.</p>
 </dd>
-<dt><strong>dtype</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Type of elements in input array.</p>
+<dt><strong>dtype</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, optional</span></dt><dd><p>Type of elements in input array. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, it is inferred from
+the dtypes of <code class="docutils literal notranslate"><span class="pre">ops</span></code>.</p>
+<p>Note that this must be at least as wide as (i.e., able to safely
+represent) the dtype of the outputs of both the forward and adjoint
+of each operator in <code class="docutils literal notranslate"><span class="pre">ops</span></code>, since results are written (or accumulated)
+in-place into arrays of this dtype (e.g., use a complex dtype if any
+of the operators is complex).</p>
 </dd>
 </dl>
 </dd>

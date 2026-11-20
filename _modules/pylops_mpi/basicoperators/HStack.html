@@ -466,13 +466,15 @@
                 <article class="bd-article">
                   
   <h1>Source code for pylops_mpi.basicoperators.HStack</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Optional</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">mpi4py</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPI</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearOperator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">DTypeLike</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">pylops_mpi</span><span class="w"> </span><span class="kn">import</span> <span class="n">DistributedArray</span><span class="p">,</span> <span class="n">MPILinearOperator</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">.VStack</span><span class="w"> </span><span class="kn">import</span> <span class="n">MPIVStack</span>
 
 
@@ -493,7 +495,14 @@
 <span class="sd">    base_comm : :obj:`mpi4py.MPI.Comm`, optional</span>
 <span class="sd">        Base MPI Communicator. Defaults to ``mpi4py.MPI.COMM_WORLD``.</span>
 <span class="sd">    dtype : :obj:`str`, optional</span>
-<span class="sd">        Type of elements in input array.</span>
+<span class="sd">        Type of elements in input array. If ``None``, it is inferred from</span>
+<span class="sd">        the dtypes of ``ops``.</span>
+
+<span class="sd">        Note that this must be at least as wide as (i.e., able to safely</span>
+<span class="sd">        represent) the dtype of the outputs of both the forward and adjoint</span>
+<span class="sd">        of each operator in ``ops``, since results are written (or accumulated)</span>
+<span class="sd">        in-place into arrays of this dtype (e.g., use a complex dtype if any</span>
+<span class="sd">        of the operators is complex).</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -557,9 +566,12 @@
 
 <span class="sd">    """</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ops</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LinearOperator</span><span class="p">],</span>
-                 <span class="n">base_comm</span><span class="p">:</span> <span class="n">MPI</span><span class="o">.</span><span class="n">Comm</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">,</span>
-                 <span class="n">dtype</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DTypeLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">ops</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LinearOperator</span><span class="p">],</span>
+        <span class="n">base_comm</span><span class="p">:</span> <span class="n">MPI</span><span class="o">.</span><span class="n">Comm</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DTypeLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ops</span> <span class="o">=</span> <span class="n">ops</span>
         <span class="n">nops</span> <span class="o">=</span> <span class="p">[</span><span class="n">oper</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">oper</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">]</span>
         <span class="n">nops</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">base_comm</span><span class="o">.</span><span class="n">allgather</span><span class="p">(</span><span class="n">nops</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -567,7 +579,12 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Operators have different number of rows"</span><span class="p">)</span>
         <span class="n">hops</span> <span class="o">=</span> <span class="p">[</span><span class="n">oper</span><span class="o">.</span><span class="n">H</span> <span class="k">for</span> <span class="n">oper</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">HStack</span> <span class="o">=</span> <span class="n">MPIVStack</span><span class="p">(</span><span class="n">ops</span><span class="o">=</span><span class="n">hops</span><span class="p">,</span> <span class="n">base_comm</span><span class="o">=</span><span class="n">base_comm</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">H</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">HStack</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span> <span class="n">dimsd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">HStack</span><span class="o">.</span><span class="n">dimsd</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">HStack</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">base_comm</span><span class="o">=</span><span class="n">base_comm</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">HStack</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span>
+            <span class="n">dimsd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">HStack</span><span class="o">.</span><span class="n">dimsd</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">HStack</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">base_comm</span><span class="o">=</span><span class="n">base_comm</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">DistributedArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DistributedArray</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">HStack</span><span class="o">.</span><span class="n">matvec</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
