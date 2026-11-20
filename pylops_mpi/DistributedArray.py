@@ -1147,7 +1147,7 @@ class DistributedArray(DistributedMixIn):
 
     def add_ghost_cells(
         self, cells_front: Optional[int] = None, cells_back: Optional[int] = None
-    ):
+    ) -> NDArray:
         """Add ghost cells to the DistributedArray along the axis
         of partition at each rank.
 

@@ -75,9 +75,8 @@ def reshaped(
                     else getattr(self, "dimsd", getattr(self, "dims"))
                 )
 
-            # Fast path: if x already has the shape and distribution that the operator expects
-            # on every rank, pass it straight to f (no redistribution, hence no copies of x).
-            # The decision is collective, since the slow path communicates.
+            # Check whether f can be directly applied to x (x already has the
+            # shape and distribution that the operator expects on every rank)
             target_local_shape = (
                 local_shapes[x.rank]
                 if local_shapes
@@ -89,6 +88,10 @@ def reshaped(
                 and x.mask is None
                 and tuple(x.local_shape) == tuple(target_local_shape)
             )
+
+            # Fast path: pass x straight to f (no redistribution, hence no
+            # copies of x). The decision is collective, since the slow path
+            # communicates.
             if x.base_comm.allreduce(int(same), op=MPI.MIN):
                 y: DistributedArray = f(self, x)
                 if len(y.global_shape) > 1:
@@ -120,19 +123,29 @@ def reshaped(
 
             # Calculate num_ghost_cells required for each rank
             dif = np.cumsum(arr_local_shapes - x_local_shapes)
-            # Calculate cells_front(0 means no ghost cells)
-            cells_front = abs(min(0, dif[self.rank - 1]))
-            # Calculate cells_back(0 means no ghost cells)
-            cells_back = max(0, dif[self.rank])
-            ghosted_array = x.add_ghost_cells(
-                cells_front=cells_front, cells_back=cells_back
-            )
-            # Fill the redistributed array
-            index = max(0, dif[self.rank - 1])
-            arr[:] = ghosted_array[index : arr_local_shapes[self.rank] + index].reshape(
-                arr.local_shape
-            )
+
+            if not dif.any():
+                # Given no ghost cells are required, simply assign a reshaped
+                # version of the x local array to arr
+                arr[:] = x.local_array.reshape(arr.local_shape)
+            else:
+                # Calculate cells_front(0 means no ghost cells)
+                cells_front = abs(min(0, dif[self.rank - 1]))
+                # Calculate cells_back(0 means no ghost cells)
+                cells_back = max(0, dif[self.rank])
+                # Created ghosted local array
+                ghosted_array = x.add_ghost_cells(
+                    cells_front=cells_front, cells_back=cells_back
+                )
+                # Fill the redistributed array
+                index = max(0, dif[self.rank - 1])
+                arr[:] = ghosted_array[
+                    index : arr_local_shapes[self.rank] + index
+                ].reshape(arr.local_shape)
+
+            # Apply f
             y: DistributedArray = f(self, arr)
+
             if len(y.global_shape) > 1:
                 # Make sure y is distributed along axis=0 before applying ravel
                 y = y.redistribute(axis=0).ravel()
