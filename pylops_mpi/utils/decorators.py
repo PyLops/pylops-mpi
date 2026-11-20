@@ -108,10 +108,16 @@ def reshaped(
                 engine=x.engine,
                 dtype=x.dtype,
             )
-            arr_local_shapes = np.asarray(
-                arr.base_comm.allgather(np.prod(arr.local_shape))
+
+            # Gather local sizes in one call for arr and x as they
+            # share the same communicator
+            sizes = np.asarray(
+                x.base_comm.allgather(
+                    (int(np.prod(arr.local_shape)), int(np.prod(x.local_shape)))
+                )
             )
-            x_local_shapes = np.asarray(x.base_comm.allgather(np.prod(x.local_shape)))
+            arr_local_shapes, x_local_shapes = sizes[:, 0], sizes[:, 1]
+
             # Calculate num_ghost_cells required for each rank
             dif = np.cumsum(arr_local_shapes - x_local_shapes)
             # Calculate cells_front(0 means no ghost cells)
