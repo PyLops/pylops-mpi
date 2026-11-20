@@ -14,6 +14,7 @@ else:
     from numpy.testing import assert_allclose
 
     backend = "numpy"
+import numpy as npp
 import pytest
 from mpi4py import MPI
 from pylops.basicoperators import Diagonal
@@ -410,7 +411,7 @@ def test_vstack(par, proxop, nstack):
 
     nlocal = x.local_shape[0]
     ns = [nlocal // nstack] * nstack
-    ns[-1] = nlocal - np.sum(ns[:-1])
+    ns[-1] = nlocal - npp.sum(ns[:-1])
     nsg = comm.allgather(ns)
     nsg = [n for ns in nsg for n in ns]  # flatten list
 
